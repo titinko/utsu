@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.UtsuController">
+   <top>
+      <MenuBar useSystemMenuBar="true" BorderPane.alignment="CENTER">
+        <menus>
+          <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
+            <items>
+                  <MenuItem fx:id="openItem" mnemonicParsing="false" onAction="#openFile" text="Open..." />
+                  <MenuItem fx:id="saveAsItem" mnemonicParsing="false" onAction="#saveFile" text="Save As..." />
+            </items>
+          </Menu>
+          <Menu fx:id="editMenu" mnemonicParsing="false" text="Edit">
+            <items>
+              <MenuItem mnemonicParsing="false" text="TODO" />
+            </items>
+          </Menu>
+            <Menu fx:id="projectMenu" mnemonicParsing="false" text="Project">
+              <items>
+                <MenuItem fx:id="propertiesItem" mnemonicParsing="false" onAction="#openProperties" text="Properties" />
+              </items>
+            </Menu>
+          <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem fx:id="aboutItem" mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+   </top>
+   <center>
+      <BorderPane BorderPane.alignment="CENTER">
+         <top>
+            <AnchorPane prefHeight="100.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label fx:id="modeLabel" layoutX="126.0" layoutY="26.0" text="Mode" />
+                  <Label fx:id="quantizationLabel" layoutX="126.0" layoutY="58.0" text="Quantization" />
+                  <ChoiceBox fx:id="modeChoiceBox" layoutX="243.0" layoutY="21.0" prefWidth="150.0" />
+                  <ChoiceBox fx:id="quantizeChoiceBox" layoutX="243.0" layoutY="53.0" prefWidth="150.0" />
+                  <Button fx:id="renderButton" layoutX="419.0" layoutY="21.0" mnemonicParsing="false" onAction="#renderSong" text="Render" />
+                  <ImageView fx:id="voicebankImage" fitHeight="90.0" fitWidth="90.0" layoutX="14.0" layoutY="13.0" pickOnBounds="true" preserveRatio="true" />
+                  <Button fx:id="exportWavButton" layoutX="504.0" layoutY="21.0" mnemonicParsing="false" onAction="#exportSongAsWav" text="Export WAV File" />
+                  <ChoiceBox fx:id="languageChoiceBox" layoutX="646.0" layoutY="21.0" prefWidth="150.0" />
+               </children>
+            </AnchorPane>
+         </top>
+         <center>
+            <HBox prefHeight="500.0" prefWidth="900.0" BorderPane.alignment="CENTER">
+               <children>
+                  <ScrollPane fx:id="scrollPaneLeft" hbarPolicy="NEVER" hmax="0.0" minViewportWidth="100.0" vbarPolicy="NEVER" vvalue="0.5">
+                     <content>
+                      <AnchorPane fx:id="anchorLeft" maxWidth="100.0" minWidth="100.0" />
+                     </content>
+                  </ScrollPane>
+                  <Separator orientation="VERTICAL" />
+                  <ScrollPane fx:id="scrollPaneRight" fitToHeight="true" fitToWidth="true" minViewportHeight="300.0" minViewportWidth="500.0" vvalue="0.5">
+                     <content>
+                      <AnchorPane fx:id="anchorRight" />
+                     </content>
+                  </ScrollPane>
+               </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+            </HBox>
+         </center>
+      </BorderPane>
+   </center>
+</BorderPane>

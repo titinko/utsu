@@ -1,0 +1,89 @@
+.game-grid {
+    -fx-background-color: white ;
+    -fx-padding: 10 ;
+}
+
+.track-cell.white-key {
+    -fx-background-color: lightgray, white;
+    -fx-background-insets: 0, 0 1 1 0;
+}
+
+.track-cell.black-key {
+	-fx-background-color: lightgray, whitesmoke;
+	-fx-background-insets: 0, 0 1 1 0;
+}
+
+.track-cell.white-key.measure-start {
+	-fx-background-color: lightskyblue, lightgray, white;
+	-fx-background-insets: 0, 0 0 0 1, 0 1 1 1;
+}
+
+.track-cell.white-key.measure-end {
+	-fx-background-color: lightskyblue, lightgray, white;
+	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
+}
+
+.track-cell.black-key.measure-start {
+	-fx-background-color: lightskyblue, lightgray, whitesmoke;
+	-fx-background-insets: 0, 0 0 0 1, 0 1 1 1;
+}
+
+.track-cell.black-key.measure-end {
+	-fx-background-color: lightskyblue, lightgray, whitesmoke;
+	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
+}
+
+.track-note.valid-note.not-highlighted {
+    -fx-fill: skyblue;
+    -fx-stroke: dodgerblue;
+}
+
+.track-note.valid-note.highlighted {
+    -fx-fill: azure;
+    -fx-stroke: skyblue;
+}
+
+.track-note.invalid-note.not-highlighted,
+.drag-edge {
+    -fx-fill: gray;
+    -fx-stroke: darkslategray;
+}
+
+.track-note.invalid-note.highlighted {
+    -fx-fill: lightgray;
+    -fx-stroke: silver;
+}
+
+.track-note.partial-note {
+	-fx-stroke-dash-array: 212;
+	-fx-stroke-dash-offset: -20;
+}
+
+.game-grid-cell.first-row {
+    -fx-background-insets: 0, 1 1 1 0 ;
+}
+
+.game-grid-cell.first-column {
+    -fx-background-insets: 0, 0 1 1 1 ;
+}
+
+.game-grid-cell.first-row.first-column {
+    -fx-background-insets: 0, 1 ;
+}
+
+.piano-black-key {
+	-fx-background-color: black;
+}
+
+.piano-black-key > Label {
+	-fx-text-fill: white;
+}
+
+.piano-white-key {
+	-fx-background-color: black, white;
+	-fx-background-insets: 0, 0 0 1 0 ;
+}
+
+.piano-no-border {
+	-fx-background-color: white;
+}
