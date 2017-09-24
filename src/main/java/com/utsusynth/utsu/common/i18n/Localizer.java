@@ -6,7 +6,7 @@ import java.util.ResourceBundle;
 
 import com.google.common.collect.ImmutableList;
 
-public class Localizer {	
+public class Localizer {
 	private final ImmutableList<NativeLocale> supportedLocales;
 	private final LinkedList<Localizable> targets;
 	private NativeLocale locale;
@@ -18,16 +18,16 @@ public class Localizer {
 		this.locale = locale;
 		this.bundle = ResourceBundle.getBundle("messages.messages", locale.getLocale());
 	}
-	
+
 	public void localize(Localizable target) {
 		if (targets.contains(target)) {
-			// TODO: Handle this, or just ignore it.  I'm not a cop.
+			// TODO: Handle this, or just ignore it. I'm not a cop.
 			return;
 		}
 		targets.add(target);
 		target.localize(this.bundle);
 	}
-	
+
 	public void setLocale(NativeLocale locale) {
 		this.locale = locale;
 		this.bundle = ResourceBundle.getBundle("messages.messages", locale.getLocale());
@@ -35,11 +35,11 @@ public class Localizer {
 			target.localize(this.bundle);
 		}
 	}
-	
+
 	public NativeLocale getCurrentLocale() {
 		return locale;
 	}
-	
+
 	public List<NativeLocale> getAllLocales() {
 		return supportedLocales;
 	}

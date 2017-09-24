@@ -9,25 +9,28 @@ public class QuantizedAddRequest {
 	private final Optional<String> trueLyric;
 
 	public QuantizedAddRequest(
-			QuantizedNote note, String pitch, String lyric, Optional<String> trueLyric) {
+			QuantizedNote note,
+			String pitch,
+			String lyric,
+			Optional<String> trueLyric) {
 		this.note = note;
 		this.pitch = pitch;
 		this.lyric = lyric;
 		this.trueLyric = trueLyric;
 	}
-	
+
 	public QuantizedNote getNote() {
 		return this.note;
 	}
-	
+
 	public String getPitch() {
 		return this.pitch;
 	}
-	
+
 	public String getLyric() {
 		return this.lyric;
 	}
-	
+
 	public Optional<String> getTrueLyric() {
 		return this.trueLyric;
 	}

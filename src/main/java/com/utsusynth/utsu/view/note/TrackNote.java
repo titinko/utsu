@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view;
+package com.utsusynth.utsu.view.note;
 
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.UtsuController.Mode;
@@ -29,15 +29,16 @@ public class TrackNote {
 
 	// Temporary cache values.
 	private enum SubMode {
-		CLICKING,
-		DRAGGING,
-		RESIZING,
+		CLICKING, DRAGGING, RESIZING,
 	}
+
 	private SubMode subMode;
 	private int quantInNote; // Always uses Quantizer.MAX
-	
-	static TrackNote createNote(
-			QuantizedAddRequest request, TrackNoteCallback callback, Quantizer quantizer) {
+
+	public static TrackNote createNote(
+			QuantizedAddRequest request,
+			TrackNoteCallback callback,
+			Quantizer quantizer) {
 		QuantizedNote qNote = request.getNote();
 		int absStart = qNote.getStart() * (COL_WIDTH / qNote.getQuantization());
 		int startCol = absStart / COL_WIDTH;
@@ -47,75 +48,80 @@ public class TrackNote {
 		defaultNote.setWidth(absDuration - 1);
 		defaultNote.setHeight(ROW_HEIGHT - 1);
 		defaultNote.getStyleClass().addAll("track-note", "valid-note", "not-highlighted");
-		
+
 		Rectangle noteEdge = new Rectangle();
 		StackPane.setAlignment(noteEdge, Pos.CENTER_RIGHT);
 		noteEdge.setWidth(2);
 		noteEdge.setHeight(defaultNote.getHeight());
 		noteEdge.getStyleClass().add("drag-edge");
-		
+
 		Rectangle overlap = new Rectangle();
 		StackPane.setAlignment(overlap, Pos.CENTER_RIGHT);
 		overlap.setWidth(0);
 		overlap.setHeight(defaultNote.getHeight());
 		overlap.getStyleClass().add("drag-edge");
-		
+
 		StackPane layout = new StackPane();
 		layout.setPickOnBounds(false);
 		layout.setAlignment(Pos.CENTER_LEFT);
 		GridPane.setRowIndex(layout, PitchUtils.pitchToRowNum(request.getPitch()));
 		GridPane.setColumnIndex(layout, startCol);
-		
-		TrackNote trackNote = new TrackNote(defaultNote, noteEdge, overlap, layout, callback, quantizer);
+
+		TrackNote trackNote =
+				new TrackNote(defaultNote, noteEdge, overlap, layout, callback, quantizer);
 		trackNote.lyric.setLyric(request.getLyric());
 		trackNote.lyric.setAlias(request.getTrueLyric());
-		
+
 		trackNote.setLeftMargin(startMargin);
 		trackNote.adjustColumnSpan();
-		
+
 		return trackNote;
 	}
 
-	static TrackNote createDefaultNote(
-			int row, int column, TrackNoteCallback callback, Quantizer quantizer) {
+	public static TrackNote createDefaultNote(
+			int row,
+			int column,
+			TrackNoteCallback callback,
+			Quantizer quantizer) {
 		Rectangle defaultNote = new Rectangle();
 		defaultNote.setWidth(COL_WIDTH - 1);
 		defaultNote.setHeight(ROW_HEIGHT - 1);
 		defaultNote.getStyleClass().addAll("track-note", "invalid-note", "not-highlighted");
-		
+
 		Rectangle noteEdge = new Rectangle();
 		StackPane.setAlignment(noteEdge, Pos.CENTER_RIGHT);
 		noteEdge.setWidth(2);
 		noteEdge.setHeight(defaultNote.getHeight());
 		noteEdge.getStyleClass().add("drag-edge");
-		
+
 		Rectangle overlap = new Rectangle();
 		StackPane.setAlignment(overlap, Pos.CENTER_RIGHT);
 		overlap.setWidth(0);
 		overlap.setHeight(defaultNote.getHeight());
 		overlap.getStyleClass().add("drag-edge");
-		
+
 		StackPane layout = new StackPane();
 		layout.setPickOnBounds(false);
 		layout.setAlignment(Pos.CENTER_LEFT);
 		GridPane.setRowIndex(layout, row);
 		GridPane.setColumnIndex(layout, column);
-		
-		TrackNote trackNote = new TrackNote(defaultNote, noteEdge, overlap, layout, callback, quantizer);
-		
+
+		TrackNote trackNote =
+				new TrackNote(defaultNote, noteEdge, overlap, layout, callback, quantizer);
+
 		trackNote.adjustColumnSpan();
 		int quant = column * quantizer.getQuant();
-		trackNote.updateNote(
-				quant, quant, quantizer.getQuant(), COL_WIDTH, row, COL_WIDTH, trackNote.lyric.getLyric());
+		trackNote.updateNote(quant, quant, quantizer.getQuant(), COL_WIDTH, row, COL_WIDTH,
+				trackNote.lyric.getLyric());
 		return trackNote;
 	}
+
 	private TrackNote(
 			Rectangle note,
 			Rectangle dragEdge,
 			Rectangle overlap,
 			StackPane layout,
-			TrackNoteCallback
-			callback,
+			TrackNoteCallback callback,
 			Quantizer quantizer) {
 		this.note = note;
 		this.dragEdge = dragEdge;
@@ -128,15 +134,15 @@ public class TrackNote {
 			this.track.setHighlighted(this, false);
 		});
 		this.layout = layout;
-		this.layout.getChildren().addAll(
-				this.note, this.overlap, this.lyric.openTextElement(), this.dragEdge);
+		this.layout.getChildren().addAll(this.note, this.overlap, this.lyric.openTextElement(),
+				this.dragEdge);
 		layout.setOnMouseClicked((event) -> {
 			if (track.getCurrentMode() == Mode.DELETE) {
 				if (note.getStyleClass().contains("valid-note")) {
 					int quantization = Quantizer.SMALLEST;
 					int quantizedDuration = getDuration() / (COL_WIDTH / quantization);
-					QuantizedNote request = new QuantizedNote(
-							getQuantizedStart(quantization), quantizedDuration, quantization);
+					QuantizedNote request = new QuantizedNote(getQuantizedStart(quantization),
+							quantizedDuration, quantization);
 					track.removeSongNote(request);
 				}
 				track.removeTrackNote(this);
@@ -155,18 +161,18 @@ public class TrackNote {
 				int quantSize = COL_WIDTH / quantizer.getQuant();
 				int absStart = GridPane.getColumnIndex(layout) * COL_WIDTH;
 				int newQuant = (int) Math.floor((action.getX() + absStart) / quantSize);
-				
+
 				// Find what to compare quantized mouse position to.
 				int oldEndPos = absStart + getAbsPositionInColumn() + getDuration();
 				int increasingQuantEnd = (int) Math.floor(oldEndPos * 1.0 / quantSize);
 				int decreasingQuantEnd = (int) (Math.ceil(oldEndPos * 1.0 / quantSize)) - 1;
-				
+
 				// Use smallest quantization to calculate actual duration change.
 				int oldSmallQuant = getQuantizedStart(Quantizer.SMALLEST);
 				int newSmallQuant = newQuant * (Quantizer.SMALLEST / quantizer.getQuant());
 				int quantChange = newSmallQuant - oldSmallQuant;
 				int smallQuantSize = COL_WIDTH / Quantizer.SMALLEST;
-				
+
 				// Increase or decrease duration.
 				if (newQuant > increasingQuantEnd) {
 					resizeNote(quantChange * smallQuantSize);
@@ -180,15 +186,15 @@ public class TrackNote {
 				if (!track.isInBounds(newRow)) {
 					newRow = oldRow;
 				}
-				
+
 				// Handle horizontal movement.
 				int curQuant = quantizer.getQuant(); // Ensure constant quantization.
 				int curQuantSize = COL_WIDTH / curQuant;
 				// Determine whether a note is aligned with the current quantization.
 				boolean aligned = getAbsPositionInColumn() % curQuantSize == 0;
 				int oldQuantInNote = quantInNote / (Quantizer.SMALLEST / curQuant);
-				int newQuantInNote = (int) Math.floor(
-						(action.getX() - getAbsPositionInColumn()) / curQuantSize);
+				int newQuantInNote =
+						(int) Math.floor((action.getX() - getAbsPositionInColumn()) / curQuantSize);
 				int quantChange = newQuantInNote - oldQuantInNote;
 				if (!aligned) {
 					// Possibly increase quantChange by 1.
@@ -216,14 +222,14 @@ public class TrackNote {
 				}
 				int oldQuant = getQuantizedStart(curQuant);
 				int newQuant = oldQuant + quantChange;
-				
+
 				// Check column bounds.
 				int newCol = (int) Math.floor(newQuant * curQuantSize * 1.0 / COL_WIDTH);
 				if (newCol < 0) {
 					newCol = GridPane.getColumnIndex(layout);
 					newQuant = oldQuant;
 				}
-				
+
 				// Actual movement.
 				if (oldRow != newRow || oldQuant != newQuant) {
 					moveNote(oldQuant, newQuant, curQuant, newRow, newCol);
@@ -242,24 +248,26 @@ public class TrackNote {
 				subMode = SubMode.RESIZING;
 			} else {
 				// Note that this may become dragging in the future.
-				quantInNote = GridPane.getColumnIndex(layout) * 32 +
-						(int) event.getX() / (COL_WIDTH / 32) - getQuantizedStart(32);
+				quantInNote = GridPane.getColumnIndex(layout) * 32
+						+ (int) event.getX() / (COL_WIDTH / 32) - getQuantizedStart(32);
 				subMode = SubMode.CLICKING;
 			}
 		});
 	}
 
-	StackPane getElement() {
+	public StackPane getElement() {
 		return layout;
 	}
-	
+
 	/**
-	 * Sets a note's highlighted state.  Should only be called from track.
-	 * @param highlighted Whether the note should be highlighted.
+	 * Sets a note's highlighted state. Should only be called from track.
+	 * 
+	 * @param highlighted
+	 *            Whether the note should be highlighted.
 	 */
-	void setHighlighted(boolean highlighted) {
+	public void setHighlighted(boolean highlighted) {
 		note.getStyleClass().set(2, highlighted ? "highlighted" : "not-highlighted");
-		
+
 		if (!highlighted) {
 			lyric.closeTextFieldIfNeeded((newLyric) -> {
 				this.setSongLyric(newLyric);
@@ -267,28 +275,22 @@ public class TrackNote {
 			});
 		}
 	}
-	
-	void setValid(boolean isValid) {
+
+	public void setValid(boolean isValid) {
 		note.getStyleClass().set(1, isValid ? "valid-note" : "invalid-note");
 		if (!isValid) {
 			lyric.setAlias(Optional.absent());
 			adjustForOverlap(Integer.MAX_VALUE);
 		}
 	}
-	
+
 	private void setSongLyric(String lyric) {
 		int curDuration = getDuration();
-		updateNote(
-				getQuantizedStart(),
-				getQuantizedStart(),
-				quantizer.getQuant(),
-				curDuration,
-				GridPane.getRowIndex(layout),
-				curDuration,
-				lyric);
+		updateNote(getQuantizedStart(), getQuantizedStart(), quantizer.getQuant(), curDuration,
+				GridPane.getRowIndex(layout), curDuration, lyric);
 	}
-	
-	void adjustForOverlap(int distanceToNextNote) {
+
+	public void adjustForOverlap(int distanceToNextNote) {
 		int noteWidth = (int) this.note.getWidth();
 		if (noteWidth > distanceToNextNote) {
 			overlap.setWidth(noteWidth - distanceToNextNote);
@@ -296,7 +298,7 @@ public class TrackNote {
 			overlap.setWidth(0);
 		}
 	}
-	
+
 	private void resizeNote(int newDuration) {
 		note.setWidth(newDuration - 1);
 		double totalWidth = getAbsPositionInColumn() + newDuration;
@@ -308,16 +310,10 @@ public class TrackNote {
 		}
 		GridPane.setColumnSpan(layout, newColumnSpan);
 		adjustDragEdge(totalWidth, newColumnSpan);
-		updateNote(
-				getQuantizedStart(32),
-				getQuantizedStart(32),
-				32,
-				getDuration(),
-				GridPane.getRowIndex(layout),
-				newDuration,
-				lyric.getLyric());
+		updateNote(getQuantizedStart(32), getQuantizedStart(32), 32, getDuration(),
+				GridPane.getRowIndex(layout), newDuration, lyric.getLyric());
 	}
-	
+
 	private void moveNote(int oldQuant, int newQuant, int quantization, int newRow, int newCol) {
 		GridPane.setRowIndex(layout, newRow);
 		GridPane.setColumnIndex(layout, newCol);
@@ -334,18 +330,19 @@ public class TrackNote {
 		}
 		GridPane.setColumnSpan(layout, newColumnSpan);
 		adjustDragEdge(totalWidth, newColumnSpan);
-		updateNote(oldQuant, newQuant, quantization, curDuration, newRow, curDuration, lyric.getLyric());
+		updateNote(oldQuant, newQuant, quantization, curDuration, newRow, curDuration,
+				lyric.getLyric());
 	}
-	
+
 	private void setLeftMargin(int newMargin) {
 		StackPane.setMargin(note, new Insets(0, 0, 0, newMargin));
 		lyric.setLeftMargin(newMargin);
 	}
-	
+
 	private void adjustColumnSpan() {
 		adjustColumnSpan(getAbsPositionInColumn(), getDuration());
 	}
-	
+
 	private void adjustColumnSpan(double newMargin, double newDuration) {
 		double totalWidth = newMargin + newDuration;
 		double lyricWidth = newMargin + lyric.getWidth();
@@ -359,13 +356,13 @@ public class TrackNote {
 		GridPane.setColumnSpan(layout, newColumnSpan);
 		adjustDragEdge(totalWidth, newColumnSpan);
 	}
-	
+
 	private void adjustDragEdge(double totalWidth, int columnSpan) {
 		int amountToAdjust = (columnSpan * COL_WIDTH) - (int) totalWidth;
 		StackPane.setMargin(dragEdge, new Insets(0, amountToAdjust, 0, 0));
 		StackPane.setMargin(overlap, new Insets(0, amountToAdjust, 0, 0));
 	}
-	
+
 	private void updateNote(
 			int oldQuant,
 			int newQuant,
@@ -374,47 +371,44 @@ public class TrackNote {
 			int newRow,
 			int newDuration,
 			String newLyric) {
-		//System.out.println("***");
+		// System.out.println("***");
 		if (note.getStyleClass().contains("valid-note")) {
-			//System.out.println(String.format(
-			//		"Moving from valid %d, %s", oldQuant, lyric.getLyric()));
+			// System.out.println(String.format(
+			// "Moving from valid %d, %s", oldQuant, lyric.getLyric()));
 			int quantOldDuration = oldDuration / (COL_WIDTH / quantization);
-			QuantizedNote deleteThis = new QuantizedNote(
-					oldQuant, quantOldDuration, quantization);
+			QuantizedNote deleteThis = new QuantizedNote(oldQuant, quantOldDuration, quantization);
 			track.removeSongNote(deleteThis);
 		} else {
-			//System.out.println(String.format(
-			//		"Moving from invalid %d, %s", oldQuant, lyric.getLyric()));
+			// System.out.println(String.format(
+			// "Moving from invalid %d, %s", oldQuant, lyric.getLyric()));
 		}
-		//System.out.println(String.format("Moving to %d, %d, %s", newRow, newQuant, newLyric));
+		// System.out.println(String.format("Moving to %d, %d, %s", newRow, newQuant, newLyric));
 		try {
 			setValid(true);
 			int quantNewDuration = newDuration / (COL_WIDTH / quantization);
-			QuantizedNote addThis = new QuantizedNote(
-					newQuant, quantNewDuration, quantization);
-			Optional<String> trueLyric = 
-					track.addSongNote(this, addThis, newRow, newLyric);
+			QuantizedNote addThis = new QuantizedNote(newQuant, quantNewDuration, quantization);
+			Optional<String> trueLyric = track.addSongNote(this, addThis, newRow, newLyric);
 			this.lyric.setAlias(trueLyric);
 		} catch (NoteAlreadyExistsException e) {
 			setValid(false);
-			//System.out.println("WARNING: New note is invalid!");
+			// System.out.println("WARNING: New note is invalid!");
 		}
 	}
-	
+
 	private int getQuantizedStart() {
 		return getQuantizedStart(quantizer.getQuant());
 	}
-	
+
 	private int getQuantizedStart(int quantization) {
 		int absColStart = GridPane.getColumnIndex(layout) * COL_WIDTH;
 		int absPosition = absColStart + getAbsPositionInColumn();
 		return absPosition / (COL_WIDTH / quantization);
 	}
-	
+
 	private int getDuration() {
 		return (int) note.getWidth() + 1;
 	}
-	
+
 	private int getAbsPositionInColumn() {
 		Insets curMargin = StackPane.getMargin(note);
 		int absPositionInColumn = 0;

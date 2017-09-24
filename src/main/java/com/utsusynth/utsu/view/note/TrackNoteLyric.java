@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view;
+package com.utsusynth.utsu.view.note;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -16,7 +16,7 @@ public class TrackNoteLyric {
 
 	private String lyric;
 	private Optional<String> alias;
-	
+
 	private final Label text;
 	private final TextField textField;
 	private Region activeNode;
@@ -29,41 +29,41 @@ public class TrackNoteLyric {
 		defaultTextField.setMaxWidth(COL_WIDTH - 2);
 		defaultTextField.setOnAction((event) -> {
 			callback.run();
-		}); 
+		});
 		return trackNoteLyric;
 	}
-	
+
 	private TrackNoteLyric(TextField textField, String defaultLyric) {
 		this.lyric = defaultLyric;
 		this.alias = Optional.absent();
 		this.text = new Label(defaultLyric);
 		this.textField = textField;
 	}
-	
+
 	void setLyric(String newLyric) {
 		text.setText(alias.isPresent() ? newLyric + " (" + alias.get() + ")" : newLyric);
 		textField.setText(newLyric);
 		this.lyric = newLyric;
 	}
-	
+
 	String getLyric() {
 		return this.lyric;
 	}
-	
+
 	double getWidth() {
 		return activeNode.getWidth();
 	}
-	
+
 	void setAlias(Optional<String> newAlias) {
 		text.setText(newAlias.isPresent() ? lyric + " (" + newAlias.get() + ")" : this.lyric);
 		this.alias = newAlias;
 	}
-	
+
 	Region openTextElement() {
 		this.activeNode = this.text;
 		return this.text;
 	}
-	
+
 	void openTextField(StackPane layout) {
 		int index = layout.getChildren().indexOf(this.activeNode);
 		this.activeNode = this.textField;
@@ -71,7 +71,7 @@ public class TrackNoteLyric {
 		this.textField.requestFocus();
 		this.textField.selectAll();
 	}
-	
+
 	void closeTextFieldIfNeeded(Function<String, StackPane> callback) {
 		if (this.activeNode == this.textField) {
 			this.activeNode = this.text;

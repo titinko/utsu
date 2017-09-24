@@ -10,14 +10,14 @@ import com.utsusynth.utsu.model.SongNote;
 
 public class Resampler {
 	private static final String SILENCE_PATH = "/Users/emmabreen/Desktop/silence.wav";
-	
+
 	private final ExternalProcessRunner runner;
-	
+
 	@Inject
 	Resampler(ExternalProcessRunner runner) {
 		this.runner = runner;
 	}
-	
+
 	void resample(
 			String resamplerPath,
 			SongNote note,
@@ -34,44 +34,21 @@ public class Resampler {
 		String offset = Double.toString(config.getOffset());
 		double scaledLength = noteLength * (125 / song.getTempo()) + 1;
 		String consonantLength = Double.toString(config.getConsonant()); // TODO: Cutoff?
-		String cutoff = Double.toString(config.getCutoff());		
+		String cutoff = Double.toString(config.getCutoff());
 		String intensity = Integer.toString(note.getIntensity());
-		String modulation = Integer.toString(note.getModulation());  // TODO: Set this song-wide?
+		String modulation = Integer.toString(note.getModulation()); // TODO: Set this song-wide?
 		String tempo = "!" + Double.toString(song.getTempo()); // TODO: Override with note tempo.
-		
+
 		// Call resampler.
-		runner.runProcess(
-				resamplerPath,
-				inputFilePath,
-				outputFilePath,
-				pitch,
-				consonantVelocity,
-				flags,
-				offset,
-				Double.toString(scaledLength),
-				consonantLength,
-				cutoff,
-				intensity,
-				modulation,
-				tempo,
-				pitchString);
+		runner.runProcess(resamplerPath, inputFilePath, outputFilePath, pitch, consonantVelocity,
+				flags, offset, Double.toString(scaledLength), consonantLength, cutoff, intensity,
+				modulation, tempo, pitchString);
 	}
-	
+
 	void resampleSilence(String resamplerPath, File outputFile, double duration) {
 		String outputFilePath = outputFile.getAbsolutePath();
 		String desiredLength = Double.toString(duration + 1);
-		runner.runProcess(
-				resamplerPath,
-				SILENCE_PATH,
-				outputFilePath,
-				"C4",
-				"100",
-				"",
-				"0",
-				desiredLength,
-				"0",
-				"0",
-				"100",
-				"0");
+		runner.runProcess(resamplerPath, SILENCE_PATH, outputFilePath, "C4", "100", "", "0",
+				desiredLength, "0", "0", "100", "0");
 	}
 }

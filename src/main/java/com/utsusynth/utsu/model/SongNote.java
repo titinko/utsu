@@ -23,7 +23,7 @@ public class SongNote {
 	private double[] envelopeHeight; // "v" in % of total intensity (0-100)
 	private double envelopeOverlap; // This value is meaningless.
 	private int[] vibrato;
-	
+
 	public SongNote() {
 		// Set every required field to its default.
 		this.delta = -1; // Must be set in builder.
@@ -43,18 +43,18 @@ public class SongNote {
 		this.envelopeWidth = new double[5];
 		this.envelopeHeight = new double[5];
 		this.setEnvelope(
-				new String[] {"5", "1", "1", "100", "100", "100", "100", "7", "35", "1", "100"});
-		vibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+				new String[] { "5", "1", "1", "100", "100", "100", "100", "7", "35", "1", "100" });
+		vibrato = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	}
-	
+
 	public void setDelta(int delta) {
 		this.delta = delta;
 	}
-	
+
 	public int getDelta() {
 		return this.delta;
 	}
-	
+
 	public void setDuration(int duration) {
 		if (this.length != -1 && this.length < duration) {
 			this.duration = this.length;
@@ -62,82 +62,82 @@ public class SongNote {
 			this.duration = duration;
 		}
 	}
-	
+
 	public int getDuration() {
 		return this.duration;
 	}
-	
+
 	public void setLength(int length) {
 		if (this.duration != -1 && length < this.duration) {
 			this.duration = length;
 		}
 		this.length = length;
 	}
-	
+
 	public int getLength() {
 		return this.length;
 	}
-	
+
 	public void setLyric(String lyric) {
 		this.lyric = lyric;
 	}
-	
+
 	public String getLyric() {
 		return this.lyric;
 	}
-	
+
 	public void setNoteNum(int noteNum) {
 		this.noteNum = noteNum;
 	}
-	
+
 	public int getNoteNum() {
 		return this.noteNum;
 	}
-	
+
 	public void setVelocity(double velocity) {
 		this.velocity = velocity;
 	}
-	
+
 	public double getVelocity() {
 		return this.velocity;
 	}
-	
+
 	public void setStartPoint(double startPoint) {
 		this.startPoint = startPoint;
 	}
-	
+
 	public double getStartPoint() {
 		return this.startPoint;
 	}
-	
+
 	public void setIntensity(int intensity) {
 		this.intensity = intensity;
 	}
-	
+
 	public int getIntensity() {
 		return this.intensity;
 	}
-	
+
 	public void setModulation(int modulation) {
 		this.modulation = modulation;
 	}
-	
+
 	public int getModulation() {
 		return this.modulation;
 	}
-	
+
 	public void setNoteFlags(String noteFlags) {
 		this.noteFlags = noteFlags;
 	}
-	
+
 	public String getNoteFlags() {
 		return this.noteFlags;
 	}
-	
+
 	public PitchbendData getPitchbends() {
 		return new PitchbendData(pbs, pbw, pby, pbm);
 	}
-	
+
 	public void setPBS(String[] pbsValues) {
 		ImmutableList.Builder<Double> builder = ImmutableList.builder();
 		for (String value : pbsValues) {
@@ -145,11 +145,11 @@ public class SongNote {
 		}
 		pbs = builder.build();
 	}
-	
+
 	public ImmutableList<Double> getPBS() {
 		return pbs;
 	}
-	
+
 	public void setPBW(String[] pbwValues) {
 		ImmutableList.Builder<Double> builder = ImmutableList.builder();
 		for (String value : pbwValues) {
@@ -157,11 +157,11 @@ public class SongNote {
 		}
 		pbw = builder.build();
 	}
-	
+
 	public ImmutableList<Double> getPBW() {
 		return pbw;
 	}
-	
+
 	public void setPBY(String[] pbyValues) {
 		ImmutableList.Builder<Double> builder = ImmutableList.builder();
 		for (String value : pbyValues) {
@@ -169,19 +169,19 @@ public class SongNote {
 		}
 		pby = builder.build();
 	}
-	
+
 	public ImmutableList<Double> getPBY() {
 		return pby;
 	}
-	
+
 	public void setPBM(String[] pbmValues) {
 		pbm = ImmutableList.copyOf(pbmValues);
 	}
-	
+
 	public ImmutableList<String> getPBM() {
 		return pbm;
 	}
-	
+
 	public void setEnvelope(String[] envelopeValues) {
 		envelopeWidth[0] = Double.parseDouble(envelopeValues[0]); // p1
 		envelopeWidth[1] = Double.parseDouble(envelopeValues[1]); // p2
@@ -195,7 +195,7 @@ public class SongNote {
 		envelopeWidth[4] = Double.parseDouble(envelopeValues[9]); // p5
 		envelopeHeight[4] = Double.parseDouble(envelopeValues[10]); // v5
 	}
-	
+
 	public String[] getFullEnvelope() {
 		String[] envelope = new String[11];
 		envelope[0] = Double.toString(envelopeWidth[0]); // p1
@@ -211,25 +211,25 @@ public class SongNote {
 		envelope[10] = Double.toString(envelopeHeight[4]); // v5
 		return envelope;
 	}
-	
+
 	public double getFadeIn() {
 		return envelopeWidth[0];
 	}
-	
+
 	public void setFadeIn(double newFadeIn) {
 		envelopeWidth[0] = newFadeIn;
 	}
-	
+
 	public void setFadeOut(double newFadeOut) {
 		envelopeWidth[3] = newFadeOut;
 	}
-	
+
 	public void setVibrato(String[] vibratoValues) {
 		for (int i = 0; i < 10; i++) {
 			vibrato[i] = Integer.parseInt(vibratoValues[i]);
 		}
 	}
-	
+
 	public String[] getVibrato() {
 		String[] vibratoValues = new String[10];
 		for (int i = 0; i < 10; i++) {
@@ -237,11 +237,11 @@ public class SongNote {
 		}
 		return vibratoValues;
 	}
-	
+
 	@Override
 	public String toString() {
 		// Crappy string representation of a Note object.
-		return delta + " " + duration + " " + length + " " + lyric + " " + noteNum + " " +
-				velocity + " " + startPoint + " " + intensity + " " + modulation + " " + noteFlags;
+		return delta + " " + duration + " " + length + " " + lyric + " " + noteNum + " " + velocity
+				+ " " + startPoint + " " + intensity + " " + modulation + " " + noteFlags;
 	}
 }

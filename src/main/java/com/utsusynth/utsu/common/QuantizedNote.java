@@ -10,15 +10,15 @@ public class QuantizedNote {
 		this.quantizedDuration = quantizedDuration;
 		this.quantization = quantization;
 	}
-	
+
 	public int getStart() {
 		return this.quantizedStart;
 	}
-	
+
 	public int getDuration() {
 		return this.quantizedDuration;
 	}
-	
+
 	public int getQuantization() {
 		return this.quantization;
 	}

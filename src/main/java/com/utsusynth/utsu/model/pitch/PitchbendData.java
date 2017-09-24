@@ -8,7 +8,7 @@ public class PitchbendData {
 	private final ImmutableList<Double> pby; // Pitch bend shifts
 	private final ImmutableList<String> pbm; // Pitch bend curves
 	// TODO: Add vibrato
-	
+
 	public PitchbendData(
 			ImmutableList<Double> pbs,
 			ImmutableList<Double> pbw,
@@ -19,19 +19,19 @@ public class PitchbendData {
 		this.pby = pby;
 		this.pbm = pbm;
 	}
-	
+
 	public ImmutableList<Double> getPBS() {
 		return pbs;
 	}
-	
+
 	public ImmutableList<Double> getPBW() {
 		return pbw;
 	}
-	
+
 	public ImmutableList<Double> getPBY() {
 		return pby;
 	}
-	
+
 	public ImmutableList<String> getPBM() {
 		return pbm;
 	}

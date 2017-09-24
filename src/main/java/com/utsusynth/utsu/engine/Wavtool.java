@@ -9,12 +9,12 @@ import com.utsusynth.utsu.model.SongNote;
 
 public class Wavtool {
 	private final ExternalProcessRunner runner;
-	
+
 	@Inject
 	Wavtool(ExternalProcessRunner runner) {
 		this.runner = runner;
 	}
-	
+
 	void addNewNote(
 			String wavtoolPath,
 			Song song,
@@ -28,7 +28,7 @@ public class Wavtool {
 		String inputFilePath = inputFile.getAbsolutePath();
 		String startPoint = "0.0"; // TODO: Stop ignoring this field.
 		String[] envelope = note.getFullEnvelope();
-		
+
 		// TODO: Scale note length, overlap, and configs by tempo.
 		double overlap = Math.min(config.getOverlap(), note.getFadeIn());
 		double boundedOverlap = Math.max(0, Math.min(overlap, noteLength));
@@ -36,17 +36,12 @@ public class Wavtool {
 		if (!includeOverlap) {
 			boundedOverlap = 0;
 		}
-		
+
 		double scaleFactor = 125 / song.getTempo();
-		
+
 		// Call wavtool to add new note onto the end of the output file.
-		runner.runProcess(
-				wavtoolPath,
-				outputFilePath,
-				inputFilePath,
-				startPoint,
-				Double.toString(noteLength * scaleFactor),
-				envelope[0], // p1
+		runner.runProcess(wavtoolPath, outputFilePath, inputFilePath, startPoint,
+				Double.toString(noteLength * scaleFactor), envelope[0], // p1
 				envelope[1], // p2
 				envelope[2], // p3
 				envelope[3], // v1
@@ -58,21 +53,16 @@ public class Wavtool {
 				envelope[9], // p5
 				envelope[10]); // v5
 	}
-	
+
 	void addSilence(String wavtoolPath, double duration, File inputFile, File outputFile) {
 		String outputFilePath = outputFile.getAbsolutePath();
 		String inputFilePath = inputFile.getAbsolutePath();
 		String startPoint = "0.0";
 		String noteLength = Double.toString(duration);
-		String[] envelope = new String[] {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
-		
+		String[] envelope = new String[] { "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" };
+
 		// Call wavtool to add new note onto the end of the output file.
-		runner.runProcess(
-				wavtoolPath,
-				outputFilePath,
-				inputFilePath,
-				startPoint,
-				noteLength,
+		runner.runProcess(wavtoolPath, outputFilePath, inputFilePath, startPoint, noteLength,
 				envelope[0], // p1
 				envelope[1], // p2
 				envelope[2], // p3

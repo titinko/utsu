@@ -24,7 +24,7 @@ public class Ust12Writer {
 		ps.println("VoiceDir=" + song.getVoiceDir());
 		ps.println("Flags=" + song.getFlags());
 		ps.println("Mode2=" + (song.getMode2() ? "True" : "False"));
-		
+
 		Iterator<SongNote> iterator = song.getNoteIterator();
 		int index = 0;
 		Optional<SongNote> prevNote = Optional.absent();
@@ -49,7 +49,7 @@ public class Ust12Writer {
 			ps.println("Intensity=" + note.getIntensity());
 			ps.println("Modulation=" + note.getModulation());
 			ps.println("Flags=" + note.getNoteFlags());
-			
+
 			// Pitch bends.
 			ImmutableList<Double> pbs = note.getPBS();
 			ps.print("PBS=");
@@ -79,13 +79,13 @@ public class Ust12Writer {
 				}
 				ps.println(pbm.get(pbm.size() - 1));
 			}
-			
+
 			// Envelope.
 			for (String value : note.getFullEnvelope()) {
 				ps.print(value + ",");
 			}
 			ps.println("0.0"); // Not sure what the meaning of this value is.
-			
+
 			// Vibrato.
 			ps.print("VBR=");
 			String[] vibrato = note.getVibrato();
@@ -94,13 +94,13 @@ public class Ust12Writer {
 			}
 			ps.println(vibrato[9]);
 			index++;
-			
+
 			// Save the current note for one more iteration.
 			prevNote = Optional.of(note);
 		}
 		ps.println("[#TRACKEND]");
 	}
-	
+
 	private String getNoteLabel(int index) {
 		if (index > 9999) {
 			// TODO: Throw error
@@ -119,7 +119,7 @@ public class Ust12Writer {
 		}
 		return null;
 	}
-	
+
 	private String roundDecimal(double number, String roundFormat) {
 		int formatNumPlaces = roundFormat.length() - roundFormat.indexOf(".") - 1;
 		String formatted = new DecimalFormat(roundFormat).format(number);

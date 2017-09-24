@@ -1,8 +1,7 @@
-package com.utsusynth.utsu.model.pitch;
+package com.utsusynth.utsu.model.pitch.portamento;
 
 /** Represents an "r"-shaped portamento. */
 class LogarithmicPortamento extends Portamento {
-	private final int noteMs;
 	private final double x1;
 	private final double y1;
 	private final double x2;
@@ -10,9 +9,8 @@ class LogarithmicPortamento extends Portamento {
 	private final double yStretch; // a in aln(bx) + c
 	private final double xStretch; // b in aln(bx) + c
 	private final double constant; // c in aln(bx) + c
-	
-	LogarithmicPortamento(int noteMs, double x1, double y1, double x2, double y2) {
-		this.noteMs = noteMs;
+
+	LogarithmicPortamento(double x1, double y1, double x2, double y2) {
 		this.x1 = x1;
 		this.y1 = y1;
 		this.x2 = x2;
@@ -21,7 +19,7 @@ class LogarithmicPortamento extends Portamento {
 		this.xStretch = 20 / (x2 - x1);
 		this.constant = (y2 - y1) / 2;
 	}
-	
+
 	@Override
 	public double apply(int positionMs) {
 		if (positionMs < x1 || positionMs > x2) {
@@ -42,17 +40,12 @@ class LogarithmicPortamento extends Portamento {
 	}
 
 	@Override
-	int getNoteMs() {
-		return noteMs;
-	}
-
-	@Override
-	double getStartPitch() {
+	public double getStartPitch() {
 		return y1;
 	}
 
 	@Override
-	double getEndPitch() {
+	public double getEndPitch() {
 		return y2;
 	}
 }

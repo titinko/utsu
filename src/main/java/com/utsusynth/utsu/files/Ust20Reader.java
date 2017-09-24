@@ -2,6 +2,8 @@ package com.utsusynth.utsu.files;
 
 import java.util.regex.Pattern;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongNote;
 
@@ -11,17 +13,23 @@ import com.utsusynth.utsu.model.SongNote;
 public class Ust20Reader {
 	private static final Pattern HEADER_PATTERN = Pattern.compile("\\[#[A-Z0-9]+\\]");
 	private static final Pattern NOTE_PATTERN = Pattern.compile("\\[#[0-9]{4,}\\]");
+	private final Provider<Song> songProvider;
+
+	@Inject
+	public Ust20Reader(Provider<Song> songProvider) {
+		this.songProvider = songProvider;
+	}
 
 	public Song loadSong(String fileContents) {
 		String[] lines = fileContents.split("\n");
-		Song.Builder songBuilder = Song.newBuilder();
+		Song.Builder songBuilder = songProvider.get().toBuilder();
 		int curLine = 0;
 		while (curLine >= 0 && curLine < lines.length) {
 			curLine = parseSection(lines, curLine, songBuilder);
 		}
 		return songBuilder.build();
 	}
-	
+
 	private int parseSection(String[] lines, int sectionStart, Song.Builder builder) {
 		String header = lines[sectionStart].trim();
 		if (!HEADER_PATTERN.matcher(header).matches()) {
@@ -34,20 +42,20 @@ public class Ust20Reader {
 			return parseNote(lines, sectionStart + 1, builder);
 		}
 		switch (header) {
-			case "[#VERSION]":
-				return parseVersion(lines, sectionStart + 1);
-			case "[#SETTING]":
-				return parseSetting(lines, sectionStart + 1, builder);
-			case "[#TRACKEND]":
-				System.out.println("Finished parsing the track!");
-				return -1;
-		    default:
-		    	System.out.println("Unexpected header discovered.");
-		    	// Report unexpected header discovered warning.
-		    	return -1;
+		case "[#VERSION]":
+			return parseVersion(lines, sectionStart + 1);
+		case "[#SETTING]":
+			return parseSetting(lines, sectionStart + 1, builder);
+		case "[#TRACKEND]":
+			System.out.println("Finished parsing the track!");
+			return -1;
+		default:
+			System.out.println("Unexpected header discovered.");
+			// Report unexpected header discovered warning.
+			return -1;
 		}
 	}
-	
+
 	private int parseNote(String[] lines, int noteStart, Song.Builder builder) {
 		SongNote note = new SongNote();
 		for (int i = noteStart; i < lines.length; i++) {

@@ -10,12 +10,12 @@ import com.google.common.base.Optional;
 public class SongIterator implements Iterator<SongNote> {
 	private Optional<SongNode> prevNode;
 	private Optional<SongNode> curNode;
-	
+
 	SongIterator(Optional<SongNode> startNode) {
 		this.prevNode = Optional.absent();
 		this.curNode = startNode;
 	}
-	
+
 	@Override
 	public boolean hasNext() {
 		return curNode.isPresent();
@@ -40,7 +40,7 @@ public class SongIterator implements Iterator<SongNote> {
 			return Optional.of(prevNode.get().getPrev().get().getNote());
 		}
 	}
-	
+
 	/** Look at the next node without proceeding in iterator. */
 	public Optional<SongNote> peekNext() {
 		if (!curNode.isPresent()) {

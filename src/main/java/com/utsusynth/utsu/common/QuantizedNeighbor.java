@@ -8,11 +8,11 @@ public class QuantizedNeighbor {
 		this.quantizedDelta = quantizedDelta;
 		this.quantization = quantization;
 	}
-	
+
 	public int getDelta() {
 		return this.quantizedDelta;
 	}
-	
+
 	public int getQuantization() {
 		return this.quantization;
 	}

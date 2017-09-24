@@ -15,15 +15,15 @@ public class QuantizedAddResponse {
 		this.prevNote = prevNote;
 		this.nextNote = nextNote;
 	}
-	
+
 	public Optional<String> getTrueLyric() {
 		return this.trueLyric;
 	}
-	
+
 	public Optional<QuantizedNeighbor> getPrevNote() {
 		return this.prevNote;
 	}
-	
+
 	public Optional<QuantizedNeighbor> getNextNote() {
 		return this.nextNote;
 	}

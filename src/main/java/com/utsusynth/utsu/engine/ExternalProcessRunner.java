@@ -19,15 +19,16 @@ public class ExternalProcessRunner {
 			e1.printStackTrace();
 		}
 	}
-	
+
 	private void watch(final Process process) {
 		new Thread() {
 			public void run() {
-				BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				BufferedReader input = new BufferedReader(
+						new InputStreamReader(process.getInputStream()));
 				String line = null;
 				try {
 					while ((line = input.readLine()) != null) {
-					    System.out.println(line);
+						System.out.println(line);
 					}
 				} catch (IOException e) {
 					e.printStackTrace();

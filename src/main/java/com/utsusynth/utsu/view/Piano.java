@@ -9,26 +9,26 @@ import javafx.scene.layout.Pane;
 
 public class Piano {
 	private final GridPane pianoGrid;
-	
+
 	Piano() {
 		pianoGrid = new GridPane();
 		addPianoKeys();
 	}
-	
+
 	public GridPane getElement() {
 		return pianoGrid;
 	}
-	
+
 	private void addPianoKeys() {
 		int rowNum = 0;
 		for (int octave = 7; octave > 0; octave--) {
 			for (String pitch : PitchUtils.REVERSE_PITCHES) {
 				Pane leftHalfOfKey = new Pane();
-				leftHalfOfKey.getStyleClass().add(
-					pitch.endsWith("#") ? "piano-black-key" : "piano-white-key");
+				leftHalfOfKey.getStyleClass()
+						.add(pitch.endsWith("#") ? "piano-black-key" : "piano-white-key");
 				leftHalfOfKey.setPrefSize(60, 20);
 				leftHalfOfKey.getChildren().add(new Label(pitch + octave));
-				
+
 				Node rightHalfOfKey;
 				if (pitch.endsWith("#")) {
 					GridPane bisectedKey = new GridPane();
@@ -50,7 +50,7 @@ public class Piano {
 					}
 					rightHalfOfKey = blankKey;
 				}
-				
+
 				pianoGrid.addRow(rowNum, leftHalfOfKey, rightHalfOfKey);
 				rowNum++;
 			}

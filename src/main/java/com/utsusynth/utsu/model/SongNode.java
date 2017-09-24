@@ -16,22 +16,22 @@ public class SongNode {
 		this.prev = Optional.absent();
 		this.next = Optional.absent();
 	}
-	
+
 	public SongNote getNote() {
 		return this.note;
 	}
-	
+
 	public Optional<SongNode> getPrev() {
 		return this.prev;
 	}
-	
+
 	public Optional<SongNode> getNext() {
 		return this.next;
 	}
-	
-	/** 
-	 * Inserts new node directly to the right of the current one. 
-	 * Should only be used when reading song notes from a file.
+
+	/**
+	 * Inserts new node directly to the right of the current one. Should only be used when reading
+	 * song notes from a file.
 	 */
 	SongNode appendRightFromFile(SongNode appendMe) {
 		if (appendMe.note.getDelta() == -1) {
@@ -49,10 +49,9 @@ public class SongNode {
 		appendMe.prev = Optional.of(this);
 		return appendMe;
 	}
-	
+
 	/**
-	 * Inserts first note into a note list.  
-	 * Should only be used when reading song notes from a file.
+	 * Inserts first note into a note list. Should only be used when reading song notes from a file.
 	 */
 	static void appendFirstFromFile(SongNode appendMe) {
 		if (appendMe.note.getDelta() == -1) {
@@ -67,7 +66,7 @@ public class SongNode {
 			appendMe.note.setDuration(appendMe.note.getLength());
 		}
 	}
-	
+
 	Optional<SongNode> insertFirstNote(SongNote noteToInsert, int deltaToInsert) {
 		int newDelta = this.note.getDelta() - deltaToInsert;
 		this.note.setDelta(newDelta);
@@ -78,14 +77,15 @@ public class SongNode {
 		this.prev = Optional.of(nodeToInsert);
 		return Optional.of(nodeToInsert);
 	}
-		
+
 	/**
 	 * Inserts a note into the linked list.
+	 * 
 	 * @param noteToInsert
 	 * @param deltaToInsert
 	 * @param prevDelta
 	 * @return The new node that was inserted.
-	 * @throws NoteAlreadyExistsException 
+	 * @throws NoteAlreadyExistsException
 	 */
 	SongNode insertNote(SongNote noteToInsert, int deltaToInsert, int prevDelta)
 			throws NoteAlreadyExistsException {
@@ -131,7 +131,7 @@ public class SongNode {
 			return this.next.get().insertNote(noteToInsert, deltaToInsert, curDelta);
 		}
 	}
-	
+
 	Optional<SongNode> removeFirstNote() {
 		if (this.next.isPresent()) {
 			SongNode nextNode = this.next.get();
@@ -141,9 +141,10 @@ public class SongNode {
 		}
 		return Optional.absent();
 	}
-	
+
 	/**
 	 * Removes a note from the linked list.
+	 * 
 	 * @param deltaToRemove
 	 * @param prevDelta
 	 * @return true if the deletion was successful, false otherwise

@@ -4,26 +4,33 @@ import java.util.HashMap;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.utsusynth.utsu.model.pitch.portamento.Portamento;
+import com.utsusynth.utsu.model.pitch.portamento.PortamentoFactory;
 
-/** 
- * Stores up to one pitchbend for each "pitch step" in a song.  There are always 96 pitch steps
- * per beat, regardless of tempo.
+/**
+ * Stores up to one pitchbend for each "pitch step" in a song. There are always 96 pitch steps per
+ * beat, regardless of tempo.
  */
 public class PitchCurve {
 	// Map of pitch step number to attached pitchbend, if any.
 	// TODO: Limit the minimum and maximum x-values of portamento/vibrato.
 	private final HashMap<Integer, Pitchbend> pitchbends;
 	private final PortamentoFactory portamentoFactory;
-	
+
 	// TODO: Put this in a provider.
-	public PitchCurve() {
+	@Inject
+	public PitchCurve(PortamentoFactory portamentoFactory) {
 		this.pitchbends = new HashMap<Integer, Pitchbend>();
 		this.portamentoFactory = new PortamentoFactory();
 	}
-	
+
 	/** Adds pitchbends for a single note. */
 	public void addPitchbends(
-			int noteStartMs, PitchbendData data, int prevNoteNum, int curNoteNum) {
+			int noteStartMs,
+			PitchbendData data,
+			int prevNoteNum,
+			int curNoteNum) {
 		if (data.getPBS().isEmpty() || data.getPBW().isEmpty()) {
 			// TODO: Handle this.
 			return;
@@ -34,7 +41,7 @@ public class PitchCurve {
 		ImmutableList<Double> pbw = data.getPBW();
 		ImmutableList<Double> pby = data.getPBY();
 		ImmutableList<String> pbm = data.getPBM();
-		
+
 		// Parse each pitchbend from provided values.
 		for (int i = 0; i < data.getPBW().size(); i++) {
 			double endMs = startMs + pbw.get(i);
@@ -46,9 +53,9 @@ public class PitchCurve {
 			if (pbm.size() >= i + 1) {
 				pitchShape = pbm.get(i);
 			}
-			Portamento portamento = portamentoFactory.makePortamento(
-					noteStartMs, startMs, pitchStart, endMs, pitchEnd, pitchShape);
-			
+			Portamento portamento = portamentoFactory.makePortamento(startMs, pitchStart, endMs,
+					pitchEnd, pitchShape);
+
 			// Add portamento to all affected steps on the pitch curve.
 			for (int j = nextPitchStep(startMs); j <= prevPitchStep(endMs); j++) {
 				if (pitchbends.containsKey(j)) {
@@ -62,7 +69,7 @@ public class PitchCurve {
 			pitchStart = pitchEnd;
 		}
 	}
-	
+
 	/** Removes pitchbends for a single note. */
 	public void removePitchbends(int noteStartMs, PitchbendData data) {
 		if (data.getPBS().isEmpty() || data.getPBW().isEmpty()) {
@@ -85,7 +92,7 @@ public class PitchCurve {
 			}
 		}
 	}
-	
+
 	/** Writes out pitchbends for a section into a format readable by resamplers. */
 	public String renderPitchbends(int firstStep, int lastStep, int noteNum) {
 		String result = "";
@@ -101,7 +108,7 @@ public class PitchCurve {
 				}
 			}
 		}
-		
+
 		for (int step = firstStep; step <= lastStep; step++) {
 			if (pitchbends.containsKey(step)) {
 				// Write pitchbend.
@@ -109,7 +116,7 @@ public class PitchCurve {
 				double realPitch = pitchbends.get(step).apply(positionMs); // In tenths.
 				int diff = (int) ((realPitch - noteNumPitch) * 10); // In cents.
 				result += convertTo12Bit(diff);
-				
+
 				// Set the default pitch to the one at the end of current portamento.
 				Optional<Portamento> portamento = pitchbends.get(step).getPortamento();
 				if (portamento.isPresent()) {
@@ -136,11 +143,12 @@ public class PitchCurve {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * For some reason, resamplers want two characters that represent a 12-bit number in
-	 * two's complement form (-2048 to 2047). I would not be using this format if existing
-	 * resamplers didn't require it.
+	 * For some reason, resamplers want two characters that represent a 12-bit number in two's
+	 * complement form (-2048 to 2047). I would not be using this format if existing resamplers
+	 * didn't require it.
+	 * 
 	 * @return A string of length 2 representing a 12-bit number.
 	 */
 	private static String convertTo12Bit(int convertMe) {
@@ -172,12 +180,12 @@ public class PitchCurve {
 		}
 		return result;
 	}
-	
+
 	// Finds the pitch step just after this position.
 	private static int nextPitchStep(double positionMs) {
 		return ((int) Math.ceil(positionMs / 5.0));
 	}
-	
+
 	// Returns the pitch step just before this position.
 	private static int prevPitchStep(double positionMs) {
 		int prevStep = ((int) Math.floor(positionMs / 5.0));

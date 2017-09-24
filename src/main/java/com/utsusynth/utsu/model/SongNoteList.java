@@ -8,17 +8,19 @@ import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
  */
 public class SongNoteList implements Iterable<SongNote> {
 	private Optional<SongNode> head;
-	
+
 	public class Builder {
 		private SongNoteList noteList;
 		private Optional<SongNode> tail;
 		private int totalDelta;
+
 		private Builder(SongNoteList noteList) {
 			this.noteList = noteList;
 			this.noteList.head = Optional.absent();
 			this.tail = Optional.absent();
 			this.totalDelta = 0;
 		}
+
 		public Builder appendNote(SongNote note) {
 			SongNode newNode = new SongNode(note);
 			if (!noteList.head.isPresent()) {
@@ -39,6 +41,7 @@ public class SongNoteList implements Iterable<SongNote> {
 			totalDelta += note.getDelta();
 			return this;
 		}
+
 		public Builder appendRestNote(SongNote note) {
 			SongNode newNode = new SongNode(note);
 			if (!noteList.head.isPresent()) {
@@ -54,25 +57,30 @@ public class SongNoteList implements Iterable<SongNote> {
 			totalDelta += note.getDelta();
 			return this;
 		}
+
 		public Optional<SongNote> getLatestNote() {
 			return tail.isPresent() ? Optional.of(tail.get().getNote()) : Optional.absent();
 		}
+
 		public int getLatestDelta() {
 			return totalDelta;
 		}
+
 		public SongNoteList build() {
 			return noteList;
 		}
 	}
-	
+
 	static Builder newBuilder() {
 		return new SongNoteList().toBuilder();
 	}
 
-	private SongNoteList() {}
-	
+	private SongNoteList() {
+	}
+
 	/**
 	 * Adds a note to the note list.
+	 * 
 	 * @param noteToInsert
 	 * @param deltaToInsert
 	 * @return The node that was added.
@@ -91,9 +99,10 @@ public class SongNoteList implements Iterable<SongNote> {
 			return this.head.get().insertNote(noteToInsert, deltaToInsert, 0);
 		}
 	}
-	
+
 	/**
 	 * Removes a note from the note list.
+	 * 
 	 * @param deltaToRemove
 	 * @return The node that was removed.
 	 */
@@ -109,7 +118,7 @@ public class SongNoteList implements Iterable<SongNote> {
 			return head.get().removeNote(deltaToRemove, 0);
 		}
 	}
-	
+
 	private Builder toBuilder() {
 		return new Builder(this);
 	}
