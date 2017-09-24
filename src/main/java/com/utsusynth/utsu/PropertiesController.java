@@ -17,6 +17,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.FileChooser.ExtensionFilter;
 
@@ -156,19 +157,16 @@ public class PropertiesController implements Localizable {
     			new ExtensionFilter("All Files", "*.*"));
     	File file = fc.showOpenDialog(null);
     	if (file != null) {
-    		resamplerPath = file.getAbsolutePath();
-    		resamplerName.setText(getName(resamplerPath));
+    		wavtoolPath = file.getAbsolutePath();
+    		wavtoolName.setText(getName(wavtoolPath));
     	}
 	}
 	
 	@FXML
 	void changeVoicebank(ActionEvent event) {
-		FileChooser fc = new FileChooser();
-    	fc.setTitle("Select UST File");
-    	fc.getExtensionFilters().addAll(
-    			new ExtensionFilter("UTAU files", "*.utau"),
-    			new ExtensionFilter("All files", "*.*"));
-    	File file = fc.showOpenDialog(null);
+		DirectoryChooser fc = new DirectoryChooser();
+    	fc.setTitle("Select Voicebank Folder");
+    	File file = fc.showDialog(null);
     	if (file != null) {
     		voicebank = Voicebank.loadFromDirectory(file.getAbsolutePath());
     		voicebankName.setText(voicebank.getName());
