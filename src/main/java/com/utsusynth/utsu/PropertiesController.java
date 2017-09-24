@@ -154,8 +154,8 @@ public class PropertiesController implements Localizable {
 				new ExtensionFilter("All Files", "*.*"));
 		File file = fc.showOpenDialog(null);
 		if (file != null) {
-			resamplerPath = file.getAbsolutePath();
-			resamplerName.setText(getName(resamplerPath));
+			wavtoolPath = file.getAbsolutePath();
+			wavtoolName.setText(getName(wavtoolPath));
 		}
 	}
 
