@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 
 /**
- * Implementation of a linked list of SongNotes.
+ * Node of a linked list of SongNotes.
  */
 public class SongNode {
 	private SongNote note;

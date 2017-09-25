@@ -15,6 +15,8 @@ import com.utsusynth.utsu.engine.Resampler;
 import com.utsusynth.utsu.engine.Wavtool;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongManager;
+import com.utsusynth.utsu.model.SongNoteList;
+import com.utsusynth.utsu.model.pitch.PitchCurve;
 import com.utsusynth.utsu.model.pitch.portamento.PortamentoFactory;
 
 import javafx.fxml.FXMLLoader;
@@ -37,8 +39,8 @@ public class UtsuModule extends AbstractModule {
 	}
 
 	@Provides
-	private Song provideSong(PortamentoFactory portamentoFactory) {
-		return new Song(portamentoFactory);
+	private Song provideSong(SongNoteList noteList, PitchCurve pitchCurve) {
+		return new Song(noteList, pitchCurve);
 	}
 
 	@Provides

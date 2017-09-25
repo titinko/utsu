@@ -3,6 +3,10 @@ package com.utsusynth.utsu.model;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.model.pitch.PitchbendData;
 
+/**
+ * Represents one note in a song. This is primarily a data storage class, so it can be instantiated
+ * directly and not injected.
+ */
 public class SongNote {
 	private int delta; // In ms, corresponds with 125 bpm tempo.
 	private int duration; // In ms, corresponds with 125 bpm tempo.

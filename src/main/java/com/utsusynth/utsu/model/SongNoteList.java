@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 
 /**
- * Implementation of a linked list of SongNotes.
+ * Implementation of a linked list of SongNotes, including head.
  */
 public class SongNoteList implements Iterable<SongNote> {
 	private Optional<SongNode> head;
@@ -16,9 +16,19 @@ public class SongNoteList implements Iterable<SongNote> {
 
 		private Builder(SongNoteList noteList) {
 			this.noteList = noteList;
-			this.noteList.head = Optional.absent();
 			this.tail = Optional.absent();
 			this.totalDelta = 0;
+		}
+
+		private Builder setHead(Optional<SongNode> newHead) {
+			noteList.head = newHead;
+			if (newHead.isPresent()) {
+				tail = newHead;
+				while (tail.get().getNext().isPresent()) {
+					tail = tail.get().getNext();
+				}
+			}
+			return this;
 		}
 
 		public Builder appendNote(SongNote note) {
@@ -71,11 +81,8 @@ public class SongNoteList implements Iterable<SongNote> {
 		}
 	}
 
-	static Builder newBuilder() {
-		return new SongNoteList().toBuilder();
-	}
-
-	private SongNoteList() {
+	public SongNoteList() {
+		this.head = Optional.absent();
 	}
 
 	/**
@@ -119,8 +126,9 @@ public class SongNoteList implements Iterable<SongNote> {
 		}
 	}
 
-	private Builder toBuilder() {
-		return new Builder(this);
+	Builder toBuilder() {
+		// Creates a new SongNoteList but reuses existing SongNodes.
+		return new Builder(new SongNoteList()).setHead(this.head);
 	}
 
 	@Override

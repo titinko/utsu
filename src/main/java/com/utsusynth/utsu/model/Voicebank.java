@@ -39,8 +39,9 @@ public class Voicebank {
 		if (sourceDir.isEmpty()) {
 			voicebank.pathToVoicebank = DEFAULT_PATH;
 		} else {
-			sourceDir = sourceDir.replaceFirst("\\$\\{DEFAULT\\}", DEFAULT_PATH)
-					.replaceFirst("\\$\\{HOME\\}", System.getProperty("user.home"));
+			sourceDir = sourceDir.replaceFirst("\\$\\{DEFAULT\\}", DEFAULT_PATH).replaceFirst(
+					"\\$\\{HOME\\}",
+					System.getProperty("user.home"));
 			if (sourceDir.endsWith("//")) {
 				voicebank.pathToVoicebank = sourceDir.substring(0, sourceDir.length() - 1);
 			} else if (sourceDir.endsWith("/")) {
@@ -87,9 +88,13 @@ public class Voicebank {
 					System.out.println("Received unexpected results while parsing oto.ini");
 					continue;
 				}
-				lyricConfigs.put(lyricName,
-						new LyricConfig(pathToVoicebank + fileName, fileName
-								.substring(fileName.lastIndexOf("/") + 1, fileName.indexOf('.')),
+				lyricConfigs.put(
+						lyricName,
+						new LyricConfig(
+								pathToVoicebank + fileName,
+								fileName.substring(
+										fileName.lastIndexOf("/") + 1,
+										fileName.indexOf('.')),
 								configValues));
 			}
 		}
@@ -104,9 +109,11 @@ public class Voicebank {
 		}
 		try {
 			String charset = "UTF-8";
-			CharsetDecoder utf8Decoder =
-					Charset.forName("UTF-8").newDecoder().onMalformedInput(CodingErrorAction.REPORT)
-							.onUnmappableCharacter(CodingErrorAction.REPORT);
+			CharsetDecoder utf8Decoder = Charset
+					.forName("UTF-8")
+					.newDecoder()
+					.onMalformedInput(CodingErrorAction.REPORT)
+					.onUnmappableCharacter(CodingErrorAction.REPORT);
 			try {
 				utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
 			} catch (MalformedInputException | UnmappableCharacterException e) {
@@ -140,6 +147,10 @@ public class Voicebank {
 
 	public String getImagePath() {
 		return pathToVoicebank + imageName;
+	}
+
+	public String getPathToVoicebank() {
+		return pathToVoicebank;
 	}
 
 	@Override

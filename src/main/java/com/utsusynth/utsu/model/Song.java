@@ -11,7 +11,6 @@ import com.utsusynth.utsu.common.QuantizedNeighbor;
 import com.utsusynth.utsu.common.QuantizedNote;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.model.pitch.PitchCurve;
-import com.utsusynth.utsu.model.pitch.portamento.PortamentoFactory;
 
 /**
  * In-code representation of a song. Compatible with UST versions 1.2 and 2.0.
@@ -41,7 +40,7 @@ public class Song {
 
 		private Builder(Song newSong) {
 			this.newSong = newSong;
-			this.noteListBuilder = SongNoteList.newBuilder();
+			this.noteListBuilder = newSong.noteList.toBuilder();
 		}
 
 		public Builder setTempo(double tempo) {
@@ -64,11 +63,6 @@ public class Song {
 			return this;
 		}
 
-		public Builder setVoicebank(Voicebank voicebank) {
-			newSong.voicebank = voicebank;
-			return this;
-		}
-
 		public Builder setFlags(String flags) {
 			newSong.flags = flags;
 			return this;
@@ -86,7 +80,9 @@ public class Song {
 			noteListBuilder.appendNote(note);
 
 			// Add pitchbends for this note.
-			newSong.pitchbends.addPitchbends(noteListBuilder.getLatestDelta(), note.getPitchbends(),
+			newSong.pitchbends.addPitchbends(
+					noteListBuilder.getLatestDelta(),
+					note.getPitchbends(),
 					prevNote.isPresent() ? prevNote.get().getNoteNum() : note.getNoteNum(),
 					note.getNoteNum());
 			return this;
@@ -98,17 +94,15 @@ public class Song {
 		}
 
 		public Song build() {
-			newSong.voicebank = Voicebank.loadFromDirectory(voiceDirectory);
-			if (newSong.noteList == null) {
-				newSong.noteList = noteListBuilder.build();
-			}
+			newSong.voicebank = Voicebank.loadFromDirectory(newSong.voiceDirectory);
+			newSong.noteList = noteListBuilder.build();
 			return newSong;
 		}
 	}
 
-	public Song(PortamentoFactory portamentoFactory) {
-		this.noteList = SongNoteList.newBuilder().build();
-		this.pitchbends = new PitchCurve(portamentoFactory);
+	public Song(SongNoteList songNoteList, PitchCurve pitchbends) {
+		this.noteList = songNoteList;
+		this.pitchbends = pitchbends;
 		this.voiceDirectory = "${DEFAULT}";
 		this.voicebank = Voicebank.loadFromDirectory(this.voiceDirectory);
 		this.tempo = 125.0;
@@ -117,7 +111,15 @@ public class Song {
 	}
 
 	public Builder toBuilder() {
-		return new Builder(this);
+		// Returns the builder of a new Song with this one's attributes.
+		// The old Song's noteList and pitchbends objects are used in the new Song.
+		return new Builder(new Song(this.noteList, this.pitchbends))
+				.setTempo(this.tempo)
+				.setProjectName(this.projectName)
+				.setOutputFile(this.outputFile)
+				.setVoiceDirectory(this.voiceDirectory)
+				.setFlags(this.flags)
+				.setMode2(this.mode2);
 	}
 
 	/**
@@ -159,7 +161,10 @@ public class Song {
 			SongNote nextSongNote = insertedNode.getNext().get().getNote();
 			int nextStart = positionMs + note.getLength();
 			pitchbends.removePitchbends(nextStart, nextSongNote.getPitchbends());
-			pitchbends.addPitchbends(nextStart, nextSongNote.getPitchbends(), note.getNoteNum(),
+			pitchbends.addPitchbends(
+					nextStart,
+					nextSongNote.getPitchbends(),
+					note.getNoteNum(),
 					nextSongNote.getNoteNum());
 		}
 
@@ -184,8 +189,8 @@ public class Song {
 		// Add this note's pitchbends.
 		int prevNoteNum = insertedNode.getPrev().isPresent()
 				? insertedNode.getPrev().get().getNote().getNoteNum() : note.getNoteNum();
-		this.pitchbends.addPitchbends(positionMs, note.getPitchbends(), prevNoteNum,
-				note.getNoteNum());
+		this.pitchbends
+				.addPitchbends(positionMs, note.getPitchbends(), prevNoteNum, note.getNoteNum());
 
 		return new QuantizedAddResponse(trueLyric, prevNote, nextNote);
 	}
@@ -199,7 +204,8 @@ public class Song {
 			prevNote = Optional.of(new QuantizedNeighbor(quantizedDelta, 32));
 
 			// Adjust envelope of adjacent previous node, if present.
-			if (removedNode.getPrev().get().getNote().getDuration() == removedNode.getNote()
+			if (removedNode.getPrev().get().getNote().getDuration() == removedNode
+					.getNote()
 					.getDelta()) {
 				removedNode.getPrev().get().getNote().setFadeOut(35); // Default fade out.
 			}
@@ -216,7 +222,10 @@ public class Song {
 					? removedNode.getPrev().get().getNote().getNoteNum()
 					: nextSongNote.getNoteNum();
 			pitchbends.removePitchbends(nextStart, nextSongNote.getPitchbends());
-			pitchbends.addPitchbends(nextStart, nextSongNote.getPitchbends(), prevNoteNum,
+			pitchbends.addPitchbends(
+					nextStart,
+					nextSongNote.getPitchbends(),
+					prevNoteNum,
 					nextSongNote.getNoteNum());
 		}
 
@@ -237,9 +246,12 @@ public class Song {
 			Optional<LyricConfig> lyricConfig = voicebank.getLyricConfig(note.getLyric());
 			Optional<String> trueLyric = lyricConfig.isPresent()
 					? Optional.of(lyricConfig.get().getTrueLyric()) : Optional.absent();
-			notes.add(new QuantizedAddRequest(
-					new QuantizedNote(totalQuantizedDelta, quantizedDuration, 32),
-					PitchUtils.noteNumToPitch(note.getNoteNum()), note.getLyric(), trueLyric));
+			notes.add(
+					new QuantizedAddRequest(
+							new QuantizedNote(totalQuantizedDelta, quantizedDuration, 32),
+							PitchUtils.noteNumToPitch(note.getNoteNum()),
+							note.getLyric(),
+							trueLyric));
 		}
 		return notes;
 	}

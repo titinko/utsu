@@ -135,7 +135,8 @@ public class PropertiesController implements Localizable {
 	void changeResampler(ActionEvent event) {
 		FileChooser fc = new FileChooser();
 		fc.setTitle("Select executable file");
-		fc.getExtensionFilters().addAll(new ExtensionFilter("Executables", "*", "*.exe"),
+		fc.getExtensionFilters().addAll(
+				new ExtensionFilter("Executables", "*", "*.exe"),
 				new ExtensionFilter("OSX Executables", "*.out", "*.app"),
 				new ExtensionFilter("All Files", "*.*"));
 		File file = fc.showOpenDialog(null);
@@ -149,7 +150,8 @@ public class PropertiesController implements Localizable {
 	void changeWavtool(ActionEvent event) {
 		FileChooser fc = new FileChooser();
 		fc.setTitle("Select executable file");
-		fc.getExtensionFilters().addAll(new ExtensionFilter("Executables", "*", "*.exe"),
+		fc.getExtensionFilters().addAll(
+				new ExtensionFilter("Executables", "*", "*.exe"),
 				new ExtensionFilter("OSX Executables", "*.out", "*.app"),
 				new ExtensionFilter("All Files", "*.*"));
 		File file = fc.showOpenDialog(null);
@@ -163,7 +165,8 @@ public class PropertiesController implements Localizable {
 	void changeVoicebank(ActionEvent event) {
 		FileChooser fc = new FileChooser();
 		fc.setTitle("Select UST File");
-		fc.getExtensionFilters().addAll(new ExtensionFilter("UTAU files", "*.utau"),
+		fc.getExtensionFilters().addAll(
+				new ExtensionFilter("UTAU files", "*.utau"),
 				new ExtensionFilter("All files", "*.*"));
 		File file = fc.showOpenDialog(null);
 		if (file != null) {
@@ -174,10 +177,16 @@ public class PropertiesController implements Localizable {
 
 	@FXML
 	void applyProperties(ActionEvent event) {
-		songManager.setSong(songManager.getSong().toBuilder()
-				.setProjectName(projectNameTF.getText()).setOutputFile(outputFileTF.getText())
-				.setFlags(flagsTF.getText()).setVoicebank(voicebank)
-				.setTempo((int) Math.round(tempoSlider.getValue())).build());
+		songManager.setSong(
+				songManager
+						.getSong()
+						.toBuilder()
+						.setProjectName(projectNameTF.getText())
+						.setOutputFile(outputFileTF.getText())
+						.setFlags(flagsTF.getText())
+						.setVoiceDirectory(voicebank.getPathToVoicebank())
+						.setTempo((int) Math.round(tempoSlider.getValue()))
+						.build());
 		engine.setResamplerPath(resamplerPath);
 		engine.setWavtoolPath(wavtoolPath);
 		Stage currentStage = (Stage) root.getScene().getWindow();
