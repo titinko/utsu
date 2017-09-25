@@ -7,11 +7,36 @@
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
+        <!-- The main app. -->
+        <fileSet>
+            <directory>${project.build.directory}/jfx/app/</directory>
+            <outputDirectory>/utsu/</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+        <!-- Jar Dependencies. -->
+        <fileSet>
+            <directory>${project.build.directory}/jfx/app/lib/</directory>
+            <outputDirectory>/utsu/lib/</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+        <!-- The Windows Executable. -->
         <fileSet>
             <directory>${project.build.directory}</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>/utsu/</outputDirectory>
             <includes>
                 <include>*.exe</include>
+            </includes>
+        </fileSet>
+        <!-- Bundled assets, for testing (voicebank, wavtool, resampler). -->
+        <fileSet>
+            <directory>${project.build.directory}/assets/</directory>
+            <outputDirectory>/utsu/assets/</outputDirectory>
+            <includes>
+                <include>**</include>
             </includes>
         </fileSet>
     </fileSets>
