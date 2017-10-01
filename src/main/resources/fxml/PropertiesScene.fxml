@@ -6,34 +6,12 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 
 <BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="384.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.PropertiesController">
-   <center>
-      <AnchorPane prefHeight="400.0" prefWidth="346.0" BorderPane.alignment="CENTER">
-         <children>
-            <Slider fx:id="tempoSlider" blockIncrement="1.0" layoutX="122.0" layoutY="322.0" max="250.0" min="50.0" minorTickCount="25" snapToTicks="true" value="125.0" />
-            <Label fx:id="curTempo" layoutX="314.0" layoutY="322.0" text="125" />
-            <Label fx:id="tempoLabel" layoutX="38.0" layoutY="322.0" text="Tempo" />
-            <Label fx:id="voicebankLabel" layoutX="27.0" layoutY="273.0" text="Voicebank" />
-            <Button layoutX="288.0" layoutY="268.0" mnemonicParsing="false" onAction="#changeVoicebank" text="Change..." />
-            <TextField fx:id="voicebankName" editable="false" layoutX="108.0" layoutY="268.0" />
-            <Label fx:id="wavtoolLabel" layoutX="34.0" layoutY="227.0" text="Wavtool" />
-            <TextField fx:id="wavtoolName" editable="false" layoutX="108.0" layoutY="222.0" />
-            <Button layoutX="286.0" layoutY="222.0" mnemonicParsing="false" onAction="#changeWavtool" text="Change..." />
-            <Label fx:id="resamplerLabel" layoutX="27.0" layoutY="181.0" text="Resampler" />
-            <TextField fx:id="resamplerName" editable="false" layoutX="108.0" layoutY="176.0" />
-            <Button layoutX="286.0" layoutY="176.0" mnemonicParsing="false" onAction="#changeResampler" text="Change..." />
-            <Label fx:id="flagsLabel" layoutX="38.0" layoutY="134.0" text="Flags" />
-            <TextField fx:id="flagsTF" layoutX="108.0" layoutY="130.0" />
-            <Label fx:id="outputFileLabel" layoutX="26.0" layoutY="88.0" text="Output File" />
-            <TextField fx:id="outputFileTF" layoutX="108.0" layoutY="83.0" />
-            <TextField fx:id="projectNameTF" layoutX="108.0" layoutY="37.0" />
-            <Label fx:id="projectNameLabel" layoutX="19.0" layoutY="42.0" text="Project Name" />
-         </children>
-      </AnchorPane>
-   </center>
    <bottom>
       <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
         <buttons>
@@ -45,4 +23,48 @@
          </BorderPane.margin>
       </ButtonBar>
    </bottom>
+   <center>
+      <GridPane BorderPane.alignment="CENTER">
+        <columnConstraints>
+          <ColumnConstraints hgrow="ALWAYS" minWidth="-Infinity" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="-Infinity" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="-Infinity" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="-Infinity" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="-Infinity" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <Slider fx:id="tempoSlider" blockIncrement="1.0" max="250.0" min="50.0" minorTickCount="25" snapToTicks="true" value="125.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+            <Label fx:id="projectNameLabel" text="Project Name" GridPane.halignment="CENTER" />
+            <Label fx:id="outputFileLabel" text="Output File" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+            <Label fx:id="flagsLabel" text="Flags" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+            <Label fx:id="resamplerLabel" text="Resampler" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+            <Label fx:id="wavtoolLabel" text="Wavtool" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+            <Label fx:id="voicebankLabel" text="Voicebank" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
+            <Label fx:id="tempoLabel" text="Tempo" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+            <TextField fx:id="projectNameTF" GridPane.columnIndex="1" />
+            <TextField fx:id="outputFileTF" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <TextField fx:id="flagsTF" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <TextField fx:id="resamplerName" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <TextField fx:id="wavtoolName" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <TextField fx:id="voicebankName" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+            <Label fx:id="curTempo" text="125" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+            <Button mnemonicParsing="false" onAction="#changeWavtool" text="Change..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+            <Button mnemonicParsing="false" onAction="#changeResampler" text="Change..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+            <Button mnemonicParsing="false" onAction="#changeVoicebank" text="Change..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
+         </children>
+         <padding>
+            <Insets top="5.0" />
+         </padding>
+         <BorderPane.margin>
+            <Insets top="5.0" />
+         </BorderPane.margin>
+      </GridPane>
+   </center>
 </BorderPane>
