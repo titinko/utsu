@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.model;
+package com.utsusynth.utsu.model.voicebank;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,64 +15,56 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 
-import com.google.common.base.Optional;
-
-/**
- * In-code representation of a voice bank. Compatible with oto.ini files. TODO: Support oto_ini.txt
- * as well
- */
-public class Voicebank {
+public class VoicebankReader {
 	private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
 
 	// TODO: Replace with actual default.
 	private static final String DEFAULT_PATH =
 			"/Users/emmabreen/Library/UTAU/voice/Japanese/IONA TestDrive2.utau/";
 
-	private String pathToVoicebank; // Example: "/Library/Iona.utau/"
-	private String name; // Example: "Iona"
-	private String imageName; // Example: "img.bmp"
-	private Map<String, LyricConfig> lyricConfigs;
-
-	public static Voicebank loadFromDirectory(String sourceDir) {
-		Voicebank voicebank = new Voicebank();
+	public Voicebank loadFromDirectory(String sourceDir) {
+		String pathToVoicebank;
+		String name = "";
+		String imageName = "";
+		Map<String, LyricConfig> lyricConfigs = new HashMap<>();
 
 		if (sourceDir.isEmpty()) {
-			voicebank.pathToVoicebank = DEFAULT_PATH;
+			pathToVoicebank = DEFAULT_PATH;
 		} else {
 			sourceDir = sourceDir.replaceFirst("\\$\\{DEFAULT\\}", DEFAULT_PATH).replaceFirst(
 					"\\$\\{HOME\\}",
 					System.getProperty("user.home"));
 			if (sourceDir.endsWith("//")) {
-				voicebank.pathToVoicebank = sourceDir.substring(0, sourceDir.length() - 1);
+				pathToVoicebank = sourceDir.substring(0, sourceDir.length() - 1);
 			} else if (sourceDir.endsWith("/")) {
-				voicebank.pathToVoicebank = sourceDir;
+				pathToVoicebank = sourceDir;
 			} else {
-				voicebank.pathToVoicebank = sourceDir + "/";
+				pathToVoicebank = sourceDir + "/";
 			}
-			if (!(new File(voicebank.pathToVoicebank).isDirectory())) {
-				voicebank.pathToVoicebank = DEFAULT_PATH;
+			if (!(new File(pathToVoicebank).isDirectory())) {
+				pathToVoicebank = DEFAULT_PATH;
 			}
 		}
-		System.out.println("Parsed voicebank as " + voicebank.pathToVoicebank);
+		System.out.println("Parsed voicebank as " + pathToVoicebank);
 
 		// Parse character data.
-		String characterData = readConfigFile(voicebank.pathToVoicebank, "character.txt");
+		String characterData = readConfigFile(pathToVoicebank, "character.txt");
 		for (String rawLine : characterData.split("\n")) {
 			String line = rawLine.trim();
 			if (line.startsWith("name=")) {
-				voicebank.name = line.substring("name=".length());
+				name = line.substring("name=".length());
 			} else if (line.startsWith("image=")) {
-				voicebank.imageName = line.substring("image=".length());
+				imageName = line.substring("image=".length());
 			}
 		}
 
 		// Parse oto_ini.txt and oto.ini, with oto.ini overriding oto_ini.txt.
-		parseOtoIni(voicebank.pathToVoicebank, "oto_ini.txt", voicebank.lyricConfigs);
-		parseOtoIni(voicebank.pathToVoicebank, "oto.ini", voicebank.lyricConfigs);
-		return voicebank;
+		parseOtoIni(pathToVoicebank, "oto_ini.txt", lyricConfigs);
+		parseOtoIni(pathToVoicebank, "oto.ini", lyricConfigs);
+		return new Voicebank(pathToVoicebank, name, imageName, lyricConfigs);
 	}
 
-	private static void parseOtoIni(
+	private void parseOtoIni(
 			String pathToVoicebank,
 			String otoFile,
 			Map<String, LyricConfig> lyricConfigs) {
@@ -100,7 +92,7 @@ public class Voicebank {
 		}
 	}
 
-	private static String readConfigFile(String path, String fileName) {
+	private String readConfigFile(String path, String fileName) {
 		File file = new File(path + fileName);
 		if (!file.canRead()) {
 			// This is often okay.
@@ -125,41 +117,5 @@ public class Voicebank {
 			e.printStackTrace();
 		}
 		return "";
-	}
-
-	private Voicebank() {
-		// Set defaults for name, image path.
-		this.name = "";
-		this.imageName = "";
-		this.lyricConfigs = new HashMap<>();
-	}
-
-	public Optional<LyricConfig> getLyricConfig(String lyric) {
-		if (lyricConfigs.keySet().contains(lyric)) {
-			return Optional.of(lyricConfigs.get(lyric));
-		}
-		return Optional.absent();
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String getImagePath() {
-		return pathToVoicebank + imageName;
-	}
-
-	public String getPathToVoicebank() {
-		return pathToVoicebank;
-	}
-
-	@Override
-	public String toString() {
-		// Crappy string representation of a Voicebank object.
-		String result = "";
-		for (String lyric : lyricConfigs.keySet()) {
-			result += lyric + " = " + lyricConfigs.get(lyric) + "\n";
-		}
-		return result + " " + pathToVoicebank + " " + name + " " + imageName;
 	}
 }

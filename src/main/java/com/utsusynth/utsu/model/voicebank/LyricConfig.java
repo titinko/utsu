@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.model;
+package com.utsusynth.utsu.model.voicebank;
 
 /**
  * Internal representation of the configuration of a single lyric in a voicebank. Parsed from an

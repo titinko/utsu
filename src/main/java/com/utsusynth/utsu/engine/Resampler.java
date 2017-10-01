@@ -4,9 +4,9 @@ import java.io.File;
 
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.PitchUtils;
-import com.utsusynth.utsu.model.LyricConfig;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongNote;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Resampler {
 	private static final String SILENCE_PATH = "/Users/emmabreen/Desktop/silence.wav";
@@ -40,15 +40,38 @@ public class Resampler {
 		String tempo = "!" + Double.toString(song.getTempo()); // TODO: Override with note tempo.
 
 		// Call resampler.
-		runner.runProcess(resamplerPath, inputFilePath, outputFilePath, pitch, consonantVelocity,
-				flags, offset, Double.toString(scaledLength), consonantLength, cutoff, intensity,
-				modulation, tempo, pitchString);
+		runner.runProcess(
+				resamplerPath,
+				inputFilePath,
+				outputFilePath,
+				pitch,
+				consonantVelocity,
+				flags,
+				offset,
+				Double.toString(scaledLength),
+				consonantLength,
+				cutoff,
+				intensity,
+				modulation,
+				tempo,
+				pitchString);
 	}
 
 	void resampleSilence(String resamplerPath, File outputFile, double duration) {
 		String outputFilePath = outputFile.getAbsolutePath();
 		String desiredLength = Double.toString(duration + 1);
-		runner.runProcess(resamplerPath, SILENCE_PATH, outputFilePath, "C4", "100", "", "0",
-				desiredLength, "0", "0", "100", "0");
+		runner.runProcess(
+				resamplerPath,
+				SILENCE_PATH,
+				outputFilePath,
+				"C4",
+				"100",
+				"",
+				"0",
+				desiredLength,
+				"0",
+				"0",
+				"100",
+				"0");
 	}
 }

@@ -13,11 +13,11 @@ import org.apache.commons.io.FileUtils;
 
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
-import com.utsusynth.utsu.model.LyricConfig;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongIterator;
 import com.utsusynth.utsu.model.SongNote;
-import com.utsusynth.utsu.model.Voicebank;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
+import com.utsusynth.utsu.model.voicebank.Voicebank;
 
 public class Engine {
 	private final Resampler resampler;
@@ -88,7 +88,10 @@ public class Engine {
 			if (!config.isPresent()) {
 				System.out.println("Could not find config for lyric: " + note.getLyric());
 				if (nextPreutter.isPresent()) {
-					addSilence(note.getLength() - nextPreutter.get(), song, renderedNote,
+					addSilence(
+							note.getLength() - nextPreutter.get(),
+							song,
+							renderedNote,
 							finalSong);
 				} else {
 					addSilence(note.getLength(), song, renderedNote, finalSong);
@@ -99,8 +102,8 @@ public class Engine {
 
 			// Adjust note length based on preutterance/overlap.
 			// TODO: Scale by tempo before calculating this?
-			double adjustedLength = getAdjustedLength(voicebank, note, config.get(),
-					notes.peekNext());
+			double adjustedLength =
+					getAdjustedLength(voicebank, note, config.get(), notes.peekNext());
 			System.out.println("Length is " + adjustedLength);
 
 			// Calculate pitchbends.
@@ -109,11 +112,23 @@ public class Engine {
 			String pitchString = song.getPitchString(firstStep, lastStep, note.getNoteNum());
 
 			// Re-samples lyric and puts result into renderedNote file.
-			resampler.resample(resamplerPath, note, adjustedLength, config.get(), renderedNote,
-					pitchString, song);
+			resampler.resample(
+					resamplerPath,
+					note,
+					adjustedLength,
+					config.get(),
+					renderedNote,
+					pitchString,
+					song);
 
 			// Append rendered note to the output file using wavtool.
-			wavtool.addNewNote(wavtoolPath, song, note, adjustedLength, config.get(), renderedNote,
+			wavtool.addNewNote(
+					wavtoolPath,
+					song,
+					note,
+					adjustedLength,
+					config.get(),
+					renderedNote,
 					finalSong,
 					// Whether to include overlap in the wavtool.
 					areNotesTouching(notes.peekPrev(), voicebank, maybePreutter));

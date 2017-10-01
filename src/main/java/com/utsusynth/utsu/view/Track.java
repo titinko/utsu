@@ -12,10 +12,10 @@ import com.utsusynth.utsu.common.QuantizedAddRequest;
 import com.utsusynth.utsu.common.QuantizedAddResponse;
 import com.utsusynth.utsu.common.QuantizedNeighbor;
 import com.utsusynth.utsu.common.QuantizedNote;
-import com.utsusynth.utsu.common.Quantizer;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.view.note.TrackCallback;
 import com.utsusynth.utsu.view.note.TrackNote;
-import com.utsusynth.utsu.view.note.TrackNoteCallback;
+import com.utsusynth.utsu.view.note.TrackNoteFactory;
 
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
@@ -25,7 +25,7 @@ public class Track {
 	private static final int COL_WIDTH = 96;
 
 	private final Highlighter highlighter;
-	private final Quantizer quantizer;
+	private final TrackNoteFactory trackNoteFactory;
 
 	private GridPane track;
 	private int numMeasures;
@@ -35,9 +35,9 @@ public class Track {
 	private Map<Integer, TrackNote> childMap;
 
 	@Inject
-	public Track(Highlighter highlighter, Quantizer quantizer) {
+	public Track(Highlighter highlighter, TrackNoteFactory trackNoteFactory) {
 		this.highlighter = highlighter;
-		this.quantizer = quantizer;
+		this.trackNoteFactory = trackNoteFactory;
 	}
 
 	public void initialize(ViewCallback callback) {
@@ -57,7 +57,7 @@ public class Track {
 
 		// Add all notes.
 		for (QuantizedAddRequest note : notes) {
-			TrackNote newNote = TrackNote.createNote(note, noteCallback, quantizer);
+			TrackNote newNote = trackNoteFactory.createNote(note, noteCallback);
 			int position =
 					note.getNote().getStart() * (COL_WIDTH / note.getNote().getQuantization());
 			if (!childMap.containsKey(position)) {
@@ -132,8 +132,8 @@ public class Track {
 						Mode currentMode = model.getCurrentMode();
 						if (currentMode == Mode.ADD) {
 							// Create note.
-							TrackNote newNote = TrackNote.createDefaultNote(currentRowNum,
-									currentColNum, noteCallback, quantizer);
+							TrackNote newNote = trackNoteFactory
+									.createDefaultNote(currentRowNum, currentColNum, noteCallback);
 							track.getChildren().add(newNote.getElement());
 						}
 						// Clear highlights regardless of current mode.
@@ -147,7 +147,7 @@ public class Track {
 		numMeasures++;
 	}
 
-	private final TrackNoteCallback noteCallback = new TrackNoteCallback() {
+	private final TrackCallback noteCallback = new TrackCallback() {
 		@Override
 		public void setHighlighted(TrackNote note, boolean highlighted) {
 			highlighter.clearHighlights();
@@ -177,8 +177,11 @@ public class Track {
 				throw new NoteAlreadyExistsException();
 			} else {
 				childMap.put(position, note);
-				QuantizedAddRequest request = new QuantizedAddRequest(toAdd,
-						PitchUtils.rowNumToPitch(rowNum), lyric, Optional.absent());
+				QuantizedAddRequest request = new QuantizedAddRequest(
+						toAdd,
+						PitchUtils.rowNumToPitch(rowNum),
+						lyric,
+						Optional.absent());
 				QuantizedAddResponse response = model.addNote(request);
 				if (response.getPrevNote().isPresent()) {
 					QuantizedNeighbor prev = response.getPrevNote().get();

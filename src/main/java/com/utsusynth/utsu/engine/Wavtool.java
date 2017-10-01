@@ -3,9 +3,9 @@ package com.utsusynth.utsu.engine;
 import java.io.File;
 
 import com.google.inject.Inject;
-import com.utsusynth.utsu.model.LyricConfig;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongNote;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Wavtool {
 	private final ExternalProcessRunner runner;
@@ -40,8 +40,13 @@ public class Wavtool {
 		double scaleFactor = 125 / song.getTempo();
 
 		// Call wavtool to add new note onto the end of the output file.
-		runner.runProcess(wavtoolPath, outputFilePath, inputFilePath, startPoint,
-				Double.toString(noteLength * scaleFactor), envelope[0], // p1
+		runner.runProcess(
+				wavtoolPath,
+				outputFilePath,
+				inputFilePath,
+				startPoint,
+				Double.toString(noteLength * scaleFactor),
+				envelope[0], // p1
 				envelope[1], // p2
 				envelope[2], // p3
 				envelope[3], // v1
@@ -62,7 +67,12 @@ public class Wavtool {
 		String[] envelope = new String[] { "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" };
 
 		// Call wavtool to add new note onto the end of the output file.
-		runner.runProcess(wavtoolPath, outputFilePath, inputFilePath, startPoint, noteLength,
+		runner.runProcess(
+				wavtoolPath,
+				outputFilePath,
+				inputFilePath,
+				startPoint,
+				noteLength,
 				envelope[0], // p1
 				envelope[1], // p2
 				envelope[2], // p3

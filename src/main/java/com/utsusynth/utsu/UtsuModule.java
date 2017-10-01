@@ -18,6 +18,9 @@ import com.utsusynth.utsu.model.SongManager;
 import com.utsusynth.utsu.model.SongNoteList;
 import com.utsusynth.utsu.model.pitch.PitchCurve;
 import com.utsusynth.utsu.model.pitch.portamento.PortamentoFactory;
+import com.utsusynth.utsu.model.voicebank.VoicebankReader;
+import com.utsusynth.utsu.view.note.TrackNoteFactory;
+import com.utsusynth.utsu.view.note.TrackNoteLyric;
 
 import javafx.fxml.FXMLLoader;
 
@@ -27,6 +30,7 @@ public class UtsuModule extends AbstractModule {
 	protected void configure() {
 		bind(SongManager.class).asEagerSingleton();
 		bind(PortamentoFactory.class).asEagerSingleton();
+		bind(TrackNoteFactory.class).asEagerSingleton();
 	}
 
 	@Provides
@@ -39,8 +43,16 @@ public class UtsuModule extends AbstractModule {
 	}
 
 	@Provides
-	private Song provideSong(SongNoteList noteList, PitchCurve pitchCurve) {
-		return new Song(noteList, pitchCurve);
+	private Song provideSong(
+			VoicebankReader voicebankReader,
+			SongNoteList noteList,
+			PitchCurve pitchCurve) {
+		return new Song(voicebankReader, noteList, pitchCurve);
+	}
+
+	@Provides
+	private TrackNoteLyric provideLyric() {
+		return new TrackNoteLyric("mi");
 	}
 
 	@Provides

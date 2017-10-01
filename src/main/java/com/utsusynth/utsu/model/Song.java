@@ -11,12 +11,16 @@ import com.utsusynth.utsu.common.QuantizedNeighbor;
 import com.utsusynth.utsu.common.QuantizedNote;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.model.pitch.PitchCurve;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
+import com.utsusynth.utsu.model.voicebank.Voicebank;
+import com.utsusynth.utsu.model.voicebank.VoicebankReader;
 
 /**
  * In-code representation of a song. Compatible with UST versions 1.2 and 2.0.
  */
 public class Song {
 	private static final int DEFAULT_NOTE_DURATION = 480;
+	private final VoicebankReader voicebankReader;
 
 	// Settings. (Anything marked with [#SETTING])
 	// Insert Time signatures here
@@ -94,17 +98,18 @@ public class Song {
 		}
 
 		public Song build() {
-			newSong.voicebank = Voicebank.loadFromDirectory(newSong.voiceDirectory);
+			newSong.voicebank = newSong.voicebankReader.loadFromDirectory(newSong.voiceDirectory);
 			newSong.noteList = noteListBuilder.build();
 			return newSong;
 		}
 	}
 
-	public Song(SongNoteList songNoteList, PitchCurve pitchbends) {
+	public Song(VoicebankReader voicebankReader, SongNoteList songNoteList, PitchCurve pitchbends) {
+		this.voicebankReader = voicebankReader;
 		this.noteList = songNoteList;
 		this.pitchbends = pitchbends;
 		this.voiceDirectory = "${DEFAULT}";
-		this.voicebank = Voicebank.loadFromDirectory(this.voiceDirectory);
+		this.voicebank = voicebankReader.loadFromDirectory(this.voiceDirectory);
 		this.tempo = 125.0;
 		this.projectName = "(no title)";
 		this.flags = "";
@@ -113,7 +118,7 @@ public class Song {
 	public Builder toBuilder() {
 		// Returns the builder of a new Song with this one's attributes.
 		// The old Song's noteList and pitchbends objects are used in the new Song.
-		return new Builder(new Song(this.noteList, this.pitchbends))
+		return new Builder(new Song(this.voicebankReader, this.noteList, this.pitchbends))
 				.setTempo(this.tempo)
 				.setProjectName(this.projectName)
 				.setOutputFile(this.outputFile)

@@ -1,6 +1,5 @@
 package com.utsusynth.utsu.view.note;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import javafx.geometry.Insets;
@@ -19,31 +18,34 @@ public class TrackNoteLyric {
 
 	private final Label text;
 	private final TextField textField;
+	private TrackNoteCallback trackNote;
 	private Region activeNode;
 
-	static TrackNoteLyric makeLyric(final Runnable callback) {
-		TextField defaultTextField = new TextField("mi");
-		TrackNoteLyric trackNoteLyric = new TrackNoteLyric(defaultTextField, "mi");
-		defaultTextField.setFont(Font.font(9));
-		defaultTextField.setMaxHeight(ROW_HEIGHT - 2);
-		defaultTextField.setMaxWidth(COL_WIDTH - 2);
-		defaultTextField.setOnAction((event) -> {
-			callback.run();
-		});
-		return trackNoteLyric;
-	}
-
-	private TrackNoteLyric(TextField textField, String defaultLyric) {
+	public TrackNoteLyric(String defaultLyric) {
 		this.lyric = defaultLyric;
 		this.alias = Optional.absent();
 		this.text = new Label(defaultLyric);
-		this.textField = textField;
+		this.textField = new TextField("mi");
+		this.textField.setFont(Font.font(9));
+		this.textField.setMaxHeight(ROW_HEIGHT - 2);
+		this.textField.setMaxWidth(COL_WIDTH - 2);
 	}
 
-	void setLyric(String newLyric) {
-		text.setText(alias.isPresent() ? newLyric + " (" + alias.get() + ")" : newLyric);
-		textField.setText(newLyric);
-		this.lyric = newLyric;
+	/** Connect this lyric to a track note. */
+	void initialize(TrackNoteCallback callback) {
+		this.textField.setOnAction((event) -> {
+			callback.setHighlighted(false);
+		});
+		this.trackNote = callback;
+	}
+
+	void setVisibleLyric(String newLyric) {
+		if (!newLyric.equals(this.lyric)) {
+			text.setText(alias.isPresent() ? newLyric + " (" + alias.get() + ")" : newLyric);
+			textField.setText(newLyric);
+			this.lyric = newLyric;
+			this.trackNote.adjustColumnSpan();
+		}
 	}
 
 	String getLyric() {
@@ -51,12 +53,16 @@ public class TrackNoteLyric {
 	}
 
 	double getWidth() {
+		// TODO: Infer width from current text instead.
 		return activeNode.getWidth();
 	}
 
-	void setAlias(Optional<String> newAlias) {
-		text.setText(newAlias.isPresent() ? lyric + " (" + newAlias.get() + ")" : this.lyric);
-		this.alias = newAlias;
+	void setVisibleAlias(Optional<String> newAlias) {
+		if (!newAlias.equals(this.alias)) {
+			text.setText(newAlias.isPresent() ? lyric + " (" + newAlias.get() + ")" : lyric);
+			this.alias = newAlias;
+			this.trackNote.adjustColumnSpan();
+		}
 	}
 
 	Region openTextElement() {
@@ -64,23 +70,25 @@ public class TrackNoteLyric {
 		return this.text;
 	}
 
-	void openTextField(StackPane layout) {
-		int index = layout.getChildren().indexOf(this.activeNode);
+	void openTextField() {
 		this.activeNode = this.textField;
-		layout.getChildren().set(index, this.textField);
+		this.trackNote.setLyricElement(this.textField);
 		this.textField.requestFocus();
 		this.textField.selectAll();
 	}
 
-	void closeTextFieldIfNeeded(Function<String, StackPane> callback) {
+	void closeTextFieldIfNeeded() {
 		if (this.activeNode == this.textField) {
 			this.activeNode = this.text;
 			String lyric = textField.getText();
-			setLyric(lyric);
-			StackPane layout = callback.apply(lyric);
-			int index = layout.getChildren().indexOf(this.textField);
-			layout.getChildren().set(index, this.text);
+			setVisibleLyric(lyric);
+			this.trackNote.setLyricElement(this.text);
+			this.trackNote.setSongLyric(lyric);
 		}
+	}
+
+	void setSongLyric(String lyric) {
+		trackNote.setSongLyric(lyric);
 	}
 
 	void setLeftMargin(int newMargin) {

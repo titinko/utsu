@@ -8,7 +8,8 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.model.SongManager;
-import com.utsusynth.utsu.model.Voicebank;
+import com.utsusynth.utsu.model.voicebank.Voicebank;
+import com.utsusynth.utsu.model.voicebank.VoicebankReader;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -27,6 +28,7 @@ public class PropertiesController implements Localizable {
 	private final SongManager songManager;
 	private final Engine engine;
 	private final Localizer localizer;
+	private VoicebankReader voicebankReader;
 
 	private String resamplerPath;
 	private String wavtoolPath;
@@ -81,7 +83,11 @@ public class PropertiesController implements Localizable {
 	private Label curTempo; // Value injected by FXMLLoader
 
 	@Inject
-	public PropertiesController(SongManager songManager, Engine engine, Localizer localizer) {
+	public PropertiesController(
+			SongManager songManager,
+			Engine engine,
+			Localizer localizer,
+			VoicebankReader voicebankReader) {
 		this.songManager = songManager;
 		this.engine = engine;
 		this.localizer = localizer;
@@ -170,7 +176,7 @@ public class PropertiesController implements Localizable {
 				new ExtensionFilter("All files", "*.*"));
 		File file = fc.showOpenDialog(null);
 		if (file != null) {
-			voicebank = Voicebank.loadFromDirectory(file.getAbsolutePath());
+			voicebank = voicebankReader.loadFromDirectory(file.getAbsolutePath());
 			voicebankName.setText(voicebank.getName());
 		}
 	}
