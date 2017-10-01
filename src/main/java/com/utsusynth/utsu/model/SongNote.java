@@ -60,6 +60,10 @@ public class SongNote {
 	}
 
 	public void setDuration(int duration) {
+		this.duration = duration;
+	}
+
+	public void safeSetDuration(int duration) {
 		if (this.length != -1 && this.length < duration) {
 			this.duration = this.length;
 		} else {
@@ -72,6 +76,10 @@ public class SongNote {
 	}
 
 	public void setLength(int length) {
+		this.length = length;
+	}
+
+	public void safeSetLength(int length) {
 		if (this.duration != -1 && length < this.duration) {
 			this.duration = length;
 		}
@@ -187,17 +195,25 @@ public class SongNote {
 	}
 
 	public void setEnvelope(String[] envelopeValues) {
-		envelopeWidth[0] = Double.parseDouble(envelopeValues[0]); // p1
-		envelopeWidth[1] = Double.parseDouble(envelopeValues[1]); // p2
-		envelopeWidth[2] = Double.parseDouble(envelopeValues[2]); // p3
-		envelopeHeight[0] = Double.parseDouble(envelopeValues[3]); // v1
-		envelopeHeight[1] = Double.parseDouble(envelopeValues[4]); // v2
-		envelopeHeight[2] = Double.parseDouble(envelopeValues[5]); // v3
-		envelopeHeight[3] = Double.parseDouble(envelopeValues[6]); // v4
-		envelopeOverlap = Double.parseDouble(envelopeValues[7]); // overlap
-		envelopeWidth[3] = Double.parseDouble(envelopeValues[8]); // p4
-		envelopeWidth[4] = Double.parseDouble(envelopeValues[9]); // p5
-		envelopeHeight[4] = Double.parseDouble(envelopeValues[10]); // v5
+		if (envelopeValues.length > 0) {
+			envelopeWidth[0] = Double.parseDouble(envelopeValues[0]); // p1
+			envelopeWidth[1] = Double.parseDouble(envelopeValues[1]); // p2
+			envelopeWidth[2] = Double.parseDouble(envelopeValues[2]); // p3
+			envelopeHeight[0] = Double.parseDouble(envelopeValues[3]); // v1
+			envelopeHeight[1] = Double.parseDouble(envelopeValues[4]); // v2
+			envelopeHeight[2] = Double.parseDouble(envelopeValues[5]); // v3
+		}
+		if (envelopeValues.length > 6) {
+			envelopeHeight[3] = Double.parseDouble(envelopeValues[6]); // v4
+		}
+		if (envelopeValues.length > 7) {
+			envelopeOverlap = Double.parseDouble(envelopeValues[7]); // overlap
+			envelopeWidth[3] = Double.parseDouble(envelopeValues[8]); // p4
+		}
+		if (envelopeValues.length > 9) {
+			envelopeWidth[4] = Double.parseDouble(envelopeValues[9]); // p5
+			envelopeHeight[4] = Double.parseDouble(envelopeValues[10]); // v5
+		}
 	}
 
 	public String[] getFullEnvelope() {

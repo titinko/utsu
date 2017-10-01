@@ -32,7 +32,23 @@ public class Ust12Writer {
 			int prevDuration = prevNote.isPresent() ? prevNote.get().getDuration() : 0;
 			SongNote note = iterator.next();
 			if (note.getDelta() > prevDuration) {
-				// Insert rest note.
+				int numRestNotes = (note.getDelta() - prevDuration) / 480;
+				int leftoverMs = (note.getDelta() - prevDuration) % 480;
+				// Insert rest notes.
+				for (int i = 0; i < numRestNotes; i++) {
+					ps.println(getNoteLabel(index));
+					index++;
+					ps.println("Length=" + 480);
+					ps.println("Lyric=R");
+					ps.println("NoteNum=60");
+				}
+				if (leftoverMs > 0) {
+					ps.println(getNoteLabel(index));
+					index++;
+					ps.println("Length=" + leftoverMs);
+					ps.println("Lyric=R");
+					ps.println("NoteNum=60");
+				}
 				ps.println(getNoteLabel(index));
 				index++;
 				ps.println("Length=" + (note.getDelta() - prevDuration));

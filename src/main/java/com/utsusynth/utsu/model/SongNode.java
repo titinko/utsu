@@ -33,17 +33,15 @@ public class SongNode {
 	 * Inserts new node directly to the right of the current one. Should only be used when reading
 	 * song notes from a file.
 	 */
-	SongNode appendRightFromFile(SongNode appendMe) {
+	SongNode appendRightFromFile(SongNode appendMe, int overrideDelta) {
+		if (overrideDelta > 0) {
+			appendMe.note.setDelta(overrideDelta);
+		}
 		if (appendMe.note.getDelta() == -1) {
 			appendMe.note.setDelta(this.note.getLength());
 		}
 		if (appendMe.note.getLength() == -1) {
 			appendMe.note.setLength(appendMe.note.getDuration());
-		}
-		if (appendMe.note.getDuration() > appendMe.note.getLength()) {
-			// TODO: Assert that this never appears, since the problem should be caught sooner.
-			System.out.println("Warning: note's length is greater than its duration.");
-			appendMe.note.setDuration(appendMe.note.getLength());
 		}
 		this.next = Optional.of(appendMe);
 		appendMe.prev = Optional.of(this);
@@ -53,29 +51,27 @@ public class SongNode {
 	/**
 	 * Inserts first note into a note list. Should only be used when reading song notes from a file.
 	 */
-	static void appendFirstFromFile(SongNode appendMe) {
+	static void appendFirstFromFile(SongNode appendMe, int overrideDelta) {
+		if (overrideDelta > 0) {
+			appendMe.note.setDelta(overrideDelta);
+		}
 		if (appendMe.note.getDelta() == -1) {
 			appendMe.note.setDelta(0);
 		}
 		if (appendMe.note.getLength() == -1) {
 			appendMe.note.setLength(appendMe.note.getDuration());
 		}
-		if (appendMe.note.getDuration() > appendMe.note.getLength()) {
-			// TODO: Assert that this never appears, since the problem should be caught sooner.
-			System.out.println("Warning: note's length is greater than its duration.");
-			appendMe.note.setDuration(appendMe.note.getLength());
-		}
 	}
 
-	Optional<SongNode> insertFirstNote(SongNote noteToInsert, int deltaToInsert) {
+	SongNode insertFirstNote(SongNote noteToInsert, int deltaToInsert) {
 		int newDelta = this.note.getDelta() - deltaToInsert;
 		this.note.setDelta(newDelta);
-		noteToInsert.setLength(newDelta);
+		noteToInsert.safeSetLength(newDelta);
 		noteToInsert.setDelta(deltaToInsert);
 		SongNode nodeToInsert = new SongNode(noteToInsert);
 		nodeToInsert.next = Optional.of(this);
 		this.prev = Optional.of(nodeToInsert);
-		return Optional.of(nodeToInsert);
+		return nodeToInsert;
 	}
 
 	/**
@@ -99,10 +95,10 @@ public class SongNode {
 				// Update with new lengths and deltas.
 				SongNode prevNode = this.prev.get();
 				int prevToInsertedNote = deltaToInsert - prevDelta;
-				prevNode.getNote().setLength(prevToInsertedNote);
+				prevNode.getNote().safeSetLength(prevToInsertedNote);
 				noteToInsert.setDelta(prevToInsertedNote);
 				int insertedToCurNote = curDelta - deltaToInsert;
-				noteToInsert.setLength(insertedToCurNote);
+				noteToInsert.safeSetLength(insertedToCurNote);
 				this.note.setDelta(insertedToCurNote);
 				// Insert note before.
 				SongNode nodeToInsert = new SongNode(noteToInsert);
@@ -118,9 +114,9 @@ public class SongNode {
 		} else if (!this.next.isPresent()) {
 			// Update with new length and delta.
 			int curToInsertedNote = deltaToInsert - curDelta;
-			this.note.setLength(curToInsertedNote);
+			this.note.safeSetLength(curToInsertedNote);
 			noteToInsert.setDelta(curToInsertedNote);
-			noteToInsert.setLength(noteToInsert.getDuration());
+			noteToInsert.safeSetLength(noteToInsert.getDuration());
 			// Insert note after.
 			SongNode nodeToInsert = new SongNode(noteToInsert);
 			this.next = Optional.of(nodeToInsert);
@@ -147,7 +143,7 @@ public class SongNode {
 	 * 
 	 * @param deltaToRemove
 	 * @param prevDelta
-	 * @return true if the deletion was successful, false otherwise
+	 * @return The node that was removed.
 	 */
 	SongNode removeNote(int deltaToRemove, int prevDelta) {
 		int curDelta = prevDelta + this.note.getDelta();
@@ -158,14 +154,14 @@ public class SongNode {
 				SongNode prevNode = this.prev.get();
 				SongNode nextNode = this.next.get();
 				int newDelta = this.note.getDelta() + this.note.getLength();
-				prevNode.note.setLength(newDelta);
+				prevNode.note.safeSetLength(newDelta);
 				nextNode.note.setDelta(newDelta);
 				prevNode.next = this.next;
 				nextNode.prev = this.prev;
 			} else if (this.prev.isPresent()) {
 				// Deleting the final node.
 				SongNode prevNode = this.prev.get();
-				prevNode.note.setLength(prevNode.note.getDuration());
+				prevNode.note.safeSetLength(prevNode.note.getDuration());
 				prevNode.next = Optional.absent();
 			} else if (this.next.isPresent()) {
 				// TODO: Throw error.

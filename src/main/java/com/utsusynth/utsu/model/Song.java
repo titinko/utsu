@@ -97,6 +97,11 @@ public class Song {
 			return this;
 		}
 
+		public Builder addInvalidNote(SongNote note) {
+			noteListBuilder.appendInvalidNote(note.getDelta(), note.getLength());
+			return this;
+		}
+
 		public Song build() {
 			newSong.voicebank = newSong.voicebankReader.loadFromDirectory(newSong.voiceDirectory);
 			newSong.noteList = noteListBuilder.build();
@@ -142,8 +147,8 @@ public class Song {
 		SongNote note = new SongNote();
 		// New note's delta/length may be overridden while inserting into note list.
 		note.setDelta(toAdd.getStart() * DEFAULT_NOTE_DURATION / toAdd.getQuantization());
-		note.setDuration(toAdd.getDuration() * DEFAULT_NOTE_DURATION / toAdd.getQuantization());
-		note.setLength(toAdd.getDuration() * DEFAULT_NOTE_DURATION / toAdd.getQuantization());
+		note.safeSetDuration(toAdd.getDuration() * DEFAULT_NOTE_DURATION / toAdd.getQuantization());
+		note.safeSetLength(toAdd.getDuration() * DEFAULT_NOTE_DURATION / toAdd.getQuantization());
 		note.setLyric(request.getLyric());
 		note.setNoteNum(PitchUtils.pitchToNoteNum(request.getPitch()));
 		note.setNoteFlags("B0");

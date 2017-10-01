@@ -58,6 +58,7 @@ public class Ust20Reader {
 
 	private int parseNote(String[] lines, int noteStart, Song.Builder builder) {
 		SongNote note = new SongNote();
+		boolean outsideMainTrack = false;
 		for (int i = noteStart; i < lines.length; i++) {
 			String line = lines[i].trim();
 			if (line.startsWith("Delta=")) {
@@ -92,8 +93,16 @@ public class Ust20Reader {
 				note.setEnvelope(line.substring("Envelope=".length()).split(","));
 			} else if (line.startsWith("VBR=")) {
 				note.setVibrato(line.substring("VBR=".length()).split(","));
+			} else if (line.startsWith("layer=")) {
+				outsideMainTrack = true;
 			} else if (HEADER_PATTERN.matcher(line).matches()) {
-				builder.addNote(note);
+				if (outsideMainTrack) {
+					// TODO: Make these notes valid once multi-track is supported.
+					builder.addInvalidNote(note);
+				} else {
+					System.out.println("Note duration is " + note.getDuration());
+					builder.addNote(note);
+				}
 				return i;
 			}
 		}
