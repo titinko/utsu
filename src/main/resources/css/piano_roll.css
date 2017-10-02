@@ -1,8 +1,3 @@
-.game-grid {
-    -fx-background-color: white ;
-    -fx-padding: 10 ;
-}
-
 .track-cell.white-key {
     -fx-background-color: lightgray, white;
     -fx-background-insets: 0, 0 1 1 0;
@@ -59,18 +54,6 @@
 	-fx-stroke-dash-offset: -20;
 }
 
-.game-grid-cell.first-row {
-    -fx-background-insets: 0, 1 1 1 0 ;
-}
-
-.game-grid-cell.first-column {
-    -fx-background-insets: 0, 0 1 1 1 ;
-}
-
-.game-grid-cell.first-row.first-column {
-    -fx-background-insets: 0, 1 ;
-}
-
 .piano-black-key {
 	-fx-background-color: black;
 }
@@ -86,4 +69,24 @@
 
 .piano-no-border {
 	-fx-background-color: white;
+}
+
+.dynamics-top-cell {
+	-fx-background-color: darkgray, black;
+	-fx-background-insets: 0, 0 1 1 0;
+}
+
+.dynamics-top-cell.measure-start {
+	-fx-background-color: darkgray, black;
+	-fx-background-insets: 0, 0 1 1 1;
+}
+
+.dynamics-bottom-cell {
+	-fx-background-color: darkgray, black;
+	-fx-background-insets: 0, 0 1 0 0;
+}
+
+.dynamics-bottom-cell.measure-start {
+	-fx-background-color: darkgray, black;
+	-fx-background-insets: 0, 0 1 0 1;
 }

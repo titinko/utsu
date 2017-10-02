@@ -28,6 +28,7 @@ public class Track {
 	private final TrackNoteFactory trackNoteFactory;
 
 	private GridPane track;
+	private GridPane dynamics;
 	private int numMeasures;
 	private ViewCallback model;
 
@@ -71,12 +72,12 @@ public class Track {
 		return track;
 	}
 
-	public GridPane getElement() {
-		if (track == null) {
-			// TODO: Handler this;
-			System.out.println("Track element is empty!");
+	public GridPane getDynamicsElement() {
+		if (dynamics == null) {
+			// TODO: Handle this;
+			System.out.println("Dynamics element is empty!");
 		}
-		return track;
+		return dynamics;
 	}
 
 	private void clearTrack() {
@@ -84,6 +85,7 @@ public class Track {
 		highlighter.clearHighlights();
 		childMap = new HashMap<>();
 		track = new GridPane();
+		dynamics = new GridPane();
 
 		numMeasures = 0;
 		setNumMeasures(4);
@@ -103,6 +105,9 @@ public class Track {
 			// Remove measures.
 			int desiredNumColumns = newNumMeasures * 4;
 			track.getChildren().removeIf((child) -> {
+				return GridPane.getColumnIndex(child) >= desiredNumColumns;
+			});
+			dynamics.getChildren().removeIf((child) -> {
 				return GridPane.getColumnIndex(child) >= desiredNumColumns;
 			});
 			numMeasures = newNumMeasures;
@@ -143,6 +148,24 @@ public class Track {
 				}
 				rowNum++;
 			}
+		}
+
+		// Add new columns to dynamics.
+		for (int colNum = numColumns; colNum < numColumns + 4; colNum++) {
+			AnchorPane topCell = new AnchorPane();
+			topCell.setPrefSize(COL_WIDTH, 50);
+			topCell.getStyleClass().add("dynamics-top-cell");
+			if (colNum % 4 == 0) {
+				topCell.getStyleClass().add("measure-start");
+			}
+			dynamics.add(topCell, colNum, 0);
+			AnchorPane bottomCell = new AnchorPane();
+			bottomCell.setPrefSize(COL_WIDTH, 50);
+			bottomCell.getStyleClass().add("dynamics-bottom-cell");
+			if (colNum % 4 == 0) {
+				bottomCell.getStyleClass().add("measure-start");
+			}
+			dynamics.add(bottomCell, colNum, 1);
 		}
 		numMeasures++;
 	}

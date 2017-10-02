@@ -93,6 +93,12 @@ public class UtsuController implements Localizable {
 	@FXML // fx:id="anchorRight"
 	private AnchorPane anchorRight; // Value injected by FXMLLoader
 
+	@FXML // fx:id="scrollPaneBottom"
+	private ScrollPane scrollPaneBottom; // Value injected by FXMLLoader
+
+	@FXML // fx:id="anchorBottom"
+	private AnchorPane anchorBottom; // Value injected by FXMLLoader
+
 	@FXML // fx:id="voicebankImage"
 	private ImageView voicebankImage; // Value injected by FXMLLoader
 
@@ -152,6 +158,7 @@ public class UtsuController implements Localizable {
 		});
 		anchorLeft.getChildren().add(piano.getElement());
 		scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneRight.vvalueProperty());
+		scrollPaneRight.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
 
 		modeChoiceBox.setItems(FXCollections.observableArrayList(Mode.ADD, Mode.EDIT, Mode.DELETE));
 		modeChoiceBox.setOnAction((action) -> {
@@ -234,21 +241,26 @@ public class UtsuController implements Localizable {
 		voicebankImage.setImage(image);
 
 		anchorRight.getChildren().clear();
-		anchorRight.getChildren()
+		anchorRight
+				.getChildren()
 				.add(track.createNewTrack(songManager.getSong().getQuantizedNotes()));
+		anchorBottom.getChildren().add(track.getDynamicsElement());
 	}
 
 	@FXML
 	void openFile(ActionEvent event) {
 		FileChooser fc = new FileChooser();
 		fc.setTitle("Select UST File");
-		fc.getExtensionFilters().addAll(new ExtensionFilter("UST files", "*.ust"),
+		fc.getExtensionFilters().addAll(
+				new ExtensionFilter("UST files", "*.ust"),
 				new ExtensionFilter("All files", "*.*"));
 		File file = fc.showOpenDialog(null);
 		if (file != null) {
 			try {
 				String charset = "UTF-8";
-				CharsetDecoder utf8Decoder = Charset.forName("UTF-8").newDecoder()
+				CharsetDecoder utf8Decoder = Charset
+						.forName("UTF-8")
+						.newDecoder()
 						.onMalformedInput(CodingErrorAction.REPORT)
 						.onUnmappableCharacter(CodingErrorAction.REPORT);
 				try {
@@ -279,7 +291,8 @@ public class UtsuController implements Localizable {
 	void saveFile(ActionEvent event) {
 		FileChooser fc = new FileChooser();
 		fc.setTitle("Select UST File");
-		fc.getExtensionFilters().addAll(new ExtensionFilter("UST 2.0 (UTF-8)", "*.ust"),
+		fc.getExtensionFilters().addAll(
+				new ExtensionFilter("UST 2.0 (UTF-8)", "*.ust"),
 				new ExtensionFilter("UST 2.0 (Shift JIS)", "*.ust"),
 				new ExtensionFilter("UST 1.2 (Shift JIS)", "*.ust"));
 		File file = fc.showSaveDialog(null);

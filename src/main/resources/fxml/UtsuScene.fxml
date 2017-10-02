@@ -80,8 +80,26 @@
                </children>
             </AnchorPane>
          </top>
+         <bottom>
+            <HBox maxHeight="100.0" prefHeight="100.0" prefWidth="700.0" spacing="10.0" BorderPane.alignment="CENTER">
+               <children>
+                  <AnchorPane maxHeight="100.0" maxWidth="100.0" minWidth="100.0" />
+                  <ScrollPane fx:id="scrollPaneBottom" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="500.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">
+                    <content>
+                      <AnchorPane fx:id="anchorBottom" maxHeight="100.0" minHeight="100.0" />
+                    </content>
+                     <HBox.margin>
+                        <Insets right="15.0" />
+                     </HBox.margin>
+                  </ScrollPane>
+               </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" />
+               </padding>
+            </HBox>
+         </bottom>
          <center>
-            <HBox prefHeight="500.0" prefWidth="900.0" BorderPane.alignment="CENTER">
+            <HBox prefHeight="300.0" prefWidth="700.0" BorderPane.alignment="CENTER">
                <children>
                   <ScrollPane fx:id="scrollPaneLeft" hbarPolicy="NEVER" hmax="0.0" minViewportWidth="100.0" vbarPolicy="NEVER" vvalue="0.5">
                      <content>
@@ -89,7 +107,7 @@
                      </content>
                   </ScrollPane>
                   <Separator orientation="VERTICAL" />
-                  <ScrollPane fx:id="scrollPaneRight" fitToHeight="true" fitToWidth="true" minViewportHeight="300.0" minViewportWidth="500.0" vvalue="0.5">
+                  <ScrollPane fx:id="scrollPaneRight" fitToHeight="true" fitToWidth="true" minViewportHeight="300.0" minViewportWidth="500.0" vvalue="0.5" HBox.hgrow="ALWAYS">
                      <content>
                       <AnchorPane fx:id="anchorRight" />
                      </content>
