@@ -19,14 +19,14 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.common.QuantizedAddRequest;
-import com.utsusynth.utsu.common.QuantizedAddResponse;
-import com.utsusynth.utsu.common.QuantizedNote;
-import com.utsusynth.utsu.common.Quantizer;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
+import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
+import com.utsusynth.utsu.common.quantize.QuantizedAddResponse;
+import com.utsusynth.utsu.common.quantize.QuantizedNote;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.files.Ust12Reader;
 import com.utsusynth.utsu.files.Ust12Writer;
@@ -244,7 +244,9 @@ public class UtsuController implements Localizable {
 		anchorRight
 				.getChildren()
 				.add(track.createNewTrack(songManager.getSong().getQuantizedNotes()));
+		anchorBottom.getChildren().clear();
 		anchorBottom.getChildren().add(track.getDynamicsElement());
+		anchorBottom.getChildren().add(track.getEnvelopesElement());
 	}
 
 	@FXML

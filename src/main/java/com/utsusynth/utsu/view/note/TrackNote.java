@@ -2,9 +2,9 @@ package com.utsusynth.utsu.view.note;
 
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.UtsuController.Mode;
-import com.utsusynth.utsu.common.QuantizedNote;
-import com.utsusynth.utsu.common.Quantizer;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.common.quantize.QuantizedNote;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
@@ -94,13 +94,7 @@ public class TrackNote {
 		layout.setOnMouseClicked((event) -> {
 			if (track.getCurrentMode() == Mode.DELETE) {
 				if (note.getStyleClass().contains("valid-note")) {
-					int quantization = Quantizer.SMALLEST;
-					int quantizedDuration = getDuration() / (COL_WIDTH / quantization);
-					QuantizedNote request = new QuantizedNote(
-							getQuantizedStart(quantization),
-							quantizedDuration,
-							quantization);
-					track.removeSongNote(request);
+					track.removeSongNote(getQuantizedNote());
 				}
 				track.removeTrackNote(this);
 			} else if (subMode == SubMode.CLICKING) {
@@ -214,6 +208,13 @@ public class TrackNote {
 
 	public StackPane getElement() {
 		return layout;
+	}
+
+	QuantizedNote getQuantizedNote() {
+		int quantization = Quantizer.SMALLEST;
+		int quantizedDuration =
+				(int) ((getDuration() - overlap.getWidth()) / (COL_WIDTH / quantization));
+		return new QuantizedNote(getQuantizedStart(quantization), quantizedDuration, quantization);
 	}
 
 	/**

@@ -1,22 +1,22 @@
 package com.utsusynth.utsu.view;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.UtsuController.Mode;
 import com.utsusynth.utsu.common.PitchUtils;
-import com.utsusynth.utsu.common.QuantizedAddRequest;
-import com.utsusynth.utsu.common.QuantizedAddResponse;
-import com.utsusynth.utsu.common.QuantizedNeighbor;
-import com.utsusynth.utsu.common.QuantizedNote;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
+import com.utsusynth.utsu.common.quantize.QuantizedAddResponse;
+import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
+import com.utsusynth.utsu.common.quantize.QuantizedNeighbor;
+import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.view.note.TrackCallback;
 import com.utsusynth.utsu.view.note.TrackNote;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
 
+import javafx.scene.Group;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 
@@ -25,20 +25,19 @@ public class Track {
 	private static final int COL_WIDTH = 96;
 
 	private final Highlighter highlighter;
-	private final TrackNoteFactory trackNoteFactory;
+	private final TrackNoteFactory noteFactory;
+	private final TrackNoteMap noteMap;
 
 	private GridPane track;
 	private GridPane dynamics;
 	private int numMeasures;
 	private ViewCallback model;
 
-	// Maps absolute position to track note's data.
-	private Map<Integer, TrackNote> childMap;
-
 	@Inject
-	public Track(Highlighter highlighter, TrackNoteFactory trackNoteFactory) {
+	public Track(Highlighter highlighter, TrackNoteFactory trackNoteFactory, TrackNoteMap noteMap) {
 		this.highlighter = highlighter;
-		this.trackNoteFactory = trackNoteFactory;
+		this.noteFactory = trackNoteFactory;
+		this.noteMap = noteMap;
 	}
 
 	public void initialize(ViewCallback callback) {
@@ -58,12 +57,12 @@ public class Track {
 
 		// Add all notes.
 		for (QuantizedAddRequest note : notes) {
-			TrackNote newNote = trackNoteFactory.createNote(note, noteCallback);
+			TrackNote newNote = noteFactory.createNote(note, noteCallback);
 			int position =
 					note.getNote().getStart() * (COL_WIDTH / note.getNote().getQuantization());
-			if (!childMap.containsKey(position)) {
-				childMap.put(position, newNote);
-			} else {
+			try {
+				noteMap.putNote(position, newNote);
+			} catch (NoteAlreadyExistsException e) {
 				// TODO: Throw an error here?
 				System.out.println("UST read found two notes in the same place :(");
 			}
@@ -80,10 +79,14 @@ public class Track {
 		return dynamics;
 	}
 
+	public Group getEnvelopesElement() {
+		return noteMap.getEnvelopesElement();
+	}
+
 	private void clearTrack() {
 		// Remove current track.
 		highlighter.clearHighlights();
-		childMap = new HashMap<>();
+		noteMap.clear();
 		track = new GridPane();
 		dynamics = new GridPane();
 
@@ -107,6 +110,7 @@ public class Track {
 			track.getChildren().removeIf((child) -> {
 				return GridPane.getColumnIndex(child) >= desiredNumColumns;
 			});
+			// Remove dynamics columns.
 			dynamics.getChildren().removeIf((child) -> {
 				return GridPane.getColumnIndex(child) >= desiredNumColumns;
 			});
@@ -137,7 +141,7 @@ public class Track {
 						Mode currentMode = model.getCurrentMode();
 						if (currentMode == Mode.ADD) {
 							// Create note.
-							TrackNote newNote = trackNoteFactory
+							TrackNote newNote = noteFactory
 									.createDefaultNote(currentRowNum, currentColNum, noteCallback);
 							track.getChildren().add(newNote.getElement());
 						}
@@ -196,25 +200,32 @@ public class Track {
 				int rowNum,
 				String lyric) throws NoteAlreadyExistsException {
 			int position = toAdd.getStart() * (COL_WIDTH / toAdd.getQuantization());
-			if (childMap.containsKey(position)) {
+			if (noteMap.hasNote(position)) {
 				throw new NoteAlreadyExistsException();
 			} else {
-				childMap.put(position, note);
 				QuantizedAddRequest request = new QuantizedAddRequest(
 						toAdd,
 						PitchUtils.rowNumToPitch(rowNum),
 						lyric,
 						Optional.absent());
 				QuantizedAddResponse response = model.addNote(request);
+
+				noteMap.putNote(position, note);
 				if (response.getPrevNote().isPresent()) {
 					QuantizedNeighbor prev = response.getPrevNote().get();
 					int prevDelta = prev.getDelta() * (COL_WIDTH / prev.getQuantization());
-					childMap.get(position - prevDelta).adjustForOverlap(prevDelta);
+					noteMap.getNote(position - prevDelta).adjustForOverlap(prevDelta);
+					noteMap.putEnvelope(position - prevDelta, prev.getEnvelope());
 				}
 				if (response.getNextNote().isPresent()) {
 					QuantizedNeighbor next = response.getNextNote().get();
 					int nextDelta = next.getDelta() * (COL_WIDTH / next.getQuantization());
 					note.adjustForOverlap(nextDelta);
+				}
+				// Add envelope after adjusting note for overlap.
+				Optional<QuantizedEnvelope> newEnvelope = response.getEnvelope();
+				if (newEnvelope.isPresent()) {
+					noteMap.putEnvelope(position, newEnvelope.get());
 				}
 
 				// Add measures if necessary.
@@ -229,17 +240,12 @@ public class Track {
 		@Override
 		public void removeSongNote(QuantizedNote toRemove) {
 			int position = toRemove.getStart() * (COL_WIDTH / toRemove.getQuantization());
-			if (childMap.containsKey(position)) {
-				childMap.remove(position);
-			} else {
-				// TODO: Handle this better.
-				System.out.println("Could not find note in map of track notes :(");
-			}
+			noteMap.removeFullNote(position);
 			QuantizedAddResponse response = model.removeNote(toRemove);
 			if (response.getPrevNote().isPresent()) {
 				QuantizedNeighbor prev = response.getPrevNote().get();
 				int prevDelta = prev.getDelta() * (COL_WIDTH / prev.getQuantization());
-				TrackNote prevNode = childMap.get(position - prevDelta);
+				TrackNote prevNode = noteMap.getNote(position - prevDelta);
 				if (response.getNextNote().isPresent()) {
 					QuantizedNeighbor next = response.getNextNote().get();
 					int nextDelta = next.getDelta() * (COL_WIDTH / next.getQuantization());
@@ -249,10 +255,11 @@ public class Track {
 					// Remove measures until you have 4 measures + previous note.
 					setNumMeasures(((position - prevDelta) / COL_WIDTH / 4) + 4);
 				}
+				noteMap.putEnvelope(position - prevDelta, prev.getEnvelope());
 			}
 
 			// Remove all measures if necessary.
-			if (childMap.isEmpty()) {
+			if (noteMap.isEmpty()) {
 				setNumMeasures(4);
 			}
 		}

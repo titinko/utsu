@@ -2,8 +2,8 @@ package com.utsusynth.utsu.view.note;
 
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.UtsuController.Mode;
-import com.utsusynth.utsu.common.QuantizedNote;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.common.quantize.QuantizedNote;
 
 /**
  * A way of communicating TrackNote information back to its parent Track.

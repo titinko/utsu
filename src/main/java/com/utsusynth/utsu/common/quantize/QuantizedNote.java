@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.common;
+package com.utsusynth.utsu.common.quantize;
 
 public class QuantizedNote {
 	private final int quantizedStart;

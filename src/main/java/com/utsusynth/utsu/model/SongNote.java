@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.model;
 
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.model.pitch.PitchbendData;
 
 /**
@@ -230,6 +231,10 @@ public class SongNote {
 		envelope[9] = Double.toString(envelopeWidth[4]); // p5
 		envelope[10] = Double.toString(envelopeHeight[4]); // v5
 		return envelope;
+	}
+
+	public QuantizedEnvelope getQuantizedEnvelope() {
+		return new QuantizedEnvelope(envelopeWidth, envelopeHeight);
 	}
 
 	public double getFadeIn() {

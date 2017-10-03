@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.common;
+package com.utsusynth.utsu.common.quantize;
 
 public class Quantizer {
 	public static final int SMALLEST = 32;

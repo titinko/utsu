@@ -3,14 +3,19 @@ package com.utsusynth.utsu.view.note;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.PitchUtils;
-import com.utsusynth.utsu.common.QuantizedAddRequest;
-import com.utsusynth.utsu.common.QuantizedNote;
-import com.utsusynth.utsu.common.Quantizer;
+import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
+import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
+import com.utsusynth.utsu.common.quantize.QuantizedNote;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
 
 public class TrackNoteFactory {
@@ -98,5 +103,37 @@ public class TrackNoteFactory {
 		lyric.setSongLyric(lyric.getLyric());
 
 		return trackNote;
+	}
+
+	public TrackEnvelope createEnvelope(TrackNote note, QuantizedEnvelope qEnvelope) {
+		QuantizedNote qNote = note.getQuantizedNote();
+		int noteQuantSize = COL_WIDTH / qNote.getQuantization();
+		int startPos = qNote.getStart() * noteQuantSize;
+		int endPos = startPos + (qNote.getDuration() * noteQuantSize);
+
+		int envQuantSize = COL_WIDTH / QuantizedEnvelope.QUANTIZATION;
+		int p1 = qEnvelope.getWidth(0) * envQuantSize;
+		int p2 = qEnvelope.getWidth(1) * envQuantSize;
+		int p3 = qEnvelope.getWidth(2) * envQuantSize;
+		int p4 = qEnvelope.getWidth(3) * envQuantSize;
+		int p5 = qEnvelope.getWidth(4) * envQuantSize;
+
+		double v1 = 100 - (qEnvelope.getHeight(0) / 2.0);
+		double v2 = 100 - (qEnvelope.getHeight(1) / 2.0);
+		double v3 = 100 - (qEnvelope.getHeight(2) / 2.0);
+		double v4 = 100 - (qEnvelope.getHeight(3) / 2.0);
+		double v5 = 100 - (qEnvelope.getHeight(4) / 2.0);
+
+		Path path = new Path();
+		path.setStroke(Paint.valueOf("yellow"));
+		// TODO: Disallow overlapping envelope values somehow.
+		path.getElements().add(new MoveTo(startPos, 100));
+		path.getElements().add(new LineTo(startPos + p1, v1));
+		path.getElements().add(new LineTo(startPos + p1 + p2, v2));
+		path.getElements().add(new LineTo(startPos + p1 + p2 + p5, v5));
+		path.getElements().add(new LineTo(endPos - p4 - p3, v3));
+		path.getElements().add(new LineTo(endPos - p4, v4));
+		path.getElements().add(new LineTo(endPos, 100));
+		return new TrackEnvelope(path);
 	}
 }

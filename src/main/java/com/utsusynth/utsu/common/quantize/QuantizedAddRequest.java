@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.common;
+package com.utsusynth.utsu.common.quantize;
 
 import com.google.common.base.Optional;
 

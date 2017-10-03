@@ -5,11 +5,11 @@ import java.util.LinkedList;
 
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.PitchUtils;
-import com.utsusynth.utsu.common.QuantizedAddRequest;
-import com.utsusynth.utsu.common.QuantizedAddResponse;
-import com.utsusynth.utsu.common.QuantizedNeighbor;
-import com.utsusynth.utsu.common.QuantizedNote;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
+import com.utsusynth.utsu.common.quantize.QuantizedAddResponse;
+import com.utsusynth.utsu.common.quantize.QuantizedNeighbor;
+import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.model.pitch.PitchCurve;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
@@ -156,28 +156,6 @@ public class Song {
 		int positionMs = toAdd.getStart() * DEFAULT_NOTE_DURATION / toAdd.getQuantization();
 		SongNode insertedNode = this.noteList.insertNote(note, positionMs);
 
-		// Find neighbors to newly added note.
-		Optional<QuantizedNeighbor> prevNote = Optional.absent();
-		if (insertedNode.getPrev().isPresent()) {
-			int quantizedDelta = note.getDelta() / (DEFAULT_NOTE_DURATION / 32);
-			prevNote = Optional.of(new QuantizedNeighbor(quantizedDelta, 32));
-		}
-		Optional<QuantizedNeighbor> nextNote = Optional.absent();
-		if (insertedNode.getNext().isPresent()) {
-			int quantizedLength = note.getLength() / (DEFAULT_NOTE_DURATION / 32);
-			nextNote = Optional.of(new QuantizedNeighbor(quantizedLength, 32));
-
-			// Modify the next note's portamento.
-			SongNote nextSongNote = insertedNode.getNext().get().getNote();
-			int nextStart = positionMs + note.getLength();
-			pitchbends.removePitchbends(nextStart, nextSongNote.getPitchbends());
-			pitchbends.addPitchbends(
-					nextStart,
-					nextSongNote.getPitchbends(),
-					note.getNoteNum(),
-					nextSongNote.getNoteNum());
-		}
-
 		Optional<LyricConfig> lyricConfig = voicebank.getLyricConfig(request.getLyric());
 		Optional<String> trueLyric = lyricConfig.isPresent()
 				? Optional.of(lyricConfig.get().getTrueLyric()) : Optional.absent();
@@ -196,13 +174,42 @@ public class Song {
 			}
 		}
 
+		// Find neighbors to newly added note.
+		Optional<QuantizedNeighbor> prevNote = Optional.absent();
+		if (insertedNode.getPrev().isPresent()) {
+			int quantizedDelta = note.getDelta() / (DEFAULT_NOTE_DURATION / 32);
+			SongNote prevSongNote = insertedNode.getPrev().get().getNote();
+			prevNote = Optional.of(
+					new QuantizedNeighbor(quantizedDelta, 32, prevSongNote.getQuantizedEnvelope()));
+		}
+		Optional<QuantizedNeighbor> nextNote = Optional.absent();
+		if (insertedNode.getNext().isPresent()) {
+			// Modify the next note's portamento.
+			SongNote nextSongNote = insertedNode.getNext().get().getNote();
+			int nextStart = positionMs + note.getLength();
+			pitchbends.removePitchbends(nextStart, nextSongNote.getPitchbends());
+			pitchbends.addPitchbends(
+					nextStart,
+					nextSongNote.getPitchbends(),
+					note.getNoteNum(),
+					nextSongNote.getNoteNum());
+
+			int quantizedLen = note.getLength() / (DEFAULT_NOTE_DURATION / 32);
+			nextNote = Optional.of(
+					new QuantizedNeighbor(quantizedLen, 32, nextSongNote.getQuantizedEnvelope()));
+		}
+
 		// Add this note's pitchbends.
 		int prevNoteNum = insertedNode.getPrev().isPresent()
 				? insertedNode.getPrev().get().getNote().getNoteNum() : note.getNoteNum();
 		this.pitchbends
 				.addPitchbends(positionMs, note.getPitchbends(), prevNoteNum, note.getNoteNum());
 
-		return new QuantizedAddResponse(trueLyric, prevNote, nextNote);
+		return new QuantizedAddResponse(
+				trueLyric,
+				Optional.of(note.getQuantizedEnvelope()),
+				prevNote,
+				nextNote);
 	}
 
 	public QuantizedAddResponse removeNote(QuantizedNote note) {
@@ -210,21 +217,20 @@ public class Song {
 		SongNode removedNode = this.noteList.removeNote(positionMs);
 		Optional<QuantizedNeighbor> prevNote = Optional.absent();
 		if (removedNode.getPrev().isPresent()) {
-			int quantizedDelta = removedNode.getNote().getDelta() / (DEFAULT_NOTE_DURATION / 32);
-			prevNote = Optional.of(new QuantizedNeighbor(quantizedDelta, 32));
-
 			// Adjust envelope of adjacent previous node, if present.
 			if (removedNode.getPrev().get().getNote().getDuration() == removedNode
 					.getNote()
 					.getDelta()) {
 				removedNode.getPrev().get().getNote().setFadeOut(35); // Default fade out.
 			}
+
+			int quantizedDelta = removedNode.getNote().getDelta() / (DEFAULT_NOTE_DURATION / 32);
+			SongNote prevSongNote = removedNode.getPrev().get().getNote();
+			prevNote = Optional.of(
+					new QuantizedNeighbor(quantizedDelta, 32, prevSongNote.getQuantizedEnvelope()));
 		}
 		Optional<QuantizedNeighbor> nextNote = Optional.absent();
 		if (removedNode.getNext().isPresent()) {
-			int quantizedLength = removedNode.getNote().getLength() / (DEFAULT_NOTE_DURATION / 32);
-			nextNote = Optional.of(new QuantizedNeighbor(quantizedLength, 32));
-
 			// Modify the next note's portamento.
 			SongNote nextSongNote = removedNode.getNext().get().getNote();
 			int nextStart = positionMs + removedNode.getNote().getLength();
@@ -237,12 +243,16 @@ public class Song {
 					nextSongNote.getPitchbends(),
 					prevNoteNum,
 					nextSongNote.getNoteNum());
+
+			int quantizedLen = removedNode.getNote().getLength() / (DEFAULT_NOTE_DURATION / 32);
+			nextNote = Optional.of(
+					new QuantizedNeighbor(quantizedLen, 32, nextSongNote.getQuantizedEnvelope()));
 		}
 
 		// Remove this note's pitchbends.
 		this.pitchbends.removePitchbends(positionMs, removedNode.getNote().getPitchbends());
 
-		return new QuantizedAddResponse(Optional.absent(), prevNote, nextNote);
+		return new QuantizedAddResponse(Optional.absent(), Optional.absent(), prevNote, nextNote);
 	}
 
 	public LinkedList<QuantizedAddRequest> getQuantizedNotes() {
