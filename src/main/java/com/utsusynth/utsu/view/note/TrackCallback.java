@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.note;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.UtsuController.Mode;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 
 /**
@@ -15,12 +16,18 @@ public interface TrackCallback {
 
 	boolean isInBounds(int rowNum);
 
-	Optional<String> addSongNote(TrackNote note, QuantizedNote toAdd, int rowNum, String lyric)
-			throws NoteAlreadyExistsException;
+	Optional<String> addSongNote(
+			TrackNote note,
+			QuantizedNote toAdd,
+			Optional<QuantizedEnvelope> envelope,
+			int rowNum,
+			String lyric) throws NoteAlreadyExistsException;
 
 	void removeSongNote(QuantizedNote toRemove);
 
 	void removeTrackNote(TrackNote trackNote);
+
+	Optional<QuantizedEnvelope> getEnvelope(QuantizedNote note);
 
 	Mode getCurrentMode();
 }

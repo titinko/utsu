@@ -2,6 +2,7 @@ package com.utsusynth.utsu.model;
 
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.model.pitch.PitchbendData;
 
 /**
@@ -233,8 +234,21 @@ public class SongNote {
 		return envelope;
 	}
 
+	public void setEnvelope(QuantizedEnvelope quantizedEnvelope) {
+		int envQuantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedEnvelope.QUANTIZATION;
+		for (int i = 0; i < 5; i++) {
+			envelopeWidth[i] = quantizedEnvelope.getWidth(i) * envQuantSize;
+			envelopeHeight[i] = quantizedEnvelope.getHeight(i);
+		}
+	}
+
 	public QuantizedEnvelope getQuantizedEnvelope() {
-		return new QuantizedEnvelope(envelopeWidth, envelopeHeight);
+		int envQuantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedEnvelope.QUANTIZATION;
+		double[] quantizedWidth = new double[5];
+		for (int i = 0; i < 5; i++) {
+			quantizedWidth[i] = envelopeWidth[i] / envQuantSize;
+		}
+		return new QuantizedEnvelope(quantizedWidth, envelopeHeight);
 	}
 
 	public double getFadeIn() {

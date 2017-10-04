@@ -62,6 +62,9 @@ public class Track {
 					note.getNote().getStart() * (COL_WIDTH / note.getNote().getQuantization());
 			try {
 				noteMap.putNote(position, newNote);
+				if (note.getEnvelope().isPresent()) {
+					noteMap.putEnvelope(position, note.getEnvelope().get());
+				}
 			} catch (NoteAlreadyExistsException e) {
 				// TODO: Throw an error here?
 				System.out.println("UST read found two notes in the same place :(");
@@ -197,6 +200,7 @@ public class Track {
 		public Optional<String> addSongNote(
 				TrackNote note,
 				QuantizedNote toAdd,
+				Optional<QuantizedEnvelope> envelope,
 				int rowNum,
 				String lyric) throws NoteAlreadyExistsException {
 			int position = toAdd.getStart() * (COL_WIDTH / toAdd.getQuantization());
@@ -205,6 +209,7 @@ public class Track {
 			} else {
 				QuantizedAddRequest request = new QuantizedAddRequest(
 						toAdd,
+						envelope,
 						PitchUtils.rowNumToPitch(rowNum),
 						lyric,
 						Optional.absent());
@@ -273,6 +278,15 @@ public class Track {
 		@Override
 		public Mode getCurrentMode() {
 			return model.getCurrentMode();
+		}
+
+		@Override
+		public Optional<QuantizedEnvelope> getEnvelope(QuantizedNote note) {
+			int position = note.getStart() * (COL_WIDTH / note.getQuantization());
+			if (noteMap.hasEnvelope(position)) {
+				return Optional.of(noteMap.getEnvelope(position).getQuantizedEnvelope());
+			}
+			return Optional.absent();
 		}
 	};
 }

@@ -12,10 +12,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
-import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
 
 public class TrackNoteFactory {
@@ -124,16 +122,13 @@ public class TrackNoteFactory {
 		double v4 = 100 - (qEnvelope.getHeight(3) / 2.0);
 		double v5 = 100 - (qEnvelope.getHeight(4) / 2.0);
 
-		Path path = new Path();
-		path.setStroke(Paint.valueOf("yellow"));
-		// TODO: Disallow overlapping envelope values somehow.
-		path.getElements().add(new MoveTo(startPos, 100));
-		path.getElements().add(new LineTo(startPos + p1, v1));
-		path.getElements().add(new LineTo(startPos + p1 + p2, v2));
-		path.getElements().add(new LineTo(startPos + p1 + p2 + p5, v5));
-		path.getElements().add(new LineTo(endPos - p4 - p3, v3));
-		path.getElements().add(new LineTo(endPos - p4, v4));
-		path.getElements().add(new LineTo(endPos, 100));
-		return new TrackEnvelope(path);
+		return new TrackEnvelope(
+				new MoveTo(startPos, 100),
+				new LineTo(startPos + p1, v1),
+				new LineTo(startPos + p1 + p2, v2),
+				new LineTo(startPos + p1 + p2 + p5, v5),
+				new LineTo(endPos - p4 - p3, v3),
+				new LineTo(endPos - p4, v4),
+				new LineTo(endPos, 100));
 	}
 }

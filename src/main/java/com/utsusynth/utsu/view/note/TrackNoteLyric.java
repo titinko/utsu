@@ -54,7 +54,11 @@ public class TrackNoteLyric {
 
 	double getWidth() {
 		// TODO: Infer width from current text instead.
-		return activeNode.getWidth();
+		double width = activeNode.getWidth();
+		if (width <= 0) {
+			return text.getText().length() * 10;
+		}
+		return width;
 	}
 
 	void setVisibleAlias(Optional<String> newAlias) {

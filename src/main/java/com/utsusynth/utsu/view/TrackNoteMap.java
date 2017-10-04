@@ -77,6 +77,14 @@ public class TrackNoteMap {
 		}
 	}
 
+	boolean hasEnvelope(int position) {
+		return envelopeMap.containsKey(position);
+	}
+
+	TrackEnvelope getEnvelope(int position) {
+		return envelopeMap.get(position);
+	}
+
 	boolean isEmpty() {
 		return noteMap.isEmpty() && envelopeMap.isEmpty();
 	}

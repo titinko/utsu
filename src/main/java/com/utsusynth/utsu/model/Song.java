@@ -152,6 +152,9 @@ public class Song {
 		note.setLyric(request.getLyric());
 		note.setNoteNum(PitchUtils.pitchToNoteNum(request.getPitch()));
 		note.setNoteFlags("B0");
+		if (request.getEnvelope().isPresent()) {
+			note.setEnvelope(request.getEnvelope().get());
+		}
 
 		int positionMs = toAdd.getStart() * DEFAULT_NOTE_DURATION / toAdd.getQuantization();
 		SongNode insertedNode = this.noteList.insertNote(note, positionMs);
@@ -269,6 +272,7 @@ public class Song {
 			notes.add(
 					new QuantizedAddRequest(
 							new QuantizedNote(totalQuantizedDelta, quantizedDuration, 32),
+							Optional.of(note.getQuantizedEnvelope()),
 							PitchUtils.noteNumToPitch(note.getNoteNum()),
 							note.getLyric(),
 							trueLyric));

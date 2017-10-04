@@ -100,7 +100,6 @@ public class Ust20Reader {
 					// TODO: Make these notes valid once multi-track is supported.
 					builder.addInvalidNote(note);
 				} else {
-					System.out.println("Note duration is " + note.getDuration());
 					builder.addNote(note);
 				}
 				return i;

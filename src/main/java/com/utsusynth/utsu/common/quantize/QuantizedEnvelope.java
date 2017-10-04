@@ -13,8 +13,7 @@ public class QuantizedEnvelope {
 		this.preutter = 0;
 		ImmutableList.Builder<Integer> widthBuilder = ImmutableList.builder();
 		for (double width : envelopeWidth) {
-			int factor = Quantizer.DEFAULT_NOTE_DURATION / QUANTIZATION;
-			widthBuilder.add((int) (width / factor));
+			widthBuilder.add((int) width);
 		}
 		this.width = widthBuilder.build();
 		ImmutableList.Builder<Integer> heightBuilder = ImmutableList.builder();
