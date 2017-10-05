@@ -25,6 +25,7 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedAddResponse;
+import com.utsusynth.utsu.common.quantize.QuantizedModifyRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.engine.Engine;
@@ -149,6 +150,11 @@ public class UtsuController implements Localizable {
 			@Override
 			public QuantizedAddResponse removeNote(QuantizedNote toRemove) {
 				return songManager.getSong().removeNote(toRemove);
+			}
+
+			@Override
+			public QuantizedAddResponse modifyNote(QuantizedModifyRequest request) {
+				return songManager.getSong().modifyNote(request);
 			}
 
 			@Override

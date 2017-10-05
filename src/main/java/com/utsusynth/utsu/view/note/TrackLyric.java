@@ -9,7 +9,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 
-public class TrackNoteLyric {
+public class TrackLyric {
 	private static final int ROW_HEIGHT = 20;
 	private static final int COL_WIDTH = 80;
 
@@ -18,10 +18,10 @@ public class TrackNoteLyric {
 
 	private final Label text;
 	private final TextField textField;
-	private TrackNoteCallback trackNote;
+	private TrackLyricCallback trackNote;
 	private Region activeNode;
 
-	public TrackNoteLyric(String defaultLyric) {
+	public TrackLyric(String defaultLyric) {
 		this.lyric = defaultLyric;
 		this.alias = Optional.absent();
 		this.text = new Label(defaultLyric);
@@ -32,7 +32,7 @@ public class TrackNoteLyric {
 	}
 
 	/** Connect this lyric to a track note. */
-	void initialize(TrackNoteCallback callback) {
+	void initialize(TrackLyricCallback callback) {
 		this.textField.setOnAction((event) -> {
 			callback.setHighlighted(false);
 		});

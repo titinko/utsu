@@ -1,5 +1,8 @@
 package com.utsusynth.utsu.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 
@@ -8,6 +11,7 @@ import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
  */
 public class SongNoteList implements Iterable<SongNote> {
 	private Optional<SongNode> head;
+	private Map<Integer, SongNode> nodeMap;
 
 	public class Builder {
 		private SongNoteList noteList;
@@ -25,10 +29,17 @@ public class SongNoteList implements Iterable<SongNote> {
 
 		private Builder setHead(Optional<SongNode> newHead) {
 			noteList.head = newHead;
+			noteList.nodeMap = new HashMap<>();
+			totalDelta = 0;
+			overrideDelta = 0;
 			if (newHead.isPresent()) {
 				tail = newHead;
+				totalDelta += newHead.get().getNote().getDelta();
+				noteList.nodeMap.put(totalDelta, newHead.get());
 				while (tail.get().getNext().isPresent()) {
 					tail = tail.get().getNext();
+					totalDelta += tail.get().getNote().getDelta();
+					noteList.nodeMap.put(totalDelta, tail.get());
 				}
 			}
 			return this;
@@ -54,6 +65,9 @@ public class SongNoteList implements Iterable<SongNote> {
 				return this;
 			}
 			totalDelta += note.getDelta();
+			if (tail.isPresent()) {
+				noteList.nodeMap.put(totalDelta, tail.get());
+			}
 			return this;
 		}
 
@@ -109,6 +123,7 @@ public class SongNoteList implements Iterable<SongNote> {
 
 	public SongNoteList() {
 		this.head = Optional.absent();
+		this.nodeMap = new HashMap<>();
 	}
 
 	/**
@@ -121,16 +136,19 @@ public class SongNoteList implements Iterable<SongNote> {
 	 */
 	SongNode insertNote(SongNote noteToInsert, int deltaToInsert)
 			throws NoteAlreadyExistsException {
+		SongNode inserted;
 		if (!head.isPresent()) {
 			this.head = Optional.of(new SongNode(noteToInsert));
 			this.head.get().getNote().setDelta(deltaToInsert);
-			return this.head.get();
+			inserted = this.head.get();
 		} else if (head.get().getNote().getDelta() > deltaToInsert) {
 			this.head = Optional.of(this.head.get().insertFirstNote(noteToInsert, deltaToInsert));
-			return this.head.get();
+			inserted = this.head.get();
 		} else {
-			return this.head.get().insertNote(noteToInsert, deltaToInsert, 0);
+			inserted = this.head.get().insertNote(noteToInsert, deltaToInsert, 0);
 		}
+		nodeMap.put(deltaToInsert, inserted);
+		return inserted;
 	}
 
 	/**
@@ -140,16 +158,29 @@ public class SongNoteList implements Iterable<SongNote> {
 	 * @return The node that was removed.
 	 */
 	SongNode removeNote(int deltaToRemove) {
+		SongNode removed;
 		if (!head.isPresent()) {
 			// TODO: Throw an error here.
 			return null;
 		} else if (head.get().getNote().getDelta() == deltaToRemove) {
-			SongNode removed = this.head.get();
+			removed = this.head.get();
 			this.head = this.head.get().removeFirstNote();
-			return removed;
 		} else {
-			return head.get().removeNote(deltaToRemove, 0);
+			removed = head.get().removeNote(deltaToRemove, 0);
 		}
+		nodeMap.remove(deltaToRemove);
+		return removed;
+	}
+
+	/**
+	 * Fetches a note from the note list.
+	 * 
+	 * @param deltaOfNote
+	 * @return The node found at that delta.
+	 */
+	SongNode getNote(int deltaOfNote) {
+		// TODO: Handle case where note not found at that delta.
+		return nodeMap.get(deltaOfNote);
 	}
 
 	Builder toBuilder() {

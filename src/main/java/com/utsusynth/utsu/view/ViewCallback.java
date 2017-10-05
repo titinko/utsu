@@ -4,6 +4,7 @@ import com.utsusynth.utsu.UtsuController.Mode;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedAddResponse;
+import com.utsusynth.utsu.common.quantize.QuantizedModifyRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 
 /**
@@ -13,6 +14,8 @@ public interface ViewCallback {
 	QuantizedAddResponse addNote(QuantizedAddRequest request) throws NoteAlreadyExistsException;
 
 	QuantizedAddResponse removeNote(QuantizedNote toRemove);
+
+	QuantizedAddResponse modifyNote(QuantizedModifyRequest request);
 
 	Mode getCurrentMode();
 }

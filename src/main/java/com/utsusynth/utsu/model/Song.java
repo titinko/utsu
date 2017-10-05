@@ -8,6 +8,7 @@ import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedAddResponse;
+import com.utsusynth.utsu.common.quantize.QuantizedModifyRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedNeighbor;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.model.pitch.PitchCurve;
@@ -256,6 +257,20 @@ public class Song {
 		this.pitchbends.removePitchbends(positionMs, removedNode.getNote().getPitchbends());
 
 		return new QuantizedAddResponse(Optional.absent(), Optional.absent(), prevNote, nextNote);
+	}
+
+	public QuantizedAddResponse modifyNote(QuantizedModifyRequest request) {
+		QuantizedNote qNote = request.getNote();
+		int positionMs = qNote.getStart() * DEFAULT_NOTE_DURATION / qNote.getQuantization();
+		SongNote note = this.noteList.getNote(positionMs).getNote();
+		if (request.getEnvelope().isPresent()) {
+			note.setEnvelope(request.getEnvelope().get());
+		}
+		return new QuantizedAddResponse(
+				Optional.absent(),
+				Optional.absent(),
+				Optional.absent(),
+				Optional.absent());
 	}
 
 	public LinkedList<QuantizedAddRequest> getQuantizedNotes() {

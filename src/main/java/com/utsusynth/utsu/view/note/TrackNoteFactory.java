@@ -21,15 +21,15 @@ public class TrackNoteFactory {
 	private static final int COL_WIDTH = 96;
 
 	private final Quantizer quantizer;
-	private final Provider<TrackNoteLyric> lyricProvider;
+	private final Provider<TrackLyric> lyricProvider;
 
 	@Inject
-	public TrackNoteFactory(Quantizer quantizer, Provider<TrackNoteLyric> lyricProvider) {
+	public TrackNoteFactory(Quantizer quantizer, Provider<TrackLyric> lyricProvider) {
 		this.quantizer = quantizer;
 		this.lyricProvider = lyricProvider;
 	}
 
-	public TrackNote createNote(QuantizedAddRequest request, TrackCallback callback) {
+	public TrackNote createNote(QuantizedAddRequest request, TrackNoteCallback callback) {
 		QuantizedNote qNote = request.getNote();
 		int absStart = qNote.getStart() * (COL_WIDTH / qNote.getQuantization());
 		int startCol = absStart / COL_WIDTH;
@@ -59,7 +59,7 @@ public class TrackNoteFactory {
 		GridPane.setRowIndex(layout, PitchUtils.pitchToRowNum(request.getPitch()));
 		GridPane.setColumnIndex(layout, startCol);
 
-		TrackNoteLyric lyric = lyricProvider.get();
+		TrackLyric lyric = lyricProvider.get();
 		lyric.setLeftMargin(startMargin);
 
 		TrackNote trackNote =
@@ -70,7 +70,7 @@ public class TrackNoteFactory {
 		return trackNote;
 	}
 
-	public TrackNote createDefaultNote(int row, int column, TrackCallback callback) {
+	public TrackNote createDefaultNote(int row, int column, TrackNoteCallback callback) {
 		Rectangle defaultNote = new Rectangle();
 		defaultNote.setWidth(COL_WIDTH - 1);
 		defaultNote.setHeight(ROW_HEIGHT - 1);
@@ -94,7 +94,7 @@ public class TrackNoteFactory {
 		GridPane.setRowIndex(layout, row);
 		GridPane.setColumnIndex(layout, column);
 
-		TrackNoteLyric lyric = lyricProvider.get();
+		TrackLyric lyric = lyricProvider.get();
 
 		TrackNote trackNote =
 				new TrackNote(defaultNote, noteEdge, overlap, lyric, layout, callback, quantizer);
@@ -103,7 +103,10 @@ public class TrackNoteFactory {
 		return trackNote;
 	}
 
-	public TrackEnvelope createEnvelope(TrackNote note, QuantizedEnvelope qEnvelope) {
+	public TrackEnvelope createEnvelope(
+			TrackNote note,
+			QuantizedEnvelope qEnvelope,
+			TrackEnvelopeCallback callback) {
 		QuantizedNote qNote = note.getQuantizedNote();
 		int noteQuantSize = COL_WIDTH / qNote.getQuantization();
 		int startPos = qNote.getStart() * noteQuantSize;
@@ -129,6 +132,7 @@ public class TrackNoteFactory {
 				new LineTo(startPos + p1 + p2 + p5, v5),
 				new LineTo(endPos - p4 - p3, v3),
 				new LineTo(endPos - p4, v4),
-				new LineTo(endPos, 100));
+				new LineTo(endPos, 100),
+				callback);
 	}
 }

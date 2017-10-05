@@ -22,8 +22,8 @@ public class TrackNote {
 	private final Rectangle note;
 	private final Rectangle dragEdge;
 	private final Rectangle overlap;
-	private final TrackCallback track;
-	private final TrackNoteLyric lyric;
+	private final TrackNoteCallback track;
+	private final TrackLyric lyric;
 	private final Quantizer quantizer;
 	private final int lyricIndex;
 
@@ -39,9 +39,9 @@ public class TrackNote {
 			Rectangle note,
 			Rectangle dragEdge,
 			Rectangle overlap,
-			TrackNoteLyric lyric,
+			TrackLyric lyric,
 			StackPane layout,
-			TrackCallback callback,
+			TrackNoteCallback callback,
 			Quantizer quantizer) {
 		this.note = note;
 		this.dragEdge = dragEdge;
@@ -60,7 +60,7 @@ public class TrackNote {
 		this.lyricIndex = 2; // Index of lyric child of layout.
 
 		TrackNote thisNote = this;
-		lyric.initialize(new TrackNoteCallback() {
+		lyric.initialize(new TrackLyricCallback() {
 			@Override
 			public void setLyricElement(Node lyricElement) {
 				layout.getChildren().set(lyricIndex, lyricElement);

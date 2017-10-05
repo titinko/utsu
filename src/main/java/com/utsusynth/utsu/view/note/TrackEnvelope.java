@@ -18,7 +18,15 @@ public class TrackEnvelope {
 	private final LineTo end;
 	private final Group group;
 
-	TrackEnvelope(MoveTo start, LineTo l1, LineTo l2, LineTo l3, LineTo l4, LineTo l5, LineTo end) {
+	TrackEnvelope(
+			MoveTo start,
+			LineTo l1,
+			LineTo l2,
+			LineTo l3,
+			LineTo l4,
+			LineTo l5,
+			LineTo end,
+			TrackEnvelopeCallback callback) {
 		this.start = start;
 		this.lines = new LineTo[] { l1, l2, l3, l4, l5 };
 		this.circles = new Circle[5];
@@ -29,16 +37,23 @@ public class TrackEnvelope {
 			lines[i].yProperty().bind(circle.centerYProperty());
 			final int index = i;
 			circle.setOnMouseDragged((event) -> {
+				boolean changed = false;
 				// Set reasonable limits for where envelope can be dragged.
 				if (index > 0 && index < 4) {
 					double newX = event.getX();
 					if (newX > lines[index - 1].getX() && newX < lines[index + 1].getX()) {
+						changed = true;
 						circle.setCenterX(newX);
 					}
 				}
 				double newY = event.getY();
 				if (newY >= 0 && newY <= 100) {
+					changed = true;
 					circle.setCenterY(newY);
+				}
+
+				if (changed) {
+					callback.modifySongEnvelope(getQuantizedEnvelope());
 				}
 			});
 			circles[i] = circle;

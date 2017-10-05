@@ -10,10 +10,12 @@ import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedAddResponse;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
+import com.utsusynth.utsu.common.quantize.QuantizedModifyRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedNeighbor;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
-import com.utsusynth.utsu.view.note.TrackCallback;
+import com.utsusynth.utsu.view.note.TrackEnvelopeCallback;
 import com.utsusynth.utsu.view.note.TrackNote;
+import com.utsusynth.utsu.view.note.TrackNoteCallback;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
 
 import javafx.scene.Group;
@@ -63,7 +65,10 @@ public class Track {
 			try {
 				noteMap.putNote(position, newNote);
 				if (note.getEnvelope().isPresent()) {
-					noteMap.putEnvelope(position, note.getEnvelope().get());
+					noteMap.putEnvelope(
+							position,
+							note.getEnvelope().get(),
+							getEnvelopeCallback(position));
 				}
 			} catch (NoteAlreadyExistsException e) {
 				// TODO: Throw an error here?
@@ -177,7 +182,7 @@ public class Track {
 		numMeasures++;
 	}
 
-	private final TrackCallback noteCallback = new TrackCallback() {
+	private final TrackNoteCallback noteCallback = new TrackNoteCallback() {
 		@Override
 		public void setHighlighted(TrackNote note, boolean highlighted) {
 			highlighter.clearHighlights();
@@ -220,7 +225,10 @@ public class Track {
 					QuantizedNeighbor prev = response.getPrevNote().get();
 					int prevDelta = prev.getDelta() * (COL_WIDTH / prev.getQuantization());
 					noteMap.getNote(position - prevDelta).adjustForOverlap(prevDelta);
-					noteMap.putEnvelope(position - prevDelta, prev.getEnvelope());
+					noteMap.putEnvelope(
+							position - prevDelta,
+							prev.getEnvelope(),
+							getEnvelopeCallback(position - prevDelta));
 				}
 				if (response.getNextNote().isPresent()) {
 					QuantizedNeighbor next = response.getNextNote().get();
@@ -230,7 +238,7 @@ public class Track {
 				// Add envelope after adjusting note for overlap.
 				Optional<QuantizedEnvelope> newEnvelope = response.getEnvelope();
 				if (newEnvelope.isPresent()) {
-					noteMap.putEnvelope(position, newEnvelope.get());
+					noteMap.putEnvelope(position, newEnvelope.get(), getEnvelopeCallback(position));
 				}
 
 				// Add measures if necessary.
@@ -260,7 +268,10 @@ public class Track {
 					// Remove measures until you have 4 measures + previous note.
 					setNumMeasures(((position - prevDelta) / COL_WIDTH / 4) + 4);
 				}
-				noteMap.putEnvelope(position - prevDelta, prev.getEnvelope());
+				noteMap.putEnvelope(
+						position - prevDelta,
+						prev.getEnvelope(),
+						getEnvelopeCallback(position - prevDelta));
 			}
 
 			// Remove all measures if necessary.
@@ -289,4 +300,14 @@ public class Track {
 			return Optional.absent();
 		}
 	};
+
+	private TrackEnvelopeCallback getEnvelopeCallback(final int position) {
+		return new TrackEnvelopeCallback() {
+			@Override
+			public void modifySongEnvelope(QuantizedEnvelope envelope) {
+				QuantizedNote note = noteMap.getNote(position).getQuantizedNote();
+				model.modifyNote(new QuantizedModifyRequest(note, Optional.of(envelope)));
+			}
+		};
+	}
 }

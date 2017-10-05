@@ -19,8 +19,8 @@ import com.utsusynth.utsu.model.SongNoteList;
 import com.utsusynth.utsu.model.pitch.PitchCurve;
 import com.utsusynth.utsu.model.pitch.portamento.PortamentoFactory;
 import com.utsusynth.utsu.model.voicebank.VoicebankReader;
+import com.utsusynth.utsu.view.note.TrackLyric;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
-import com.utsusynth.utsu.view.note.TrackNoteLyric;
 
 import javafx.fxml.FXMLLoader;
 
@@ -51,8 +51,8 @@ public class UtsuModule extends AbstractModule {
 	}
 
 	@Provides
-	private TrackNoteLyric provideLyric() {
-		return new TrackNoteLyric("mi");
+	private TrackLyric provideLyric() {
+		return new TrackLyric("mi");
 	}
 
 	@Provides

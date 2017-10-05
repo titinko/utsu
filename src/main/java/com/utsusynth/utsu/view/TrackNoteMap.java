@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.view.note.TrackEnvelope;
+import com.utsusynth.utsu.view.note.TrackEnvelopeCallback;
 import com.utsusynth.utsu.view.note.TrackNote;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
 
@@ -64,10 +65,11 @@ public class TrackNoteMap {
 		}
 	}
 
-	void putEnvelope(int position, QuantizedEnvelope qEnvelope) {
+	void putEnvelope(int position, QuantizedEnvelope qEnvelope, TrackEnvelopeCallback callback) {
 		// Track note must exist before envelope is added.
 		if (noteMap.containsKey(position)) {
-			TrackEnvelope envelope = noteFactory.createEnvelope(noteMap.get(position), qEnvelope);
+			TrackEnvelope envelope =
+					noteFactory.createEnvelope(noteMap.get(position), qEnvelope, callback);
 			// Overrides are expected here.
 			if (envelopeMap.containsKey(position)) {
 				envelopes.getChildren().remove(envelopeMap.get(position).getElement());
