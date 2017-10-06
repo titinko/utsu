@@ -184,7 +184,11 @@ public class Song {
 			int quantizedDelta = note.getDelta() / (DEFAULT_NOTE_DURATION / 32);
 			SongNote prevSongNote = insertedNode.getPrev().get().getNote();
 			prevNote = Optional.of(
-					new QuantizedNeighbor(quantizedDelta, 32, prevSongNote.getQuantizedEnvelope()));
+					new QuantizedNeighbor(
+							quantizedDelta,
+							32,
+							prevSongNote.getQuantizedEnvelope(),
+							Optional.absent()));
 		}
 		Optional<QuantizedNeighbor> nextNote = Optional.absent();
 		if (insertedNode.getNext().isPresent()) {
@@ -200,7 +204,12 @@ public class Song {
 
 			int quantizedLen = note.getLength() / (DEFAULT_NOTE_DURATION / 32);
 			nextNote = Optional.of(
-					new QuantizedNeighbor(quantizedLen, 32, nextSongNote.getQuantizedEnvelope()));
+					new QuantizedNeighbor(
+							quantizedLen,
+							32,
+							nextSongNote.getQuantizedEnvelope(),
+							Optional.of(
+									nextSongNote.getPitchbends().quantize(request.getPitch()))));
 		}
 
 		// Add this note's pitchbends.
@@ -208,10 +217,12 @@ public class Song {
 				? insertedNode.getPrev().get().getNote().getNoteNum() : note.getNoteNum();
 		this.pitchbends
 				.addPitchbends(positionMs, note.getPitchbends(), prevNoteNum, note.getNoteNum());
+		String prevPitch = PitchUtils.noteNumToPitch(prevNoteNum);
 
 		return new QuantizedAddResponse(
 				trueLyric,
 				Optional.of(note.getQuantizedEnvelope()),
+				Optional.of(note.getPitchbends().quantize(prevPitch)),
 				prevNote,
 				nextNote);
 	}
@@ -231,7 +242,11 @@ public class Song {
 			int quantizedDelta = removedNode.getNote().getDelta() / (DEFAULT_NOTE_DURATION / 32);
 			SongNote prevSongNote = removedNode.getPrev().get().getNote();
 			prevNote = Optional.of(
-					new QuantizedNeighbor(quantizedDelta, 32, prevSongNote.getQuantizedEnvelope()));
+					new QuantizedNeighbor(
+							quantizedDelta,
+							32,
+							prevSongNote.getQuantizedEnvelope(),
+							Optional.absent()));
 		}
 		Optional<QuantizedNeighbor> nextNote = Optional.absent();
 		if (removedNode.getNext().isPresent()) {
@@ -249,14 +264,24 @@ public class Song {
 					nextSongNote.getNoteNum());
 
 			int quantizedLen = removedNode.getNote().getLength() / (DEFAULT_NOTE_DURATION / 32);
+			String prevPitch = PitchUtils.noteNumToPitch(prevNoteNum);
 			nextNote = Optional.of(
-					new QuantizedNeighbor(quantizedLen, 32, nextSongNote.getQuantizedEnvelope()));
+					new QuantizedNeighbor(
+							quantizedLen,
+							32,
+							nextSongNote.getQuantizedEnvelope(),
+							Optional.of(nextSongNote.getPitchbends().quantize(prevPitch))));
 		}
 
 		// Remove this note's pitchbends.
 		this.pitchbends.removePitchbends(positionMs, removedNode.getNote().getPitchbends());
 
-		return new QuantizedAddResponse(Optional.absent(), Optional.absent(), prevNote, nextNote);
+		return new QuantizedAddResponse(
+				Optional.absent(),
+				Optional.absent(),
+				Optional.absent(),
+				prevNote,
+				nextNote);
 	}
 
 	public QuantizedAddResponse modifyNote(QuantizedModifyRequest request) {
@@ -270,12 +295,13 @@ public class Song {
 				Optional.absent(),
 				Optional.absent(),
 				Optional.absent(),
+				Optional.absent(),
 				Optional.absent());
 	}
 
 	public LinkedList<QuantizedAddRequest> getQuantizedNotes() {
 		LinkedList<QuantizedAddRequest> notes = new LinkedList<>();
-		Iterator<SongNote> iterator = noteList.iterator();
+		SongIterator iterator = noteList.iterator();
 		int totalQuantizedDelta = 0;
 		while (iterator.hasNext()) {
 			SongNote note = iterator.next();
@@ -284,10 +310,14 @@ public class Song {
 			Optional<LyricConfig> lyricConfig = voicebank.getLyricConfig(note.getLyric());
 			Optional<String> trueLyric = lyricConfig.isPresent()
 					? Optional.of(lyricConfig.get().getTrueLyric()) : Optional.absent();
+			String prevPitch = iterator.peekPrev().isPresent()
+					? PitchUtils.noteNumToPitch(iterator.peekPrev().get().getNoteNum())
+					: PitchUtils.noteNumToPitch(note.getNoteNum());
 			notes.add(
 					new QuantizedAddRequest(
 							new QuantizedNote(totalQuantizedDelta, quantizedDuration, 32),
 							Optional.of(note.getQuantizedEnvelope()),
+							Optional.of(note.getPitchbends().quantize(prevPitch)),
 							PitchUtils.noteNumToPitch(note.getNoteNum()),
 							note.getLyric(),
 							trueLyric));

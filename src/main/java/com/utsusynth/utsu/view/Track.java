@@ -70,6 +70,9 @@ public class Track {
 							note.getEnvelope().get(),
 							getEnvelopeCallback(position));
 				}
+				if (note.getPitchbend().isPresent()) {
+					noteMap.putPitchbend(position, note.getPitchbend().get());
+				}
 			} catch (NoteAlreadyExistsException e) {
 				// TODO: Throw an error here?
 				System.out.println("UST read found two notes in the same place :(");
@@ -89,6 +92,10 @@ public class Track {
 
 	public Group getEnvelopesElement() {
 		return noteMap.getEnvelopesElement();
+	}
+
+	public Group getPitchbendsElement() {
+		return noteMap.getPitchbendsElement();
 	}
 
 	private void clearTrack() {
@@ -215,6 +222,7 @@ public class Track {
 				QuantizedAddRequest request = new QuantizedAddRequest(
 						toAdd,
 						envelope,
+						Optional.absent(),
 						PitchUtils.rowNumToPitch(rowNum),
 						lyric,
 						Optional.absent());
@@ -234,11 +242,21 @@ public class Track {
 					QuantizedNeighbor next = response.getNextNote().get();
 					int nextDelta = next.getDelta() * (COL_WIDTH / next.getQuantization());
 					note.adjustForOverlap(nextDelta);
+					noteMap.putEnvelope(
+							position + nextDelta,
+							next.getEnvelope(),
+							getEnvelopeCallback(position + nextDelta));
+					if (next.getPitchbend().isPresent()) {
+						noteMap.putPitchbend(position + nextDelta, next.getPitchbend().get());
+					}
 				}
 				// Add envelope after adjusting note for overlap.
 				Optional<QuantizedEnvelope> newEnvelope = response.getEnvelope();
 				if (newEnvelope.isPresent()) {
 					noteMap.putEnvelope(position, newEnvelope.get(), getEnvelopeCallback(position));
+				}
+				if (response.getPitchbend().isPresent()) {
+					noteMap.putPitchbend(position, response.getPitchbend().get());
 				}
 
 				// Add measures if necessary.
@@ -263,6 +281,13 @@ public class Track {
 					QuantizedNeighbor next = response.getNextNote().get();
 					int nextDelta = next.getDelta() * (COL_WIDTH / next.getQuantization());
 					prevNode.adjustForOverlap(prevDelta + nextDelta);
+					noteMap.putEnvelope(
+							position + nextDelta,
+							next.getEnvelope(),
+							getEnvelopeCallback(position + nextDelta));
+					if (next.getPitchbend().isPresent()) {
+						noteMap.putPitchbend(position + nextDelta, next.getPitchbend().get());
+					}
 				} else {
 					prevNode.adjustForOverlap(Integer.MAX_VALUE);
 					// Remove measures until you have 4 measures + previous note.

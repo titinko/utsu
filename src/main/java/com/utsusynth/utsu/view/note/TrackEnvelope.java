@@ -3,7 +3,7 @@ package com.utsusynth.utsu.view.note;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 
 import javafx.scene.Group;
-import javafx.scene.paint.Paint;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
@@ -14,7 +14,6 @@ public class TrackEnvelope {
 
 	private final MoveTo start;
 	private final LineTo[] lines;
-	private final Circle[] circles; // Control points.
 	private final LineTo end;
 	private final Group group;
 
@@ -29,10 +28,10 @@ public class TrackEnvelope {
 			TrackEnvelopeCallback callback) {
 		this.start = start;
 		this.lines = new LineTo[] { l1, l2, l3, l4, l5 };
-		this.circles = new Circle[5];
+		Circle[] circles = new Circle[5]; // Control points.
 		for (int i = 0; i < 5; i++) {
 			Circle circle = new Circle(lines[i].getX(), lines[i].getY(), 3);
-			circle.setFill(Paint.valueOf("yellow"));
+			circle.setFill(Color.YELLOW);
 			lines[i].xProperty().bind(circle.centerXProperty());
 			lines[i].yProperty().bind(circle.centerYProperty());
 			final int index = i;
@@ -60,7 +59,7 @@ public class TrackEnvelope {
 		}
 		this.end = end;
 		Path path = new Path(start, lines[0], lines[1], lines[2], lines[3], lines[4], end);
-		path.setStroke(Paint.valueOf("yellow"));
+		path.setStroke(Color.YELLOW);
 		this.group = new Group(path, circles[0], circles[1], circles[2], circles[4], circles[3]);
 	}
 

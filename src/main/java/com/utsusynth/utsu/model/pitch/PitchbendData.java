@@ -1,6 +1,8 @@
 package com.utsusynth.utsu.model.pitch;
 
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 
 public class PitchbendData {
 	private final ImmutableList<Double> pbs; // Pitch bend start.
@@ -34,5 +36,15 @@ public class PitchbendData {
 
 	public ImmutableList<String> getPBM() {
 		return pbm;
+	}
+
+	public QuantizedPitchbend quantize(String prevPitch) {
+		int quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPitchbend.QUANTIZATION;
+		int start = (int) Math.ceil(pbs.get(0) / quantSize);
+		ImmutableList.Builder<Integer> widths = ImmutableList.builder();
+		for (double width : pbw) {
+			widths.add((int) Math.floor(width / quantSize));
+		}
+		return new QuantizedPitchbend(prevPitch, start, widths.build(), pby, pbm);
 	}
 }

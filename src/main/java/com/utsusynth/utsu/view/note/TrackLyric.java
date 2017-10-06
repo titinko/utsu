@@ -3,9 +3,9 @@ package com.utsusynth.utsu.view.note;
 import com.google.common.base.Optional;
 
 import javafx.geometry.Insets;
+import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 
@@ -19,7 +19,7 @@ public class TrackLyric {
 	private final Label text;
 	private final TextField textField;
 	private TrackLyricCallback trackNote;
-	private Region activeNode;
+	private Group activeNode;
 
 	public TrackLyric(String defaultLyric) {
 		this.lyric = defaultLyric;
@@ -29,6 +29,10 @@ public class TrackLyric {
 		this.textField.setFont(Font.font(9));
 		this.textField.setMaxHeight(ROW_HEIGHT - 2);
 		this.textField.setMaxWidth(COL_WIDTH - 2);
+
+		// Initialize with text active.
+		activeNode = new Group();
+		activeNode.getChildren().add(text);
 	}
 
 	/** Connect this lyric to a track note. */
@@ -48,14 +52,18 @@ public class TrackLyric {
 		}
 	}
 
+	Group getElement() {
+		return activeNode;
+	}
+
 	String getLyric() {
 		return this.lyric;
 	}
 
 	double getWidth() {
-		// TODO: Infer width from current text instead.
-		double width = activeNode.getWidth();
+		double width = Math.max(textField.getWidth(), text.getWidth());
 		if (width <= 0) {
+			// If width not calculated yet, infer from current text instead.
 			return text.getText().length() * 10;
 		}
 		return width;
@@ -69,34 +77,33 @@ public class TrackLyric {
 		}
 	}
 
-	Region openTextElement() {
-		this.activeNode = this.text;
-		return this.text;
+	void openTextElement() {
+		this.activeNode.getChildren().clear();
+		this.activeNode.getChildren().add(this.text);
 	}
 
 	void openTextField() {
-		this.activeNode = this.textField;
-		this.trackNote.setLyricElement(this.textField);
+		this.activeNode.getChildren().clear();
+		this.activeNode.getChildren().add(this.textField);
 		this.textField.requestFocus();
 		this.textField.selectAll();
 	}
 
 	void closeTextFieldIfNeeded() {
-		if (this.activeNode == this.textField) {
-			this.activeNode = this.text;
-			String lyric = textField.getText();
-			setVisibleLyric(lyric);
-			this.trackNote.setLyricElement(this.text);
-			this.trackNote.setSongLyric(lyric);
+		if (this.textField.isVisible()) {
+			this.activeNode.getChildren().clear();
+			this.activeNode.getChildren().add(this.text);
+			String newLyric = textField.getText();
+			setVisibleLyric(newLyric);
+			this.trackNote.setSongLyric(newLyric);
 		}
 	}
 
-	void setSongLyric(String lyric) {
+	void registerLyric() {
 		trackNote.setSongLyric(lyric);
 	}
 
 	void setLeftMargin(int newMargin) {
-		StackPane.setMargin(text, new Insets(0, 0, 0, newMargin));
-		StackPane.setMargin(textField, new Insets(0, 0, 0, newMargin));
+		StackPane.setMargin(activeNode, new Insets(0, 0, 0, newMargin));
 	}
 }

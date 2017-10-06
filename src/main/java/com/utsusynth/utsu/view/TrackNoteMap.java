@@ -6,10 +6,12 @@ import java.util.Map;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
+import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
 import com.utsusynth.utsu.view.note.TrackEnvelope;
 import com.utsusynth.utsu.view.note.TrackEnvelopeCallback;
 import com.utsusynth.utsu.view.note.TrackNote;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
+import com.utsusynth.utsu.view.note.TrackPitchbend;
 
 import javafx.scene.Group;
 
@@ -19,7 +21,9 @@ public class TrackNoteMap {
 	// Maps absolute position to track note's data.
 	private Map<Integer, TrackNote> noteMap;
 	private Map<Integer, TrackEnvelope> envelopeMap;
+	private Map<Integer, TrackPitchbend> pitchbendMap;
 	private Group envelopes;
+	private Group pitchbends;
 
 	@Inject
 	public TrackNoteMap(TrackNoteFactory noteFactory) {
@@ -31,10 +35,16 @@ public class TrackNoteMap {
 		return envelopes;
 	}
 
+	Group getPitchbendsElement() {
+		return pitchbends;
+	}
+
 	void clear() {
 		noteMap = new HashMap<>();
 		envelopeMap = new HashMap<>();
+		pitchbendMap = new HashMap<>();
 		envelopes = new Group();
+		pitchbends = new Group();
 	}
 
 	boolean hasNote(int position) {
@@ -63,6 +73,10 @@ public class TrackNoteMap {
 			envelopes.getChildren().remove(envelopeMap.get(position).getElement());
 			envelopeMap.remove(position);
 		}
+		if (pitchbendMap.containsKey(position)) {
+			pitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
+			pitchbendMap.remove(position);
+		}
 	}
 
 	void putEnvelope(int position, QuantizedEnvelope qEnvelope, TrackEnvelopeCallback callback) {
@@ -87,7 +101,28 @@ public class TrackNoteMap {
 		return envelopeMap.get(position);
 	}
 
+	void putPitchbend(int position, QuantizedPitchbend qPitchbend) {
+		if (noteMap.containsKey(position)) {
+			TrackPitchbend pitchbend =
+					noteFactory.createPitchbend(noteMap.get(position), qPitchbend);
+			// Overrides are expected here.
+			if (pitchbendMap.containsKey(position)) {
+				pitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
+			}
+			pitchbendMap.put(position, pitchbend);
+			pitchbends.getChildren().add(pitchbend.getElement());
+		}
+	}
+
+	boolean hasPitchbend(int position) {
+		return pitchbendMap.containsKey(position);
+	}
+
+	TrackPitchbend getPitchbend(int position) {
+		return pitchbendMap.get(position);
+	}
+
 	boolean isEmpty() {
-		return noteMap.isEmpty() && envelopeMap.isEmpty();
+		return noteMap.isEmpty() && envelopeMap.isEmpty() && pitchbendMap.isEmpty();
 	}
 }

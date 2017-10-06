@@ -9,7 +9,6 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
@@ -25,7 +24,6 @@ public class TrackNote {
 	private final TrackNoteCallback track;
 	private final TrackLyric lyric;
 	private final Quantizer quantizer;
-	private final int lyricIndex;
 
 	// Temporary cache values.
 	private enum SubMode {
@@ -55,21 +53,14 @@ public class TrackNote {
 		this.layout.getChildren().addAll(
 				this.note,
 				this.overlap,
-				this.lyric.openTextElement(),
+				this.lyric.getElement(),
 				this.dragEdge);
-		this.lyricIndex = 2; // Index of lyric child of layout.
 
 		TrackNote thisNote = this;
 		lyric.initialize(new TrackLyricCallback() {
 			@Override
-			public void setLyricElement(Node lyricElement) {
-				layout.getChildren().set(lyricIndex, lyricElement);
-			}
-
-			@Override
 			public void setHighlighted(boolean highlighted) {
 				callback.setHighlighted(thisNote, false);
-
 			}
 
 			@Override
@@ -216,6 +207,10 @@ public class TrackNote {
 		int quantizedDuration =
 				(int) ((getDuration() - overlap.getWidth()) / (COL_WIDTH / quantization));
 		return new QuantizedNote(getQuantizedStart(quantization), quantizedDuration, quantization);
+	}
+
+	public int getRow() {
+		return GridPane.getRowIndex(layout);
 	}
 
 	/**

@@ -24,8 +24,8 @@ public class Piano {
 		for (int octave = 7; octave > 0; octave--) {
 			for (String pitch : PitchUtils.REVERSE_PITCHES) {
 				Pane leftHalfOfKey = new Pane();
-				leftHalfOfKey.getStyleClass()
-						.add(pitch.endsWith("#") ? "piano-black-key" : "piano-white-key");
+				leftHalfOfKey.getStyleClass().add(
+						pitch.endsWith("#") ? "piano-black-key" : "piano-white-key");
 				leftHalfOfKey.setPrefSize(60, 20);
 				leftHalfOfKey.getChildren().add(new Label(pitch + octave));
 

@@ -1,12 +1,19 @@
 package com.utsusynth.utsu.view.note;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
+import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
 import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.view.note.pitch.JPitch;
+import com.utsusynth.utsu.view.note.pitch.Pitch;
+import com.utsusynth.utsu.view.note.pitch.RPitch;
+import com.utsusynth.utsu.view.note.pitch.SPitch;
+import com.utsusynth.utsu.view.note.pitch.StraightPitch;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -98,7 +105,7 @@ public class TrackNoteFactory {
 
 		TrackNote trackNote =
 				new TrackNote(defaultNote, noteEdge, overlap, lyric, layout, callback, quantizer);
-		lyric.setSongLyric(lyric.getLyric());
+		lyric.registerLyric();
 
 		return trackNote;
 	}
@@ -134,5 +141,39 @@ public class TrackNoteFactory {
 				new LineTo(endPos - p4, v4),
 				new LineTo(endPos, 100),
 				callback);
+	}
+
+	public TrackPitchbend createPitchbend(TrackNote note, QuantizedPitchbend qPitchbend) {
+		QuantizedNote qNote = note.getQuantizedNote();
+		int noteQuantSize = COL_WIDTH / qNote.getQuantization();
+		int pitchQuantSize = COL_WIDTH / QuantizedPitchbend.QUANTIZATION;
+		int curX = (qNote.getStart() * noteQuantSize) + (qPitchbend.getStart() * pitchQuantSize);
+		double curY = (PitchUtils.pitchToRowNum(qPitchbend.getPrevPitch()) + .5) * ROW_HEIGHT;
+
+		ImmutableList.Builder<Pitch> builder = ImmutableList.builder();
+		for (int i = 0; i < qPitchbend.getNumWidths(); i++) {
+			int tempX = curX;
+			curX += qPitchbend.getWidth(i) * pitchQuantSize;
+			double tempY = curY;
+			if (i == qPitchbend.getNumWidths() - 1) {
+				curY = (note.getRow() + .5) * ROW_HEIGHT;
+			} else {
+				curY -= (qPitchbend.getShift(i) / 10) * ROW_HEIGHT;
+			}
+			switch (qPitchbend.getCurve(i)) {
+			case "r":
+				builder.add(new RPitch(tempX, tempY, curX, curY));
+				break;
+			case "j":
+				builder.add(new JPitch(tempX, tempY, curX, curY));
+				break;
+			case "s":
+				builder.add(new StraightPitch(tempX, tempY, curX, curY));
+				break;
+			default:
+				builder.add(new SPitch(tempX, tempY, curX, curY));
+			}
+		}
+		return new TrackPitchbend(builder.build());
 	}
 }
