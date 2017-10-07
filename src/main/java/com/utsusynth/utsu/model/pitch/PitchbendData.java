@@ -11,6 +11,20 @@ public class PitchbendData {
 	private final ImmutableList<String> pbm; // Pitch bend curves
 	// TODO: Add vibrato
 
+	public static PitchbendData fromQuantized(QuantizedPitchbend qPitchbend) {
+		double quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPitchbend.QUANTIZATION;
+		ImmutableList<Double> pbs = ImmutableList.of(qPitchbend.getStart() * quantSize, 0.0);
+		ImmutableList.Builder<Double> pbwBuilder = ImmutableList.builder();
+		for (int i = 0; i < qPitchbend.getNumWidths(); i++) {
+			pbwBuilder.add(qPitchbend.getWidth(i) * quantSize);
+		}
+		return new PitchbendData(
+				pbs,
+				pbwBuilder.build(),
+				qPitchbend.getShifts(),
+				qPitchbend.getCurves());
+	}
+
 	public PitchbendData(
 			ImmutableList<Double> pbs,
 			ImmutableList<Double> pbw,

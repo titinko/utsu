@@ -42,9 +42,17 @@ public class QuantizedPitchbend {
 		return widths.get(index);
 	}
 
+	public ImmutableList<Double> getShifts() {
+		return pitchShifts;
+	}
+
 	public double getShift(int index) {
 		// TODO: Handle index out of bounds exception.
 		return pitchShifts.get(index);
+	}
+
+	public ImmutableList<String> getCurves() {
+		return curves;
 	}
 
 	public String getCurve(int index) {

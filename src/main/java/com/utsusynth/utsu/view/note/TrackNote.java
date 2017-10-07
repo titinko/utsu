@@ -5,6 +5,7 @@ import com.utsusynth.utsu.UtsuController.Mode;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
+import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.geometry.Insets;
@@ -310,12 +311,14 @@ public class TrackNote {
 			String newLyric) {
 		// System.out.println("***");
 		Optional<QuantizedEnvelope> envelope = Optional.absent();
+		Optional<QuantizedPitchbend> pitchbend = Optional.absent();
 		if (note.getStyleClass().contains("valid-note")) {
 			// System.out.println(String.format(
 			// "Moving from valid %d, %s", oldQuant, lyric.getLyric()));
 			int quantOldDuration = oldDuration / (COL_WIDTH / quantization);
 			QuantizedNote deleteThis = new QuantizedNote(oldQuant, quantOldDuration, quantization);
 			envelope = track.getEnvelope(deleteThis);
+			pitchbend = track.getPitchbend(deleteThis);
 			track.removeSongNote(deleteThis);
 		} else {
 			// System.out.println(String.format(
@@ -327,7 +330,7 @@ public class TrackNote {
 			int quantNewDuration = newDuration / (COL_WIDTH / quantization);
 			QuantizedNote addThis = new QuantizedNote(newQuant, quantNewDuration, quantization);
 			Optional<String> trueLyric =
-					track.addSongNote(this, addThis, envelope, newRow, newLyric);
+					track.addSongNote(this, addThis, envelope, pitchbend, newRow, newLyric);
 			this.lyric.setVisibleAlias(trueLyric);
 		} catch (NoteAlreadyExistsException e) {
 			setValid(false);

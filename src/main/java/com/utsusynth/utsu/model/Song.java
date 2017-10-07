@@ -12,6 +12,7 @@ import com.utsusynth.utsu.common.quantize.QuantizedModifyRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedNeighbor;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.model.pitch.PitchCurve;
+import com.utsusynth.utsu.model.pitch.PitchbendData;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankReader;
@@ -155,6 +156,9 @@ public class Song {
 		note.setNoteFlags("B0");
 		if (request.getEnvelope().isPresent()) {
 			note.setEnvelope(request.getEnvelope().get());
+		}
+		if (request.getPitchbend().isPresent()) {
+			note.setPitchbends(PitchbendData.fromQuantized(request.getPitchbend().get()));
 		}
 
 		int positionMs = toAdd.getStart() * DEFAULT_NOTE_DURATION / toAdd.getQuantization();

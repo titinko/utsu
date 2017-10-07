@@ -90,7 +90,7 @@ public class TrackLyric {
 	}
 
 	void closeTextFieldIfNeeded() {
-		if (this.textField.isVisible()) {
+		if (this.activeNode.getChildren().contains(this.textField)) {
 			this.activeNode.getChildren().clear();
 			this.activeNode.getChildren().add(this.text);
 			String newLyric = textField.getText();

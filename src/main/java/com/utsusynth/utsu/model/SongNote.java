@@ -152,6 +152,13 @@ public class SongNote {
 		return new PitchbendData(pbs, pbw, pby, pbm);
 	}
 
+	public void setPitchbends(PitchbendData pitchbends) {
+		this.pbs = pitchbends.getPBS();
+		this.pbw = pitchbends.getPBW();
+		this.pby = pitchbends.getPBY();
+		this.pbm = pitchbends.getPBM();
+	}
+
 	public void setPBS(String[] pbsValues) {
 		ImmutableList.Builder<Double> builder = ImmutableList.builder();
 		for (String value : pbsValues) {

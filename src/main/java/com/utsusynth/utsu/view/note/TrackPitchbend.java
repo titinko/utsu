@@ -1,6 +1,8 @@
 package com.utsusynth.utsu.view.note;
 
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
 import com.utsusynth.utsu.view.note.pitch.Pitch;
 
 import javafx.scene.Group;
@@ -9,6 +11,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 
 public class TrackPitchbend {
+	private static final int ROW_HEIGHT = 20;
+	private static final int COL_WIDTH = 96;
+
 	private final ImmutableList<Pitch> lines;
 	private final ImmutableList<Rectangle> squares; // Control points.
 	private final Group group;
@@ -56,5 +61,30 @@ public class TrackPitchbend {
 
 	public Group getElement() {
 		return group;
+	}
+
+	public QuantizedPitchbend getQuantizedPitchbend(int notePos) {
+		assert (lines.size() > 0);
+		int pitchQuantSize = COL_WIDTH / QuantizedPitchbend.QUANTIZATION;
+		String prevPitch = PitchUtils.rowNumToPitch((int) (lines.get(0).getStartY() / ROW_HEIGHT));
+		int start = (int) ((lines.get(0).getStartX() - notePos) / pitchQuantSize);
+		double endY = lines.get(lines.size() - 1).getEndY();
+		ImmutableList.Builder<Integer> widths = ImmutableList.builder();
+		ImmutableList.Builder<Double> heights = ImmutableList.builder();
+		ImmutableList.Builder<String> shapes = ImmutableList.builder();
+		for (int i = 0; i < lines.size(); i++) {
+			Pitch line = lines.get(i);
+			widths.add((int) (line.getEndX() - line.getStartX()) / pitchQuantSize);
+			if (i < lines.size() - 1) {
+				heights.add((endY - line.getEndY()) / ROW_HEIGHT * 10);
+			}
+			shapes.add(line.getType());
+		}
+		return new QuantizedPitchbend(
+				prevPitch,
+				start,
+				widths.build(),
+				heights.build(),
+				shapes.build());
 	}
 }

@@ -70,6 +70,6 @@ public class JPitch implements Pitch {
 
 	@Override
 	public String getType() {
-		return "r";
+		return "j";
 	}
 }

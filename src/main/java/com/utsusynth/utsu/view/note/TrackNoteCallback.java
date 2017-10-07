@@ -5,6 +5,7 @@ import com.utsusynth.utsu.UtsuController.Mode;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
+import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
 
 /**
  * A way of communicating TrackNote information back to its parent Track.
@@ -20,6 +21,7 @@ public interface TrackNoteCallback {
 			TrackNote note,
 			QuantizedNote toAdd,
 			Optional<QuantizedEnvelope> envelope,
+			Optional<QuantizedPitchbend> pitchbend,
 			int rowNum,
 			String lyric) throws NoteAlreadyExistsException;
 
@@ -28,6 +30,8 @@ public interface TrackNoteCallback {
 	void removeTrackNote(TrackNote trackNote);
 
 	Optional<QuantizedEnvelope> getEnvelope(QuantizedNote note);
+
+	Optional<QuantizedPitchbend> getPitchbend(QuantizedNote note);
 
 	Mode getCurrentMode();
 }

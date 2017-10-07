@@ -147,6 +147,8 @@ public class TrackNoteFactory {
 		QuantizedNote qNote = note.getQuantizedNote();
 		int noteQuantSize = COL_WIDTH / qNote.getQuantization();
 		int pitchQuantSize = COL_WIDTH / QuantizedPitchbend.QUANTIZATION;
+		double finalY = (note.getRow() + .5) * ROW_HEIGHT;
+
 		int curX = (qNote.getStart() * noteQuantSize) + (qPitchbend.getStart() * pitchQuantSize);
 		double curY = (PitchUtils.pitchToRowNum(qPitchbend.getPrevPitch()) + .5) * ROW_HEIGHT;
 
@@ -156,9 +158,9 @@ public class TrackNoteFactory {
 			curX += qPitchbend.getWidth(i) * pitchQuantSize;
 			double tempY = curY;
 			if (i == qPitchbend.getNumWidths() - 1) {
-				curY = (note.getRow() + .5) * ROW_HEIGHT;
+				curY = finalY;
 			} else {
-				curY -= (qPitchbend.getShift(i) / 10) * ROW_HEIGHT;
+				curY = finalY - (qPitchbend.getShift(i) / 10) * ROW_HEIGHT;
 			}
 			switch (qPitchbend.getCurve(i)) {
 			case "r":

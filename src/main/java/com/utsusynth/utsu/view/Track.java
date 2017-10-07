@@ -13,6 +13,7 @@ import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.common.quantize.QuantizedModifyRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedNeighbor;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
+import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
 import com.utsusynth.utsu.view.note.TrackEnvelopeCallback;
 import com.utsusynth.utsu.view.note.TrackNote;
 import com.utsusynth.utsu.view.note.TrackNoteCallback;
@@ -213,6 +214,7 @@ public class Track {
 				TrackNote note,
 				QuantizedNote toAdd,
 				Optional<QuantizedEnvelope> envelope,
+				Optional<QuantizedPitchbend> pitchbend,
 				int rowNum,
 				String lyric) throws NoteAlreadyExistsException {
 			int position = toAdd.getStart() * (COL_WIDTH / toAdd.getQuantization());
@@ -222,7 +224,7 @@ public class Track {
 				QuantizedAddRequest request = new QuantizedAddRequest(
 						toAdd,
 						envelope,
-						Optional.absent(),
+						pitchbend,
 						PitchUtils.rowNumToPitch(rowNum),
 						lyric,
 						Optional.absent());
@@ -321,6 +323,15 @@ public class Track {
 			int position = note.getStart() * (COL_WIDTH / note.getQuantization());
 			if (noteMap.hasEnvelope(position)) {
 				return Optional.of(noteMap.getEnvelope(position).getQuantizedEnvelope());
+			}
+			return Optional.absent();
+		}
+
+		@Override
+		public Optional<QuantizedPitchbend> getPitchbend(QuantizedNote note) {
+			int position = note.getStart() * (COL_WIDTH / note.getQuantization());
+			if (noteMap.hasPitchbend(position)) {
+				return Optional.of(noteMap.getPitchbend(position).getQuantizedPitchbend(position));
 			}
 			return Optional.absent();
 		}

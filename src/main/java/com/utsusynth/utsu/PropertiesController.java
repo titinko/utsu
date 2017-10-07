@@ -91,6 +91,7 @@ public class PropertiesController implements Localizable {
 		this.songManager = songManager;
 		this.engine = engine;
 		this.localizer = localizer;
+		this.voicebankReader = voicebankReader;
 	}
 
 	public void initialize() {
