@@ -143,7 +143,10 @@ public class TrackNoteFactory {
 				callback);
 	}
 
-	public TrackPitchbend createPitchbend(TrackNote note, QuantizedPitchbend qPitchbend) {
+	public TrackPitchbend createPitchbend(
+			TrackNote note,
+			QuantizedPitchbend qPitchbend,
+			TrackPitchbendCallback callback) {
 		QuantizedNote qNote = note.getQuantizedNote();
 		int noteQuantSize = COL_WIDTH / qNote.getQuantization();
 		int pitchQuantSize = COL_WIDTH / QuantizedPitchbend.QUANTIZATION;
@@ -176,6 +179,6 @@ public class TrackNoteFactory {
 				builder.add(new SPitch(tempX, tempY, curX, curY));
 			}
 		}
-		return new TrackPitchbend(builder.build());
+		return new TrackPitchbend(builder.build(), callback);
 	}
 }

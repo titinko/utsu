@@ -35,7 +35,7 @@ public class TrackEnvelope {
 			lines[i].xProperty().bind(circle.centerXProperty());
 			lines[i].yProperty().bind(circle.centerYProperty());
 			final int index = i;
-			circle.setOnMouseDragged((event) -> {
+			circle.setOnMouseDragged(event -> {
 				boolean changed = false;
 				// Set reasonable limits for where envelope can be dragged.
 				if (index > 0 && index < 4) {

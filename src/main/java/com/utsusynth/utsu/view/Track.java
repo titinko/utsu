@@ -18,6 +18,8 @@ import com.utsusynth.utsu.view.note.TrackEnvelopeCallback;
 import com.utsusynth.utsu.view.note.TrackNote;
 import com.utsusynth.utsu.view.note.TrackNoteCallback;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
+import com.utsusynth.utsu.view.note.TrackPitchbend;
+import com.utsusynth.utsu.view.note.TrackPitchbendCallback;
 
 import javafx.scene.Group;
 import javafx.scene.layout.AnchorPane;
@@ -72,7 +74,10 @@ public class Track {
 							getEnvelopeCallback(position));
 				}
 				if (note.getPitchbend().isPresent()) {
-					noteMap.putPitchbend(position, note.getPitchbend().get());
+					noteMap.putPitchbend(
+							position,
+							note.getPitchbend().get(),
+							getPitchbendCallback(position));
 				}
 			} catch (NoteAlreadyExistsException e) {
 				// TODO: Throw an error here?
@@ -249,7 +254,10 @@ public class Track {
 							next.getEnvelope(),
 							getEnvelopeCallback(position + nextDelta));
 					if (next.getPitchbend().isPresent()) {
-						noteMap.putPitchbend(position + nextDelta, next.getPitchbend().get());
+						noteMap.putPitchbend(
+								position + nextDelta,
+								next.getPitchbend().get(),
+								getPitchbendCallback(position + nextDelta));
 					}
 				}
 				// Add envelope after adjusting note for overlap.
@@ -258,7 +266,10 @@ public class Track {
 					noteMap.putEnvelope(position, newEnvelope.get(), getEnvelopeCallback(position));
 				}
 				if (response.getPitchbend().isPresent()) {
-					noteMap.putPitchbend(position, response.getPitchbend().get());
+					noteMap.putPitchbend(
+							position,
+							response.getPitchbend().get(),
+							getPitchbendCallback(position));
 				}
 
 				// Add measures if necessary.
@@ -288,7 +299,10 @@ public class Track {
 							next.getEnvelope(),
 							getEnvelopeCallback(position + nextDelta));
 					if (next.getPitchbend().isPresent()) {
-						noteMap.putPitchbend(position + nextDelta, next.getPitchbend().get());
+						noteMap.putPitchbend(
+								position + nextDelta,
+								next.getPitchbend().get(),
+								getPitchbendCallback(position + nextDelta));
 					}
 				} else {
 					prevNode.adjustForOverlap(Integer.MAX_VALUE);
@@ -342,7 +356,18 @@ public class Track {
 			@Override
 			public void modifySongEnvelope(QuantizedEnvelope envelope) {
 				QuantizedNote note = noteMap.getNote(position).getQuantizedNote();
-				model.modifyNote(new QuantizedModifyRequest(note, Optional.of(envelope)));
+				model.modifyNote(new QuantizedModifyRequest(note, envelope));
+			}
+		};
+	}
+
+	private TrackPitchbendCallback getPitchbendCallback(final int position) {
+		return new TrackPitchbendCallback() {
+			@Override
+			public void modifySongPitchbend(TrackPitchbend pitchbend) {
+				QuantizedNote note = noteMap.getNote(position).getQuantizedNote();
+				QuantizedPitchbend qPitchbend = pitchbend.getQuantizedPitchbend(position);
+				model.modifyNote(new QuantizedModifyRequest(note, qPitchbend));
 			}
 		};
 	}

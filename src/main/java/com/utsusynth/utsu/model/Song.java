@@ -291,9 +291,19 @@ public class Song {
 	public QuantizedAddResponse modifyNote(QuantizedModifyRequest request) {
 		QuantizedNote qNote = request.getNote();
 		int positionMs = qNote.getStart() * DEFAULT_NOTE_DURATION / qNote.getQuantization();
-		SongNote note = this.noteList.getNote(positionMs).getNote();
+		SongNode node = this.noteList.getNote(positionMs);
+		SongNote note = node.getNote();
 		if (request.getEnvelope().isPresent()) {
 			note.setEnvelope(request.getEnvelope().get());
+		}
+		if (request.getPitchbend().isPresent()) {
+			this.pitchbends.removePitchbends(positionMs, note.getPitchbends());
+			PitchbendData newPitchbend = PitchbendData.fromQuantized(request.getPitchbend().get());
+			note.setPitchbends(newPitchbend);
+
+			int prevNoteNum = node.getPrev().isPresent()
+					? node.getPrev().get().getNote().getNoteNum() : note.getNoteNum();
+			this.pitchbends.addPitchbends(positionMs, newPitchbend, prevNoteNum, note.getNoteNum());
 		}
 		return new QuantizedAddResponse(
 				Optional.absent(),

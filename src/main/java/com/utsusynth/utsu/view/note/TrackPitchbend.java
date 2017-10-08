@@ -18,30 +18,25 @@ public class TrackPitchbend {
 	private final ImmutableList<Rectangle> squares; // Control points.
 	private final Group group;
 
-	TrackPitchbend(ImmutableList<Pitch> lines) {
+	TrackPitchbend(ImmutableList<Pitch> lines, TrackPitchbendCallback callback) {
 		ImmutableList.Builder<Rectangle> squareBuilder = ImmutableList.builder();
 		if (!lines.isEmpty()) {
-			// Add start and end control points.
-			Pitch first = lines.get(0);
-			Rectangle startSquare =
-					new Rectangle(first.getStartX() - 2, first.getStartY() - 2, 4, 4);
-			first.bindStart(startSquare.xProperty(), startSquare.yProperty());
-			squareBuilder.add(startSquare);
+			// Add all control points except the last.
+			for (int i = 0; i < lines.size(); i++) {
+				Pitch pitch = lines.get(i);
+				Rectangle square =
+						new Rectangle(pitch.getStartX() - 2, pitch.getStartY() - 2, 4, 4);
+				if (i > 0) {
+					lines.get(i - 1).bindEnd(square.xProperty(), square.yProperty());
+				}
+				pitch.bindStart(square.xProperty(), square.yProperty());
+				squareBuilder.add(square);
+			}
+			// Add last control point.
 			Pitch last = lines.get(lines.size() - 1);
 			Rectangle endSquare = new Rectangle(last.getEndX() - 2, last.getEndY() - 2, 4, 4);
 			last.bindEnd(endSquare.xProperty(), endSquare.yProperty());
 			squareBuilder.add(endSquare);
-			if (lines.size() > 1) {
-				// Add middle control points.
-				for (int i = 1; i < lines.size(); i++) {
-					Pitch pitch = lines.get(i);
-					Rectangle square =
-							new Rectangle(pitch.getStartX() - 2, pitch.getStartY() - 2, 4, 4);
-					lines.get(i - 1).bindEnd(square.xProperty(), square.yProperty());
-					pitch.bindStart(square.xProperty(), square.yProperty());
-					squareBuilder.add(square);
-				}
-			}
 		}
 		this.lines = lines;
 		this.squares = squareBuilder.build();
@@ -52,9 +47,41 @@ public class TrackPitchbend {
 			shape.setFill(Color.TRANSPARENT);
 			this.group.getChildren().add(shape);
 		}
-		for (Rectangle square : squares) {
+		for (int i = 0; i < squares.size(); i++) {
+			Rectangle square = squares.get(i);
 			square.setStroke(Color.DARKSLATEBLUE);
 			square.setFill(Color.TRANSPARENT);
+			final int index = i;
+			square.setOnMouseDragged(event -> {
+				boolean changed = false;
+				double newX = event.getX();
+				if (index == 0) {
+					if (newX > 0 && newX < squares.get(index + 1).getX() + 2) {
+						changed = true;
+						square.setX(newX - 2);
+					}
+				} else if (index == squares.size() - 1) {
+					if (newX > squares.get(index - 1).getX() + 2) {
+						changed = true;
+						square.setX(newX - 2);
+					}
+				} else if (newX > squares.get(index - 1).getX() + 2
+						&& newX < squares.get(index + 1).getX() + 2) {
+					changed = true;
+					square.setX(newX - 2);
+				}
+
+				if (index > 0 && index < squares.size() - 1) {
+					double newY = event.getY();
+					if (newY > 0 && newY < ROW_HEIGHT * 12 * 7) {
+						changed = true;
+						square.setY(newY - 2);
+					}
+				}
+				if (changed) {
+					callback.modifySongPitchbend(this);
+				}
+			});
 			this.group.getChildren().add(square);
 		}
 	}

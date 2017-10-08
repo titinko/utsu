@@ -67,9 +67,9 @@ public class TrackNote {
 			@Override
 			public void setSongLyric(String newLyric) {
 				thisNote.updateNote(
-						thisNote.getQuantizedStart(),
-						thisNote.getQuantizedStart(),
-						quantizer.getQuant(),
+						thisNote.getQuantizedStart(Quantizer.SMALLEST),
+						thisNote.getQuantizedStart(Quantizer.SMALLEST),
+						Quantizer.SMALLEST,
 						thisNote.getDuration(),
 						GridPane.getRowIndex(layout),
 						thisNote.getDuration(),

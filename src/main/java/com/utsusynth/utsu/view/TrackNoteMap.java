@@ -12,6 +12,7 @@ import com.utsusynth.utsu.view.note.TrackEnvelopeCallback;
 import com.utsusynth.utsu.view.note.TrackNote;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
 import com.utsusynth.utsu.view.note.TrackPitchbend;
+import com.utsusynth.utsu.view.note.TrackPitchbendCallback;
 
 import javafx.scene.Group;
 
@@ -101,10 +102,13 @@ public class TrackNoteMap {
 		return envelopeMap.get(position);
 	}
 
-	void putPitchbend(int position, QuantizedPitchbend qPitchbend) {
+	void putPitchbend(
+			int position,
+			QuantizedPitchbend qPitchbend,
+			TrackPitchbendCallback callback) {
 		if (noteMap.containsKey(position)) {
 			TrackPitchbend pitchbend =
-					noteFactory.createPitchbend(noteMap.get(position), qPitchbend);
+					noteFactory.createPitchbend(noteMap.get(position), qPitchbend, callback);
 			// Overrides are expected here.
 			if (pitchbendMap.containsKey(position)) {
 				pitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
