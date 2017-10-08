@@ -64,8 +64,8 @@
                         </VBox>
                         <VBox prefHeight="200.0" prefWidth="100.0" spacing="20.0">
                            <children>
-                              <ChoiceBox fx:id="quantizeChoiceBox" prefWidth="150.0" />
                               <ChoiceBox fx:id="modeChoiceBox" prefWidth="150.0" />
+                              <ChoiceBox fx:id="quantizeChoiceBox" prefWidth="150.0" />
                            </children>
                         </VBox>
                         <Button fx:id="renderButton" mnemonicParsing="false" onAction="#renderSong" text="Render" />

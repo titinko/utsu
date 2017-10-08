@@ -82,9 +82,13 @@ public class Track {
 				// TODO: Throw an error here?
 				System.out.println("UST read found two notes in the same place :(");
 			}
-			track.getChildren().add(newNote.getElement());
+			noteMap.addNoteElement(newNote);
 		}
 		return track;
+	}
+
+	public Group getNotesElement() {
+		return noteMap.getNotesElement();
 	}
 
 	public GridPane getDynamicsElement() {
@@ -163,7 +167,7 @@ public class Track {
 							// Create note.
 							TrackNote newNote = noteFactory
 									.createDefaultNote(currentRowNum, currentColNum, noteCallback);
-							track.getChildren().add(newNote.getElement());
+							noteMap.addNoteElement(newNote);
 						}
 						// Clear highlights regardless of current mode.
 						highlighter.clearHighlights();
@@ -323,7 +327,7 @@ public class Track {
 		@Override
 		public void removeTrackNote(TrackNote trackNote) {
 			highlighter.clearHighlights();
-			track.getChildren().remove(trackNote.getElement());
+			noteMap.removeNoteElement(trackNote);
 		}
 
 		@Override

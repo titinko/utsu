@@ -206,6 +206,8 @@ public class TrackPitchbend {
 					oldCurve.getEndX(),
 					oldCurve.getEndY(),
 					curveType);
+			newCurve.bindStart(squares.get(curveIndex));
+			newCurve.bindEnd(squares.get(curveIndex + 1));
 			curves.set(curveIndex, newCurve);
 			curveGroup.getChildren().remove(oldCurve.getElement());
 			curveGroup.getChildren().add(newCurve.getElement());

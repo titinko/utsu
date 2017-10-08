@@ -23,6 +23,7 @@ public class TrackNoteMap {
 	private Map<Integer, TrackNote> noteMap;
 	private Map<Integer, TrackEnvelope> envelopeMap;
 	private Map<Integer, TrackPitchbend> pitchbendMap;
+	private Group notes;
 	private Group envelopes;
 	private Group pitchbends;
 
@@ -30,6 +31,10 @@ public class TrackNoteMap {
 	public TrackNoteMap(TrackNoteFactory noteFactory) {
 		this.noteFactory = noteFactory;
 		clear();
+	}
+
+	Group getNotesElement() {
+		return notes;
 	}
 
 	Group getEnvelopesElement() {
@@ -44,6 +49,7 @@ public class TrackNoteMap {
 		noteMap = new HashMap<>();
 		envelopeMap = new HashMap<>();
 		pitchbendMap = new HashMap<>();
+		notes = new Group();
 		envelopes = new Group();
 		pitchbends = new Group();
 	}
@@ -61,6 +67,14 @@ public class TrackNoteMap {
 			throw new NoteAlreadyExistsException();
 		}
 		noteMap.put(position, note);
+	}
+
+	void addNoteElement(TrackNote note) {
+		notes.getChildren().add(note.getElement());
+	}
+
+	void removeNoteElement(TrackNote note) {
+		notes.getChildren().remove(note.getElement());
 	}
 
 	void removeFullNote(int position) {

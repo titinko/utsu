@@ -15,7 +15,6 @@ import com.utsusynth.utsu.view.note.pitch.CurveFactory;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
@@ -42,23 +41,18 @@ public class TrackNoteFactory {
 	public TrackNote createNote(QuantizedAddRequest request, TrackNoteCallback callback) {
 		QuantizedNote qNote = request.getNote();
 		int absStart = qNote.getStart() * (COL_WIDTH / qNote.getQuantization());
-		int startCol = absStart / COL_WIDTH;
-		int startMargin = absStart % COL_WIDTH;
 		int absDuration = qNote.getDuration() * (COL_WIDTH / qNote.getQuantization());
 		Rectangle note = new Rectangle();
 		note.setWidth(absDuration - 1);
 		note.setHeight(ROW_HEIGHT - 1);
 		note.getStyleClass().addAll("track-note", "valid-note", "not-highlighted");
-		StackPane.setMargin(note, new Insets(0, 0, 0, startMargin));
 
 		Rectangle noteEdge = new Rectangle();
-		StackPane.setAlignment(noteEdge, Pos.CENTER_RIGHT);
 		noteEdge.setWidth(2);
 		noteEdge.setHeight(note.getHeight());
 		noteEdge.getStyleClass().add("drag-edge");
 
 		Rectangle overlap = new Rectangle();
-		StackPane.setAlignment(overlap, Pos.CENTER_RIGHT);
 		overlap.setWidth(0);
 		overlap.setHeight(note.getHeight());
 		overlap.getStyleClass().add("drag-edge");
@@ -66,11 +60,10 @@ public class TrackNoteFactory {
 		StackPane layout = new StackPane();
 		layout.setPickOnBounds(false);
 		layout.setAlignment(Pos.CENTER_LEFT);
-		GridPane.setRowIndex(layout, PitchUtils.pitchToRowNum(request.getPitch()));
-		GridPane.setColumnIndex(layout, startCol);
+		layout.setTranslateY(PitchUtils.pitchToRowNum(request.getPitch()) * ROW_HEIGHT);
+		layout.setTranslateX(absStart);
 
 		TrackLyric lyric = lyricProvider.get();
-		lyric.setLeftMargin(startMargin);
 
 		TrackNote trackNote =
 				new TrackNote(note, noteEdge, overlap, lyric, layout, callback, quantizer);
@@ -87,22 +80,22 @@ public class TrackNoteFactory {
 		defaultNote.getStyleClass().addAll("track-note", "invalid-note", "not-highlighted");
 
 		Rectangle noteEdge = new Rectangle();
-		StackPane.setAlignment(noteEdge, Pos.CENTER_RIGHT);
 		noteEdge.setWidth(2);
 		noteEdge.setHeight(defaultNote.getHeight());
 		noteEdge.getStyleClass().add("drag-edge");
+		StackPane.setMargin(noteEdge, new Insets(0, 0, 0, COL_WIDTH - 3));
 
 		Rectangle overlap = new Rectangle();
-		StackPane.setAlignment(overlap, Pos.CENTER_RIGHT);
 		overlap.setWidth(0);
 		overlap.setHeight(defaultNote.getHeight());
 		overlap.getStyleClass().add("drag-edge");
+		StackPane.setMargin(overlap, new Insets(0, 0, 0, COL_WIDTH - 1));
 
 		StackPane layout = new StackPane();
 		layout.setPickOnBounds(false);
 		layout.setAlignment(Pos.CENTER_LEFT);
-		GridPane.setRowIndex(layout, row);
-		GridPane.setColumnIndex(layout, column);
+		layout.setTranslateY(row * ROW_HEIGHT);
+		layout.setTranslateX(column * COL_WIDTH);
 
 		TrackLyric lyric = lyricProvider.get();
 

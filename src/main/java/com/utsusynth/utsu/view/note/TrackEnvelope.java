@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.note;
 
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 
+import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -35,6 +36,12 @@ public class TrackEnvelope {
 			lines[i].xProperty().bind(circle.centerXProperty());
 			lines[i].yProperty().bind(circle.centerYProperty());
 			final int index = i;
+			circle.setOnMouseEntered(event -> {
+				circle.getScene().setCursor(Cursor.HAND);
+			});
+			circle.setOnMouseExited(event -> {
+				circle.getScene().setCursor(Cursor.DEFAULT);
+			});
 			circle.setOnMouseDragged(event -> {
 				boolean changed = false;
 				// Set reasonable limits for where envelope can be dragged.

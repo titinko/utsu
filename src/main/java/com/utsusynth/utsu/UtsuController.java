@@ -250,6 +250,7 @@ public class UtsuController implements Localizable {
 		anchorRight
 				.getChildren()
 				.add(track.createNewTrack(songManager.getSong().getQuantizedNotes()));
+		anchorRight.getChildren().add(track.getNotesElement());
 		anchorRight.getChildren().add(track.getPitchbendsElement());
 		anchorBottom.getChildren().clear();
 		anchorBottom.getChildren().add(track.getDynamicsElement());

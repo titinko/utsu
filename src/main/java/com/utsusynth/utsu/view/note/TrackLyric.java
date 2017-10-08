@@ -2,11 +2,9 @@ package com.utsusynth.utsu.view.note;
 
 import com.google.common.base.Optional;
 
-import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 
 public class TrackLyric {
@@ -101,9 +99,5 @@ public class TrackLyric {
 
 	void registerLyric() {
 		trackNote.setSongLyric(lyric);
-	}
-
-	void setLeftMargin(int newMargin) {
-		StackPane.setMargin(activeNode, new Insets(0, 0, 0, newMargin));
 	}
 }
