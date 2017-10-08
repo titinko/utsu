@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.view.note;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.PitchUtils;
@@ -9,11 +10,8 @@ import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
 import com.utsusynth.utsu.common.quantize.Quantizer;
-import com.utsusynth.utsu.view.note.pitch.JPitch;
-import com.utsusynth.utsu.view.note.pitch.Pitch;
-import com.utsusynth.utsu.view.note.pitch.RPitch;
-import com.utsusynth.utsu.view.note.pitch.SPitch;
-import com.utsusynth.utsu.view.note.pitch.StraightPitch;
+import com.utsusynth.utsu.view.note.pitch.Curve;
+import com.utsusynth.utsu.view.note.pitch.CurveFactory;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,11 +27,16 @@ public class TrackNoteFactory {
 
 	private final Quantizer quantizer;
 	private final Provider<TrackLyric> lyricProvider;
+	private final CurveFactory curveFactory;
 
 	@Inject
-	public TrackNoteFactory(Quantizer quantizer, Provider<TrackLyric> lyricProvider) {
+	public TrackNoteFactory(
+			Quantizer quantizer,
+			Provider<TrackLyric> lyricProvider,
+			CurveFactory curveFactory) {
 		this.quantizer = quantizer;
 		this.lyricProvider = lyricProvider;
+		this.curveFactory = curveFactory;
 	}
 
 	public TrackNote createNote(QuantizedAddRequest request, TrackNoteCallback callback) {
@@ -155,7 +158,7 @@ public class TrackNoteFactory {
 		int curX = (qNote.getStart() * noteQuantSize) + (qPitchbend.getStart() * pitchQuantSize);
 		double curY = (PitchUtils.pitchToRowNum(qPitchbend.getPrevPitch()) + .5) * ROW_HEIGHT;
 
-		ImmutableList.Builder<Pitch> builder = ImmutableList.builder();
+		ArrayList<Curve> pitchCurves = new ArrayList<>();
 		for (int i = 0; i < qPitchbend.getNumWidths(); i++) {
 			int tempX = curX;
 			curX += qPitchbend.getWidth(i) * pitchQuantSize;
@@ -165,20 +168,9 @@ public class TrackNoteFactory {
 			} else {
 				curY = finalY - (qPitchbend.getShift(i) / 10) * ROW_HEIGHT;
 			}
-			switch (qPitchbend.getCurve(i)) {
-			case "r":
-				builder.add(new RPitch(tempX, tempY, curX, curY));
-				break;
-			case "j":
-				builder.add(new JPitch(tempX, tempY, curX, curY));
-				break;
-			case "s":
-				builder.add(new StraightPitch(tempX, tempY, curX, curY));
-				break;
-			default:
-				builder.add(new SPitch(tempX, tempY, curX, curY));
-			}
+			String type = qPitchbend.getCurve(i);
+			pitchCurves.add(curveFactory.createCurve(tempX, tempY, curX, curY, type));
 		}
-		return new TrackPitchbend(builder.build(), callback);
+		return new TrackPitchbend(pitchCurves, callback, curveFactory);
 	}
 }

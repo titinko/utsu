@@ -18,7 +18,6 @@ import com.utsusynth.utsu.view.note.TrackEnvelopeCallback;
 import com.utsusynth.utsu.view.note.TrackNote;
 import com.utsusynth.utsu.view.note.TrackNoteCallback;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
-import com.utsusynth.utsu.view.note.TrackPitchbend;
 import com.utsusynth.utsu.view.note.TrackPitchbendCallback;
 
 import javafx.scene.Group;
@@ -364,9 +363,10 @@ public class Track {
 	private TrackPitchbendCallback getPitchbendCallback(final int position) {
 		return new TrackPitchbendCallback() {
 			@Override
-			public void modifySongPitchbend(TrackPitchbend pitchbend) {
+			public void modifySongPitchbend() {
 				QuantizedNote note = noteMap.getNote(position).getQuantizedNote();
-				QuantizedPitchbend qPitchbend = pitchbend.getQuantizedPitchbend(position);
+				QuantizedPitchbend qPitchbend =
+						noteMap.getPitchbend(position).getQuantizedPitchbend(position);
 				model.modifyNote(new QuantizedModifyRequest(note, qPitchbend));
 			}
 		};

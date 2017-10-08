@@ -1,16 +1,20 @@
 package com.utsusynth.utsu.view.note.pitch;
 
-import javafx.beans.property.DoubleProperty;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.CubicCurve;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 
-public class JPitch implements Pitch {
+/** Represents a portamento that is a j-shaped curve. */
+public class JCurve implements Curve {
 	private final CubicCurve curve;
 
-	public JPitch(double startX, double startY, double endX, double endY) {
+	public JCurve(double startX, double startY, double endX, double endY) {
 		double halfX = (startX + endX) / 2;
 		double halfY = (startY + endY) / 2;
 		this.curve = new CubicCurve(startX, startY, halfX, startY, endX, halfY, endX, endY);
+		this.curve.setStroke(Color.DARKSLATEBLUE);
+		this.curve.setFill(Color.TRANSPARENT);
 	}
 
 	@Override
@@ -39,14 +43,14 @@ public class JPitch implements Pitch {
 	}
 
 	@Override
-	public void bindStart(DoubleProperty xControl, DoubleProperty yControl) {
-		xControl.addListener(event -> {
-			double centerX = xControl.get() + 2;
+	public void bindStart(Rectangle controlPoint) {
+		controlPoint.xProperty().addListener(event -> {
+			double centerX = controlPoint.getX() + 2;
 			curve.setStartX(centerX);
 			curve.setControlX1((centerX + curve.getEndX()) / 2);
 		});
-		yControl.addListener(event -> {
-			double centerY = yControl.get() + 2;
+		controlPoint.yProperty().addListener(event -> {
+			double centerY = controlPoint.getY() + 2;
 			curve.setStartY(centerY);
 			curve.setControlY1(centerY);
 			curve.setControlY2((centerY + curve.getEndY()) / 2);
@@ -54,15 +58,15 @@ public class JPitch implements Pitch {
 	}
 
 	@Override
-	public void bindEnd(DoubleProperty xControl, DoubleProperty yControl) {
-		xControl.addListener(event -> {
-			double centerX = xControl.get() + 2;
+	public void bindEnd(Rectangle controlPoint) {
+		controlPoint.xProperty().addListener(event -> {
+			double centerX = controlPoint.getX() + 2;
 			curve.setEndX(centerX);
 			curve.setControlX1((curve.getStartX() + centerX) / 2);
 			curve.setControlX2(centerX);
 		});
-		yControl.addListener(event -> {
-			double centerY = yControl.get() + 2;
+		controlPoint.yProperty().addListener(event -> {
+			double centerY = controlPoint.getY() + 2;
 			curve.setEndY(centerY);
 			curve.setControlY2((curve.getStartY() + centerY) / 2);
 		});
