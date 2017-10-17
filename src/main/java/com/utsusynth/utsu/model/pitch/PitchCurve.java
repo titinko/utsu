@@ -59,9 +59,9 @@ public class PitchCurve {
 			// Add portamento to all affected steps on the pitch curve.
 			for (int j = nextPitchStep(startMs); j <= prevPitchStep(endMs); j++) {
 				if (pitchbends.containsKey(j)) {
-					pitchbends.get(j).addPortamento(portamento);
+					pitchbends.get(j).addPortamento(noteStartMs, portamento);
 				} else {
-					pitchbends.put(j, Pitchbend.makePitchbend(portamento));
+					pitchbends.put(j, Pitchbend.makePitchbend(noteStartMs, portamento));
 				}
 			}
 			// End of the current pitchbend is the start of the next one.
@@ -110,7 +110,7 @@ public class PitchCurve {
 			// Remove portamento from each pitch step it covers.
 			if (pitchbends.containsKey(i)) {
 				Pitchbend pitchbend = pitchbends.get(i);
-				pitchbend.removePortamento();
+				pitchbend.removePortamento(noteStartMs);
 				if (pitchbend.isEmpty()) {
 					pitchbends.remove(i);
 				}
