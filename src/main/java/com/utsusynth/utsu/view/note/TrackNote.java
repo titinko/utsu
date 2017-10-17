@@ -10,6 +10,10 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
@@ -21,6 +25,7 @@ public class TrackNote {
 	private final Rectangle note;
 	private final Rectangle dragEdge;
 	private final Rectangle overlap;
+	private final ContextMenu contextMenu;
 	private final TrackNoteCallback track;
 	private final TrackLyric lyric;
 	private final Quantizer quantizer;
@@ -81,12 +86,24 @@ public class TrackNote {
 				thisNote.adjustDragEdge(thisNote.getDuration());
 			}
 		});
-		layout.setOnMouseClicked((event) -> {
+
+		// Create context menu.
+		this.contextMenu = new ContextMenu();
+		MenuItem deleteMenuItem = new MenuItem("Delete");
+		deleteMenuItem.setOnAction(action -> deleteNote());
+		CheckMenuItem vibratoMenuItem = new CheckMenuItem("Vibrato");
+		contextMenu.getItems().addAll(deleteMenuItem, vibratoMenuItem);
+		layout.setOnContextMenuRequested(event -> {
+			contextMenu.hide();
+			contextMenu.show(layout, event.getScreenX(), event.getScreenY());
+		});
+
+		layout.setOnMouseClicked(event -> {
+			if (event.getButton() != MouseButton.PRIMARY) {
+				return;
+			}
 			if (track.getCurrentMode() == Mode.DELETE) {
-				if (note.getStyleClass().contains("valid-note")) {
-					track.removeSongNote(getQuantizedNote());
-				}
-				track.removeTrackNote(this);
+				deleteNote();
 			} else if (subMode == SubMode.CLICKING) {
 				if (this.track.isHighlighted(this)) {
 					this.lyric.openTextField();
@@ -96,11 +113,11 @@ public class TrackNote {
 			}
 			subMode = SubMode.CLICKING;
 		});
-		layout.setOnMouseDragged((action) -> {
+		layout.setOnMouseDragged(event -> {
 			if (subMode == SubMode.RESIZING) {
 				// Find quantized mouse position.
 				int quantSize = COL_WIDTH / quantizer.getQuant();
-				int newQuant = (int) Math.floor((action.getX() + getAbsPosition()) / quantSize);
+				int newQuant = (int) Math.floor((event.getX() + getAbsPosition()) / quantSize);
 
 				// Find what to compare quantized mouse position to.
 				int oldEndPos = getAbsPosition() + getDuration();
@@ -122,7 +139,7 @@ public class TrackNote {
 			} else {
 				// Handle vertical movement and check against row bounds.
 				int oldRow = getRow();
-				int newRow = ((int) Math.floor(action.getY() / ROW_HEIGHT)) + oldRow;
+				int newRow = ((int) Math.floor(event.getY() / ROW_HEIGHT)) + oldRow;
 				if (!track.isInBounds(newRow)) {
 					newRow = oldRow;
 				}
@@ -133,13 +150,13 @@ public class TrackNote {
 				// Determine whether a note is aligned with the current quantization.
 				boolean aligned = getAbsPosition() % curQuantSize == 0;
 				int oldQuantInNote = quantInNote / (Quantizer.SMALLEST / curQuant);
-				int newQuantInNote = (int) Math.floor(action.getX() / curQuantSize);
+				int newQuantInNote = (int) Math.floor(event.getX() / curQuantSize);
 				int quantChange = newQuantInNote - oldQuantInNote;
 				if (!aligned) {
 					// Possibly increase quantChange by 1.
 					int minBound = getDuration();
 					int ceilQuantDur = (int) Math.ceil(getDuration() * 1.0 / curQuantSize);
-					if (action.getX() > minBound && newQuantInNote < ceilQuantDur) {
+					if (event.getX() > minBound && newQuantInNote < ceilQuantDur) {
 						quantChange++;
 					}
 					// Convert to smallest quantization.
@@ -174,13 +191,13 @@ public class TrackNote {
 				subMode = SubMode.DRAGGING;
 			}
 		});
-		dragEdge.setOnMouseEntered((event) -> {
+		dragEdge.setOnMouseEntered(event -> {
 			dragEdge.getScene().setCursor(Cursor.W_RESIZE);
 		});
-		dragEdge.setOnMouseExited((event) -> {
+		dragEdge.setOnMouseExited(event -> {
 			dragEdge.getScene().setCursor(Cursor.DEFAULT);
 		});
-		layout.setOnMousePressed((event) -> {
+		layout.setOnMousePressed(event -> {
 			if (layout.getScene().getCursor() == Cursor.W_RESIZE) {
 				subMode = SubMode.RESIZING;
 			} else {
@@ -236,6 +253,15 @@ public class TrackNote {
 			overlap.setWidth(0);
 		}
 		adjustDragEdge(getDuration());
+	}
+
+	private void deleteNote() {
+		contextMenu.hide();
+		lyric.closeTextFieldIfNeeded();
+		if (note.getStyleClass().contains("valid-note")) {
+			track.removeSongNote(getQuantizedNote());
+		}
+		track.removeTrackNote(this);
 	}
 
 	private void resizeNote(int newDuration) {
