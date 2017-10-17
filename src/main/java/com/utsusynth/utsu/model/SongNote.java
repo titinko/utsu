@@ -149,7 +149,7 @@ public class SongNote {
 	}
 
 	public PitchbendData getPitchbends() {
-		return new PitchbendData(pbs, pbw, pby, pbm);
+		return new PitchbendData(pbs, pbw, pby, pbm, vibrato);
 	}
 
 	public void setPitchbends(PitchbendData pitchbends) {

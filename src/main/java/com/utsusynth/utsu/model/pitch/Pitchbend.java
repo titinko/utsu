@@ -62,10 +62,12 @@ class Pitchbend implements PitchMutation {
 	public double apply(int positionMs) {
 		double portamentoVal = 0;
 		if (portamento.isPresent()) {
+			// Portamento pitch is absolute.
 			portamentoVal = portamento.get().apply(positionMs);
 		}
 		double vibratoVal = 0;
 		if (vibrato.isPresent()) {
+			// Vibrato pitch is centered on zero, meant to modify portamento pitch.
 			vibratoVal = vibrato.get().apply(positionMs);
 		}
 		return portamentoVal + vibratoVal;

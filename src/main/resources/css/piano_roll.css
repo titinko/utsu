@@ -39,9 +39,14 @@
 }
 
 .track-note.invalid-note.not-highlighted,
-.drag-edge {
+.note-overlap {
     -fx-fill: gray;
     -fx-stroke: darkslategray;
+}
+
+.drag-edge {
+	-fx-fill: darkslategray;
+	-fx-stroke: black;
 }
 
 .track-note.invalid-note.highlighted {

@@ -18,7 +18,6 @@ public class PitchCurve {
 	private final HashMap<Integer, Pitchbend> pitchbends;
 	private final PortamentoFactory portamentoFactory;
 
-	// TODO: Put this in a provider.
 	@Inject
 	public PitchCurve(PortamentoFactory portamentoFactory) {
 		this.pitchbends = new HashMap<Integer, Pitchbend>();
@@ -28,6 +27,7 @@ public class PitchCurve {
 	/** Adds pitchbends for a single note. */
 	public void addPitchbends(
 			int noteStartMs,
+			int noteLengthMs,
 			PitchbendData data,
 			int prevNoteNum,
 			int curNoteNum) {
@@ -35,14 +35,14 @@ public class PitchCurve {
 			// TODO: Handle this.
 			return;
 		}
-		// Start x value (in milliseconds) and y value (in cents) of a pitchbend.
+		// Start x value (in milliseconds) and y value (in tenths) of a pitchbend.
 		double startMs = noteStartMs + data.getPBS().get(0);
 		double pitchStart = prevNoteNum * 10; // Measured in tenths (1/10 a semitone.)
 		ImmutableList<Double> pbw = data.getPBW();
 		ImmutableList<Double> pby = data.getPBY();
 		ImmutableList<String> pbm = data.getPBM();
 
-		// Parse each pitchbend from provided values.
+		// Parse each portamento from provided values.
 		for (int i = 0; i < data.getPBW().size(); i++) {
 			double endMs = startMs + pbw.get(i);
 			double pitchEnd = curNoteNum * 10;
@@ -53,8 +53,8 @@ public class PitchCurve {
 			if (pbm.size() >= i + 1) {
 				pitchShape = pbm.get(i);
 			}
-			Portamento portamento = portamentoFactory.makePortamento(startMs, pitchStart, endMs,
-					pitchEnd, pitchShape);
+			Portamento portamento = portamentoFactory
+					.makePortamento(startMs, pitchStart, endMs, pitchEnd, pitchShape);
 
 			// Add portamento to all affected steps on the pitch curve.
 			for (int j = nextPitchStep(startMs); j <= prevPitchStep(endMs); j++) {
@@ -68,10 +68,35 @@ public class PitchCurve {
 			startMs = endMs;
 			pitchStart = pitchEnd;
 		}
+
+		// Parse vibrato if vibrato length > 0.
+		if (data.getVibrato(0) > 0) {
+			double vibratoLengthMs = noteLengthMs * (data.getVibrato(0) * 1.0 / 100);
+			double vibratoStartMs = noteStartMs + noteLengthMs - vibratoLengthMs;
+			double vibratoEndMs = noteStartMs + noteLengthMs;
+			// Does not use indices 7 and 9 because they don't seem to do anything.
+			Vibrato vibrato = new Vibrato(
+					vibratoStartMs,
+					vibratoEndMs,
+					data.getVibrato(1),
+					data.getVibrato(2),
+					data.getVibrato(3),
+					data.getVibrato(4),
+					data.getVibrato(5),
+					data.getVibrato(6),
+					data.getVibrato(8));
+			for (int i = nextPitchStep(vibratoStartMs); i < prevPitchStep(vibratoEndMs); i++) {
+				if (pitchbends.containsKey(i)) {
+					pitchbends.get(i).addVibrato(vibrato);
+				} else {
+					pitchbends.put(i, Pitchbend.makePitchbend(vibrato));
+				}
+			}
+		}
 	}
 
 	/** Removes pitchbends for a single note. */
-	public void removePitchbends(int noteStartMs, PitchbendData data) {
+	public void removePitchbends(int noteStartMs, int noteLengthMs, PitchbendData data) {
 		if (data.getPBS().isEmpty() || data.getPBW().isEmpty()) {
 			// TODO: Handle this.
 			return;
@@ -88,6 +113,22 @@ public class PitchCurve {
 				pitchbend.removePortamento();
 				if (pitchbend.isEmpty()) {
 					pitchbends.remove(i);
+				}
+			}
+		}
+
+		// Remove vibrato from each pitch step it covers.
+		if (data.getVibrato(0) > 0) {
+			double vibratoLengthMs = noteLengthMs * (data.getVibrato(0) * 1.0 / 100);
+			double vibratoStartMs = noteStartMs + noteLengthMs - vibratoLengthMs;
+			double vibratoEndMs = noteStartMs + noteLengthMs;
+			for (int i = nextPitchStep(vibratoStartMs); i < prevPitchStep(vibratoEndMs); i++) {
+				if (pitchbends.containsKey(i)) {
+					Pitchbend pitchbend = pitchbends.get(i);
+					pitchbend.removeVibrato();
+					if (pitchbend.isEmpty()) {
+						pitchbends.remove(i);
+					}
 				}
 			}
 		}
@@ -114,6 +155,9 @@ public class PitchCurve {
 				// Write pitchbend.
 				int positionMs = step * 5; // 92 pitch steps in a beat of 480 ms.
 				double realPitch = pitchbends.get(step).apply(positionMs); // In tenths.
+				if (!pitchbends.get(step).getPortamento().isPresent()) {
+					realPitch += defaultPitch; // Vibrato modifies default pitch if no portamento.
+				}
 				int diff = (int) ((realPitch - noteNumPitch) * 10); // In cents.
 				result += convertTo12Bit(diff);
 

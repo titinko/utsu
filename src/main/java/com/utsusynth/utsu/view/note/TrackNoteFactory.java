@@ -55,7 +55,7 @@ public class TrackNoteFactory {
 		Rectangle overlap = new Rectangle();
 		overlap.setWidth(0);
 		overlap.setHeight(note.getHeight());
-		overlap.getStyleClass().add("drag-edge");
+		overlap.getStyleClass().add("note-overlap");
 
 		StackPane layout = new StackPane();
 		layout.setPickOnBounds(false);
@@ -88,7 +88,7 @@ public class TrackNoteFactory {
 		Rectangle overlap = new Rectangle();
 		overlap.setWidth(0);
 		overlap.setHeight(defaultNote.getHeight());
-		overlap.getStyleClass().add("drag-edge");
+		overlap.getStyleClass().add("note-overlap");
 		StackPane.setMargin(overlap, new Insets(0, 0, 0, COL_WIDTH - 1));
 
 		StackPane layout = new StackPane();

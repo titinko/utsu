@@ -88,6 +88,7 @@ public class Song {
 			// Add pitchbends for this note.
 			newSong.pitchbends.addPitchbends(
 					noteListBuilder.getLatestDelta(),
+					note.getLength(),
 					note.getPitchbends(),
 					prevNote.isPresent() ? prevNote.get().getNoteNum() : note.getNoteNum(),
 					note.getNoteNum());
@@ -199,9 +200,13 @@ public class Song {
 			// Modify the next note's portamento.
 			SongNote nextSongNote = insertedNode.getNext().get().getNote();
 			int nextStart = positionMs + note.getLength();
-			pitchbends.removePitchbends(nextStart, nextSongNote.getPitchbends());
+			pitchbends.removePitchbends(
+					nextStart,
+					nextSongNote.getLength(),
+					nextSongNote.getPitchbends());
 			pitchbends.addPitchbends(
 					nextStart,
+					nextSongNote.getLength(),
 					nextSongNote.getPitchbends(),
 					note.getNoteNum(),
 					nextSongNote.getNoteNum());
@@ -219,8 +224,12 @@ public class Song {
 		// Add this note's pitchbends.
 		int prevNoteNum = insertedNode.getPrev().isPresent()
 				? insertedNode.getPrev().get().getNote().getNoteNum() : note.getNoteNum();
-		this.pitchbends
-				.addPitchbends(positionMs, note.getPitchbends(), prevNoteNum, note.getNoteNum());
+		this.pitchbends.addPitchbends(
+				positionMs,
+				note.getLength(),
+				note.getPitchbends(),
+				prevNoteNum,
+				note.getNoteNum());
 		String prevPitch = PitchUtils.noteNumToPitch(prevNoteNum);
 
 		return new QuantizedAddResponse(
@@ -260,9 +269,13 @@ public class Song {
 			int prevNoteNum = removedNode.getPrev().isPresent()
 					? removedNode.getPrev().get().getNote().getNoteNum()
 					: nextSongNote.getNoteNum();
-			pitchbends.removePitchbends(nextStart, nextSongNote.getPitchbends());
+			pitchbends.removePitchbends(
+					nextStart,
+					nextSongNote.getLength(),
+					nextSongNote.getPitchbends());
 			pitchbends.addPitchbends(
 					nextStart,
+					nextSongNote.getLength(),
 					nextSongNote.getPitchbends(),
 					prevNoteNum,
 					nextSongNote.getNoteNum());
@@ -278,7 +291,10 @@ public class Song {
 		}
 
 		// Remove this note's pitchbends.
-		this.pitchbends.removePitchbends(positionMs, removedNode.getNote().getPitchbends());
+		this.pitchbends.removePitchbends(
+				positionMs,
+				removedNode.getNote().getLength(),
+				removedNode.getNote().getPitchbends());
 
 		return new QuantizedAddResponse(
 				Optional.absent(),
@@ -297,13 +313,18 @@ public class Song {
 			note.setEnvelope(request.getEnvelope().get());
 		}
 		if (request.getPitchbend().isPresent()) {
-			this.pitchbends.removePitchbends(positionMs, note.getPitchbends());
+			this.pitchbends.removePitchbends(positionMs, note.getLength(), note.getPitchbends());
 			PitchbendData newPitchbend = PitchbendData.fromQuantized(request.getPitchbend().get());
 			note.setPitchbends(newPitchbend);
 
 			int prevNoteNum = node.getPrev().isPresent()
 					? node.getPrev().get().getNote().getNoteNum() : note.getNoteNum();
-			this.pitchbends.addPitchbends(positionMs, newPitchbend, prevNoteNum, note.getNoteNum());
+			this.pitchbends.addPitchbends(
+					positionMs,
+					note.getLength(),
+					newPitchbend,
+					prevNoteNum,
+					note.getNoteNum());
 		}
 		return new QuantizedAddResponse(
 				Optional.absent(),

@@ -9,7 +9,7 @@ public class PitchbendData {
 	private final ImmutableList<Double> pbw; // Pitch bend widths
 	private final ImmutableList<Double> pby; // Pitch bend shifts
 	private final ImmutableList<String> pbm; // Pitch bend curves
-	// TODO: Add vibrato
+	private final int[] vibrato;
 
 	public static PitchbendData fromQuantized(QuantizedPitchbend qPitchbend) {
 		double quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPitchbend.QUANTIZATION;
@@ -22,18 +22,21 @@ public class PitchbendData {
 				pbs,
 				pbwBuilder.build(),
 				qPitchbend.getShifts(),
-				qPitchbend.getCurves());
+				qPitchbend.getCurves(),
+				new int[8]);
 	}
 
 	public PitchbendData(
 			ImmutableList<Double> pbs,
 			ImmutableList<Double> pbw,
 			ImmutableList<Double> pby,
-			ImmutableList<String> pbm) {
+			ImmutableList<String> pbm,
+			int[] vibrato) {
 		this.pbs = pbs;
 		this.pbw = pbw;
 		this.pby = pby;
 		this.pbm = pbm;
+		this.vibrato = vibrato;
 	}
 
 	public ImmutableList<Double> getPBS() {
@@ -50,6 +53,13 @@ public class PitchbendData {
 
 	public ImmutableList<String> getPBM() {
 		return pbm;
+	}
+
+	public int getVibrato(int index) {
+		if (index < 0 || index >= vibrato.length) {
+			return 0;
+		}
+		return vibrato[index];
 	}
 
 	public QuantizedPitchbend quantize(String prevPitch) {
