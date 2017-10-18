@@ -2,6 +2,7 @@ package com.utsusynth.utsu.model.pitch;
 
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
+import com.utsusynth.utsu.common.quantize.QuantizedVibrato;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 
 public class PitchbendData {
@@ -23,7 +24,7 @@ public class PitchbendData {
 				pbwBuilder.build(),
 				qPitchbend.getShifts(),
 				qPitchbend.getCurves(),
-				new int[8]);
+				qPitchbend.getVibrato().toUstVibrato());
 	}
 
 	public PitchbendData(
@@ -55,6 +56,10 @@ public class PitchbendData {
 		return pbm;
 	}
 
+	public int[] getVibrato() {
+		return vibrato;
+	}
+
 	public int getVibrato(int index) {
 		if (index < 0 || index >= vibrato.length) {
 			return 0;
@@ -69,6 +74,7 @@ public class PitchbendData {
 		for (double width : pbw) {
 			widths.add((int) Math.floor(width / quantSize));
 		}
-		return new QuantizedPitchbend(prevPitch, start, widths.build(), pby, pbm);
+		QuantizedVibrato quantizedVibrato = new QuantizedVibrato(vibrato);
+		return new QuantizedPitchbend(prevPitch, start, widths.build(), pby, pbm, quantizedVibrato);
 	}
 }

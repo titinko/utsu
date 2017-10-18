@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
+import com.utsusynth.utsu.common.quantize.QuantizedVibrato;
 import com.utsusynth.utsu.view.note.pitch.Curve;
 import com.utsusynth.utsu.view.note.pitch.CurveFactory;
 
@@ -29,10 +30,16 @@ public class TrackPitchbend {
 	private final Group group;
 	private final TrackPitchbendCallback callback;
 	private final CurveFactory curveFactory;
+	private final QuantizedVibrato vibrato;
 
-	TrackPitchbend(ArrayList<Curve> curves, TrackPitchbendCallback callback, CurveFactory factory) {
+	TrackPitchbend(
+			ArrayList<Curve> curves,
+			TrackPitchbendCallback callback,
+			CurveFactory factory,
+			QuantizedVibrato vibrato) {
 		this.callback = callback;
 		this.curveFactory = factory;
+		this.vibrato = vibrato;
 		this.squares = new ArrayList<>();
 		// Add control points.
 		for (int i = 0; i < curves.size(); i++) {
@@ -241,6 +248,7 @@ public class TrackPitchbend {
 				start,
 				widths.build(),
 				heights.build(),
-				shapes.build());
+				shapes.build(),
+				vibrato);
 	}
 }

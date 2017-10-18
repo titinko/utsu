@@ -24,7 +24,6 @@ public class SongNote {
 	private ImmutableList<Double> pbw; // Pitch bend widths
 	private ImmutableList<Double> pby; // Pitch bend shifts
 	private ImmutableList<String> pbm; // Pitch bend curves
-	// TODO: Parse PBM
 	private double[] envelopeWidth; // "p" in ms
 	private double[] envelopeHeight; // "v" in % of total intensity (0-100)
 	private double envelopeOverlap; // This value is meaningless.
@@ -157,6 +156,7 @@ public class SongNote {
 		this.pbw = pitchbends.getPBW();
 		this.pby = pitchbends.getPBY();
 		this.pbm = pitchbends.getPBM();
+		this.vibrato = pitchbends.getVibrato();
 	}
 
 	public void setPBS(String[] pbsValues) {

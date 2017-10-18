@@ -164,6 +164,6 @@ public class TrackNoteFactory {
 			String type = qPitchbend.getCurve(i);
 			pitchCurves.add(curveFactory.createCurve(tempX, tempY, curX, curY, type));
 		}
-		return new TrackPitchbend(pitchCurves, callback, curveFactory);
+		return new TrackPitchbend(pitchCurves, callback, curveFactory, qPitchbend.getVibrato());
 	}
 }

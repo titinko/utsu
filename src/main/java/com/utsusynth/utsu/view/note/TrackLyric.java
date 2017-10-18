@@ -23,6 +23,7 @@ public class TrackLyric {
 		this.lyric = defaultLyric;
 		this.alias = Optional.absent();
 		this.text = new Label(defaultLyric);
+		this.text.setMouseTransparent(true);
 		this.textField = new TextField("mi");
 		this.textField.setFont(Font.font(9));
 		this.textField.setMaxHeight(ROW_HEIGHT - 2);

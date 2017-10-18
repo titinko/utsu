@@ -31,7 +31,7 @@ class Vibrato implements PitchMutation {
 		this.amplitude = amplitude / 10.0; // Convert cents into tenths.
 		this.baseFreq = 2 * Math.PI / cycleMs;
 		this.phase = 2 * Math.PI * (phasePercent / 100.0);
-		this.pitchChange = pitchChange / 10.0; // Convert cents into tenths.
+		this.pitchChange = pitchChange / 20.0; // Convert 2*cents into tenths.
 
 		// Current min frequency is .5 * base, current max is 1.5 * base.
 		this.startFreq = baseFreq * (baseFreqSlope / 200.0 + 1);

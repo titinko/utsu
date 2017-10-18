@@ -10,19 +10,21 @@ public class QuantizedPitchbend {
 	private final ImmutableList<Integer> widths; // In quants.
 	private final ImmutableList<Double> pitchShifts; // In 1/10 a semitone.
 	private final ImmutableList<String> curves; // "s" or "r" or "j" or ""
-	// TODO: Add vibrato.
+	private final QuantizedVibrato vibrato;
 
 	public QuantizedPitchbend(
 			String prevPitch,
 			int start,
 			ImmutableList<Integer> widths,
 			ImmutableList<Double> pitchShifts,
-			ImmutableList<String> curves) {
+			ImmutableList<String> curves,
+			QuantizedVibrato vibrato) {
 		this.prevPitch = prevPitch;
 		this.start = start;
 		this.widths = widths;
 		this.pitchShifts = pitchShifts;
 		this.curves = curves;
+		this.vibrato = vibrato;
 	}
 
 	public String getPrevPitch() {
@@ -60,5 +62,9 @@ public class QuantizedPitchbend {
 			return "";
 		}
 		return curves.get(index);
+	}
+
+	public QuantizedVibrato getVibrato() {
+		return vibrato;
 	}
 }
