@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.note;
+package com.utsusynth.utsu.view.note.envelope;
 
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 

@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.note.pitch;
+package com.utsusynth.utsu.view.note.portamento;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CubicCurve;
@@ -9,7 +9,7 @@ import javafx.scene.shape.Shape;
 public class RCurve implements Curve {
 	private final CubicCurve curve;
 
-	public RCurve(double startX, double startY, double endX, double endY) {
+	RCurve(double startX, double startY, double endX, double endY) {
 		double halfX = (startX + endX) / 2;
 		double halfY = (startY + endY) / 2;
 		this.curve = new CubicCurve(startX, startY, startX, halfY, halfX, endY, endX, endY);

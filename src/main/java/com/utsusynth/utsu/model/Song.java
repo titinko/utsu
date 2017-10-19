@@ -218,7 +218,8 @@ public class Song {
 							32,
 							nextSongNote.getQuantizedEnvelope(),
 							Optional.of(
-									nextSongNote.getPitchbends().quantize(request.getPitch()))));
+									nextSongNote.getPitchbends().quantizePortamento(
+											request.getPitch()))));
 		}
 
 		// Add this note's pitchbends.
@@ -235,7 +236,7 @@ public class Song {
 		return new QuantizedAddResponse(
 				trueLyric,
 				Optional.of(note.getQuantizedEnvelope()),
-				Optional.of(note.getPitchbends().quantize(prevPitch)),
+				Optional.of(note.getPitchbends().quantizePortamento(prevPitch)),
 				prevNote,
 				nextNote);
 	}
@@ -287,7 +288,8 @@ public class Song {
 							quantizedLen,
 							32,
 							nextSongNote.getQuantizedEnvelope(),
-							Optional.of(nextSongNote.getPitchbends().quantize(prevPitch))));
+							Optional.of(
+									nextSongNote.getPitchbends().quantizePortamento(prevPitch))));
 		}
 
 		// Remove this note's pitchbends.

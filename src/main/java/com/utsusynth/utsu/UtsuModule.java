@@ -21,7 +21,9 @@ import com.utsusynth.utsu.model.pitch.portamento.PortamentoFactory;
 import com.utsusynth.utsu.model.voicebank.VoicebankReader;
 import com.utsusynth.utsu.view.note.TrackLyric;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
-import com.utsusynth.utsu.view.note.pitch.CurveFactory;
+import com.utsusynth.utsu.view.note.envelope.TrackEnvelopeFactory;
+import com.utsusynth.utsu.view.note.portamento.CurveFactory;
+import com.utsusynth.utsu.view.note.portamento.TrackPortamentoFactory;
 
 import javafx.fxml.FXMLLoader;
 
@@ -32,6 +34,8 @@ public class UtsuModule extends AbstractModule {
 		bind(SongManager.class).asEagerSingleton();
 		bind(PortamentoFactory.class).asEagerSingleton();
 		bind(TrackNoteFactory.class).asEagerSingleton();
+		bind(TrackEnvelopeFactory.class).asEagerSingleton();
+		bind(TrackPortamentoFactory.class).asEagerSingleton();
 		bind(CurveFactory.class).asEagerSingleton();
 	}
 

@@ -6,17 +6,17 @@ public class QuantizedNeighbor {
 	private final int quantizedDelta;
 	private final int quantization;
 	private final QuantizedEnvelope envelope;
-	private final Optional<QuantizedPitchbend> pitchbend;
+	private final Optional<QuantizedPortamento> portamento;
 
 	public QuantizedNeighbor(
 			int quantizedDelta,
 			int quantization,
 			QuantizedEnvelope envelope,
-			Optional<QuantizedPitchbend> pitchbend) {
+			Optional<QuantizedPortamento> pitchbend) {
 		this.quantizedDelta = quantizedDelta;
 		this.quantization = quantization;
 		this.envelope = envelope;
-		this.pitchbend = pitchbend;
+		this.portamento = pitchbend;
 	}
 
 	public int getDelta() {
@@ -31,7 +31,7 @@ public class QuantizedNeighbor {
 		return this.envelope;
 	}
 
-	public Optional<QuantizedPitchbend> getPitchbend() {
-		return this.pitchbend;
+	public Optional<QuantizedPortamento> getPortamento() {
+		return this.portamento;
 	}
 }

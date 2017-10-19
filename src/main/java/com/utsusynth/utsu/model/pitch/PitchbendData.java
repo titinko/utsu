@@ -1,7 +1,9 @@
 package com.utsusynth.utsu.model.pitch;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
+import com.utsusynth.utsu.common.quantize.QuantizedPortamento;
 import com.utsusynth.utsu.common.quantize.QuantizedVibrato;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 
@@ -13,18 +15,22 @@ public class PitchbendData {
 	private final int[] vibrato;
 
 	public static PitchbendData fromQuantized(QuantizedPitchbend qPitchbend) {
-		double quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPitchbend.QUANTIZATION;
-		ImmutableList<Double> pbs = ImmutableList.of(qPitchbend.getStart() * quantSize, 0.0);
+		QuantizedPortamento qPortamento = qPitchbend.getPortamento();
+		double quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPortamento.QUANTIZATION;
+		ImmutableList<Double> pbs = ImmutableList.of(qPortamento.getStart() * quantSize, 0.0);
 		ImmutableList.Builder<Double> pbwBuilder = ImmutableList.builder();
-		for (int i = 0; i < qPitchbend.getNumWidths(); i++) {
-			pbwBuilder.add(qPitchbend.getWidth(i) * quantSize);
+		for (int i = 0; i < qPortamento.getNumWidths(); i++) {
+			pbwBuilder.add(qPortamento.getWidth(i) * quantSize);
 		}
+		int[] vibrato =
+				qPitchbend.getVibrato().isPresent() ? qPitchbend.getVibrato().get().toUstVibrato()
+						: new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 		return new PitchbendData(
 				pbs,
 				pbwBuilder.build(),
-				qPitchbend.getShifts(),
-				qPitchbend.getCurves(),
-				qPitchbend.getVibrato().toUstVibrato());
+				qPortamento.getShifts(),
+				qPortamento.getCurves(),
+				vibrato);
 	}
 
 	public PitchbendData(
@@ -68,13 +74,25 @@ public class PitchbendData {
 	}
 
 	public QuantizedPitchbend quantize(String prevPitch) {
-		int quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPitchbend.QUANTIZATION;
+		int quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPortamento.QUANTIZATION;
 		int start = (int) Math.ceil(pbs.get(0) / quantSize);
 		ImmutableList.Builder<Integer> widths = ImmutableList.builder();
 		for (double width : pbw) {
 			widths.add((int) Math.floor(width / quantSize));
 		}
-		QuantizedVibrato quantizedVibrato = new QuantizedVibrato(vibrato);
-		return new QuantizedPitchbend(prevPitch, start, widths.build(), pby, pbm, quantizedVibrato);
+		QuantizedPortamento qPortamento =
+				new QuantizedPortamento(prevPitch, start, widths.build(), pby, pbm);
+		QuantizedVibrato qVibrato = new QuantizedVibrato(vibrato);
+		return new QuantizedPitchbend(qPortamento, Optional.of(qVibrato));
+	}
+
+	public QuantizedPortamento quantizePortamento(String prevPitch) {
+		int quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPortamento.QUANTIZATION;
+		int start = (int) Math.ceil(pbs.get(0) / quantSize);
+		ImmutableList.Builder<Integer> widths = ImmutableList.builder();
+		for (double width : pbw) {
+			widths.add((int) Math.floor(width / quantSize));
+		}
+		return new QuantizedPortamento(prevPitch, start, widths.build(), pby, pbm);
 	}
 }

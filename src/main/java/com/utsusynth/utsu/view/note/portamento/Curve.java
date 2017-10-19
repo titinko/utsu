@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.note.pitch;
+package com.utsusynth.utsu.view.note.portamento;
 
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;

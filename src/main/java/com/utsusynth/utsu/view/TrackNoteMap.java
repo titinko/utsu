@@ -6,30 +6,33 @@ import java.util.Map;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
-import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
-import com.utsusynth.utsu.view.note.TrackEnvelope;
-import com.utsusynth.utsu.view.note.TrackEnvelopeCallback;
+import com.utsusynth.utsu.common.quantize.QuantizedPortamento;
 import com.utsusynth.utsu.view.note.TrackNote;
-import com.utsusynth.utsu.view.note.TrackNoteFactory;
-import com.utsusynth.utsu.view.note.TrackPitchbend;
-import com.utsusynth.utsu.view.note.TrackPitchbendCallback;
+import com.utsusynth.utsu.view.note.envelope.TrackEnvelope;
+import com.utsusynth.utsu.view.note.envelope.TrackEnvelopeCallback;
+import com.utsusynth.utsu.view.note.envelope.TrackEnvelopeFactory;
+import com.utsusynth.utsu.view.note.portamento.TrackPortamento;
+import com.utsusynth.utsu.view.note.portamento.TrackPortamentoCallback;
+import com.utsusynth.utsu.view.note.portamento.TrackPortamentoFactory;
 
 import javafx.scene.Group;
 
 public class TrackNoteMap {
-	private final TrackNoteFactory noteFactory;
+	private final TrackEnvelopeFactory envelopeFactory;
+	private final TrackPortamentoFactory portamentoFactory;
 
 	// Maps absolute position to track note's data.
 	private Map<Integer, TrackNote> noteMap;
 	private Map<Integer, TrackEnvelope> envelopeMap;
-	private Map<Integer, TrackPitchbend> pitchbendMap;
+	private Map<Integer, TrackPortamento> portamentoMap;
 	private Group notes;
 	private Group envelopes;
 	private Group pitchbends;
 
 	@Inject
-	public TrackNoteMap(TrackNoteFactory noteFactory) {
-		this.noteFactory = noteFactory;
+	public TrackNoteMap(TrackEnvelopeFactory envFactory, TrackPortamentoFactory portFactory) {
+		this.envelopeFactory = envFactory;
+		this.portamentoFactory = portFactory;
 		clear();
 	}
 
@@ -48,7 +51,7 @@ public class TrackNoteMap {
 	void clear() {
 		noteMap = new HashMap<>();
 		envelopeMap = new HashMap<>();
-		pitchbendMap = new HashMap<>();
+		portamentoMap = new HashMap<>();
 		notes = new Group();
 		envelopes = new Group();
 		pitchbends = new Group();
@@ -88,9 +91,9 @@ public class TrackNoteMap {
 			envelopes.getChildren().remove(envelopeMap.get(position).getElement());
 			envelopeMap.remove(position);
 		}
-		if (pitchbendMap.containsKey(position)) {
-			pitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
-			pitchbendMap.remove(position);
+		if (portamentoMap.containsKey(position)) {
+			pitchbends.getChildren().remove(portamentoMap.get(position).getElement());
+			portamentoMap.remove(position);
 		}
 	}
 
@@ -98,7 +101,7 @@ public class TrackNoteMap {
 		// Track note must exist before envelope is added.
 		if (noteMap.containsKey(position)) {
 			TrackEnvelope envelope =
-					noteFactory.createEnvelope(noteMap.get(position), qEnvelope, callback);
+					envelopeFactory.createEnvelope(noteMap.get(position), qEnvelope, callback);
 			// Overrides are expected here.
 			if (envelopeMap.containsKey(position)) {
 				envelopes.getChildren().remove(envelopeMap.get(position).getElement());
@@ -116,31 +119,31 @@ public class TrackNoteMap {
 		return envelopeMap.get(position);
 	}
 
-	void putPitchbend(
+	void putPortamento(
 			int position,
-			QuantizedPitchbend qPitchbend,
-			TrackPitchbendCallback callback) {
+			QuantizedPortamento qPortamento,
+			TrackPortamentoCallback callback) {
 		if (noteMap.containsKey(position)) {
-			TrackPitchbend pitchbend =
-					noteFactory.createPitchbend(noteMap.get(position), qPitchbend, callback);
+			TrackPortamento pitchbend = portamentoFactory
+					.createPortamento(noteMap.get(position), qPortamento, callback);
 			// Overrides are expected here.
-			if (pitchbendMap.containsKey(position)) {
-				pitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
+			if (portamentoMap.containsKey(position)) {
+				pitchbends.getChildren().remove(portamentoMap.get(position).getElement());
 			}
-			pitchbendMap.put(position, pitchbend);
+			portamentoMap.put(position, pitchbend);
 			pitchbends.getChildren().add(pitchbend.getElement());
 		}
 	}
 
-	boolean hasPitchbend(int position) {
-		return pitchbendMap.containsKey(position);
+	boolean hasPortamento(int position) {
+		return portamentoMap.containsKey(position);
 	}
 
-	TrackPitchbend getPitchbend(int position) {
-		return pitchbendMap.get(position);
+	TrackPortamento getPortamento(int position) {
+		return portamentoMap.get(position);
 	}
 
 	boolean isEmpty() {
-		return noteMap.isEmpty() && envelopeMap.isEmpty() && pitchbendMap.isEmpty();
+		return noteMap.isEmpty() && envelopeMap.isEmpty() && portamentoMap.isEmpty();
 	}
 }

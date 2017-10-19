@@ -1,13 +1,10 @@
-package com.utsusynth.utsu.view.note;
+package com.utsusynth.utsu.view.note.portamento;
 
 import java.util.ArrayList;
 
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.PitchUtils;
-import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
-import com.utsusynth.utsu.common.quantize.QuantizedVibrato;
-import com.utsusynth.utsu.view.note.pitch.Curve;
-import com.utsusynth.utsu.view.note.pitch.CurveFactory;
+import com.utsusynth.utsu.common.quantize.QuantizedPortamento;
 
 import javafx.scene.Cursor;
 import javafx.scene.Group;
@@ -19,7 +16,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-public class TrackPitchbend {
+public class TrackPortamento {
 	private static final int ROW_HEIGHT = 20;
 	private static final int COL_WIDTH = 96;
 
@@ -28,18 +25,15 @@ public class TrackPitchbend {
 	private final Group curveGroup; // Curves, unordered.
 	private final Group squareGroup; // Control points, unordered.
 	private final Group group;
-	private final TrackPitchbendCallback callback;
+	private final TrackPortamentoCallback callback;
 	private final CurveFactory curveFactory;
-	private final QuantizedVibrato vibrato;
 
-	TrackPitchbend(
+	TrackPortamento(
 			ArrayList<Curve> curves,
-			TrackPitchbendCallback callback,
-			CurveFactory factory,
-			QuantizedVibrato vibrato) {
+			TrackPortamentoCallback callback,
+			CurveFactory factory) {
 		this.callback = callback;
 		this.curveFactory = factory;
-		this.vibrato = vibrato;
 		this.squares = new ArrayList<>();
 		// Add control points.
 		for (int i = 0; i < curves.size(); i++) {
@@ -115,7 +109,7 @@ public class TrackPitchbend {
 				}
 			}
 			if (changed) {
-				callback.modifySongPitchbend();
+				callback.modifySongPortamento();
 			}
 		});
 	}
@@ -158,7 +152,7 @@ public class TrackPitchbend {
 			squares.add(insertIndex, newSquare);
 			initializeControlPoint(newSquare);
 			squareGroup.getChildren().add(newSquare);
-			callback.modifySongPitchbend();
+			callback.modifySongPortamento();
 		});
 		addControlPoint.setDisable(squares.size() >= 50); // Arbitrary control point limit.
 		MenuItem removeControlPoint = new MenuItem("Remove control point");
@@ -182,7 +176,7 @@ public class TrackPitchbend {
 			// Remove the control point between the two curves.
 			squares.remove(squareIndex);
 			squareGroup.getChildren().remove(square);
-			callback.modifySongPitchbend();
+			callback.modifySongPortamento();
 		});
 		removeControlPoint.setDisable(squareIndex == 0 || squareIndex == squares.size() - 1);
 
@@ -218,7 +212,7 @@ public class TrackPitchbend {
 			curves.set(curveIndex, newCurve);
 			curveGroup.getChildren().remove(oldCurve.getElement());
 			curveGroup.getChildren().add(newCurve.getElement());
-			callback.modifySongPitchbend();
+			callback.modifySongPortamento();
 		});
 		if (curves.get(curveIndex).getType() == curveType) {
 			radioItem.setSelected(true);
@@ -226,9 +220,9 @@ public class TrackPitchbend {
 		return radioItem;
 	}
 
-	public QuantizedPitchbend getQuantizedPitchbend(int notePos) {
+	public QuantizedPortamento quantize(int notePos) {
 		assert (curves.size() > 0);
-		int pitchQuantSize = COL_WIDTH / QuantizedPitchbend.QUANTIZATION;
+		int pitchQuantSize = COL_WIDTH / QuantizedPortamento.QUANTIZATION;
 		String prevPitch = PitchUtils.rowNumToPitch((int) (curves.get(0).getStartY() / ROW_HEIGHT));
 		int start = (int) ((curves.get(0).getStartX() - notePos) / pitchQuantSize);
 		double endY = curves.get(curves.size() - 1).getEndY();
@@ -243,12 +237,11 @@ public class TrackPitchbend {
 			}
 			shapes.add(line.getType());
 		}
-		return new QuantizedPitchbend(
+		return new QuantizedPortamento(
 				prevPitch,
 				start,
 				widths.build(),
 				heights.build(),
-				shapes.build(),
-				vibrato);
+				shapes.build());
 	}
 }

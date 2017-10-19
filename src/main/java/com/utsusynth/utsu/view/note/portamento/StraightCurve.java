@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.note.pitch;
+package com.utsusynth.utsu.view.note.portamento;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -9,7 +9,7 @@ import javafx.scene.shape.Shape;
 public class StraightCurve implements Curve {
 	private final Line line;
 
-	public StraightCurve(double startX, double startY, double endX, double endY) {
+	StraightCurve(double startX, double startY, double endX, double endY) {
 		this.line = new Line(startX, startY, endX, endY);
 		this.line.setStroke(Color.DARKSLATEBLUE);
 		this.line.setFill(Color.TRANSPARENT);

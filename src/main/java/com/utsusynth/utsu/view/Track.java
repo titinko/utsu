@@ -14,11 +14,12 @@ import com.utsusynth.utsu.common.quantize.QuantizedModifyRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedNeighbor;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
-import com.utsusynth.utsu.view.note.TrackEnvelopeCallback;
+import com.utsusynth.utsu.common.quantize.QuantizedPortamento;
 import com.utsusynth.utsu.view.note.TrackNote;
 import com.utsusynth.utsu.view.note.TrackNoteCallback;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
-import com.utsusynth.utsu.view.note.TrackPitchbendCallback;
+import com.utsusynth.utsu.view.note.envelope.TrackEnvelopeCallback;
+import com.utsusynth.utsu.view.note.portamento.TrackPortamentoCallback;
 
 import javafx.scene.Group;
 import javafx.scene.layout.AnchorPane;
@@ -73,9 +74,9 @@ public class Track {
 							getEnvelopeCallback(position));
 				}
 				if (note.getPitchbend().isPresent()) {
-					noteMap.putPitchbend(
+					noteMap.putPortamento(
 							position,
-							note.getPitchbend().get(),
+							note.getPitchbend().get().getPortamento(),
 							getPitchbendCallback(position));
 				}
 			} catch (NoteAlreadyExistsException e) {
@@ -256,10 +257,10 @@ public class Track {
 							position + nextDelta,
 							next.getEnvelope(),
 							getEnvelopeCallback(position + nextDelta));
-					if (next.getPitchbend().isPresent()) {
-						noteMap.putPitchbend(
+					if (next.getPortamento().isPresent()) {
+						noteMap.putPortamento(
 								position + nextDelta,
-								next.getPitchbend().get(),
+								next.getPortamento().get(),
 								getPitchbendCallback(position + nextDelta));
 					}
 				}
@@ -268,10 +269,10 @@ public class Track {
 				if (newEnvelope.isPresent()) {
 					noteMap.putEnvelope(position, newEnvelope.get(), getEnvelopeCallback(position));
 				}
-				if (response.getPitchbend().isPresent()) {
-					noteMap.putPitchbend(
+				if (response.getPortamento().isPresent()) {
+					noteMap.putPortamento(
 							position,
-							response.getPitchbend().get(),
+							response.getPortamento().get(),
 							getPitchbendCallback(position));
 				}
 
@@ -301,10 +302,10 @@ public class Track {
 							position + nextDelta,
 							next.getEnvelope(),
 							getEnvelopeCallback(position + nextDelta));
-					if (next.getPitchbend().isPresent()) {
-						noteMap.putPitchbend(
+					if (next.getPortamento().isPresent()) {
+						noteMap.putPortamento(
 								position + nextDelta,
-								next.getPitchbend().get(),
+								next.getPortamento().get(),
 								getPitchbendCallback(position + nextDelta));
 					}
 				} else {
@@ -322,6 +323,16 @@ public class Track {
 			if (noteMap.isEmpty()) {
 				setNumMeasures(4);
 			}
+		}
+
+		@Override
+		public void modifySongVibrato(QuantizedNote toModify) {
+			int position = toModify.getStart() * (COL_WIDTH / toModify.getQuantization());
+			TrackNote trackNote = noteMap.getNote(position);
+			QuantizedPitchbend qPitchbend = new QuantizedPitchbend(
+					noteMap.getPortamento(position).quantize(position),
+					trackNote.getVibrato());
+			model.modifyNote(new QuantizedModifyRequest(toModify, qPitchbend));
 		}
 
 		@Override
@@ -345,10 +356,10 @@ public class Track {
 		}
 
 		@Override
-		public Optional<QuantizedPitchbend> getPitchbend(QuantizedNote note) {
+		public Optional<QuantizedPortamento> getPortamento(QuantizedNote note) {
 			int position = note.getStart() * (COL_WIDTH / note.getQuantization());
-			if (noteMap.hasPitchbend(position)) {
-				return Optional.of(noteMap.getPitchbend(position).getQuantizedPitchbend(position));
+			if (noteMap.hasPortamento(position)) {
+				return Optional.of(noteMap.getPortamento(position).quantize(position));
 			}
 			return Optional.absent();
 		}
@@ -364,13 +375,15 @@ public class Track {
 		};
 	}
 
-	private TrackPitchbendCallback getPitchbendCallback(final int position) {
-		return new TrackPitchbendCallback() {
+	private TrackPortamentoCallback getPitchbendCallback(final int position) {
+		return new TrackPortamentoCallback() {
 			@Override
-			public void modifySongPitchbend() {
-				QuantizedNote note = noteMap.getNote(position).getQuantizedNote();
-				QuantizedPitchbend qPitchbend =
-						noteMap.getPitchbend(position).getQuantizedPitchbend(position);
+			public void modifySongPortamento() {
+				TrackNote trackNote = noteMap.getNote(position);
+				QuantizedNote note = trackNote.getQuantizedNote();
+				QuantizedPitchbend qPitchbend = new QuantizedPitchbend(
+						noteMap.getPortamento(position).quantize(position),
+						trackNote.getVibrato());
 				model.modifyNote(new QuantizedModifyRequest(note, qPitchbend));
 			}
 		};

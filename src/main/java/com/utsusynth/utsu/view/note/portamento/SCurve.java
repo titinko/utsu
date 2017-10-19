@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.note.pitch;
+package com.utsusynth.utsu.view.note.portamento;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CubicCurve;
@@ -9,7 +9,7 @@ import javafx.scene.shape.Shape;
 public class SCurve implements Curve {
 	private final CubicCurve curve;
 
-	public SCurve(double startX, double startY, double endX, double endY) {
+	SCurve(double startX, double startY, double endX, double endY) {
 		double halfX = (startX + endX) / 2;
 		curve = new CubicCurve(startX, startY, halfX, startY, halfX, endY, endX, endY);
 		this.curve.setStroke(Color.DARKSLATEBLUE);

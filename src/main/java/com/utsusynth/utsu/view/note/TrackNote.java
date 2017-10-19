@@ -6,6 +6,8 @@ import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
+import com.utsusynth.utsu.common.quantize.QuantizedPortamento;
+import com.utsusynth.utsu.common.quantize.QuantizedVibrato;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.geometry.Insets;
@@ -28,6 +30,7 @@ public class TrackNote {
 	private final ContextMenu contextMenu;
 	private final TrackNoteCallback track;
 	private final TrackLyric lyric;
+	private final TrackVibrato vibrato;
 	private final Quantizer quantizer;
 
 	// Temporary cache values.
@@ -43,6 +46,7 @@ public class TrackNote {
 			Rectangle dragEdge,
 			Rectangle overlap,
 			TrackLyric lyric,
+			TrackVibrato vibrato,
 			StackPane layout,
 			TrackNoteCallback callback,
 			Quantizer quantizer) {
@@ -54,6 +58,7 @@ public class TrackNote {
 		this.quantInNote = 0;
 		this.quantizer = quantizer;
 		this.lyric = lyric;
+		this.vibrato = vibrato;
 		this.layout = layout;
 		this.layout.getChildren().addAll(
 				this.note,
@@ -92,6 +97,15 @@ public class TrackNote {
 		MenuItem deleteMenuItem = new MenuItem("Delete");
 		deleteMenuItem.setOnAction(action -> deleteNote());
 		CheckMenuItem vibratoMenuItem = new CheckMenuItem("Vibrato");
+		vibratoMenuItem.setSelected(vibrato.getVibrato().isPresent());
+		vibratoMenuItem.setOnAction(action -> {
+			if (vibratoMenuItem.isSelected()) {
+				vibrato.addDefaultVibrato();
+			} else {
+				vibrato.clearVibrato();
+			}
+			track.modifySongVibrato(getQuantizedNote()); // Update backend.
+		});
 		contextMenu.getItems().addAll(deleteMenuItem, vibratoMenuItem);
 		layout.setOnContextMenuRequested(event -> {
 			contextMenu.hide();
@@ -105,6 +119,7 @@ public class TrackNote {
 			if (track.getCurrentMode() == Mode.DELETE) {
 				deleteNote();
 			} else if (subMode == SubMode.CLICKING) {
+				contextMenu.hide();
 				if (this.track.isHighlighted(this)) {
 					this.lyric.openTextField();
 				} else {
@@ -223,6 +238,10 @@ public class TrackNote {
 		return (int) layout.getTranslateY() / ROW_HEIGHT;
 	}
 
+	public Optional<QuantizedVibrato> getVibrato() {
+		return vibrato.getVibrato();
+	}
+
 	/**
 	 * Sets a note's highlighted state. Should only be called from track.
 	 * 
@@ -307,14 +326,14 @@ public class TrackNote {
 			String newLyric) {
 		// System.out.println("***");
 		Optional<QuantizedEnvelope> envelope = Optional.absent();
-		Optional<QuantizedPitchbend> pitchbend = Optional.absent();
+		Optional<QuantizedPortamento> portamento = Optional.absent();
 		if (note.getStyleClass().contains("valid-note")) {
 			// System.out.println(String.format(
 			// "Moving from valid %d, %s", oldQuant, lyric.getLyric()));
 			int quantOldDuration = oldDuration / (COL_WIDTH / quantization);
 			QuantizedNote deleteThis = new QuantizedNote(oldQuant, quantOldDuration, quantization);
 			envelope = track.getEnvelope(deleteThis);
-			pitchbend = track.getPitchbend(deleteThis);
+			portamento = track.getPortamento(deleteThis);
 			track.removeSongNote(deleteThis);
 		} else {
 			// System.out.println(String.format(
@@ -325,6 +344,11 @@ public class TrackNote {
 			setValid(true);
 			int quantNewDuration = newDuration / (COL_WIDTH / quantization);
 			QuantizedNote addThis = new QuantizedNote(newQuant, quantNewDuration, quantization);
+			Optional<QuantizedPitchbend> pitchbend = Optional.absent();
+			if (portamento.isPresent()) {
+				pitchbend =
+						Optional.of(new QuantizedPitchbend(portamento.get(), vibrato.getVibrato()));
+			}
 			Optional<String> trueLyric =
 					track.addSongNote(this, addThis, envelope, pitchbend, newRow, newLyric);
 			this.lyric.setVisibleAlias(trueLyric);
