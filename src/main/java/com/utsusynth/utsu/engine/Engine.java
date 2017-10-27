@@ -193,7 +193,7 @@ public class Engine {
 			int totalDelta,
 			Optional<Double> maybePreutter,
 			double adjustedLength) {
-		// TODO: This is no longer usable if we start changing adjustedLength based on tempo.
+		// NOTE: This is no longer usable if we start changing adjustedLength based on tempo.
 		double preutter = maybePreutter.isPresent() ? maybePreutter.get() : 0.0;
 		return (int) Math.floor((totalDelta - preutter + adjustedLength) / 5.0);
 	}

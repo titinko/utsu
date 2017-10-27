@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.quantize.QuantizedPortamento;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.scene.Cursor;
 import javafx.scene.Group;
@@ -17,9 +18,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class TrackPortamento {
-	private static final int ROW_HEIGHT = 20;
-	private static final int COL_WIDTH = 96;
-
 	private final ArrayList<Curve> curves; // Curves, ordered.
 	private final ArrayList<Rectangle> squares; // Control points, ordered.
 	private final Group curveGroup; // Curves, unordered.
@@ -103,7 +101,7 @@ public class TrackPortamento {
 
 			if (index > 0 && index < squares.size() - 1) {
 				double newY = event.getY();
-				if (newY > 0 && newY < ROW_HEIGHT * 12 * 7) {
+				if (newY > 0 && newY < Quantizer.ROW_HEIGHT * 12 * 7) {
 					changed = true;
 					square.setY(newY - 2);
 				}
@@ -222,8 +220,9 @@ public class TrackPortamento {
 
 	public QuantizedPortamento quantize(int notePos) {
 		assert (curves.size() > 0);
-		int pitchQuantSize = COL_WIDTH / QuantizedPortamento.QUANTIZATION;
-		String prevPitch = PitchUtils.rowNumToPitch((int) (curves.get(0).getStartY() / ROW_HEIGHT));
+		int pitchQuantSize = Quantizer.COL_WIDTH / QuantizedPortamento.QUANTIZATION;
+		String prevPitch =
+				PitchUtils.rowNumToPitch((int) (curves.get(0).getStartY() / Quantizer.ROW_HEIGHT));
 		int start = (int) ((curves.get(0).getStartX() - notePos) / pitchQuantSize);
 		double endY = curves.get(curves.size() - 1).getEndY();
 		ImmutableList.Builder<Integer> widths = ImmutableList.builder();
@@ -233,7 +232,7 @@ public class TrackPortamento {
 			Curve line = curves.get(i);
 			widths.add((int) (line.getEndX() - line.getStartX()) / pitchQuantSize);
 			if (i < curves.size() - 1) {
-				heights.add((endY - line.getEndY()) / ROW_HEIGHT * 10);
+				heights.add((endY - line.getEndY()) / Quantizer.ROW_HEIGHT * 10);
 			}
 			shapes.add(line.getType());
 		}

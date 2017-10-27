@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.common.quantize;
 
 public class QuantizedVibrato {
-	public static final int QUANTIZATION = 96;
+	public static final int QUANTIZATION = 32;
 
 	private final int breadth; // In percent of note.
 	private final int cycleLength; // In quants.

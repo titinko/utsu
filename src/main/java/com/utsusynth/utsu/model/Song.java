@@ -11,6 +11,7 @@ import com.utsusynth.utsu.common.quantize.QuantizedAddResponse;
 import com.utsusynth.utsu.common.quantize.QuantizedModifyRequest;
 import com.utsusynth.utsu.common.quantize.QuantizedNeighbor;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.model.pitch.PitchCurve;
 import com.utsusynth.utsu.model.pitch.PitchbendData;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
@@ -23,6 +24,7 @@ import com.utsusynth.utsu.model.voicebank.VoicebankReader;
 public class Song {
 	private static final int DEFAULT_NOTE_DURATION = 480;
 	private final VoicebankReader voicebankReader;
+	private final SongNoteStandardizer standardizer;
 
 	// Settings. (Anything marked with [#SETTING])
 	// Insert Time signatures here
@@ -107,13 +109,19 @@ public class Song {
 
 		public Song build() {
 			newSong.voicebank = newSong.voicebankReader.loadFromDirectory(newSong.voiceDirectory);
+			noteListBuilder.standardize(newSong.standardizer, newSong.voicebank);
 			newSong.noteList = noteListBuilder.build();
 			return newSong;
 		}
 	}
 
-	public Song(VoicebankReader voicebankReader, SongNoteList songNoteList, PitchCurve pitchbends) {
+	public Song(
+			VoicebankReader voicebankReader,
+			SongNoteStandardizer standardizer,
+			SongNoteList songNoteList,
+			PitchCurve pitchbends) {
 		this.voicebankReader = voicebankReader;
+		this.standardizer = standardizer;
 		this.noteList = songNoteList;
 		this.pitchbends = pitchbends;
 		this.voiceDirectory = "${DEFAULT}";
@@ -126,13 +134,14 @@ public class Song {
 	public Builder toBuilder() {
 		// Returns the builder of a new Song with this one's attributes.
 		// The old Song's noteList and pitchbends objects are used in the new Song.
-		return new Builder(new Song(this.voicebankReader, this.noteList, this.pitchbends))
-				.setTempo(this.tempo)
-				.setProjectName(this.projectName)
-				.setOutputFile(this.outputFile)
-				.setVoiceDirectory(this.voiceDirectory)
-				.setFlags(this.flags)
-				.setMode2(this.mode2);
+		return new Builder(
+				new Song(this.voicebankReader, this.standardizer, this.noteList, this.pitchbends))
+						.setTempo(this.tempo)
+						.setProjectName(this.projectName)
+						.setOutputFile(this.outputFile)
+						.setVoiceDirectory(this.voiceDirectory)
+						.setFlags(this.flags)
+						.setMode2(this.mode2);
 	}
 
 	/**
@@ -156,7 +165,7 @@ public class Song {
 		note.setNoteNum(PitchUtils.pitchToNoteNum(request.getPitch()));
 		note.setNoteFlags("B0");
 		if (request.getEnvelope().isPresent()) {
-			note.setEnvelope(request.getEnvelope().get());
+			note.setEnvelope(EnvelopeData.fromQuantized(request.getEnvelope().get()));
 		}
 		if (request.getPitchbend().isPresent()) {
 			note.setPitchbends(PitchbendData.fromQuantized(request.getPitchbend().get()));
@@ -169,18 +178,10 @@ public class Song {
 		Optional<String> trueLyric = lyricConfig.isPresent()
 				? Optional.of(lyricConfig.get().getTrueLyric()) : Optional.absent();
 
-		// Adjust the envelopes to match overlap.
-		if (lyricConfig.isPresent()) {
-			note.setFadeIn(Math.max(note.getFadeIn(), lyricConfig.get().getOverlap()));
-			// Case where there is an adjacent previous node.
-			if (insertedNode.getPrev().isPresent()
-					&& insertedNode.getPrev().get().getNote().getDuration() == note.getDelta()) {
-				insertedNode.getPrev().get().getNote().setFadeOut(note.getFadeIn());
-			}
-			// Case where there is an adjacent next node.
-			if (insertedNode.getNext().isPresent() && note.getDuration() == note.getLength()) {
-				note.setFadeOut(insertedNode.getNext().get().getNote().getFadeIn());
-			}
+		// Standardize note lengths and envelopes.
+		insertedNode.standardize(standardizer, voicebank);
+		if (insertedNode.getPrev().isPresent()) {
+			insertedNode.getPrev().get().standardize(standardizer, voicebank);
 		}
 
 		// Find neighbors to newly added note.
@@ -191,8 +192,10 @@ public class Song {
 			prevNote = Optional.of(
 					new QuantizedNeighbor(
 							quantizedDelta,
-							32,
-							prevSongNote.getQuantizedEnvelope(),
+							Quantizer.SMALLEST,
+							prevSongNote.getEnvelope().quantize(
+									prevSongNote.getRealPreutter(),
+									prevSongNote.getRealDuration()),
 							Optional.absent()));
 		}
 		Optional<QuantizedNeighbor> nextNote = Optional.absent();
@@ -211,12 +214,14 @@ public class Song {
 					note.getNoteNum(),
 					nextSongNote.getNoteNum());
 
-			int quantizedLen = note.getLength() / (DEFAULT_NOTE_DURATION / 32);
+			int quantizedLen = note.getLength() / (DEFAULT_NOTE_DURATION / Quantizer.SMALLEST);
 			nextNote = Optional.of(
 					new QuantizedNeighbor(
 							quantizedLen,
-							32,
-							nextSongNote.getQuantizedEnvelope(),
+							Quantizer.SMALLEST,
+							nextSongNote.getEnvelope().quantize(
+									nextSongNote.getRealPreutter(),
+									nextSongNote.getRealDuration()),
 							Optional.of(
 									nextSongNote.getPitchbends().quantizePortamento(
 											request.getPitch()))));
@@ -235,7 +240,10 @@ public class Song {
 
 		return new QuantizedAddResponse(
 				trueLyric,
-				Optional.of(note.getQuantizedEnvelope()),
+				Optional.of(
+						note.getEnvelope().quantize(
+								note.getRealPreutter(),
+								note.getRealDuration())),
 				Optional.of(note.getPitchbends().quantizePortamento(prevPitch)),
 				prevNote,
 				nextNote);
@@ -246,20 +254,18 @@ public class Song {
 		SongNode removedNode = this.noteList.removeNote(positionMs);
 		Optional<QuantizedNeighbor> prevNote = Optional.absent();
 		if (removedNode.getPrev().isPresent()) {
-			// Adjust envelope of adjacent previous node, if present.
-			if (removedNode.getPrev().get().getNote().getDuration() == removedNode
-					.getNote()
-					.getDelta()) {
-				removedNode.getPrev().get().getNote().setFadeOut(35); // Default fade out.
-			}
+			// Adjust envelope, preutterance, and length of previous note.
+			removedNode.getPrev().get().standardize(standardizer, voicebank);
 
-			int quantizedDelta = removedNode.getNote().getDelta() / (DEFAULT_NOTE_DURATION / 32);
 			SongNote prevSongNote = removedNode.getPrev().get().getNote();
+			int quantizedDelta = removedNode.getNote().getDelta() / (DEFAULT_NOTE_DURATION / 32);
 			prevNote = Optional.of(
 					new QuantizedNeighbor(
 							quantizedDelta,
-							32,
-							prevSongNote.getQuantizedEnvelope(),
+							Quantizer.SMALLEST,
+							prevSongNote.getEnvelope().quantize(
+									prevSongNote.getRealPreutter(),
+									prevSongNote.getRealDuration()),
 							Optional.absent()));
 		}
 		Optional<QuantizedNeighbor> nextNote = Optional.absent();
@@ -286,8 +292,10 @@ public class Song {
 			nextNote = Optional.of(
 					new QuantizedNeighbor(
 							quantizedLen,
-							32,
-							nextSongNote.getQuantizedEnvelope(),
+							Quantizer.SMALLEST,
+							nextSongNote.getEnvelope().quantize(
+									nextSongNote.getRealPreutter(),
+									nextSongNote.getRealDuration()),
 							Optional.of(
 									nextSongNote.getPitchbends().quantizePortamento(prevPitch))));
 		}
@@ -312,7 +320,7 @@ public class Song {
 		SongNode node = this.noteList.getNote(positionMs);
 		SongNote note = node.getNote();
 		if (request.getEnvelope().isPresent()) {
-			note.setEnvelope(request.getEnvelope().get());
+			note.setEnvelope(EnvelopeData.fromQuantized(request.getEnvelope().get()));
 		}
 		if (request.getPitchbend().isPresent()) {
 			this.pitchbends.removePitchbends(positionMs, note.getLength(), note.getPitchbends());
@@ -353,7 +361,10 @@ public class Song {
 			notes.add(
 					new QuantizedAddRequest(
 							new QuantizedNote(totalQuantizedDelta, quantizedDuration, 32),
-							Optional.of(note.getQuantizedEnvelope()),
+							Optional.of(
+									note.getEnvelope().quantize(
+											note.getRealPreutter(),
+											note.getRealDuration())),
 							Optional.of(note.getPitchbends().quantize(prevPitch)),
 							PitchUtils.noteNumToPitch(note.getNoteNum()),
 							note.getLyric(),

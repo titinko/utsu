@@ -3,7 +3,7 @@ package com.utsusynth.utsu.common.quantize;
 import com.google.common.collect.ImmutableList;
 
 public class QuantizedPortamento {
-	public static final int QUANTIZATION = 96;
+	public static final int QUANTIZATION = 32;
 
 	private final String prevPitch; // Example: C#4
 	private final int start; // In quants.

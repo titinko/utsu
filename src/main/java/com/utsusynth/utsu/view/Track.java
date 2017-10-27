@@ -15,6 +15,7 @@ import com.utsusynth.utsu.common.quantize.QuantizedNeighbor;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
 import com.utsusynth.utsu.common.quantize.QuantizedPortamento;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.view.note.TrackNote;
 import com.utsusynth.utsu.view.note.TrackNoteCallback;
 import com.utsusynth.utsu.view.note.TrackNoteFactory;
@@ -26,9 +27,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 
 public class Track {
-	private static final int ROW_HEIGHT = 20;
-	private static final int COL_WIDTH = 96;
-
 	private final Highlighter highlighter;
 	private final TrackNoteFactory noteFactory;
 	private final TrackNoteMap noteMap;
@@ -57,14 +55,15 @@ public class Track {
 
 		// Add as many octaves as needed.
 		QuantizedNote lastNote = notes.get(notes.size() - 1).getNote();
-		int finalPosition = lastNote.getStart() * (COL_WIDTH / lastNote.getQuantization());
-		setNumMeasures((finalPosition / COL_WIDTH / 4) + 4);
+		int finalPosition =
+				lastNote.getStart() * (Quantizer.COL_WIDTH / lastNote.getQuantization());
+		setNumMeasures((finalPosition / Quantizer.COL_WIDTH / 4) + 4);
 
 		// Add all notes.
 		for (QuantizedAddRequest note : notes) {
 			TrackNote newNote = noteFactory.createNote(note, noteCallback);
-			int position =
-					note.getNote().getStart() * (COL_WIDTH / note.getNote().getQuantization());
+			int position = note.getNote().getStart()
+					* (Quantizer.COL_WIDTH / note.getNote().getQuantization());
 			try {
 				noteMap.putNote(position, newNote);
 				if (note.getEnvelope().isPresent()) {
@@ -151,7 +150,7 @@ public class Track {
 				// Add row to track.
 				for (int colNum = numColumns; colNum < numColumns + 4; colNum++) {
 					AnchorPane newCell = new AnchorPane();
-					newCell.setPrefSize(COL_WIDTH, ROW_HEIGHT);
+					newCell.setPrefSize(Quantizer.COL_WIDTH, Quantizer.ROW_HEIGHT);
 					newCell.getStyleClass().add("track-cell");
 					newCell.getStyleClass().add(pitch.endsWith("#") ? "black-key" : "white-key");
 					if (colNum % 4 == 0) {
@@ -182,14 +181,14 @@ public class Track {
 		// Add new columns to dynamics.
 		for (int colNum = numColumns; colNum < numColumns + 4; colNum++) {
 			AnchorPane topCell = new AnchorPane();
-			topCell.setPrefSize(COL_WIDTH, 50);
+			topCell.setPrefSize(Quantizer.COL_WIDTH, 50);
 			topCell.getStyleClass().add("dynamics-top-cell");
 			if (colNum % 4 == 0) {
 				topCell.getStyleClass().add("measure-start");
 			}
 			dynamics.add(topCell, colNum, 0);
 			AnchorPane bottomCell = new AnchorPane();
-			bottomCell.setPrefSize(COL_WIDTH, 50);
+			bottomCell.setPrefSize(Quantizer.COL_WIDTH, 50);
 			bottomCell.getStyleClass().add("dynamics-bottom-cell");
 			if (colNum % 4 == 0) {
 				bottomCell.getStyleClass().add("measure-start");
@@ -226,7 +225,7 @@ public class Track {
 				Optional<QuantizedPitchbend> pitchbend,
 				int rowNum,
 				String lyric) throws NoteAlreadyExistsException {
-			int position = toAdd.getStart() * (COL_WIDTH / toAdd.getQuantization());
+			int position = toAdd.getStart() * (Quantizer.COL_WIDTH / toAdd.getQuantization());
 			if (noteMap.hasNote(position)) {
 				throw new NoteAlreadyExistsException();
 			} else {
@@ -242,7 +241,8 @@ public class Track {
 				noteMap.putNote(position, note);
 				if (response.getPrevNote().isPresent()) {
 					QuantizedNeighbor prev = response.getPrevNote().get();
-					int prevDelta = prev.getDelta() * (COL_WIDTH / prev.getQuantization());
+					int prevDelta =
+							prev.getDelta() * (Quantizer.COL_WIDTH / prev.getQuantization());
 					noteMap.getNote(position - prevDelta).adjustForOverlap(prevDelta);
 					noteMap.putEnvelope(
 							position - prevDelta,
@@ -251,7 +251,8 @@ public class Track {
 				}
 				if (response.getNextNote().isPresent()) {
 					QuantizedNeighbor next = response.getNextNote().get();
-					int nextDelta = next.getDelta() * (COL_WIDTH / next.getQuantization());
+					int nextDelta =
+							next.getDelta() * (Quantizer.COL_WIDTH / next.getQuantization());
 					note.adjustForOverlap(nextDelta);
 					noteMap.putEnvelope(
 							position + nextDelta,
@@ -278,7 +279,7 @@ public class Track {
 
 				// Add measures if necessary.
 				if (!response.getNextNote().isPresent()) {
-					setNumMeasures((position / COL_WIDTH / 4) + 4);
+					setNumMeasures((position / Quantizer.COL_WIDTH / 4) + 4);
 				}
 
 				return response.getTrueLyric();
@@ -287,16 +288,17 @@ public class Track {
 
 		@Override
 		public void removeSongNote(QuantizedNote toRemove) {
-			int position = toRemove.getStart() * (COL_WIDTH / toRemove.getQuantization());
+			int position = toRemove.getStart() * (Quantizer.COL_WIDTH / toRemove.getQuantization());
 			noteMap.removeFullNote(position);
 			QuantizedAddResponse response = model.removeNote(toRemove);
 			if (response.getPrevNote().isPresent()) {
 				QuantizedNeighbor prev = response.getPrevNote().get();
-				int prevDelta = prev.getDelta() * (COL_WIDTH / prev.getQuantization());
+				int prevDelta = prev.getDelta() * (Quantizer.COL_WIDTH / prev.getQuantization());
 				TrackNote prevNode = noteMap.getNote(position - prevDelta);
 				if (response.getNextNote().isPresent()) {
 					QuantizedNeighbor next = response.getNextNote().get();
-					int nextDelta = next.getDelta() * (COL_WIDTH / next.getQuantization());
+					int nextDelta =
+							next.getDelta() * (Quantizer.COL_WIDTH / next.getQuantization());
 					prevNode.adjustForOverlap(prevDelta + nextDelta);
 					noteMap.putEnvelope(
 							position + nextDelta,
@@ -311,7 +313,7 @@ public class Track {
 				} else {
 					prevNode.adjustForOverlap(Integer.MAX_VALUE);
 					// Remove measures until you have 4 measures + previous note.
-					setNumMeasures(((position - prevDelta) / COL_WIDTH / 4) + 4);
+					setNumMeasures(((position - prevDelta) / Quantizer.COL_WIDTH / 4) + 4);
 				}
 				noteMap.putEnvelope(
 						position - prevDelta,
@@ -327,7 +329,7 @@ public class Track {
 
 		@Override
 		public void modifySongVibrato(QuantizedNote toModify) {
-			int position = toModify.getStart() * (COL_WIDTH / toModify.getQuantization());
+			int position = toModify.getStart() * (Quantizer.COL_WIDTH / toModify.getQuantization());
 			TrackNote trackNote = noteMap.getNote(position);
 			QuantizedPitchbend qPitchbend = new QuantizedPitchbend(
 					noteMap.getPortamento(position).quantize(position),
@@ -348,7 +350,7 @@ public class Track {
 
 		@Override
 		public Optional<QuantizedEnvelope> getEnvelope(QuantizedNote note) {
-			int position = note.getStart() * (COL_WIDTH / note.getQuantization());
+			int position = note.getStart() * (Quantizer.COL_WIDTH / note.getQuantization());
 			if (noteMap.hasEnvelope(position)) {
 				return Optional.of(noteMap.getEnvelope(position).getQuantizedEnvelope());
 			}
@@ -357,7 +359,7 @@ public class Track {
 
 		@Override
 		public Optional<QuantizedPortamento> getPortamento(QuantizedNote note) {
-			int position = note.getStart() * (COL_WIDTH / note.getQuantization());
+			int position = note.getStart() * (Quantizer.COL_WIDTH / note.getQuantization());
 			if (noteMap.hasPortamento(position)) {
 				return Optional.of(noteMap.getPortamento(position).quantize(position));
 			}

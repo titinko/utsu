@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.view;
 
 import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -26,23 +27,23 @@ public class Piano {
 				Pane leftHalfOfKey = new Pane();
 				leftHalfOfKey.getStyleClass().add(
 						pitch.endsWith("#") ? "piano-black-key" : "piano-white-key");
-				leftHalfOfKey.setPrefSize(60, 20);
+				leftHalfOfKey.setPrefSize(60, Quantizer.ROW_HEIGHT);
 				leftHalfOfKey.getChildren().add(new Label(pitch + octave));
 
 				Node rightHalfOfKey;
 				if (pitch.endsWith("#")) {
 					GridPane bisectedKey = new GridPane();
 					Pane child1 = new Pane();
-					child1.setPrefSize(40, 10);
+					child1.setPrefSize(40, Quantizer.ROW_HEIGHT / 2);
 					child1.getStyleClass().add("piano-white-key");
 					Pane child2 = new Pane();
-					child2.setPrefSize(40, 10);
+					child2.setPrefSize(40, Quantizer.ROW_HEIGHT / 2);
 					child2.getStyleClass().add("piano-no-border");
 					bisectedKey.addColumn(0, child1, child2);
 					rightHalfOfKey = bisectedKey;
 				} else {
 					Pane blankKey = new Pane();
-					blankKey.setPrefSize(40, 20);
+					blankKey.setPrefSize(40, Quantizer.ROW_HEIGHT);
 					if (pitch.startsWith("F") || pitch.startsWith("C")) {
 						blankKey.getStyleClass().add("piano-white-key");
 					} else {

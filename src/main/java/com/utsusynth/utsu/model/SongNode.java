@@ -2,6 +2,7 @@ package com.utsusynth.utsu.model;
 
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.model.voicebank.Voicebank;
 
 /**
  * Node of a linked list of SongNotes.
@@ -180,5 +181,19 @@ public class SongNode {
 		} else {
 			return this.next.get().removeNote(deltaToRemove, curDelta);
 		}
+	}
+
+	void standardize(SongNoteStandardizer standardizer, Voicebank voicebank) {
+		Optional<SongNote> prevNote = getOptionalNote(this.prev);
+		Optional<SongNote> nextNote = getOptionalNote(this.next);
+		standardizer.standardizeInContext(prevNote, this.note, nextNote, voicebank);
+	}
+
+	private static Optional<SongNote> getOptionalNote(Optional<SongNode> fromNode) {
+		Optional<SongNote> maybeNote = Optional.absent();
+		if (fromNode.isPresent()) {
+			maybeNote = Optional.of(fromNode.get().getNote());
+		}
+		return maybeNote;
 	}
 }

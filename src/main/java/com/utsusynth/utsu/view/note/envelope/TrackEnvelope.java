@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.view.note.envelope;
 
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.scene.Cursor;
 import javafx.scene.Group;
@@ -11,8 +12,6 @@ import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 
 public class TrackEnvelope {
-	private static final int COL_WIDTH = 96;
-
 	private final MoveTo start;
 	private final LineTo[] lines;
 	private final LineTo end;
@@ -75,7 +74,7 @@ public class TrackEnvelope {
 	}
 
 	public QuantizedEnvelope getQuantizedEnvelope() {
-		int envQuantSize = COL_WIDTH / QuantizedEnvelope.QUANTIZATION;
+		int envQuantSize = Quantizer.COL_WIDTH / QuantizedEnvelope.QUANTIZATION;
 		double[] widths = new double[5];
 		widths[0] = (lines[0].getX() - start.getX()) / envQuantSize;
 		widths[1] = (lines[1].getX() - lines[0].getX()) / envQuantSize;
@@ -89,6 +88,7 @@ public class TrackEnvelope {
 		heights[2] = 200 - (lines[3].getY() * 2);
 		heights[3] = 200 - (lines[4].getY() * 2);
 		heights[4] = 200 - (lines[2].getY() * 2);
-		return new QuantizedEnvelope(widths, heights);
+		// TODO: Set this to a value other than zero.
+		return new QuantizedEnvelope(0, 0, widths, heights);
 	}
 }

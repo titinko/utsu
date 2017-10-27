@@ -15,9 +15,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
 public class TrackNoteFactory {
-	private static final int ROW_HEIGHT = 20;
-	private static final int COL_WIDTH = 96;
-
 	private final Quantizer quantizer;
 	private final Provider<TrackLyric> lyricProvider;
 
@@ -32,11 +29,11 @@ public class TrackNoteFactory {
 
 	public TrackNote createNote(QuantizedAddRequest request, TrackNoteCallback callback) {
 		QuantizedNote qNote = request.getNote();
-		int absStart = qNote.getStart() * (COL_WIDTH / qNote.getQuantization());
-		int absDuration = qNote.getDuration() * (COL_WIDTH / qNote.getQuantization());
+		int absStart = qNote.getStart() * (Quantizer.COL_WIDTH / qNote.getQuantization());
+		int absDuration = qNote.getDuration() * (Quantizer.COL_WIDTH / qNote.getQuantization());
 		Rectangle note = new Rectangle();
 		note.setWidth(absDuration - 1);
-		note.setHeight(ROW_HEIGHT - 1);
+		note.setHeight(Quantizer.ROW_HEIGHT - 1);
 		note.getStyleClass().addAll("track-note", "valid-note", "not-highlighted");
 
 		Rectangle edge = new Rectangle();
@@ -52,7 +49,7 @@ public class TrackNoteFactory {
 		StackPane layout = new StackPane();
 		layout.setPickOnBounds(false);
 		layout.setAlignment(Pos.CENTER_LEFT);
-		layout.setTranslateY(PitchUtils.pitchToRowNum(request.getPitch()) * ROW_HEIGHT);
+		layout.setTranslateY(PitchUtils.pitchToRowNum(request.getPitch()) * Quantizer.ROW_HEIGHT);
 		layout.setTranslateX(absStart);
 
 		TrackLyric lyric = lyricProvider.get();
@@ -73,27 +70,27 @@ public class TrackNoteFactory {
 
 	public TrackNote createDefaultNote(int row, int column, TrackNoteCallback callback) {
 		Rectangle note = new Rectangle();
-		note.setWidth(COL_WIDTH - 1);
-		note.setHeight(ROW_HEIGHT - 1);
+		note.setWidth(Quantizer.COL_WIDTH - 1);
+		note.setHeight(Quantizer.ROW_HEIGHT - 1);
 		note.getStyleClass().addAll("track-note", "invalid-note", "not-highlighted");
 
 		Rectangle edge = new Rectangle();
 		edge.setWidth(2);
 		edge.setHeight(note.getHeight());
 		edge.getStyleClass().add("drag-edge");
-		StackPane.setMargin(edge, new Insets(0, 0, 0, COL_WIDTH - 3));
+		StackPane.setMargin(edge, new Insets(0, 0, 0, Quantizer.COL_WIDTH - 3));
 
 		Rectangle overlap = new Rectangle();
 		overlap.setWidth(0);
 		overlap.setHeight(note.getHeight());
 		overlap.getStyleClass().add("note-overlap");
-		StackPane.setMargin(overlap, new Insets(0, 0, 0, COL_WIDTH - 1));
+		StackPane.setMargin(overlap, new Insets(0, 0, 0, Quantizer.COL_WIDTH - 1));
 
 		StackPane layout = new StackPane();
 		layout.setPickOnBounds(false);
 		layout.setAlignment(Pos.CENTER_LEFT);
-		layout.setTranslateY(row * ROW_HEIGHT);
-		layout.setTranslateX(column * COL_WIDTH);
+		layout.setTranslateY(row * Quantizer.ROW_HEIGHT);
+		layout.setTranslateX(column * Quantizer.COL_WIDTH);
 
 		TrackLyric lyric = lyricProvider.get();
 		TrackVibrato vibrato = new TrackVibrato(Optional.absent());

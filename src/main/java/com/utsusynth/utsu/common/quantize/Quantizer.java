@@ -5,6 +5,8 @@ public class Quantizer {
 	public static final int LARGEST = 1;
 
 	public static final int DEFAULT_NOTE_DURATION = 480;
+	public static final int COL_WIDTH = 96;
+	public static final int ROW_HEIGHT = 20;
 
 	private int quantization;
 

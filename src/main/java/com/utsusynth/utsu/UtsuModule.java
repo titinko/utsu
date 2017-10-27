@@ -16,6 +16,7 @@ import com.utsusynth.utsu.engine.Wavtool;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongManager;
 import com.utsusynth.utsu.model.SongNoteList;
+import com.utsusynth.utsu.model.SongNoteStandardizer;
 import com.utsusynth.utsu.model.pitch.PitchCurve;
 import com.utsusynth.utsu.model.pitch.portamento.PortamentoFactory;
 import com.utsusynth.utsu.model.voicebank.VoicebankReader;
@@ -51,9 +52,10 @@ public class UtsuModule extends AbstractModule {
 	@Provides
 	private Song provideSong(
 			VoicebankReader voicebankReader,
+			SongNoteStandardizer noteStandardizer,
 			SongNoteList noteList,
 			PitchCurve pitchCurve) {
-		return new Song(voicebankReader, noteList, pitchCurve);
+		return new Song(voicebankReader, noteStandardizer, noteList, pitchCurve);
 	}
 
 	@Provides

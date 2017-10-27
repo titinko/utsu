@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.view.note;
 
 import com.google.common.base.Optional;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -8,9 +9,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.text.Font;
 
 public class TrackLyric {
-	private static final int ROW_HEIGHT = 20;
-	private static final int COL_WIDTH = 80;
-
 	private String lyric;
 	private Optional<String> alias;
 
@@ -26,8 +24,8 @@ public class TrackLyric {
 		this.text.setMouseTransparent(true);
 		this.textField = new TextField("mi");
 		this.textField.setFont(Font.font(9));
-		this.textField.setMaxHeight(ROW_HEIGHT - 2);
-		this.textField.setMaxWidth(COL_WIDTH - 2);
+		this.textField.setMaxHeight(Quantizer.ROW_HEIGHT - 2);
+		this.textField.setMaxWidth(Quantizer.COL_WIDTH - 2);
 
 		// Initialize with text active.
 		activeNode = new Group();

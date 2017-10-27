@@ -1,8 +1,6 @@
 package com.utsusynth.utsu.model;
 
 import com.google.common.collect.ImmutableList;
-import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
-import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.model.pitch.PitchbendData;
 
 /**
@@ -10,6 +8,7 @@ import com.utsusynth.utsu.model.pitch.PitchbendData;
  * directly and not injected.
  */
 public class SongNote {
+	// Values the user has control over. These are saved to file.
 	private int delta; // In ms, corresponds with 125 bpm tempo.
 	private int duration; // In ms, corresponds with 125 bpm tempo.
 	private int length; // In ms, corresponds with 125 bpm tempo.
@@ -28,6 +27,11 @@ public class SongNote {
 	private double[] envelopeHeight; // "v" in % of total intensity (0-100)
 	private double envelopeOverlap; // This value is meaningless.
 	private int[] vibrato;
+
+	// Values calculated in-program and not saved to any file.
+	private double realPreutter;
+	private double realDuration;
+	private double autoStartPoint; // This is added to the user-added startPoint.
 
 	public SongNote() {
 		// Set every required field to its default.
@@ -49,7 +53,11 @@ public class SongNote {
 		this.envelopeHeight = new double[5];
 		this.setEnvelope(
 				new String[] { "5", "1", "1", "100", "100", "100", "100", "7", "35", "1", "100" });
-		vibrato = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		this.vibrato = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+		this.realPreutter = 0;
+		this.realDuration = -1; // Should be ignored if not explicitly set.
+		this.autoStartPoint = 0;
 	}
 
 	public void setDelta(int delta) {
@@ -241,21 +249,13 @@ public class SongNote {
 		return envelope;
 	}
 
-	public void setEnvelope(QuantizedEnvelope quantizedEnvelope) {
-		int envQuantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedEnvelope.QUANTIZATION;
-		for (int i = 0; i < 5; i++) {
-			envelopeWidth[i] = quantizedEnvelope.getWidth(i) * envQuantSize;
-			envelopeHeight[i] = quantizedEnvelope.getHeight(i);
-		}
+	public void setEnvelope(EnvelopeData envelopeData) {
+		envelopeWidth = envelopeData.getWidths();
+		envelopeHeight = envelopeData.getHeights();
 	}
 
-	public QuantizedEnvelope getQuantizedEnvelope() {
-		int envQuantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedEnvelope.QUANTIZATION;
-		double[] quantizedWidth = new double[5];
-		for (int i = 0; i < 5; i++) {
-			quantizedWidth[i] = envelopeWidth[i] / envQuantSize;
-		}
-		return new QuantizedEnvelope(quantizedWidth, envelopeHeight);
+	public EnvelopeData getEnvelope() {
+		return new EnvelopeData(envelopeWidth, envelopeHeight);
 	}
 
 	public double getFadeIn() {
@@ -282,6 +282,30 @@ public class SongNote {
 			vibratoValues[i] = Integer.toString(vibrato[i]);
 		}
 		return vibratoValues;
+	}
+
+	public double getRealPreutter() {
+		return this.realPreutter;
+	}
+
+	public void setRealPreutter(double realPreutter) {
+		this.realPreutter = realPreutter;
+	}
+
+	public double getRealDuration() {
+		return this.realDuration;
+	}
+
+	public void setRealDuration(double realDuration) {
+		this.realDuration = realDuration;
+	}
+
+	public double getAutoStartPoint() {
+		return this.autoStartPoint;
+	}
+
+	public void setAutoStartPoint(double autoStartPoint) {
+		this.autoStartPoint = autoStartPoint;
 	}
 
 	@Override

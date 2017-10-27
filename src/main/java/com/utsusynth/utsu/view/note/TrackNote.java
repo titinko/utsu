@@ -20,9 +20,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
 public class TrackNote {
-	private static final int ROW_HEIGHT = 20;
-	private static final int COL_WIDTH = 96;
-
 	private final StackPane layout;
 	private final Rectangle note;
 	private final Rectangle dragEdge;
@@ -131,7 +128,7 @@ public class TrackNote {
 		layout.setOnMouseDragged(event -> {
 			if (subMode == SubMode.RESIZING) {
 				// Find quantized mouse position.
-				int quantSize = COL_WIDTH / quantizer.getQuant();
+				int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
 				int newQuant = (int) Math.floor((event.getX() + getAbsPosition()) / quantSize);
 
 				// Find what to compare quantized mouse position to.
@@ -143,7 +140,7 @@ public class TrackNote {
 				int oldSmallQuant = getQuantizedStart(Quantizer.SMALLEST);
 				int newSmallQuant = newQuant * (Quantizer.SMALLEST / quantizer.getQuant());
 				int quantChange = newSmallQuant - oldSmallQuant;
-				int smallQuantSize = COL_WIDTH / Quantizer.SMALLEST;
+				int smallQuantSize = Quantizer.COL_WIDTH / Quantizer.SMALLEST;
 
 				// Increase or decrease duration.
 				if (newQuant > increasingQuantEnd) {
@@ -154,14 +151,14 @@ public class TrackNote {
 			} else {
 				// Handle vertical movement and check against row bounds.
 				int oldRow = getRow();
-				int newRow = ((int) Math.floor(event.getY() / ROW_HEIGHT)) + oldRow;
+				int newRow = ((int) Math.floor(event.getY() / Quantizer.ROW_HEIGHT)) + oldRow;
 				if (!track.isInBounds(newRow)) {
 					newRow = oldRow;
 				}
 
 				// Handle horizontal movement.
 				int curQuant = quantizer.getQuant(); // Ensure constant quantization.
-				int curQuantSize = COL_WIDTH / curQuant;
+				int curQuantSize = Quantizer.COL_WIDTH / curQuant;
 				// Determine whether a note is aligned with the current quantization.
 				boolean aligned = getAbsPosition() % curQuantSize == 0;
 				int oldQuantInNote = quantInNote / (Quantizer.SMALLEST / curQuant);
@@ -178,7 +175,7 @@ public class TrackNote {
 					quantChange *= (Quantizer.SMALLEST / curQuant);
 					// Both values are in the smallest quantization.
 					int truncatedStart = getAbsPosition() / curQuantSize * (32 / curQuant);
-					int actualStart = getAbsPosition() / (COL_WIDTH / 32);
+					int actualStart = getAbsPosition() / (Quantizer.COL_WIDTH / 32);
 					// Align start quant with true quantization.
 					if (quantChange > 0) {
 						// Subtract from quantChange.
@@ -189,7 +186,7 @@ public class TrackNote {
 					}
 					// Adjust curQuant now that quantChange has been corrected.
 					curQuant = Quantizer.SMALLEST;
-					curQuantSize = COL_WIDTH / Quantizer.SMALLEST;
+					curQuantSize = Quantizer.COL_WIDTH / Quantizer.SMALLEST;
 				}
 				int oldQuant = getQuantizedStart(curQuant);
 				int newQuant = oldQuant + quantChange;
@@ -217,7 +214,7 @@ public class TrackNote {
 				subMode = SubMode.RESIZING;
 			} else {
 				// Note that this may become dragging in the future.
-				quantInNote = (int) event.getX() / (COL_WIDTH / 32);
+				quantInNote = (int) event.getX() / (Quantizer.COL_WIDTH / 32);
 				subMode = SubMode.CLICKING;
 			}
 		});
@@ -230,12 +227,12 @@ public class TrackNote {
 	public QuantizedNote getQuantizedNote() {
 		int quantization = Quantizer.SMALLEST;
 		int quantizedDuration =
-				(int) ((getDuration() - overlap.getWidth()) / (COL_WIDTH / quantization));
+				(int) ((getDuration() - overlap.getWidth()) / (Quantizer.COL_WIDTH / quantization));
 		return new QuantizedNote(getQuantizedStart(quantization), quantizedDuration, quantization);
 	}
 
 	public int getRow() {
-		return (int) layout.getTranslateY() / ROW_HEIGHT;
+		return (int) layout.getTranslateY() / Quantizer.ROW_HEIGHT;
 	}
 
 	public Optional<QuantizedVibrato> getVibrato() {
@@ -297,8 +294,8 @@ public class TrackNote {
 	}
 
 	private void moveNote(int oldQuant, int newQuant, int quantization, int newRow) {
-		layout.setTranslateX(newQuant * (COL_WIDTH / quantization));
-		layout.setTranslateY(newRow * ROW_HEIGHT);
+		layout.setTranslateX(newQuant * (Quantizer.COL_WIDTH / quantization));
+		layout.setTranslateY(newRow * Quantizer.ROW_HEIGHT);
 		int curDuration = getDuration();
 		adjustDragEdge(curDuration);
 		updateNote(
@@ -330,7 +327,7 @@ public class TrackNote {
 		if (note.getStyleClass().contains("valid-note")) {
 			// System.out.println(String.format(
 			// "Moving from valid %d, %s", oldQuant, lyric.getLyric()));
-			int quantOldDuration = oldDuration / (COL_WIDTH / quantization);
+			int quantOldDuration = oldDuration / (Quantizer.COL_WIDTH / quantization);
 			QuantizedNote deleteThis = new QuantizedNote(oldQuant, quantOldDuration, quantization);
 			envelope = track.getEnvelope(deleteThis);
 			portamento = track.getPortamento(deleteThis);
@@ -342,7 +339,7 @@ public class TrackNote {
 		// System.out.println(String.format("Moving to %d, %d, %s", newRow, newQuant, newLyric));
 		try {
 			setValid(true);
-			int quantNewDuration = newDuration / (COL_WIDTH / quantization);
+			int quantNewDuration = newDuration / (Quantizer.COL_WIDTH / quantization);
 			QuantizedNote addThis = new QuantizedNote(newQuant, quantNewDuration, quantization);
 			Optional<QuantizedPitchbend> pitchbend = Optional.absent();
 			if (portamento.isPresent()) {
@@ -363,7 +360,7 @@ public class TrackNote {
 	}
 
 	private int getQuantizedStart(int quantization) {
-		return getAbsPosition() / (COL_WIDTH / quantization);
+		return getAbsPosition() / (Quantizer.COL_WIDTH / quantization);
 	}
 
 	private int getAbsPosition() {
