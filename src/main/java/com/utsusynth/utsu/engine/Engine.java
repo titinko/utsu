@@ -72,12 +72,14 @@ public class Engine {
 			SongNote note = notes.next();
 			totalDelta += note.getDelta();
 			Optional<LyricConfig> config = voicebank.getLyricConfig(note.getLyric());
-			Optional<Double> maybePreutter = getPreutter(Optional.of(note), voicebank);
-			Optional<Double> nextPreutter = getPreutter(notes.peekNext(), voicebank);
+			double preutter = note.getRealPreutter();
+			Optional<Double> nextPreutter = Optional.absent();
+			if (notes.peekNext().isPresent()) {
+				nextPreutter = Optional.of(notes.peekNext().get().getRealPreutter());
+			}
 
 			// Possible silence before first note.
 			if (isFirstNote) {
-				double preutter = maybePreutter.isPresent() ? maybePreutter.get() : 0.0;
 				if (note.getDelta() - preutter > 0) {
 					addSilence(note.getDelta() - preutter, song, renderedNote, finalSong);
 				}
@@ -101,14 +103,13 @@ public class Engine {
 			System.out.println(config.get());
 
 			// Adjust note length based on preutterance/overlap.
-			// TODO: Scale by tempo before calculating this?
 			double adjustedLength =
-					getAdjustedLength(voicebank, note, config.get(), notes.peekNext());
+					note.getRealDuration() > -1 ? note.getRealDuration() : note.getDuration();
 			System.out.println("Length is " + adjustedLength);
 
 			// Calculate pitchbends.
-			int firstStep = getFirstPitchStep(totalDelta, maybePreutter);
-			int lastStep = getLastPitchStep(totalDelta, maybePreutter, adjustedLength);
+			int firstStep = getFirstPitchStep(totalDelta, preutter);
+			int lastStep = getLastPitchStep(totalDelta, preutter, adjustedLength);
 			String pitchString = song.getPitchString(firstStep, lastStep, note.getNoteNum());
 
 			// Re-samples lyric and puts result into renderedNote file.
@@ -131,7 +132,7 @@ public class Engine {
 					renderedNote,
 					finalSong,
 					// Whether to include overlap in the wavtool.
-					areNotesTouching(notes.peekPrev(), voicebank, maybePreutter));
+					areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter)));
 
 			// Possible silence after each note.
 			if (notes.peekNext().isPresent()
@@ -184,70 +185,12 @@ public class Engine {
 		}
 	}
 
-	private int getFirstPitchStep(int totalDelta, Optional<Double> maybePreutter) {
-		double preutter = maybePreutter.isPresent() ? maybePreutter.get() : 0.0;
+	private int getFirstPitchStep(int totalDelta, double preutter) {
 		return (int) Math.ceil((totalDelta - preutter) / 5.0);
 	}
 
-	private int getLastPitchStep(
-			int totalDelta,
-			Optional<Double> maybePreutter,
-			double adjustedLength) {
-		// NOTE: This is no longer usable if we start changing adjustedLength based on tempo.
-		double preutter = maybePreutter.isPresent() ? maybePreutter.get() : 0.0;
+	private int getLastPitchStep(int totalDelta, double preutter, double adjustedLength) {
 		return (int) Math.floor((totalDelta - preutter + adjustedLength) / 5.0);
-	}
-
-	// Find length of a note taking into account preutterance and overlap, but not tempo.
-	private double getAdjustedLength(
-			Voicebank voicebank,
-			SongNote cur,
-			LyricConfig config,
-			Optional<SongNote> next) {
-		double noteLength = cur.getDuration();
-		// Increase length by this note's preutterance.
-		// Cap the preutterance at start of prev note or start of track.
-		double preutterance = Math.min(config.getPreutterance(), cur.getDelta());
-		noteLength += preutterance;
-
-		// Decrease length by next note's preutterance.
-		if (!next.isPresent()) {
-			return noteLength;
-		}
-
-		Optional<LyricConfig> nextConfig = voicebank.getLyricConfig(next.get().getLyric());
-		if (!nextConfig.isPresent()) {
-			// Ignore next note if it has an invalid lyric.
-			return noteLength;
-		}
-
-		double nextPreutter = Math.min(nextConfig.get().getPreutterance(), cur.getLength());
-		if (nextPreutter + cur.getDuration() < cur.getLength()) {
-			// Ignore next note if it doesn't touch current note.
-			return noteLength;
-		}
-
-		double encroachingPreutter = nextPreutter + cur.getDuration() - cur.getLength();
-		noteLength -= encroachingPreutter;
-
-		// Increase length by next note's overlap.
-		double nextOverlap = Math.min(nextConfig.get().getOverlap(), next.get().getFadeIn());
-		double nextBoundedOverlap = Math.max(0, Math.min(nextOverlap, next.get().getDuration()));
-		noteLength += nextBoundedOverlap;
-
-		return noteLength;
-	}
-
-	private Optional<Double> getPreutter(Optional<SongNote> note, Voicebank voicebank) {
-		if (!note.isPresent()) {
-			return Optional.absent();
-		}
-
-		Optional<LyricConfig> config = voicebank.getLyricConfig(note.get().getLyric());
-		if (!config.isPresent()) {
-			return Optional.absent();
-		}
-		return Optional.of(Math.min(config.get().getPreutterance(), note.get().getDelta()));
 	}
 
 	// Determines whether two notes are "touching" given the second note's preutterance.

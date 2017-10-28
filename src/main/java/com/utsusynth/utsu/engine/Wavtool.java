@@ -26,10 +26,9 @@ public class Wavtool {
 			boolean includeOverlap) {
 		String outputFilePath = outputFile.getAbsolutePath();
 		String inputFilePath = inputFile.getAbsolutePath();
-		String startPoint = "0.0"; // TODO: Stop ignoring this field.
+		double startPoint = note.getStartPoint(); // TODO: Add auto start point.
 		String[] envelope = note.getFullEnvelope();
 
-		// TODO: Scale note length, overlap, and configs by tempo.
 		double overlap = Math.min(config.getOverlap(), note.getFadeIn());
 		double boundedOverlap = Math.max(0, Math.min(overlap, noteLength));
 		// Ignore overlap if current note doesn't touch previous one.
@@ -44,7 +43,7 @@ public class Wavtool {
 				wavtoolPath,
 				outputFilePath,
 				inputFilePath,
-				startPoint,
+				Double.toString(startPoint),
 				Double.toString(noteLength * scaleFactor),
 				envelope[0], // p1
 				envelope[1], // p2
@@ -53,7 +52,7 @@ public class Wavtool {
 				envelope[4], // v2
 				envelope[5], // v3
 				envelope[6], // v4
-				Double.toString(boundedOverlap), // overlap
+				Double.toString(boundedOverlap * scaleFactor), // overlap
 				envelope[8], // p4
 				envelope[9], // p5
 				envelope[10]); // v5
@@ -63,7 +62,7 @@ public class Wavtool {
 		String outputFilePath = outputFile.getAbsolutePath();
 		String inputFilePath = inputFile.getAbsolutePath();
 		String startPoint = "0.0";
-		String noteLength = Double.toString(duration);
+		String noteLength = Double.toString(duration); // Tempo already applied.
 		String[] envelope = new String[] { "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" };
 
 		// Call wavtool to add new note onto the end of the output file.

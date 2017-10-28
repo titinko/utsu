@@ -29,11 +29,12 @@ public class Resampler {
 		String inputFilePath = config.getPathToFile();
 		String outputFilePath = outputFile.getAbsolutePath();
 		String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
-		String consonantVelocity = Double.toString(note.getVelocity());
+		String consonantVelocity = Double.toString(note.getVelocity() * (song.getTempo() / 125));
 		String flags = note.getNoteFlags().isEmpty() ? song.getFlags() : note.getNoteFlags();
 		String offset = Double.toString(config.getOffset());
-		double scaledLength = noteLength * (125 / song.getTempo()) + 1;
-		String consonantLength = Double.toString(config.getConsonant()); // TODO: Cutoff?
+		double startPoint = note.getStartPoint() + note.getAutoStartPoint();
+		double scaledLength = noteLength * (125 / song.getTempo()) + startPoint + 1;
+		double consonantLength = config.getConsonant(); // TODO: Cutoff?
 		String cutoff = Double.toString(config.getCutoff());
 		String intensity = Integer.toString(note.getIntensity());
 		String modulation = Integer.toString(note.getModulation()); // TODO: Set this song-wide?
@@ -49,7 +50,7 @@ public class Resampler {
 				flags,
 				offset,
 				Double.toString(scaledLength),
-				consonantLength,
+				Double.toString(consonantLength),
 				cutoff,
 				intensity,
 				modulation,

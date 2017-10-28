@@ -42,9 +42,8 @@ public class SongNoteStandardizer {
 			// TODO: Confirm envelope not bigger than note length.
 			// Adjust the envelopes to match overlap.
 			note.setFadeIn(Math.max(note.getFadeIn(), realOverlap));
-			// TODO: Make this isTouching instead.
 			// Case where there is an adjacent next node.
-			if (next.isPresent() && note.getDuration() == note.getLength()) {
+			if (next.isPresent() && areNotesTouching(note, next.get(), voicebank)) {
 				note.setFadeOut(next.get().getFadeIn());
 			} else {
 				note.setFadeOut(35); // Default fade out.
@@ -79,13 +78,12 @@ public class SongNoteStandardizer {
 			return noteLength;
 		}
 
-		// Expect next preutterance to be set.
-		double nextPreutter = next.get().getRealPreutter();
-		if (nextPreutter + cur.getDuration() < cur.getLength()) {
+		if (!areNotesTouching(cur, next.get(), voicebank)) {
 			// Ignore next note if it doesn't touch current note.
 			return noteLength;
 		}
 
+		double nextPreutter = next.get().getRealPreutter();
 		double encroachingPreutter = nextPreutter + cur.getDuration() - cur.getLength();
 		noteLength -= encroachingPreutter;
 
@@ -95,5 +93,19 @@ public class SongNoteStandardizer {
 		noteLength += nextBoundedOverlap;
 
 		return noteLength;
+	}
+
+	private boolean areNotesTouching(SongNote note, SongNote nextNote, Voicebank voicebank) {
+		if (!voicebank.getLyricConfig(note.getLyric()).isPresent()
+				|| !voicebank.getLyricConfig(nextNote.getLyric()).isPresent()) {
+			return false;
+		}
+
+		// Expect next preutterance to be set.
+		double preutterance = Math.min(nextNote.getRealPreutter(), note.getLength());
+		if (preutterance + note.getDuration() < note.getLength()) {
+			return false;
+		}
+		return true;
 	}
 }
