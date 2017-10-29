@@ -74,29 +74,7 @@
               <goal>launch4j</goal>
             </goals>
             <configuration>
-              <headerType>gui</headerType>
-              <outfile>target/utsu.exe</outfile>
-              <jar>target/jfx/app/utsu-0.0.1-SNAPSHOT-jfx.jar</jar>
-              <errTitle>utsu</errTitle>
-              <classPath>
-                <mainClass>com.utsusynth.utsu.UtsuApp</mainClass>
-                <addDependencies>false</addDependencies>
-                <preCp>anything</preCp>
-              </classPath>
-              <jre>
-                <minVersion>1.8.0_121</minVersion>
-              </jre>
-              <versionInfo>
-                <fileVersion>0.0.1.0</fileVersion>
-                <txtFileVersion>0.0.1.0</txtFileVersion>
-                <productVersion>0.0.1.0</productVersion>
-                <txtProductVersion>0.0.1.0</txtProductVersion>
-                <copyright>FILL ME IN</copyright>
-                <fileDescription>Utsu Vocal Synth</fileDescription>
-                <productName>Utsu</productName>
-                <internalName>Utsu</internalName>
-                <originalFilename>utsu.exe</originalFilename>
-              </versionInfo>
+              <infile>launch4j.xml</infile>
             </configuration>
           </execution>
         </executions>
