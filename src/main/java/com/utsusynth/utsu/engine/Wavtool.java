@@ -16,7 +16,7 @@ public class Wavtool {
 	}
 
 	void addNewNote(
-			String wavtoolPath,
+			File wavtoolPath,
 			Song song,
 			SongNote note,
 			double noteLength,
@@ -40,7 +40,7 @@ public class Wavtool {
 
 		// Call wavtool to add new note onto the end of the output file.
 		runner.runProcess(
-				wavtoolPath,
+				wavtoolPath.getAbsolutePath(),
 				outputFilePath,
 				inputFilePath,
 				Double.toString(startPoint),
@@ -58,18 +58,16 @@ public class Wavtool {
 				envelope[10]); // v5
 	}
 
-	void addSilence(String wavtoolPath, double duration, File inputFile, File outputFile) {
-		String outputFilePath = outputFile.getAbsolutePath();
-		String inputFilePath = inputFile.getAbsolutePath();
+	void addSilence(File wavtoolPath, double duration, File inputFile, File outputFile) {
 		String startPoint = "0.0";
 		String noteLength = Double.toString(duration); // Tempo already applied.
 		String[] envelope = new String[] { "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" };
 
 		// Call wavtool to add new note onto the end of the output file.
 		runner.runProcess(
-				wavtoolPath,
-				outputFilePath,
-				inputFilePath,
+				wavtoolPath.getAbsolutePath(),
+				outputFile.getAbsolutePath(),
+				inputFile.getAbsolutePath(),
 				startPoint,
 				noteLength,
 				envelope[0], // p1

@@ -1,21 +1,21 @@
 package com.utsusynth.utsu.model.voicebank;
 
-import java.util.Map;
-
 import com.google.common.base.Optional;
+import java.io.File;
+import java.util.Map;
 
 /**
  * In-code representation of a voice bank. Compatible with oto.ini files. TODO: Support oto_ini.txt
  * as well
  */
 public class Voicebank {
-	private String pathToVoicebank; // Example: "/Library/Iona.utau/"
+	private File pathToVoicebank; // Example: "/Library/Iona.utau/"
 	private String name; // Example: "Iona"
 	private String imageName; // Example: "img.bmp"
 	private Map<String, LyricConfig> lyricConfigs;
 
 	Voicebank(
-			String pathToVoicebank,
+			File pathToVoicebank,
 			String name,
 			String imageName,
 			Map<String, LyricConfig> lyricConfigs) {
@@ -40,7 +40,7 @@ public class Voicebank {
 		return pathToVoicebank + imageName;
 	}
 
-	public String getPathToVoicebank() {
+	public File getPathToVoicebank() {
 		return pathToVoicebank;
 	}
 

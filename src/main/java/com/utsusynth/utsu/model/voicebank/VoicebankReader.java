@@ -28,36 +28,29 @@ public class VoicebankReader {
 	private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
 
 	// TODO: Replace with actual default.
-	private static final String DEFAULT_PATH =
-			"/Users/emmabreen/Library/UTAU/voice/Japanese/IONA TestDrive2.utau/";
+	private static final File DEFAULT_PATH =
+			new File("/Users/emmabreen/Library/UTAU/voice/Japanese/IONA TestDrive2.utau/");
 
-	public Voicebank loadFromDirectory(String sourceDir) {
-		String pathToVoicebank;
+	public Voicebank loadFromDirectory(File sourceDir) {
+		File pathToVoicebank;
 		String name = "";
 		String imageName = "";
 		Map<String, LyricConfig> lyricConfigs = new HashMap<>();
 
-		if (sourceDir.isEmpty()) {
+		if (!sourceDir.exists()) {
 			pathToVoicebank = DEFAULT_PATH;
 		} else {
-			sourceDir = sourceDir.replaceFirst("\\$\\{DEFAULT\\}", DEFAULT_PATH).replaceFirst(
-					"\\$\\{HOME\\}",
-					System.getProperty("user.home"));
-			if (sourceDir.endsWith("//")) {
-				pathToVoicebank = sourceDir.substring(0, sourceDir.length() - 1);
-			} else if (sourceDir.endsWith("/")) {
-				pathToVoicebank = sourceDir;
+			// TODO(trouble): If user passes in ${DEFAULT} or ${HOME}, replace with the actual value.
+			if (!sourceDir.isDirectory()) {
+				pathToVoicebank = sourceDir.getParentFile();
 			} else {
-				pathToVoicebank = sourceDir + "/";
-			}
-			if (!(new File(pathToVoicebank).isDirectory())) {
-				pathToVoicebank = DEFAULT_PATH;
+				pathToVoicebank = sourceDir;
 			}
 		}
 		System.out.println("Parsed voicebank as " + pathToVoicebank);
 
 		// Parse character data.
-		String characterData = readConfigFile(new File(pathToVoicebank).toPath(), "character.txt");
+		String characterData = readConfigFile(pathToVoicebank.toPath(), "character.txt");
 		for (String rawLine : characterData.split("\n")) {
 			String line = rawLine.trim();
 			if (line.startsWith("name=")) {
@@ -70,7 +63,7 @@ public class VoicebankReader {
 		// Parse all oto_ini.txt and oto.ini files in arbitrary order.
 		try {
 			Files.walkFileTree(
-					new File(pathToVoicebank).toPath(),
+					pathToVoicebank.toPath(),
 					EnumSet.of(FileVisitOption.FOLLOW_LINKS),
 					10,
 					new SimpleFileVisitor<Path>() {
@@ -146,5 +139,9 @@ public class VoicebankReader {
 			e.printStackTrace();
 		}
 		return "";
+	}
+
+	public static File getDefaultPath() {
+		return DEFAULT_PATH;
 	}
 }

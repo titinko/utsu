@@ -19,7 +19,7 @@ public class Resampler {
 	}
 
 	void resample(
-			String resamplerPath,
+			File resamplerPath,
 			SongNote note,
 			double noteLength,
 			LyricConfig config,
@@ -42,7 +42,7 @@ public class Resampler {
 
 		// Call resampler.
 		runner.runProcess(
-				resamplerPath,
+				resamplerPath.getAbsolutePath(),
 				inputFilePath,
 				outputFilePath,
 				pitch,
@@ -58,13 +58,12 @@ public class Resampler {
 				pitchString);
 	}
 
-	void resampleSilence(String resamplerPath, File outputFile, double duration) {
-		String outputFilePath = outputFile.getAbsolutePath();
+	void resampleSilence(File resamplerPath, File outputFile, double duration) {
 		String desiredLength = Double.toString(duration + 1);
 		runner.runProcess(
-				resamplerPath,
+				resamplerPath.getAbsolutePath(),
 				SILENCE_PATH,
-				outputFilePath,
+				outputFile.getAbsolutePath(),
 				"C4",
 				"100",
 				"",

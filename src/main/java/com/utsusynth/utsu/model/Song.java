@@ -1,8 +1,5 @@
 package com.utsusynth.utsu.model;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
@@ -17,6 +14,9 @@ import com.utsusynth.utsu.model.pitch.PitchbendData;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankReader;
+import java.io.File;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * In-code representation of a song. Compatible with UST versions 1.2 and 2.0.
@@ -30,8 +30,8 @@ public class Song {
 	// Insert Time signatures here
 	private double tempo;
 	private String projectName;
-	private String outputFile;
-	private String voiceDirectory; // Pulled directly from the oto file.
+	private File outputFile;
+	private File voiceDirectory; // Pulled directly from the oto file.
 	private Voicebank voicebank;
 	private String flags;
 	private boolean mode2 = true;
@@ -61,12 +61,12 @@ public class Song {
 			return this;
 		}
 
-		public Builder setOutputFile(String outputFile) {
+		public Builder setOutputFile(File outputFile) {
 			newSong.outputFile = outputFile;
 			return this;
 		}
 
-		public Builder setVoiceDirectory(String voiceDirectory) {
+		public Builder setVoiceDirectory(File voiceDirectory) {
 			newSong.voiceDirectory = voiceDirectory;
 			return this;
 		}
@@ -124,7 +124,7 @@ public class Song {
 		this.standardizer = standardizer;
 		this.noteList = songNoteList;
 		this.pitchbends = pitchbends;
-		this.voiceDirectory = "${DEFAULT}";
+		this.voiceDirectory = VoicebankReader.getDefaultPath();
 		this.voicebank = voicebankReader.loadFromDirectory(this.voiceDirectory);
 		this.tempo = 125.0;
 		this.projectName = "(no title)";
@@ -147,9 +147,7 @@ public class Song {
 	/**
 	 * Adds a note to the song object at the specified location
 	 * 
-	 * @param beat
-	 * @param percentThroughBeat
-	 * @param fullPitch
+	 * @param request
 	 * @return the lyric of the new note.
 	 * @throws NoteAlreadyExistsException
 	 */
@@ -377,11 +375,11 @@ public class Song {
 		return projectName;
 	}
 
-	public String getOutputFile() {
+	public File getOutputFile() {
 		return outputFile;
 	}
 
-	public String getVoiceDir() {
+	public File getVoiceDir() {
 		return voiceDirectory;
 	}
 

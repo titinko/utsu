@@ -1,11 +1,12 @@
 package com.utsusynth.utsu.files;
 
-import java.util.regex.Pattern;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongNote;
+import com.utsusynth.utsu.model.voicebank.VoicebankReader;
+import java.io.File;
+import java.util.regex.Pattern;
 
 /**
  * Reads a song from a Unicode UST 1.2 file.
@@ -123,9 +124,9 @@ public class Ust12Reader {
 			} else if (line.startsWith("ProjectName=")) {
 				builder.setProjectName(line.substring("ProjectName=".length()));
 			} else if (line.startsWith("OutFile=")) {
-				builder.setOutputFile(line.substring("OutFile=".length()));
+				builder.setOutputFile(parseFilePath(line, "OutFile="));
 			} else if (line.startsWith("VoiceDir=")) {
-				builder.setVoiceDirectory(line.substring("VoiceDir=".length()));
+				builder.setVoiceDirectory(parseFilePath(line, "VoiceDir="));
 			} else if (line.startsWith("Flags=")) {
 				builder.setFlags(line.substring("Flags=".length()));
 			} else if (line.startsWith("Mode2=")) {
@@ -135,5 +136,17 @@ public class Ust12Reader {
 			}
 		}
 		return -1;
+	}
+
+	/**
+	 * Parses a file path, and replaces the strings "${DEFAULT}" and "${HOME}" with their
+	 * corresponding directories.
+	 */
+	static File parseFilePath(String line, String property) {
+		String pathString = line.substring(property.length());
+		pathString = pathString
+		    .replaceFirst("\\$\\{DEFAULT\\}", VoicebankReader.getDefaultPath().getAbsolutePath())
+		    .replaceFirst("\\$\\{HOME\\}", System.getProperty("user.home"));
+		return new File(pathString);
 	}
 }
