@@ -16,6 +16,7 @@ public class TrackEnvelope {
 	private final LineTo[] lines;
 	private final LineTo end;
 	private final Group group;
+	private final Quantizer quantizer;
 
 	TrackEnvelope(
 			MoveTo start,
@@ -25,7 +26,9 @@ public class TrackEnvelope {
 			LineTo l4,
 			LineTo l5,
 			LineTo end,
-			TrackEnvelopeCallback callback) {
+			TrackEnvelopeCallback callback,
+			Quantizer quantizer) {
+		this.quantizer = quantizer;
 		this.start = start;
 		this.lines = new LineTo[] { l1, l2, l3, l4, l5 };
 		Circle[] circles = new Circle[5]; // Control points.
@@ -74,7 +77,7 @@ public class TrackEnvelope {
 	}
 
 	public QuantizedEnvelope getQuantizedEnvelope() {
-		int envQuantSize = Quantizer.COL_WIDTH / QuantizedEnvelope.QUANTIZATION;
+		int envQuantSize = quantizer.getColWidth() / QuantizedEnvelope.QUANTIZATION;
 		double[] widths = new double[5];
 		widths[0] = (lines[0].getX() - start.getX()) / envQuantSize;
 		widths[1] = (lines[1].getX() - lines[0].getX()) / envQuantSize;

@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.note.envelope;
 
+import com.google.inject.Inject;
 import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
 import com.utsusynth.utsu.common.quantize.QuantizedNote;
 import com.utsusynth.utsu.common.quantize.Quantizer;
@@ -9,16 +10,23 @@ import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 
 public class TrackEnvelopeFactory {
+	private final Quantizer quantizer;
+
+	@Inject
+	public TrackEnvelopeFactory(Quantizer quantizer) {
+		this.quantizer = quantizer;
+	}
+
 	public TrackEnvelope createEnvelope(
 			TrackNote note,
 			QuantizedEnvelope qEnvelope,
 			TrackEnvelopeCallback callback) {
 		QuantizedNote qNote = note.getQuantizedNote();
-		int noteQuantSize = Quantizer.COL_WIDTH / qNote.getQuantization();
+		int noteQuantSize = quantizer.getColWidth() / qNote.getQuantization();
 		int startPos = (qNote.getStart() - qEnvelope.getPreutterance()) * noteQuantSize;
 		int endPos = startPos + (qEnvelope.getLength() * noteQuantSize);
 
-		int envQuantSize = Quantizer.COL_WIDTH / QuantizedEnvelope.QUANTIZATION;
+		int envQuantSize = quantizer.getColWidth() / QuantizedEnvelope.QUANTIZATION;
 		int p1 = qEnvelope.getWidth(0) * envQuantSize;
 		int p2 = qEnvelope.getWidth(1) * envQuantSize;
 		int p3 = qEnvelope.getWidth(2) * envQuantSize;
@@ -39,6 +47,7 @@ public class TrackEnvelopeFactory {
 				new LineTo(endPos - p4 - p3, v3),
 				new LineTo(endPos - p4, v4),
 				new LineTo(endPos, 100),
-				callback);
+				callback,
+				quantizer);
 	}
 }

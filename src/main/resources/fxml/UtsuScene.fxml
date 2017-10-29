@@ -30,6 +30,12 @@
               <MenuItem mnemonicParsing="false" text="TODO" />
             </items>
           </Menu>
+            <Menu fx:id="viewMenu" mnemonicParsing="false" text="View">
+              <items>
+                <MenuItem fx:id="zoomInItem" mnemonicParsing="false" onAction="#zoomIn" text="Zoom In" />
+                  <MenuItem fx:id="zoomOutItem" mnemonicParsing="false" onAction="#zoomOut" text="Zoom Out" />
+              </items>
+            </Menu>
             <Menu fx:id="projectMenu" mnemonicParsing="false" text="Project">
               <items>
                 <MenuItem fx:id="propertiesItem" mnemonicParsing="false" onAction="#openProperties" text="Properties" />

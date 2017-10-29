@@ -11,10 +11,12 @@ import com.utsusynth.utsu.view.note.TrackNote;
 
 public class TrackPortamentoFactory {
 	private final CurveFactory curveFactory;
+	private final Quantizer quantizer;
 
 	@Inject
-	public TrackPortamentoFactory(CurveFactory curveFactory) {
+	public TrackPortamentoFactory(CurveFactory curveFactory, Quantizer quantizer) {
 		this.curveFactory = curveFactory;
+		this.quantizer = quantizer;
 	}
 
 	public TrackPortamento createPortamento(
@@ -22,8 +24,8 @@ public class TrackPortamentoFactory {
 			QuantizedPortamento qPortamento,
 			TrackPortamentoCallback callback) {
 		QuantizedNote qNote = note.getQuantizedNote();
-		int noteQuantSize = Quantizer.COL_WIDTH / qNote.getQuantization();
-		int pitchQuantSize = Quantizer.COL_WIDTH / QuantizedPortamento.QUANTIZATION;
+		int noteQuantSize = quantizer.getColWidth() / qNote.getQuantization();
+		int pitchQuantSize = quantizer.getColWidth() / QuantizedPortamento.QUANTIZATION;
 		double finalY = (note.getRow() + .5) * Quantizer.ROW_HEIGHT;
 
 		int curX = (qNote.getStart() * noteQuantSize) + (qPortamento.getStart() * pitchQuantSize);
@@ -43,6 +45,6 @@ public class TrackPortamentoFactory {
 			String type = qPortamento.getCurve(i);
 			pitchCurves.add(curveFactory.createCurve(tempX, tempY, curX, curY, type));
 		}
-		return new TrackPortamento(pitchCurves, callback, curveFactory);
+		return new TrackPortamento(pitchCurves, callback, curveFactory, quantizer);
 	}
 }

@@ -59,8 +59,8 @@ public class UtsuModule extends AbstractModule {
 	}
 
 	@Provides
-	private TrackLyric provideLyric() {
-		return new TrackLyric("mi");
+	private TrackLyric provideLyric(Quantizer quantizer) {
+		return new TrackLyric("mi", quantizer);
 	}
 
 	@Provides
@@ -76,7 +76,7 @@ public class UtsuModule extends AbstractModule {
 	@Singleton
 	private Engine engine(Resampler resampler, Wavtool wavtool) {
 		String path = "/Users/emmabreen/Documents/Playground/C++/";
-		String resamplerPath = path + "tn_fnds/macres";
+		String resamplerPath = path + "macres/macres";
 		String wavtoolPath = path + "wavtool-yawu/build/wavtool-yawu";
 		return new Engine(resampler, wavtool, resamplerPath, wavtoolPath);
 	}
@@ -84,6 +84,6 @@ public class UtsuModule extends AbstractModule {
 	@Provides
 	@Singleton
 	private Quantizer provideQuantizer() {
-		return new Quantizer(1);
+		return new Quantizer(1, 96);
 	}
 }
