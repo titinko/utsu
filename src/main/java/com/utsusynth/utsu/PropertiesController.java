@@ -104,8 +104,8 @@ public class PropertiesController implements Localizable {
 		projectNameTF.setText(songManager.getSong().getProjectName());
 		outputFileTF.setText(songManager.getSong().getOutputFile().getAbsolutePath());
 		flagsTF.setText(songManager.getSong().getFlags());
-		resamplerName.setText(getName(resamplerPath));
-		wavtoolName.setText(getName(wavtoolPath));
+		resamplerName.setText(resamplerPath.getName());
+		wavtoolName.setText(wavtoolPath.getName());
 		voicebankName.setText(voicebank.getName());
 
 		// Setup tempo slider.
@@ -131,14 +131,6 @@ public class PropertiesController implements Localizable {
 		tempoLabel.setText(bundle.getString("properties.tempo"));
 	}
 
-	private String getName(File file) {
-		String path = file.getAbsolutePath();
-		if (path.contains("/") && !path.endsWith("/")) {
-			return path.substring(path.lastIndexOf("/") + 1, path.length());
-		}
-		return path;
-	}
-
 	@FXML
 	void changeResampler(ActionEvent event) {
 		FileChooser fc = new FileChooser();
@@ -150,7 +142,7 @@ public class PropertiesController implements Localizable {
 		File file = fc.showOpenDialog(null);
 		if (file != null) {
 			resamplerPath = file;
-			resamplerName.setText(getName(resamplerPath));
+			resamplerName.setText(resamplerPath.getName());
 		}
 	}
 
@@ -165,7 +157,7 @@ public class PropertiesController implements Localizable {
 		File file = fc.showOpenDialog(null);
 		if (file != null) {
 			wavtoolPath = file;
-			wavtoolName.setText(getName(wavtoolPath));
+			wavtoolName.setText(wavtoolPath.getName());
 		}
 	}
 
