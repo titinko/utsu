@@ -6,13 +6,7 @@ import com.utsusynth.utsu.model.voicebank.Voicebank;
 
 /** Standardizes a song note and prepares it for rendering. */
 public class SongNoteStandardizer {
-
-	void standardize(SongNote note) {
-		// Ensure note duration is a multiple of smallest quantization.
-		// Enforce pitchbend size/location limits.
-	}
-
-	void standardizeInContext(
+	void standardize(
 			Optional<SongNote> prev,
 			SongNote note,
 			Optional<SongNote> next,
@@ -56,6 +50,9 @@ public class SongNoteStandardizer {
 		note.setRealPreutter(realPreutter);
 		note.setRealDuration(realDuration);
 		note.setAutoStartPoint(autoStartPoint);
+
+		// TODO: Ensure note duration is a multiple of smallest quantization.
+		// TODO: Enforce pitchbend size/location limits.
 	}
 
 	// Find length of a note taking into account preutterance and overlap, but not tempo.

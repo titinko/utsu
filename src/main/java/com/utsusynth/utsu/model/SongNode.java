@@ -186,7 +186,7 @@ public class SongNode {
 	void standardize(SongNoteStandardizer standardizer, Voicebank voicebank) {
 		Optional<SongNote> prevNote = getOptionalNote(this.prev);
 		Optional<SongNote> nextNote = getOptionalNote(this.next);
-		standardizer.standardizeInContext(prevNote, this.note, nextNote, voicebank);
+		standardizer.standardize(prevNote, this.note, nextNote, voicebank);
 	}
 
 	private static Optional<SongNote> getOptionalNote(Optional<SongNode> fromNode) {
