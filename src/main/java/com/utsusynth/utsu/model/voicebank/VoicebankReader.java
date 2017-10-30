@@ -28,7 +28,7 @@ public class VoicebankReader {
 	private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
 
 	// TODO: Replace with actual default.
-	private static final File DEFAULT_PATH =
+	public static final File DEFAULT_PATH =
 			new File("/Users/emmabreen/Library/UTAU/voice/Japanese/IONA TestDrive2.utau/");
 
 	public Voicebank loadFromDirectory(File sourceDir) {
