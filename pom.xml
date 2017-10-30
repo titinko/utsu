@@ -45,10 +45,18 @@
         </configuration>
         <executions>
           <execution>
+            <!-- required before build-native -->
             <id>create-jfxjar</id>
             <phase>package</phase>
             <goals>
               <goal>build-jar</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>create-native</id>
+            <phase>package</phase>
+            <goals>
+              <goal>build-native</goal>
             </goals>
           </execution>
         </executions>
@@ -61,23 +69,6 @@
           <source>1.8</source>
           <target>1.8</target>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.akathist.maven.plugins.launch4j</groupId>
-        <artifactId>launch4j-maven-plugin</artifactId>
-        <version>1.7.21</version>
-        <executions>
-          <execution>
-            <id>utsusynth</id>
-            <phase>package</phase>
-            <goals>
-              <goal>launch4j</goal>
-            </goals>
-            <configuration>
-              <infile>launch4j.xml</infile>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
