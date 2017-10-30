@@ -30,8 +30,8 @@ public class PropertiesController implements Localizable {
 	private final Localizer localizer;
 	private VoicebankReader voicebankReader;
 
-	private String resamplerPath;
-	private String wavtoolPath;
+	private File resamplerPath;
+	private File wavtoolPath;
 	private Voicebank voicebank;
 
 	@FXML // fx:id="root"
@@ -102,10 +102,10 @@ public class PropertiesController implements Localizable {
 
 		// Set text boxes.
 		projectNameTF.setText(songManager.getSong().getProjectName());
-		outputFileTF.setText(songManager.getSong().getOutputFile());
+		outputFileTF.setText(songManager.getSong().getOutputFile().getAbsolutePath());
 		flagsTF.setText(songManager.getSong().getFlags());
-		resamplerName.setText(getName(resamplerPath));
-		wavtoolName.setText(getName(wavtoolPath));
+		resamplerName.setText(resamplerPath.getName());
+		wavtoolName.setText(wavtoolPath.getName());
 		voicebankName.setText(voicebank.getName());
 
 		// Setup tempo slider.
@@ -131,13 +131,6 @@ public class PropertiesController implements Localizable {
 		tempoLabel.setText(bundle.getString("properties.tempo"));
 	}
 
-	private String getName(String path) {
-		if (path.contains("/") && !path.endsWith("/")) {
-			return path.substring(path.lastIndexOf("/") + 1, path.length());
-		}
-		return path;
-	}
-
 	@FXML
 	void changeResampler(ActionEvent event) {
 		FileChooser fc = new FileChooser();
@@ -148,8 +141,8 @@ public class PropertiesController implements Localizable {
 				new ExtensionFilter("All Files", "*.*"));
 		File file = fc.showOpenDialog(null);
 		if (file != null) {
-			resamplerPath = file.getAbsolutePath();
-			resamplerName.setText(getName(resamplerPath));
+			resamplerPath = file;
+			resamplerName.setText(resamplerPath.getName());
 		}
 	}
 
@@ -163,8 +156,8 @@ public class PropertiesController implements Localizable {
 				new ExtensionFilter("All Files", "*.*"));
 		File file = fc.showOpenDialog(null);
 		if (file != null) {
-			wavtoolPath = file.getAbsolutePath();
-			wavtoolName.setText(getName(wavtoolPath));
+			wavtoolPath = file;
+			wavtoolName.setText(wavtoolPath.getName());
 		}
 	}
 
@@ -177,7 +170,7 @@ public class PropertiesController implements Localizable {
 				new ExtensionFilter("All files", "*.*"));
 		File file = fc.showOpenDialog(null);
 		if (file != null) {
-			voicebank = voicebankReader.loadFromDirectory(file.getAbsolutePath());
+			voicebank = voicebankReader.loadFromDirectory(file);
 			voicebankName.setText(voicebank.getName());
 		}
 	}
@@ -189,7 +182,7 @@ public class PropertiesController implements Localizable {
 						.getSong()
 						.toBuilder()
 						.setProjectName(projectNameTF.getText())
-						.setOutputFile(outputFileTF.getText())
+						.setOutputFile(new File(outputFileTF.getText()))
 						.setFlags(flagsTF.getText())
 						.setVoiceDirectory(voicebank.getPathToVoicebank())
 						.setTempo((int) Math.round(tempoSlider.getValue()))

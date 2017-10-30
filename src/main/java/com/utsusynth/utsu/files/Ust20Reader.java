@@ -132,9 +132,9 @@ public class Ust20Reader {
 			} else if (line.startsWith("ProjectName=")) {
 				builder.setProjectName(line.substring("ProjectName=".length()));
 			} else if (line.startsWith("OutFile=")) {
-				builder.setOutputFile(line.substring("OutFile=".length()));
+				builder.setOutputFile(Ust12Reader.parseFilePath(line, "OutFile="));
 			} else if (line.startsWith("VoiceDir=")) {
-				builder.setVoiceDirectory(line.substring("VoiceDir=".length()));
+				builder.setVoiceDirectory(Ust12Reader.parseFilePath(line, "VoiceDir="));
 			} else if (line.startsWith("Flags=")) {
 				builder.setFlags(line.substring("Flags=".length()));
 			} else if (line.startsWith("Mode2=")) {

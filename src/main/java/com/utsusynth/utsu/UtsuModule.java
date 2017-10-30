@@ -1,5 +1,6 @@
 package com.utsusynth.utsu;
 
+import java.io.File;
 import java.util.Locale;
 
 import com.google.common.collect.ImmutableList;
@@ -76,8 +77,8 @@ public class UtsuModule extends AbstractModule {
 	@Singleton
 	private Engine engine(Resampler resampler, Wavtool wavtool) {
 		String path = "/Users/emmabreen/Documents/Playground/C++/";
-		String resamplerPath = path + "macres/macres";
-		String wavtoolPath = path + "wavtool-yawu/build/wavtool-yawu";
+		File resamplerPath = new File(path + "macres/macres");
+		File wavtoolPath = new File(path + "wavtool-yawu/build/wavtool-yawu");
 		return new Engine(resampler, wavtool, resamplerPath, wavtoolPath);
 	}
 

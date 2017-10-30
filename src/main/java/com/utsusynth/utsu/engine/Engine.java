@@ -22,29 +22,29 @@ import com.utsusynth.utsu.model.voicebank.Voicebank;
 public class Engine {
 	private final Resampler resampler;
 	private final Wavtool wavtool;
-	private String resamplerPath;
-	private String wavtoolPath;
+	private File resamplerPath;
+	private File wavtoolPath;
 
-	public Engine(Resampler resampler, Wavtool wavtool, String resamplerPath, String wavtoolPath) {
+	public Engine(Resampler resampler, Wavtool wavtool, File resamplerPath, File wavtoolPath) {
 		this.resampler = resampler;
 		this.wavtool = wavtool;
 		this.resamplerPath = resamplerPath;
 		this.wavtoolPath = wavtoolPath;
 	}
 
-	public String getResamplerPath() {
+	public File getResamplerPath() {
 		return resamplerPath;
 	}
 
-	public void setResamplerPath(String resamplerPath) {
+	public void setResamplerPath(File resamplerPath) {
 		this.resamplerPath = resamplerPath;
 	}
 
-	public String getWavtoolPath() {
+	public File getWavtoolPath() {
 		return wavtoolPath;
 	}
 
-	public void setWavtoolPath(String wavtoolPath) {
+	public void setWavtoolPath(File wavtoolPath) {
 		this.wavtoolPath = wavtoolPath;
 	}
 
