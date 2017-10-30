@@ -35,7 +35,7 @@ public class SongNoteStandardizer {
 
 			// TODO: Confirm envelope not bigger than note length.
 			// Adjust the envelopes to match overlap.
-			note.setFadeIn(Math.max(note.getFadeIn(), realOverlap));
+			note.setFadeIn(realOverlap);
 			// Case where there is an adjacent next node.
 			if (next.isPresent() && areNotesTouching(note, next.get(), voicebank)) {
 				note.setFadeOut(next.get().getFadeIn());
