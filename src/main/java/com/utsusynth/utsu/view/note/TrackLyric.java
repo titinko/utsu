@@ -11,13 +11,13 @@ import javafx.scene.text.Font;
 public class TrackLyric {
 	private String lyric;
 	private Optional<String> alias;
-
-	private final Label text;
-	private final TextField textField;
 	private TrackLyricCallback trackNote;
 	private Group activeNode;
 
-	public TrackLyric(String defaultLyric) {
+	private final Label text;
+	private final TextField textField;
+
+	public TrackLyric(String defaultLyric, Quantizer quantizer) {
 		this.lyric = defaultLyric;
 		this.alias = Optional.absent();
 		this.text = new Label(defaultLyric);
@@ -25,7 +25,7 @@ public class TrackLyric {
 		this.textField = new TextField("mi");
 		this.textField.setFont(Font.font(9));
 		this.textField.setMaxHeight(Quantizer.ROW_HEIGHT - 2);
-		this.textField.setMaxWidth(Quantizer.COL_WIDTH - 2);
+		this.textField.setMaxWidth(quantizer.getColWidth() - 2);
 
 		// Initialize with text active.
 		activeNode = new Group();

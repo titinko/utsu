@@ -1,5 +1,8 @@
 package com.utsusynth.utsu;
 
+import java.io.File;
+import java.util.Locale;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -23,8 +26,7 @@ import com.utsusynth.utsu.view.note.TrackNoteFactory;
 import com.utsusynth.utsu.view.note.envelope.TrackEnvelopeFactory;
 import com.utsusynth.utsu.view.note.portamento.CurveFactory;
 import com.utsusynth.utsu.view.note.portamento.TrackPortamentoFactory;
-import java.io.File;
-import java.util.Locale;
+
 import javafx.fxml.FXMLLoader;
 
 public class UtsuModule extends AbstractModule {
@@ -58,8 +60,8 @@ public class UtsuModule extends AbstractModule {
 	}
 
 	@Provides
-	private TrackLyric provideLyric() {
-		return new TrackLyric("mi");
+	private TrackLyric provideLyric(Quantizer quantizer) {
+		return new TrackLyric("mi", quantizer);
 	}
 
 	@Provides
@@ -75,7 +77,7 @@ public class UtsuModule extends AbstractModule {
 	@Singleton
 	private Engine engine(Resampler resampler, Wavtool wavtool) {
 		String path = "/Users/emmabreen/Documents/Playground/C++/";
-		File resamplerPath = new File(path + "tn_fnds/macres");
+		File resamplerPath = new File(path + "macres/macres");
 		File wavtoolPath = new File(path + "wavtool-yawu/build/wavtool-yawu");
 		return new Engine(resampler, wavtool, resamplerPath, wavtoolPath);
 	}
@@ -83,6 +85,6 @@ public class UtsuModule extends AbstractModule {
 	@Provides
 	@Singleton
 	private Quantizer provideQuantizer() {
-		return new Quantizer(1);
+		return new Quantizer(1, 96);
 	}
 }

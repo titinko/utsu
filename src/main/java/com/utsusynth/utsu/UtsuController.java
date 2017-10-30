@@ -205,6 +205,12 @@ public class UtsuController implements Localizable {
 	@FXML
 	private Menu editMenu; // Value injected by FXMLLoader
 	@FXML
+	private Menu viewMenu; // Value injected by FXMLLoader
+	@FXML
+	private MenuItem zoomInItem; // Value injected by FXMLLoader
+	@FXML
+	private MenuItem zoomOutItem; // Value injected by FXMLLoader
+	@FXML
 	private Menu projectMenu; // Value injected by FXMLLoader
 	@FXML
 	private MenuItem propertiesItem; // Value injected by FXMLLoader
@@ -227,6 +233,9 @@ public class UtsuController implements Localizable {
 		openItem.setText(bundle.getString("menu.file.open"));
 		saveAsItem.setText(bundle.getString("menu.file.saveAs"));
 		editMenu.setText(bundle.getString("menu.edit"));
+		viewMenu.setText(bundle.getString("menu.view"));
+		zoomInItem.setText(bundle.getString("menu.view.zoomIn"));
+		zoomOutItem.setText(bundle.getString("menu.view.zoomOut"));
 		projectMenu.setText(bundle.getString("menu.project"));
 		propertiesItem.setText(bundle.getString("menu.project.properties"));
 		helpMenu.setText(bundle.getString("menu.help"));
@@ -324,6 +333,32 @@ public class UtsuController implements Localizable {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@FXML
+	void zoomIn(ActionEvent event) {
+		int newColWidth = quantizer.getColWidth() + Quantizer.COL_WIDTH_INDREMENT;
+		quantizer.changeColWidth(quantizer.getColWidth(), newColWidth);
+		if (newColWidth >= Quantizer.MAX_COL_WIDTH) {
+			zoomInItem.setDisable(true);
+		}
+		if (newColWidth > Quantizer.MIN_COL_WIDTH) {
+			zoomOutItem.setDisable(false);
+		}
+		refreshView();
+	}
+
+	@FXML
+	void zoomOut(ActionEvent event) {
+		int newColWidth = quantizer.getColWidth() - Quantizer.COL_WIDTH_INDREMENT;
+		quantizer.changeColWidth(quantizer.getColWidth(), newColWidth);
+		if (newColWidth <= Quantizer.MIN_COL_WIDTH) {
+			zoomOutItem.setDisable(true);
+		}
+		if (newColWidth < Quantizer.MAX_COL_WIDTH) {
+			zoomInItem.setDisable(false);
+		}
+		refreshView();
 	}
 
 	@FXML

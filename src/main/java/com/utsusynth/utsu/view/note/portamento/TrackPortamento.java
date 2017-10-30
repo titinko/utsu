@@ -25,13 +25,16 @@ public class TrackPortamento {
 	private final Group group;
 	private final TrackPortamentoCallback callback;
 	private final CurveFactory curveFactory;
+	private final Quantizer quantizer;
 
 	TrackPortamento(
 			ArrayList<Curve> curves,
 			TrackPortamentoCallback callback,
-			CurveFactory factory) {
+			CurveFactory factory,
+			Quantizer quantizer) {
 		this.callback = callback;
 		this.curveFactory = factory;
+		this.quantizer = quantizer;
 		this.squares = new ArrayList<>();
 		// Add control points.
 		for (int i = 0; i < curves.size(); i++) {
@@ -220,7 +223,7 @@ public class TrackPortamento {
 
 	public QuantizedPortamento quantize(int notePos) {
 		assert (curves.size() > 0);
-		int pitchQuantSize = Quantizer.COL_WIDTH / QuantizedPortamento.QUANTIZATION;
+		int pitchQuantSize = quantizer.getColWidth() / QuantizedPortamento.QUANTIZATION;
 		String prevPitch =
 				PitchUtils.rowNumToPitch((int) (curves.get(0).getStartY() / Quantizer.ROW_HEIGHT));
 		int start = (int) ((curves.get(0).getStartX() - notePos) / pitchQuantSize);

@@ -29,8 +29,8 @@ public class TrackNoteFactory {
 
 	public TrackNote createNote(QuantizedAddRequest request, TrackNoteCallback callback) {
 		QuantizedNote qNote = request.getNote();
-		int absStart = qNote.getStart() * (Quantizer.COL_WIDTH / qNote.getQuantization());
-		int absDuration = qNote.getDuration() * (Quantizer.COL_WIDTH / qNote.getQuantization());
+		int absStart = qNote.getStart() * (quantizer.getColWidth() / qNote.getQuantization());
+		int absDuration = qNote.getDuration() * (quantizer.getColWidth() / qNote.getQuantization());
 		Rectangle note = new Rectangle();
 		note.setWidth(absDuration - 1);
 		note.setHeight(Quantizer.ROW_HEIGHT - 1);
@@ -70,7 +70,7 @@ public class TrackNoteFactory {
 
 	public TrackNote createDefaultNote(int row, int column, TrackNoteCallback callback) {
 		Rectangle note = new Rectangle();
-		note.setWidth(Quantizer.COL_WIDTH - 1);
+		note.setWidth(quantizer.getColWidth() - 1);
 		note.setHeight(Quantizer.ROW_HEIGHT - 1);
 		note.getStyleClass().addAll("track-note", "invalid-note", "not-highlighted");
 
@@ -78,19 +78,19 @@ public class TrackNoteFactory {
 		edge.setWidth(2);
 		edge.setHeight(note.getHeight());
 		edge.getStyleClass().add("drag-edge");
-		StackPane.setMargin(edge, new Insets(0, 0, 0, Quantizer.COL_WIDTH - 3));
+		StackPane.setMargin(edge, new Insets(0, 0, 0, quantizer.getColWidth() - 3));
 
 		Rectangle overlap = new Rectangle();
 		overlap.setWidth(0);
 		overlap.setHeight(note.getHeight());
 		overlap.getStyleClass().add("note-overlap");
-		StackPane.setMargin(overlap, new Insets(0, 0, 0, Quantizer.COL_WIDTH - 1));
+		StackPane.setMargin(overlap, new Insets(0, 0, 0, quantizer.getColWidth() - 1));
 
 		StackPane layout = new StackPane();
 		layout.setPickOnBounds(false);
 		layout.setAlignment(Pos.CENTER_LEFT);
 		layout.setTranslateY(row * Quantizer.ROW_HEIGHT);
-		layout.setTranslateX(column * Quantizer.COL_WIDTH);
+		layout.setTranslateX(column * quantizer.getColWidth());
 
 		TrackLyric lyric = lyricProvider.get();
 		TrackVibrato vibrato = new TrackVibrato(Optional.absent());
