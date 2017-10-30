@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.files;
 
+import com.utsusynth.utsu.model.voicebank.VoicebankReader;
 import java.util.regex.Pattern;
 
 import com.google.inject.Inject;
@@ -132,9 +133,9 @@ public class Ust20Reader {
 			} else if (line.startsWith("ProjectName=")) {
 				builder.setProjectName(line.substring("ProjectName=".length()));
 			} else if (line.startsWith("OutFile=")) {
-				builder.setOutputFile(Ust12Reader.parseFilePath(line, "OutFile="));
+				builder.setOutputFile(VoicebankReader.parseFilePath(line, "OutFile="));
 			} else if (line.startsWith("VoiceDir=")) {
-				builder.setVoiceDirectory(Ust12Reader.parseFilePath(line, "VoiceDir="));
+				builder.setVoiceDirectory(VoicebankReader.parseFilePath(line, "VoiceDir="));
 			} else if (line.startsWith("Flags=")) {
 				builder.setFlags(line.substring("Flags=".length()));
 			} else if (line.startsWith("Mode2=")) {

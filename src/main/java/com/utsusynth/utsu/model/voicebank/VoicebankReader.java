@@ -40,7 +40,6 @@ public class VoicebankReader {
 		if (!sourceDir.exists()) {
 			pathToVoicebank = DEFAULT_PATH;
 		} else {
-			// TODO(trouble): If user passes in ${DEFAULT} or ${HOME}, replace with the actual value.
 			if (!sourceDir.isDirectory()) {
 				pathToVoicebank = sourceDir.getParentFile();
 			} else {
@@ -141,7 +140,15 @@ public class VoicebankReader {
 		return "";
 	}
 
-	public static File getDefaultPath() {
-		return DEFAULT_PATH;
+	/**
+	 * Parses a file path, and replaces the strings "${DEFAULT}" and "${HOME}" with their
+	 * corresponding directories.
+	 */
+	public static File parseFilePath(String line, String property) {
+		String pathString = line.substring(property.length());
+		pathString = pathString
+				.replaceFirst("\\$\\{DEFAULT\\}", DEFAULT_PATH.getAbsolutePath())
+				.replaceFirst("\\$\\{HOME\\}", System.getProperty("user.home"));
+		return new File(pathString);
 	}
 }

@@ -124,7 +124,7 @@ public class Song {
 		this.standardizer = standardizer;
 		this.noteList = songNoteList;
 		this.pitchbends = pitchbends;
-		this.voiceDirectory = VoicebankReader.getDefaultPath();
+		this.voiceDirectory = VoicebankReader.DEFAULT_PATH;
 		this.voicebank = voicebankReader.loadFromDirectory(this.voiceDirectory);
 		this.tempo = 125.0;
 		this.projectName = "(no title)";
