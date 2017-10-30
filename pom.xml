@@ -42,6 +42,7 @@
         <version>8.8.3</version>
         <configuration>
           <mainClass>com.utsusynth.utsu.UtsuApp</mainClass>
+          <vendor>utsu synth</vendor>
         </configuration>
         <executions>
           <execution>
