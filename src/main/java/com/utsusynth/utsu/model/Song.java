@@ -1,5 +1,9 @@
 package com.utsusynth.utsu.model;
 
+import java.io.File;
+import java.util.Iterator;
+import java.util.LinkedList;
+
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
@@ -14,9 +18,6 @@ import com.utsusynth.utsu.model.pitch.PitchbendData;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankReader;
-import java.io.File;
-import java.util.Iterator;
-import java.util.LinkedList;
 
 /**
  * In-code representation of a song. Compatible with UST versions 1.2 and 2.0.
@@ -125,6 +126,7 @@ public class Song {
 		this.noteList = songNoteList;
 		this.pitchbends = pitchbends;
 		this.voiceDirectory = VoicebankReader.getDefaultPath();
+		this.outputFile = new File("outputFile");
 		this.voicebank = voicebankReader.loadFromDirectory(this.voiceDirectory);
 		this.tempo = 125.0;
 		this.projectName = "(no title)";
