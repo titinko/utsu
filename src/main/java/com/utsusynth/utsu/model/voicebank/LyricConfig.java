@@ -6,7 +6,7 @@ package com.utsusynth.utsu.model.voicebank;
  */
 public class LyricConfig {
 	private String pathToFile; // example: /Library/Iona.utau/C3/de.wav
-	private String trueLyric; // example: de
+	private String fileLyric; // example: de
 	private double offset; // Time in wav file before note starts, in ms.
 	private double consonant; // Time in wav file before consonant ends, in ms.
 	private double cutoff; // Time in wav file before note ends, in ms.
@@ -16,7 +16,7 @@ public class LyricConfig {
 	LyricConfig(String pathToFile, String trueLyric, String[] configValues) {
 		assert (configValues.length == 5);
 		this.pathToFile = pathToFile;
-		this.trueLyric = trueLyric;
+		this.fileLyric = trueLyric;
 		this.offset = Double.parseDouble(configValues[0]);
 		this.consonant = Double.parseDouble(configValues[1]);
 		this.cutoff = Double.parseDouble(configValues[2]);
@@ -48,8 +48,8 @@ public class LyricConfig {
 		return pathToFile;
 	}
 
-	public String getTrueLyric() {
-		return trueLyric;
+	public String getFileLyric() {
+		return fileLyric;
 	}
 
 	@Override

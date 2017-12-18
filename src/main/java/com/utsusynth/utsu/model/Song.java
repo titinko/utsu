@@ -175,8 +175,8 @@ public class Song {
 		SongNode insertedNode = this.noteList.insertNote(note, positionMs);
 
 		Optional<LyricConfig> lyricConfig = voicebank.getLyricConfig(request.getLyric());
-		Optional<String> trueLyric = lyricConfig.isPresent()
-				? Optional.of(lyricConfig.get().getTrueLyric()) : Optional.absent();
+		Optional<String> trueLyric =
+				lyricConfig.isPresent() ? Optional.of(request.getLyric()) : Optional.absent();
 
 		// Standardize note lengths and envelopes.
 		insertedNode.standardize(standardizer, voicebank);
@@ -353,8 +353,8 @@ public class Song {
 			totalQuantizedDelta += note.getDelta() / (DEFAULT_NOTE_DURATION / 32);
 			int quantizedDuration = note.getDuration() / (DEFAULT_NOTE_DURATION / 32);
 			Optional<LyricConfig> lyricConfig = voicebank.getLyricConfig(note.getLyric());
-			Optional<String> trueLyric = lyricConfig.isPresent()
-					? Optional.of(lyricConfig.get().getTrueLyric()) : Optional.absent();
+			Optional<String> trueLyric =
+					lyricConfig.isPresent() ? Optional.of(note.getLyric()) : Optional.absent();
 			String prevPitch = iterator.peekPrev().isPresent()
 					? PitchUtils.noteNumToPitch(iterator.peekPrev().get().getNoteNum())
 					: PitchUtils.noteNumToPitch(note.getNoteNum());
