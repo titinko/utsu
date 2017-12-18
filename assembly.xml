@@ -38,6 +38,21 @@
             <includes>
                 <include>**</include>
             </includes>
+            <excludes>
+                <exclude>**/LICENSES</exclude>
+            </excludes>
+            <fileMode>775</fileMode>
+            <directoryMode>775</directoryMode>
+        </fileSet>
+        <!-- Licenses for bundled assets -->
+        <fileSet>
+            <directory>${project.build.directory}/assets/</directory>
+            <outputDirectory>/utsu/assets/</outputDirectory>
+            <includes>
+                <include>**/LICENSES</include>
+            </includes>
+            <fileMode>664</fileMode>
+            <directoryMode>775</directoryMode>
         </fileSet>
     </fileSets>
 </assembly>

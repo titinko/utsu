@@ -44,6 +44,11 @@
         <artifactId>guava</artifactId>
         <version>23.3-jre</version>
     </dependency>
+    <dependency>
+        <groupId>org.lwjgl</groupId>
+        <artifactId>lwjgl-openal</artifactId>
+        <version>3.1.5</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
