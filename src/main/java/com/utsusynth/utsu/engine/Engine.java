@@ -1,16 +1,5 @@
 package com.utsusynth.utsu.engine;
 
-import java.io.File;
-import java.io.IOException;
-
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineEvent;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
-import org.apache.commons.io.FileUtils;
-
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
 import com.utsusynth.utsu.model.Song;
@@ -18,6 +7,11 @@ import com.utsusynth.utsu.model.SongIterator;
 import com.utsusynth.utsu.model.SongNote;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
+import java.io.File;
+import java.io.IOException;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import org.apache.commons.io.FileUtils;
 
 public class Engine {
 	private final Resampler resampler;
@@ -164,25 +158,9 @@ public class Engine {
 	}
 
 	private void playSong(File wavFile) {
-		try {
-			Clip clip = AudioSystem.getClip();
-			clip.addLineListener((event) -> {
-				if (event.getType() == LineEvent.Type.STOP) {
-					clip.close();
-				}
-			});
-			clip.open(AudioSystem.getAudioInputStream(wavFile));
-			clip.start();
-		} catch (UnsupportedAudioFileException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (LineUnavailableException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		Media media = new Media(wavFile.toURI().toString());
+		MediaPlayer player = new MediaPlayer(media);
+		player.play();
 	}
 
 	private int getFirstPitchStep(int totalDelta, double preutter) {
