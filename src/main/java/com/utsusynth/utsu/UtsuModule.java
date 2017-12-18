@@ -77,17 +77,21 @@ public class UtsuModule extends AbstractModule {
 	@Singleton
 	private Engine engine(Resampler resampler, Wavtool wavtool) {
 		String os = System.getProperty("os.name").toLowerCase();
-		String path;
+		String resamplerPath;
+		String wavtoolPath;
 		if (os.contains("win")) {
-			path = "./assets/win64/";
+			resamplerPath = "assets/win64/macres.exe";
+			wavtoolPath = "assets/win64/wavtool-yawu.exe";
 		} else if (os.contains("mac")) {
-			path = "./assets/Mac/";
+			resamplerPath = "assets/Mac/macres";
+			wavtoolPath = "assets/Mac/wavtool-yawu";
 		} else {
-			path = "./assets/linux64/";
+			resamplerPath = "assets/linux64/macres";
+			wavtoolPath = "assets/linux64/wavtool-yawu";
 		}
-		File resamplerPath = new File(path + "macres");
-		File wavtoolPath = new File(path + "wavtool-yawu");
-		return new Engine(resampler, wavtool, resamplerPath, wavtoolPath);
+		File resamplerFile = new File(resamplerPath);
+		File wavtoolFile = new File(wavtoolPath);
+		return new Engine(resampler, wavtool, resamplerFile, wavtoolFile);
 	}
 
 	@Provides
