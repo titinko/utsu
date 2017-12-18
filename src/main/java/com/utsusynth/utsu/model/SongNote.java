@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.model;
 
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.model.pitch.PitchbendData;
 
 /**
@@ -61,7 +62,8 @@ public class SongNote {
 	}
 
 	public void setDelta(int delta) {
-		this.delta = delta;
+		int roundedDelta = delta / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		this.delta = roundedDelta;
 	}
 
 	public int getDelta() {
@@ -69,14 +71,16 @@ public class SongNote {
 	}
 
 	public void setDuration(int duration) {
-		this.duration = duration;
+		int roundedDuration = duration / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		this.duration = roundedDuration;
 	}
 
 	public void safeSetDuration(int duration) {
-		if (this.length != -1 && this.length < duration) {
+		int roundedDuration = duration / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		if (this.length != -1 && this.length < roundedDuration) {
 			this.duration = this.length;
 		} else {
-			this.duration = duration;
+			this.duration = roundedDuration;
 		}
 	}
 
@@ -85,14 +89,16 @@ public class SongNote {
 	}
 
 	public void setLength(int length) {
-		this.length = length;
+		int roundedLength = length / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		this.length = roundedLength;
 	}
 
 	public void safeSetLength(int length) {
-		if (this.duration != -1 && length < this.duration) {
-			this.duration = length;
+		int roundedLength = length / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		if (this.duration != -1 && roundedLength < this.duration) {
+			this.duration = roundedLength;
 		}
-		this.length = length;
+		this.length = roundedLength;
 	}
 
 	public int getLength() {

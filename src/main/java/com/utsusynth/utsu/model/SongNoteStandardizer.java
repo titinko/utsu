@@ -51,7 +51,6 @@ public class SongNoteStandardizer {
 		note.setRealDuration(realDuration);
 		note.setAutoStartPoint(autoStartPoint);
 
-		// TODO: Ensure note duration is a multiple of smallest quantization.
 		// TODO: Enforce pitchbend size/location limits.
 	}
 
