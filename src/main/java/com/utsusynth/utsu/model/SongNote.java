@@ -5,8 +5,8 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.model.pitch.PitchbendData;
 
 /**
- * Represents one note in a song. This is primarily a data storage class, so it can be instantiated
- * directly and not injected.
+ * Represents one note in a song. This is primarily a data storage class, so it
+ * can be instantiated directly and not injected.
  */
 public class SongNote {
 	// Values the user has control over. These are saved to file.
@@ -52,8 +52,7 @@ public class SongNote {
 		this.pbm = ImmutableList.of();
 		this.envelopeWidth = new double[5];
 		this.envelopeHeight = new double[5];
-		this.setEnvelope(
-				new String[] { "5", "1", "1", "100", "100", "100", "100", "7", "35", "1", "100" });
+		this.setEnvelope(new String[] { "5", "1", "1", "100", "100", "100", "100", "7", "35", "1", "100" });
 		this.vibrato = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 		this.realPreutter = 0;
@@ -62,7 +61,7 @@ public class SongNote {
 	}
 
 	public void setDelta(int delta) {
-		int roundedDelta = delta / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		int roundedDelta = delta / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
 		this.delta = roundedDelta;
 	}
 
@@ -71,12 +70,12 @@ public class SongNote {
 	}
 
 	public void setDuration(int duration) {
-		int roundedDuration = duration / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		int roundedDuration = duration / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
 		this.duration = roundedDuration;
 	}
 
 	public void safeSetDuration(int duration) {
-		int roundedDuration = duration / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		int roundedDuration = duration / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
 		if (this.length != -1 && this.length < roundedDuration) {
 			this.duration = this.length;
 		} else {
@@ -89,12 +88,12 @@ public class SongNote {
 	}
 
 	public void setLength(int length) {
-		int roundedLength = length / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		int roundedLength = length / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
 		this.length = roundedLength;
 	}
 
 	public void safeSetLength(int length) {
-		int roundedLength = length / Quantizer.SMALLEST * Quantizer.SMALLEST;
+		int roundedLength = length / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
 		if (this.duration != -1 && roundedLength < this.duration) {
 			this.duration = roundedLength;
 		}
@@ -317,7 +316,7 @@ public class SongNote {
 	@Override
 	public String toString() {
 		// Crappy string representation of a Note object.
-		return delta + " " + duration + " " + length + " " + lyric + " " + noteNum + " " + velocity
-				+ " " + startPoint + " " + intensity + " " + modulation + " " + noteFlags;
+		return delta + " " + duration + " " + length + " " + lyric + " " + noteNum + " " + velocity + " " + startPoint
+				+ " " + intensity + " " + modulation + " " + noteFlags;
 	}
 }

@@ -5,6 +5,7 @@ public class Quantizer {
 	public static final int LARGEST = 1;
 
 	public static final int DEFAULT_NOTE_DURATION = 480;
+	public static final int SMALLEST_DURATION = DEFAULT_NOTE_DURATION / SMALLEST;
 	public static final int ROW_HEIGHT = 20;
 
 	public static final int MIN_COL_WIDTH = SMALLEST;
