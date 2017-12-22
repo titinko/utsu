@@ -9,6 +9,13 @@ import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import java.io.File;
 import java.io.IOException;
+
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import org.apache.commons.io.FileUtils;
@@ -158,9 +165,33 @@ public class Engine {
 	}
 
 	private void playSong(File wavFile) {
-		Media media = new Media(wavFile.toURI().toString());
-		MediaPlayer player = new MediaPlayer(media);
-		player.play();
+		// Use the least glitchy audio player for each operating system.
+		String os = System.getProperty("os.name").toLowerCase();
+		if (os.contains("mac")) {
+			try {
+				Clip clip = AudioSystem.getClip();
+				clip.addLineListener((event) -> {
+					if (event.getType() == LineEvent.Type.STOP) {
+						clip.close();
+					}
+				});
+				clip.open(AudioSystem.getAudioInputStream(wavFile));
+				clip.start();
+			} catch (UnsupportedAudioFileException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (LineUnavailableException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			Media media = new Media(wavFile.toURI().toString());
+			MediaPlayer player = new MediaPlayer(media);
+			player.play();
+		}
 	}
 
 	private int getFirstPitchStep(int totalDelta, double preutter) {

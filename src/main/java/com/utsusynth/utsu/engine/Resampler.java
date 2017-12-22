@@ -9,7 +9,7 @@ import com.utsusynth.utsu.model.SongNote;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Resampler {
-	private static final String SILENCE_PATH = "/Users/emmabreen/Desktop/silence.wav";
+	private static final File SILENCE_PATH = new File("assets/silence.wav");
 
 	private final ExternalProcessRunner runner;
 
@@ -62,7 +62,7 @@ public class Resampler {
 		String desiredLength = Double.toString(duration + 1);
 		runner.runProcess(
 				resamplerPath.getAbsolutePath(),
-				SILENCE_PATH,
+				SILENCE_PATH.getAbsolutePath(),
 				outputFile.getAbsolutePath(),
 				"C4",
 				"100",
