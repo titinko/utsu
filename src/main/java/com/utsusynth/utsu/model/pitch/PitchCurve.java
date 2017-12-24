@@ -5,6 +5,7 @@ import java.util.HashMap;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.model.pitch.portamento.Portamento;
 import com.utsusynth.utsu.model.pitch.portamento.PortamentoFactory;
 

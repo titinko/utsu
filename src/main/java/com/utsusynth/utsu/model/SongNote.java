@@ -1,8 +1,9 @@
 package com.utsusynth.utsu.model;
 
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
-import com.utsusynth.utsu.model.pitch.PitchbendData;
 
 /**
  * Represents one note in a song. This is primarily a data storage class, so it
