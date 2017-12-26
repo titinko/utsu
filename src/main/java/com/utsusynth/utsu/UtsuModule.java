@@ -59,8 +59,8 @@ public class UtsuModule extends AbstractModule {
     }
 
     @Provides
-    private TrackLyric provideLyric(Quantizer quantizer) {
-        return new TrackLyric("mi", quantizer);
+    private TrackLyric provideLyric(Scaler scaler) {
+        return new TrackLyric("mi", scaler);
     }
 
     @Provides

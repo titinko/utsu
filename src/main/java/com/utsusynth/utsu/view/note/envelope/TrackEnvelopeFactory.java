@@ -1,53 +1,53 @@
 package com.utsusynth.utsu.view.note.envelope;
 
 import com.google.inject.Inject;
-import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
-import com.utsusynth.utsu.common.quantize.QuantizedNote;
-import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.note.TrackNote;
-
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 
 public class TrackEnvelopeFactory {
-	private final Quantizer quantizer;
+    private final Scaler scaler;
 
-	@Inject
-	public TrackEnvelopeFactory(Quantizer quantizer) {
-		this.quantizer = quantizer;
-	}
+    @Inject
+    public TrackEnvelopeFactory(Scaler scaler) {
+        this.scaler = scaler;
+    }
 
-	public TrackEnvelope createEnvelope(
-			TrackNote note,
-			QuantizedEnvelope qEnvelope,
-			TrackEnvelopeCallback callback) {
-		QuantizedNote qNote = note.getQuantizedNote();
-		int noteQuantSize = quantizer.getColWidth() / qNote.getQuantization();
-		int startPos = (qNote.getStart() - qEnvelope.getPreutterance()) * noteQuantSize;
-		int endPos = startPos + (qEnvelope.getLength() * noteQuantSize);
+    public TrackEnvelope createEnvelope(
+            TrackNote note,
+            EnvelopeData envelope,
+            TrackEnvelopeCallback callback) {
+        double preutter = envelope.getPreutter().isPresent() ? envelope.getPreutter().get() : 0;
+        double length = envelope.getLength().isPresent() ? envelope.getLength().get() : 0;
+        double startPos = note.getAbsPosition() - preutter;
+        double endPos = startPos + length;
 
-		int envQuantSize = quantizer.getColWidth() / QuantizedEnvelope.QUANTIZATION;
-		int p1 = qEnvelope.getWidth(0) * envQuantSize;
-		int p2 = qEnvelope.getWidth(1) * envQuantSize;
-		int p3 = qEnvelope.getWidth(2) * envQuantSize;
-		int p4 = qEnvelope.getWidth(3) * envQuantSize;
-		int p5 = qEnvelope.getWidth(4) * envQuantSize;
+        double[] widths = envelope.getWidths();
+        double p1 = widths[0];
+        double p2 = widths[1];
+        double p3 = widths[2];
+        double p4 = widths[3];
+        double p5 = widths[4];
 
-		double v1 = 100 - (qEnvelope.getHeight(0) / 2.0);
-		double v2 = 100 - (qEnvelope.getHeight(1) / 2.0);
-		double v3 = 100 - (qEnvelope.getHeight(2) / 2.0);
-		double v4 = 100 - (qEnvelope.getHeight(3) / 2.0);
-		double v5 = 100 - (qEnvelope.getHeight(4) / 2.0);
+        double[] heights = envelope.getHeights();
+        double v1 = 100 - (heights[0] / 2.0);
+        double v2 = 100 - (heights[1] / 2.0);
+        double v3 = 100 - (heights[2] / 2.0);
+        double v4 = 100 - (heights[3] / 2.0);
+        double v5 = 100 - (heights[4] / 2.0);
 
-		return new TrackEnvelope(
-				new MoveTo(startPos, 100),
-				new LineTo(startPos + p1, v1),
-				new LineTo(startPos + p1 + p2, v2),
-				new LineTo(startPos + p1 + p2 + p5, v5),
-				new LineTo(endPos - p4 - p3, v3),
-				new LineTo(endPos - p4, v4),
-				new LineTo(endPos, 100),
-				callback,
-				quantizer);
-	}
+        // Do not scale y axis for envelopes.
+        return new TrackEnvelope(
+                new MoveTo(scaler.scaleX(startPos), 100),
+                new LineTo(scaler.scaleX(startPos + p1), v1),
+                new LineTo(scaler.scaleX(startPos + p1 + p2), v2),
+                new LineTo(scaler.scaleX(startPos + p1 + p2 + p5), v5),
+                new LineTo(scaler.scaleX(endPos - p4 - p3), v3),
+                new LineTo(scaler.scaleX(endPos - p4), v4),
+                new LineTo(scaler.scaleX(endPos), 100),
+                callback,
+                scaler);
+    }
 }

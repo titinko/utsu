@@ -4,101 +4,121 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.PitchUtils;
-import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
-import com.utsusynth.utsu.common.quantize.QuantizedNote;
+import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.note.portamento.CurveFactory;
-
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
 public class TrackNoteFactory {
-	private final Quantizer quantizer;
-	private final Provider<TrackLyric> lyricProvider;
+    private final Scaler scaler;
+    private final Quantizer quantizer;
+    private final Provider<TrackLyric> lyricProvider;
 
-	@Inject
-	public TrackNoteFactory(
-			Quantizer quantizer,
-			Provider<TrackLyric> lyricProvider,
-			CurveFactory curveFactory) {
-		this.quantizer = quantizer;
-		this.lyricProvider = lyricProvider;
-	}
+    @Inject
+    public TrackNoteFactory(
+            Scaler scaler,
+            Quantizer quantizer,
+            Provider<TrackLyric> lyricProvider,
+            CurveFactory curveFactory) {
+        this.scaler = scaler;
+        this.quantizer = quantizer;
+        this.lyricProvider = lyricProvider;
+    }
 
-	public TrackNote createNote(QuantizedAddRequest request, TrackNoteCallback callback) {
-		QuantizedNote qNote = request.getNote();
-		int absStart = qNote.getStart() * (quantizer.getColWidth() / qNote.getQuantization());
-		int absDuration = qNote.getDuration() * (quantizer.getColWidth() / qNote.getQuantization());
-		Rectangle note = new Rectangle();
-		note.setWidth(absDuration - 1);
-		note.setHeight(Quantizer.ROW_HEIGHT - 1);
-		note.getStyleClass().addAll("track-note", "valid-note", "not-highlighted");
+    public TrackNote createNote(NoteData note, TrackNoteCallback callback) {
+        int absStart = note.getPosition();
+        int absDuration = note.getDuration();
+        Rectangle rect = new Rectangle();
+        rect.setWidth(scaler.scaleX(absDuration) - 1);
+        rect.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
+        rect.getStyleClass().addAll("track-note", "valid-note", "not-highlighted");
 
-		Rectangle edge = new Rectangle();
-		edge.setWidth(2);
-		edge.setHeight(note.getHeight());
-		edge.getStyleClass().add("drag-edge");
+        Rectangle edge = new Rectangle();
+        edge.setWidth(2);
+        edge.setHeight(rect.getHeight());
+        edge.getStyleClass().add("drag-edge");
 
-		Rectangle overlap = new Rectangle();
-		overlap.setWidth(0);
-		overlap.setHeight(note.getHeight());
-		overlap.getStyleClass().add("note-overlap");
+        Rectangle overlap = new Rectangle();
+        overlap.setWidth(0);
+        overlap.setHeight(rect.getHeight());
+        overlap.getStyleClass().add("note-overlap");
 
-		StackPane layout = new StackPane();
-		layout.setPickOnBounds(false);
-		layout.setAlignment(Pos.CENTER_LEFT);
-		layout.setTranslateY(PitchUtils.pitchToRowNum(request.getPitch()) * Quantizer.ROW_HEIGHT);
-		layout.setTranslateX(absStart);
+        StackPane layout = new StackPane();
+        layout.setPickOnBounds(false);
+        layout.setAlignment(Pos.CENTER_LEFT);
+        layout.setTranslateY(
+                scaler.scaleX(PitchUtils.pitchToRowNum(note.getPitch()) * Quantizer.ROW_HEIGHT));
+        layout.setTranslateX(scaler.scaleX(absStart));
 
-		TrackLyric lyric = lyricProvider.get();
-		TrackVibrato vibrato;
-		if (request.getPitchbend().isPresent()) {
-			vibrato = new TrackVibrato(request.getPitchbend().get().getVibrato());
-		} else {
-			vibrato = new TrackVibrato(Optional.absent());
-		}
+        TrackLyric lyric = lyricProvider.get();
+        TrackVibrato vibrato;
+        if (note.getPitchbend().isPresent()) {
+            vibrato = new TrackVibrato(Optional.of(note.getPitchbend().get().getVibrato()));
+        } else {
+            vibrato = new TrackVibrato(Optional.absent());
+        }
 
-		TrackNote trackNote =
-				new TrackNote(note, edge, overlap, lyric, vibrato, layout, callback, quantizer);
-		lyric.setVisibleLyric(request.getLyric());
-		lyric.setVisibleAlias(request.getTrueLyric());
+        TrackNote trackNote = new TrackNote(
+                rect,
+                edge,
+                overlap,
+                lyric,
+                vibrato,
+                layout,
+                callback,
+                quantizer,
+                scaler);
+        lyric.setVisibleLyric(note.getLyric());
+        if (note.getConfig().isPresent()) {
+            lyric.setVisibleAlias(note.getConfig().get().getTrueLyric());
+        }
 
-		return trackNote;
-	}
+        return trackNote;
+    }
 
-	public TrackNote createDefaultNote(int row, int column, TrackNoteCallback callback) {
-		Rectangle note = new Rectangle();
-		note.setWidth(quantizer.getColWidth() - 1);
-		note.setHeight(Quantizer.ROW_HEIGHT - 1);
-		note.getStyleClass().addAll("track-note", "invalid-note", "not-highlighted");
+    public TrackNote createDefaultNote(int row, int column, TrackNoteCallback callback) {
+        Rectangle note = new Rectangle();
+        note.setWidth(scaler.scaleX(Quantizer.COL_WIDTH) - 1);
+        note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
+        note.getStyleClass().addAll("track-note", "invalid-note", "not-highlighted");
 
-		Rectangle edge = new Rectangle();
-		edge.setWidth(2);
-		edge.setHeight(note.getHeight());
-		edge.getStyleClass().add("drag-edge");
-		StackPane.setMargin(edge, new Insets(0, 0, 0, quantizer.getColWidth() - 3));
+        Rectangle edge = new Rectangle();
+        edge.setWidth(2);
+        edge.setHeight(note.getHeight());
+        edge.getStyleClass().add("drag-edge");
+        StackPane.setMargin(edge, new Insets(0, 0, 0, scaler.scaleX(Quantizer.COL_WIDTH) - 3));
 
-		Rectangle overlap = new Rectangle();
-		overlap.setWidth(0);
-		overlap.setHeight(note.getHeight());
-		overlap.getStyleClass().add("note-overlap");
-		StackPane.setMargin(overlap, new Insets(0, 0, 0, quantizer.getColWidth() - 1));
+        Rectangle overlap = new Rectangle();
+        overlap.setWidth(0);
+        overlap.setHeight(note.getHeight());
+        overlap.getStyleClass().add("note-overlap");
+        StackPane.setMargin(overlap, new Insets(0, 0, 0, scaler.scaleX(Quantizer.COL_WIDTH) - 1));
 
-		StackPane layout = new StackPane();
-		layout.setPickOnBounds(false);
-		layout.setAlignment(Pos.CENTER_LEFT);
-		layout.setTranslateY(row * Quantizer.ROW_HEIGHT);
-		layout.setTranslateX(column * quantizer.getColWidth());
+        StackPane layout = new StackPane();
+        layout.setPickOnBounds(false);
+        layout.setAlignment(Pos.CENTER_LEFT);
+        layout.setTranslateY(scaler.scaleY(row * Quantizer.ROW_HEIGHT));
+        layout.setTranslateX(scaler.scaleX(column * Quantizer.COL_WIDTH));
 
-		TrackLyric lyric = lyricProvider.get();
-		TrackVibrato vibrato = new TrackVibrato(Optional.absent());
+        TrackLyric lyric = lyricProvider.get();
+        TrackVibrato vibrato = new TrackVibrato(Optional.absent());
 
-		TrackNote trackNote =
-				new TrackNote(note, edge, overlap, lyric, vibrato, layout, callback, quantizer);
-		lyric.registerLyric();
+        TrackNote trackNote = new TrackNote(
+                note,
+                edge,
+                overlap,
+                lyric,
+                vibrato,
+                layout,
+                callback,
+                quantizer,
+                scaler);
+        lyric.registerLyric();
 
-		return trackNote;
-	}
+        return trackNote;
+    }
 }

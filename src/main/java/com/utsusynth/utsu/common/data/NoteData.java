@@ -32,16 +32,16 @@ public class NoteData {
             int duration,
             String pitch,
             String lyric,
-            EnvelopeData envelope,
-            PitchbendData pitchbend,
-            NoteConfigData config) {
+            Optional<EnvelopeData> envelope,
+            Optional<PitchbendData> pitchbend,
+            Optional<NoteConfigData> config) {
         this.position = position;
         this.duration = duration;
         this.pitch = pitch;
         this.lyric = lyric;
-        this.envelope = Optional.of(envelope);
-        this.pitchbend = Optional.of(pitchbend);
-        this.config = Optional.of(config);
+        this.envelope = envelope;
+        this.pitchbend = pitchbend;
+        this.config = config;
     }
 
     public NoteData(int position, int duration, String pitch, String lyric, EnvelopeData envelope) {

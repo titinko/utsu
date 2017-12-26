@@ -2,36 +2,13 @@ package com.utsusynth.utsu.common.data;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.utsusynth.utsu.common.quantize.QuantizedPitchbend;
-import com.utsusynth.utsu.common.quantize.QuantizedPortamento;
-import com.utsusynth.utsu.common.quantize.QuantizedVibrato;
-import com.utsusynth.utsu.common.quantize.Quantizer;
 
 public class PitchbendData {
-    private final ImmutableList<Double> pbs; // Pitch bend start.
-    private final ImmutableList<Double> pbw; // Pitch bend widths.
-    private final ImmutableList<Double> pby; // Pitch bend shifts.
-    private final ImmutableList<String> pbm; // Pitch bend curves.
+    private final ImmutableList<Double> pbs; // Pitch bend start, in milliseconds.
+    private final ImmutableList<Double> pbw; // Pitch bend widths, in milliseconds.
+    private final ImmutableList<Double> pby; // Pitch bend shifts, in 1/10 of a semitone.
+    private final ImmutableList<String> pbm; // Pitch bend curves: "s" or "r" or "j" or ""
     private final int[] vibrato;
-
-    public static PitchbendData fromQuantized(QuantizedPitchbend qPitchbend) {
-        QuantizedPortamento qPortamento = qPitchbend.getPortamento();
-        double quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPortamento.QUANTIZATION;
-        ImmutableList<Double> pbs = ImmutableList.of(qPortamento.getStart() * quantSize, 0.0);
-        ImmutableList.Builder<Double> pbwBuilder = ImmutableList.builder();
-        for (int i = 0; i < qPortamento.getNumWidths(); i++) {
-            pbwBuilder.add(qPortamento.getWidth(i) * quantSize);
-        }
-        int[] vibrato =
-                qPitchbend.getVibrato().isPresent() ? qPitchbend.getVibrato().get().toUstVibrato()
-                        : new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        return new PitchbendData(
-                pbs,
-                pbwBuilder.build(),
-                qPortamento.getShifts(),
-                qPortamento.getCurves(),
-                vibrato);
-    }
 
     public PitchbendData(
             ImmutableList<Double> pbs,
@@ -44,6 +21,14 @@ public class PitchbendData {
         this.pby = pby;
         this.pbm = pbm;
         this.vibrato = vibrato;
+    }
+
+    public PitchbendData(
+            ImmutableList<Double> pbs,
+            ImmutableList<Double> pbw,
+            ImmutableList<Double> pby,
+            ImmutableList<String> pbm) {
+        this(pbs, pbw, pby, pbm, new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     }
 
     public ImmutableList<Double> getPBS() {
@@ -73,26 +58,11 @@ public class PitchbendData {
         return vibrato[index];
     }
 
-    public QuantizedPitchbend quantize(String prevPitch) {
-        int quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPortamento.QUANTIZATION;
-        int start = (int) Math.ceil(pbs.get(0) / quantSize);
-        ImmutableList.Builder<Integer> widths = ImmutableList.builder();
-        for (double width : pbw) {
-            widths.add((int) Math.floor(width / quantSize));
+    public PitchbendData withVibrato(Optional<int[]> newVibrato) {
+        if (newVibrato.isPresent()) {
+            return new PitchbendData(this.pbs, this.pbw, this.pby, this.pbm, newVibrato.get());
+        } else {
+            return new PitchbendData(this.pbs, this.pbw, this.pby, this.pbm);
         }
-        QuantizedPortamento qPortamento =
-                new QuantizedPortamento(prevPitch, start, widths.build(), pby, pbm);
-        QuantizedVibrato qVibrato = new QuantizedVibrato(vibrato);
-        return new QuantizedPitchbend(qPortamento, Optional.of(qVibrato));
-    }
-
-    public QuantizedPortamento quantizePortamento(String prevPitch) {
-        int quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedPortamento.QUANTIZATION;
-        int start = (int) Math.ceil(pbs.get(0) / quantSize);
-        ImmutableList.Builder<Integer> widths = ImmutableList.builder();
-        for (double width : pbw) {
-            widths.add((int) Math.floor(width / quantSize));
-        }
-        return new QuantizedPortamento(prevPitch, start, widths.build(), pby, pbm);
     }
 }

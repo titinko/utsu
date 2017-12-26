@@ -5,23 +5,17 @@ package com.utsusynth.utsu.common.data;
  */
 public class NeighborData {
     private final int delta;
-    private final String pitch;
     private final EnvelopeData envelope;
     private final PitchbendData pitchbend;
 
-    public NeighborData(int delta, String pitch, EnvelopeData envelope, PitchbendData pitchbend) {
+    public NeighborData(int delta, EnvelopeData envelope, PitchbendData pitchbend) {
         this.delta = delta;
-        this.pitch = pitch;
         this.envelope = envelope;
         this.pitchbend = pitchbend;
     }
 
     public int getDelta() {
         return this.delta;
-    }
-
-    public String getPitch() {
-        return this.pitch;
     }
 
     public EnvelopeData getEnvelope() {

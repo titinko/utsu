@@ -1,21 +1,20 @@
 package com.utsusynth.utsu.view;
 
 import com.utsusynth.utsu.UtsuController.Mode;
+import com.utsusynth.utsu.common.data.AddResponse;
+import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.RemoveResponse;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
-import com.utsusynth.utsu.common.quantize.QuantizedAddRequest;
-import com.utsusynth.utsu.common.quantize.QuantizedAddResponse;
-import com.utsusynth.utsu.common.quantize.QuantizedModifyRequest;
-import com.utsusynth.utsu.common.quantize.QuantizedNote;
 
 /**
  * The view can use this interface to communicate with the model by way of the constructor.
  */
 public interface ViewCallback {
-	QuantizedAddResponse addNote(QuantizedAddRequest request) throws NoteAlreadyExistsException;
+    AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException;
 
-	QuantizedAddResponse removeNote(QuantizedNote toRemove);
+    RemoveResponse removeNote(int position);
 
-	QuantizedAddResponse modifyNote(QuantizedModifyRequest request);
+    void modifyNote(NoteData toModify);
 
-	Mode getCurrentMode();
+    Mode getCurrentMode();
 }

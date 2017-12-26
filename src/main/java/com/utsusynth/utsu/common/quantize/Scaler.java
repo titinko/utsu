@@ -9,19 +9,27 @@ public class Scaler {
         this.verticalScale = defaultVerticalScale;
     }
 
-    public double scaleHorizontal(int scaleMe) {
+    public double scaleX(int scaleMe) {
         return horizontalScale * scaleMe;
     }
 
-    public double scaleVertical(int scaleMe) {
+    public double scaleX(double scaleMe) {
+        return horizontalScale * scaleMe;
+    }
+
+    public double scaleY(int scaleMe) {
         return verticalScale * scaleMe;
     }
 
-    public int unscaleHorizontal(double unscaleMe) {
-        return (int) Math.round(unscaleMe / horizontalScale);
+    public double scaleY(double scaleMe) {
+        return verticalScale * scaleMe;
     }
 
-    public int unscaleVertical(double unscaleMe) {
-        return (int) Math.round(unscaleMe / verticalScale);
+    public double unscaleX(double unscaleMe) {
+        return unscaleMe / horizontalScale;
+    }
+
+    public double unscaleY(double unscaleMe) {
+        return unscaleMe / verticalScale;
     }
 }

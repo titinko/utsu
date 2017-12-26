@@ -1,26 +1,38 @@
 package com.utsusynth.utsu.common.data;
 
-import com.utsusynth.utsu.common.quantize.QuantizedEnvelope;
-import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.google.common.base.Optional;
 
 public class EnvelopeData {
-    private final double[] widths;
-    private final double[] heights;
-
-    public static EnvelopeData fromQuantized(QuantizedEnvelope qEnvelope) {
-        int quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedEnvelope.QUANTIZATION;
-        double[] envWidths = new double[5];
-        double[] envHeights = new double[5];
-        for (int i = 0; i < 5; i++) {
-            envWidths[i] = qEnvelope.getWidth(i) * quantSize;
-            envHeights[i] = qEnvelope.getHeight(i);
-        }
-        return new EnvelopeData(envWidths, envHeights);
-    }
+    private final Optional<Double> envPreutter;
+    private final Optional<Double> envLength;
+    private final double[] widths; // "p" in milliseconds
+    private final double[] heights; // "v" in % of total intensity (0-100)
 
     public EnvelopeData(double[] envWidths, double[] envHeights) {
+        // TODO: Add more parameter checking here, don't just assume the inputs make sense.
+        this.envPreutter = Optional.absent();
+        this.envLength = Optional.absent();
         this.widths = envWidths;
         this.heights = envHeights;
+    }
+
+    public EnvelopeData(
+            double envPreutter,
+            double envLength,
+            double[] envWidths,
+            double[] envHeights) {
+        this.envPreutter = Optional.of(envPreutter);
+        this.envLength = Optional.of(envLength);
+        this.widths = envWidths;
+        this.heights = envHeights;
+    }
+
+    public Optional<Double> getPreutter() {
+        return envPreutter;
+    }
+
+    public Optional<Double> getLength() {
+        return envLength;
     }
 
     public double[] getWidths() {
@@ -29,16 +41,5 @@ public class EnvelopeData {
 
     public double[] getHeights() {
         return heights;
-    }
-
-    public QuantizedEnvelope quantize(double envPreutter, double envLength) {
-        int quantSize = Quantizer.DEFAULT_NOTE_DURATION / QuantizedEnvelope.QUANTIZATION;
-        double[] quantizedWidth = new double[5];
-        for (int i = 0; i < 5; i++) {
-            quantizedWidth[i] = widths[i] / quantSize;
-        }
-        int preutter = (int) Math.round(envPreutter / quantSize);
-        int length = (int) Math.round(envLength / quantSize);
-        return new QuantizedEnvelope(preutter, length, quantizedWidth, heights);
     }
 }

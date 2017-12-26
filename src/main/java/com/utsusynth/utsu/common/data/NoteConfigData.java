@@ -8,27 +8,19 @@ public class NoteConfigData {
     private final int modulation;
     private final String noteFlags;
 
-    // The "true" preutterance and duration or a note depending on its config and oto.
-    private final double realPreutter;
-    private final double realDuration;
-
     public NoteConfigData(
             String trueLyric,
             double velocity,
             double startPoint,
             int intensity,
             int modulation,
-            String noteFlags,
-            double realPreutter,
-            double realDuration) {
+            String noteFlags) {
         this.trueLyric = trueLyric;
         this.velocity = velocity;
         this.startPoint = startPoint;
         this.intensity = intensity;
         this.modulation = modulation;
         this.noteFlags = noteFlags;
-        this.realPreutter = realPreutter;
-        this.realDuration = realDuration;
     }
 
     public String getTrueLyric() {
@@ -53,13 +45,5 @@ public class NoteConfigData {
 
     public String getNoteFlags() {
         return this.noteFlags;
-    }
-
-    public double getRealPreutter() {
-        return this.realPreutter;
-    }
-
-    public double getRealDuration() {
-        return this.realDuration;
     }
 }
