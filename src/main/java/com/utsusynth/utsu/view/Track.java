@@ -154,8 +154,8 @@ public class Track {
                 for (int colNum = numColumns; colNum < numColumns + 4; colNum++) {
                     AnchorPane newCell = new AnchorPane();
                     newCell.setPrefSize(
-                            scaler.scaleX(Quantizer.COL_WIDTH),
-                            scaler.scaleY(Quantizer.ROW_HEIGHT));
+                            Math.round(scaler.scaleX(Quantizer.COL_WIDTH)),
+                            Math.round(scaler.scaleY(Quantizer.ROW_HEIGHT)));
                     newCell.getStyleClass().add("track-cell");
                     newCell.getStyleClass().add(pitch.endsWith("#") ? "black-key" : "white-key");
                     if (colNum % 4 == 0) {

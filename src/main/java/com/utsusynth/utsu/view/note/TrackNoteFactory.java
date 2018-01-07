@@ -8,7 +8,6 @@ import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.note.portamento.CurveFactory;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
@@ -51,7 +50,7 @@ public class TrackNoteFactory {
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
         layout.setTranslateY(
-                scaler.scaleX(PitchUtils.pitchToRowNum(note.getPitch()) * Quantizer.ROW_HEIGHT));
+                scaler.scaleY(PitchUtils.pitchToRowNum(note.getPitch()) * Quantizer.ROW_HEIGHT));
         layout.setTranslateX(scaler.scaleX(absStart));
 
         TrackLyric lyric = lyricProvider.get();
@@ -90,13 +89,11 @@ public class TrackNoteFactory {
         edge.setWidth(2);
         edge.setHeight(note.getHeight());
         edge.getStyleClass().add("drag-edge");
-        StackPane.setMargin(edge, new Insets(0, 0, 0, scaler.scaleX(Quantizer.COL_WIDTH) - 3));
 
         Rectangle overlap = new Rectangle();
         overlap.setWidth(0);
         overlap.setHeight(note.getHeight());
         overlap.getStyleClass().add("note-overlap");
-        StackPane.setMargin(overlap, new Insets(0, 0, 0, scaler.scaleX(Quantizer.COL_WIDTH) - 1));
 
         StackPane layout = new StackPane();
         layout.setPickOnBounds(false);

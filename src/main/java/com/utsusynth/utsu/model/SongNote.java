@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.PitchbendData;
-import com.utsusynth.utsu.common.quantize.Quantizer;
 
 /**
  * Represents one note in a song. This is primarily a data storage class, so it can be instantiated
@@ -66,8 +65,7 @@ public class SongNote {
     }
 
     public void setDelta(int delta) {
-        int roundedDelta = delta / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
-        this.delta = roundedDelta;
+        this.delta = delta;
     }
 
     public int getDelta() {
@@ -75,16 +73,14 @@ public class SongNote {
     }
 
     public void setDuration(int duration) {
-        int roundedDuration = duration / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
-        this.duration = roundedDuration;
+        this.duration = duration;
     }
 
     public void safeSetDuration(int duration) {
-        int roundedDuration = duration / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
-        if (this.length != -1 && this.length < roundedDuration) {
+        if (this.length != -1 && this.length < duration) {
             this.duration = this.length;
         } else {
-            this.duration = roundedDuration;
+            this.duration = duration;
         }
     }
 
@@ -93,16 +89,14 @@ public class SongNote {
     }
 
     public void setLength(int length) {
-        int roundedLength = length / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
-        this.length = roundedLength;
+        this.length = length;
     }
 
     public void safeSetLength(int length) {
-        int roundedLength = length / Quantizer.SMALLEST_DURATION * Quantizer.SMALLEST_DURATION;
-        if (this.duration != -1 && roundedLength < this.duration) {
-            this.duration = roundedLength;
+        if (this.duration != -1 && length < this.duration) {
+            this.duration = length;
         }
-        this.length = roundedLength;
+        this.length = length;
     }
 
     public int getLength() {

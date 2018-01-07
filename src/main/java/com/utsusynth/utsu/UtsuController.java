@@ -25,6 +25,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.files.Ust12Reader;
 import com.utsusynth.utsu.files.Ust12Writer;
@@ -72,6 +73,7 @@ public class UtsuController implements Localizable {
     private final Piano piano;
     private final Localizer localizer;
     private final Quantizer quantizer;
+    private final Scaler scaler;
     private final Ust12Reader ust12Reader;
     private final Ust12Writer ust12Writer;
     private final Ust20Reader ust20Reader;
@@ -116,6 +118,7 @@ public class UtsuController implements Localizable {
             Piano piano,
             Localizer localizer,
             Quantizer quantizer,
+            Scaler scaler,
             Ust12Reader ust12Reader,
             Ust12Writer ust12Writer,
             Ust20Reader ust20Reader,
@@ -127,6 +130,7 @@ public class UtsuController implements Localizable {
         this.piano = piano;
         this.localizer = localizer;
         this.quantizer = quantizer;
+        this.scaler = scaler;
         this.ust12Reader = ust12Reader;
         this.ust12Writer = ust12Writer;
         this.ust20Reader = ust20Reader;
@@ -329,12 +333,12 @@ public class UtsuController implements Localizable {
 
     @FXML
     void zoomIn(ActionEvent event) {
-        int newColWidth = quantizer.getColWidth() + Quantizer.COL_WIDTH_INDREMENT;
-        quantizer.changeColWidth(quantizer.getColWidth(), newColWidth);
-        if (newColWidth >= Quantizer.MAX_COL_WIDTH) {
+        double newScale = scaler.getHorizontalScale() + Scaler.HORIZONTAL_SCALE_INDREMENT;
+        scaler.changeHorizontalScale(scaler.getHorizontalScale(), newScale);
+        if (newScale >= Scaler.MAX_HORIZONTAL_SCALE) {
             zoomInItem.setDisable(true);
         }
-        if (newColWidth > Quantizer.MIN_COL_WIDTH) {
+        if (newScale > Scaler.MIN_HORIZONTAL_SCALE) {
             zoomOutItem.setDisable(false);
         }
         refreshView();
@@ -342,12 +346,12 @@ public class UtsuController implements Localizable {
 
     @FXML
     void zoomOut(ActionEvent event) {
-        int newColWidth = quantizer.getColWidth() - Quantizer.COL_WIDTH_INDREMENT;
-        quantizer.changeColWidth(quantizer.getColWidth(), newColWidth);
-        if (newColWidth <= Quantizer.MIN_COL_WIDTH) {
+        double newScale = scaler.getHorizontalScale() - Scaler.HORIZONTAL_SCALE_INDREMENT;
+        scaler.changeHorizontalScale(scaler.getHorizontalScale(), newScale);
+        if (newScale <= Scaler.MIN_HORIZONTAL_SCALE) {
             zoomOutItem.setDisable(true);
         }
-        if (newColWidth < Quantizer.MAX_COL_WIDTH) {
+        if (newScale < Scaler.MAX_HORIZONTAL_SCALE) {
             zoomInItem.setDisable(false);
         }
         refreshView();
