@@ -38,15 +38,14 @@
     -fx-stroke: skyblue;
 }
 
-.track-note.invalid-note.not-highlighted,
-.note-overlap {
+.track-note.invalid-note.not-highlighted {
     -fx-fill: gray;
     -fx-stroke: darkslategray;
 }
 
-.drag-edge {
-	-fx-fill: darkslategray;
-	-fx-stroke: black;
+.note-overlap {
+	-fx-fill: gray;
+	-fx-stroke: transparent;
 }
 
 .track-note.invalid-note.highlighted {
