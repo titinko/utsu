@@ -143,16 +143,19 @@ public class UtsuController implements Localizable {
         track.initialize(new ViewCallback() {
             @Override
             public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
+                onSongChange();
                 return songManager.getSong().addNote(toAdd);
             }
 
             @Override
             public RemoveResponse removeNote(int position) {
+                onSongChange();
                 return songManager.getSong().removeNote(position);
             }
 
             @Override
             public void modifyNote(NoteData toModify) {
+                onSongChange();
                 songManager.getSong().modifyNote(toModify);
             }
 
@@ -199,6 +202,8 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem openItem; // Value injected by FXMLLoader
     @FXML
+    private MenuItem saveItem; // Value injected by FXMLLoader
+    @FXML
     private MenuItem saveAsItem; // Value injected by FXMLLoader
     @FXML
     private Menu editMenu; // Value injected by FXMLLoader
@@ -229,6 +234,7 @@ public class UtsuController implements Localizable {
     public void localize(ResourceBundle bundle) {
         fileMenu.setText(bundle.getString("menu.file"));
         openItem.setText(bundle.getString("menu.file.open"));
+        saveItem.setText(bundle.getString("menu.file.save"));
         saveAsItem.setText(bundle.getString("menu.file.saveAs"));
         editMenu.setText(bundle.getString("menu.edit"));
         viewMenu.setText(bundle.getString("menu.view"));
@@ -264,6 +270,15 @@ public class UtsuController implements Localizable {
         anchorBottom.getChildren().add(track.getEnvelopesElement());
     }
 
+    /** Called whenever a Song is changed. */
+    private void onSongChange() {
+        if (songManager.getSong().getSaveLocation().isPresent()) {
+            saveItem.setDisable(false);
+        } else {
+            saveItem.setDisable(true);
+        }
+    }
+
     @FXML
     void openFile(ActionEvent event) {
         FileChooser fc = new FileChooser();
@@ -274,6 +289,7 @@ public class UtsuController implements Localizable {
         File file = fc.showOpenDialog(null);
         if (file != null) {
             try {
+                String saveFormat; // Format to save this song in the future.
                 String charset = "UTF-8";
                 CharsetDecoder utf8Decoder = Charset.forName("UTF-8").newDecoder()
                         .onMalformedInput(CodingErrorAction.REPORT)
@@ -286,14 +302,19 @@ public class UtsuController implements Localizable {
                 String content = FileUtils.readFileToString(file, charset);
                 if (content.contains("UST Version1.2")) {
                     songManager.setSong(ust12Reader.loadSong(content));
+                    saveFormat = "UST 1.2 (Shift JIS)";
                 } else if (content.contains("UST Version2.0")) {
                     songManager.setSong(ust20Reader.loadSong(content));
+                    saveFormat = "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
                 } else {
                     // TODO: Deal with this error.
                     System.out.println("UST format not found!");
                     return;
                 }
                 // System.out.println(currentSong);
+                saveItem.setDisable(true);
+                songManager.getSong().setSaveLocation(file);
+                songManager.getSong().setSaveFormat(saveFormat);
                 refreshView();
             } catch (IOException e) {
                 // TODO Handle this.
@@ -304,6 +325,30 @@ public class UtsuController implements Localizable {
 
     @FXML
     void saveFile(ActionEvent event) {
+        if (songManager.getSong().getSaveLocation().isPresent()) {
+            String saveFormat = songManager.getSong().getSaveFormat();
+            String charset = "UTF-8";
+            if (saveFormat.contains("Shift JIS")) {
+                charset = "SJIS";
+            }
+            File saveLocation = songManager.getSong().getSaveLocation().get();
+            try (PrintStream ps = new PrintStream(saveLocation, charset)) {
+                if (saveFormat.contains("UST 1.2")) {
+                    ust12Writer.writeSong(songManager.getSong(), ps);
+                } else {
+                    ust20Writer.writeSong(songManager.getSong(), ps, charset);
+                }
+                ps.close();
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                // TODO: Handle this.
+                e.printStackTrace();
+            }
+        }
+        saveItem.setDisable(true);
+    }
+
+    @FXML
+    void saveFileAs(ActionEvent event) {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         fc.getExtensionFilters().addAll(
@@ -328,6 +373,9 @@ public class UtsuController implements Localizable {
                 // TODO: Handle this.
                 e.printStackTrace();
             }
+            songManager.getSong().setSaveLocation(file);
+            songManager.getSong().setSaveFormat(chosenFormat.getDescription());
+            saveItem.setDisable(true);
         }
     }
 
