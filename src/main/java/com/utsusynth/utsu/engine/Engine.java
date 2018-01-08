@@ -2,6 +2,7 @@ package com.utsusynth.utsu.engine;
 
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongIterator;
 import com.utsusynth.utsu.model.SongNote;
@@ -21,6 +22,8 @@ import javafx.scene.media.MediaPlayer;
 import org.apache.commons.io.FileUtils;
 
 public class Engine {
+	private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
 	private final Resampler resampler;
 	private final Wavtool wavtool;
 	private File resamplerPath;
@@ -58,7 +61,7 @@ public class Engine {
 			try {
 				FileUtils.deleteDirectory(tempDir);
 			} catch (IOException e) {
-				e.printStackTrace();
+				errorLogger.logError(e);
 			}
 		}));
 
@@ -179,13 +182,13 @@ public class Engine {
 				clip.start();
 			} catch (UnsupportedAudioFileException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				errorLogger.logError(e);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				errorLogger.logError(e);
 			} catch (LineUnavailableException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				errorLogger.logError(e);
 			}
 		} else {
 			Media media = new Media(wavFile.toURI().toString());

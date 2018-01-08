@@ -9,6 +9,7 @@ import com.google.inject.Provider;
 import com.utsusynth.utsu.common.data.AddResponse;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.RemoveResponse;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -64,6 +65,8 @@ import org.apache.commons.io.FileUtils;
  * 'UtsuScene.fxml' Controller Class
  */
 public class UtsuController implements Localizable {
+    private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
     public enum Mode {
         ADD, EDIT, DELETE,
     }
@@ -328,7 +331,7 @@ public class UtsuController implements Localizable {
                 refreshView();
             } catch (IOException e) {
                 // TODO Handle this.
-                e.printStackTrace();
+                errorLogger.logError(e);
             }
         }
     }
@@ -351,7 +354,7 @@ public class UtsuController implements Localizable {
                 ps.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 // TODO: Handle this.
-                e.printStackTrace();
+                errorLogger.logError(e);
             }
         }
         saveItem.setDisable(true);
@@ -381,7 +384,7 @@ public class UtsuController implements Localizable {
                 ps.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 // TODO: Handle this.
-                e.printStackTrace();
+                errorLogger.logError(e);
             }
             songManager.getSong().setSaveLocation(file);
             songManager.getSong().setSaveFormat(chosenFormat.getDescription());
@@ -446,7 +449,7 @@ public class UtsuController implements Localizable {
             propertiesWindow.showAndWait();
         } catch (IOException e) {
             // TODO Handle this.
-            e.printStackTrace();
+            errorLogger.logError(e);
         }
         refreshView();
     }

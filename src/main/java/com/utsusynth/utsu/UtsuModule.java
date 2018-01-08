@@ -1,7 +1,5 @@
 package com.utsusynth.utsu;
 
-import java.io.File;
-import java.util.Locale;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -26,6 +24,8 @@ import com.utsusynth.utsu.view.note.TrackNoteFactory;
 import com.utsusynth.utsu.view.note.envelope.TrackEnvelopeFactory;
 import com.utsusynth.utsu.view.note.portamento.CurveFactory;
 import com.utsusynth.utsu.view.note.portamento.TrackPortamentoFactory;
+import java.io.File;
+import java.util.Locale;
 import javafx.fxml.FXMLLoader;
 
 public class UtsuModule extends AbstractModule {
