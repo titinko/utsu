@@ -1,19 +1,8 @@
 package com.utsusynth.utsu;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.MalformedInputException;
-import java.nio.charset.UnmappableCharacterException;
-import java.util.ResourceBundle;
-import org.apache.commons.io.FileUtils;
+import static javafx.scene.input.KeyCombination.CONTROL_DOWN;
+import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -35,6 +24,19 @@ import com.utsusynth.utsu.model.SongManager;
 import com.utsusynth.utsu.view.Piano;
 import com.utsusynth.utsu.view.Track;
 import com.utsusynth.utsu.view.ViewCallback;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.MalformedInputException;
+import java.nio.charset.UnmappableCharacterException;
+import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -48,12 +50,15 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.apache.commons.io.FileUtils;
 
 /**
  * 'UtsuScene.fxml' Controller Class
@@ -235,14 +240,19 @@ public class UtsuController implements Localizable {
         fileMenu.setText(bundle.getString("menu.file"));
         openItem.setText(bundle.getString("menu.file.open"));
         saveItem.setText(bundle.getString("menu.file.save"));
+        saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, CONTROL_DOWN));
         saveAsItem.setText(bundle.getString("menu.file.saveAs"));
+        saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, CONTROL_DOWN, SHIFT_DOWN));
         editMenu.setText(bundle.getString("menu.edit"));
         viewMenu.setText(bundle.getString("menu.view"));
         zoomInItem.setText(bundle.getString("menu.view.zoomIn"));
+        zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, CONTROL_DOWN));
         zoomOutItem.setText(bundle.getString("menu.view.zoomOut"));
+        zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, CONTROL_DOWN));
         projectMenu.setText(bundle.getString("menu.project"));
         propertiesItem.setText(bundle.getString("menu.project.properties"));
         helpMenu.setText(bundle.getString("menu.help"));
+        helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, CONTROL_DOWN, SHIFT_DOWN));
         aboutItem.setText(bundle.getString("menu.help.about"));
         modeLabel.setText(bundle.getString("top.mode"));
         quantizationLabel.setText(bundle.getString("top.quantization"));
