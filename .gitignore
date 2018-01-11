@@ -5,4 +5,5 @@ target/
 *.iml
 .idea
 /bin/
+.DS_Store
 */.DS_Store
