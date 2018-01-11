@@ -1,5 +1,7 @@
 package com.utsusynth.utsu.model.voicebank;
 
+import com.google.common.collect.ImmutableSet;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -19,12 +21,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.apache.commons.io.FileUtils;
 
-import com.google.common.collect.ImmutableSet;
-
 public class VoicebankReader {
+	private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
 	private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
 
 	// TODO: Replace with actual default.
@@ -79,7 +80,7 @@ public class VoicebankReader {
 					});
 		} catch (IOException e) {
 			// TODO: Handle this.
-			e.printStackTrace();
+			errorLogger.logError(e);
 		}
 		return new Voicebank(pathToVoicebank, name, imageName, lyricConfigs);
 	}
@@ -134,7 +135,7 @@ public class VoicebankReader {
 			return FileUtils.readFileToString(file, charset);
 		} catch (IOException e) {
 			// TODO Handle this.
-			e.printStackTrace();
+			errorLogger.logError(e);
 		}
 		return "";
 	}

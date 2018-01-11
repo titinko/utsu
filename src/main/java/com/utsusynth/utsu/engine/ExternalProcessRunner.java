@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.engine;
 
+import com.utsusynth.utsu.common.exception.ErrorLogger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -8,6 +9,8 @@ import java.io.InputStreamReader;
  * Class that runs an external command-line process with the provided arguments.
  */
 public class ExternalProcessRunner {
+	private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
 	void runProcess(String... args) {
 		ProcessBuilder builder = new ProcessBuilder(args);
 		builder.redirectErrorStream(true);
@@ -15,8 +18,8 @@ public class ExternalProcessRunner {
 			Process process = builder.start();
 			watch(process);
 			process.waitFor();
-		} catch (IOException | InterruptedException e1) {
-			e1.printStackTrace();
+		} catch (IOException | InterruptedException e) {
+			errorLogger.logError(e);
 		}
 	}
 
@@ -31,7 +34,7 @@ public class ExternalProcessRunner {
 						System.out.println(line);
 					}
 				} catch (IOException e) {
-					e.printStackTrace();
+					errorLogger.logError(e);
 				}
 			}
 		}.start();
