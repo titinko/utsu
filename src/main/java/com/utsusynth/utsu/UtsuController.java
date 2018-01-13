@@ -2,7 +2,20 @@ package com.utsusynth.utsu;
 
 import static javafx.scene.input.KeyCombination.CONTROL_DOWN;
 import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
-
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.MalformedInputException;
+import java.nio.charset.UnmappableCharacterException;
+import java.util.ResourceBundle;
+import org.apache.commons.io.FileUtils;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -25,19 +38,6 @@ import com.utsusynth.utsu.model.SongManager;
 import com.utsusynth.utsu.view.Piano;
 import com.utsusynth.utsu.view.Track;
 import com.utsusynth.utsu.view.ViewCallback;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.MalformedInputException;
-import java.nio.charset.UnmappableCharacterException;
-import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -59,7 +59,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
 
 /**
  * 'UtsuScene.fxml' Controller Class
@@ -420,7 +419,11 @@ public class UtsuController implements Localizable {
 
     @FXML
     void renderSong(ActionEvent event) {
-        engine.render(songManager.getSong(), Optional.absent());
+        renderButton.setDisable(true);
+        new Thread(() -> {
+            engine.render(songManager.getSong(), Optional.absent());
+            renderButton.setDisable(false);
+        }).start();
     }
 
     @FXML
