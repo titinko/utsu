@@ -33,18 +33,31 @@ public class SongNoteStandardizer {
                     autoStartPoint = oldPreutter - realPreutter;
                 }
             }
+            realDuration = getAdjustedLength(voicebank, note, realPreutter, next);
 
-            // TODO: Confirm envelope not bigger than note length.
-            // Adjust the envelopes to match overlap.
-            note.setFadeIn(realOverlap);
             // Case where there is an adjacent next node.
             if (next.isPresent() && areNotesTouching(note, next.get(), voicebank)) {
                 note.setFadeOut(next.get().getFadeIn());
             } else {
-                note.setFadeOut(35); // Default fade out.
+                note.setFadeOut(Math.min(35, realDuration)); // Default fade out.
             }
 
-            realDuration = getAdjustedLength(voicebank, note, realPreutter, next);
+            // Ensure that envelope length is not greater than note length, ignoring fade out.
+            double[] envWidths = note.getEnvelope().getWidths();
+            double envLength = realOverlap + envWidths[1] + envWidths[2] + envWidths[4];
+            if (envLength > realDuration - envWidths[3]) {
+                double shrinkFactor = (realDuration - envWidths[3]) / envLength;
+                String[] fullEnvelope = note.getFullEnvelope();
+                realOverlap *= shrinkFactor;
+                fullEnvelope[1] = Double.toString(envWidths[1] * shrinkFactor);
+                fullEnvelope[2] = Double.toString(envWidths[2] * shrinkFactor);
+                fullEnvelope[9] = Double.toString(envWidths[4] * shrinkFactor);
+                note.setEnvelope(fullEnvelope);
+            }
+
+            // Adjust the envelopes to match overlap.
+            note.setFadeIn(realOverlap);
+
             trueLyric = note.getLyric();
         }
 
