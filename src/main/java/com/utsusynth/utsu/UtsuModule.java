@@ -1,10 +1,13 @@
 package com.utsusynth.utsu;
 
+import java.io.File;
+import java.util.Locale;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
@@ -24,8 +27,6 @@ import com.utsusynth.utsu.view.note.TrackNoteFactory;
 import com.utsusynth.utsu.view.note.envelope.TrackEnvelopeFactory;
 import com.utsusynth.utsu.view.note.portamento.CurveFactory;
 import com.utsusynth.utsu.view.note.portamento.TrackPortamentoFactory;
-import java.io.File;
-import java.util.Locale;
 import javafx.fxml.FXMLLoader;
 
 public class UtsuModule extends AbstractModule {
@@ -33,6 +34,7 @@ public class UtsuModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(SongManager.class).asEagerSingleton();
+        bind(UndoService.class).asEagerSingleton();
         bind(PortamentoFactory.class).asEagerSingleton();
         bind(TrackNoteFactory.class).asEagerSingleton();
         bind(TrackEnvelopeFactory.class).asEagerSingleton();

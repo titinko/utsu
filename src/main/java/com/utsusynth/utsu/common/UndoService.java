@@ -1,42 +1,60 @@
 package com.utsusynth.utsu.common;
 
-import com.google.inject.Singleton;
+import java.util.Stack;
+import com.google.common.base.Optional;
 
-/** A singleton that keeps track of the most recent action and how to undo it. */
-@Singleton
+/** A class that keeps track of the most recent actions and how to undo them. */
 public class UndoService {
+    private static final int MAX_STACK_SIZE = 20;
 
-  private Runnable mostRecentAction;
-  private Runnable undoMostRecentAction;
+    private Stack<Runnable> redoActions;
+    private Stack<Runnable> undoActions;
+    private Optional<Runnable> nextRedoAction;
 
-  /** True if the next {@link #undo()} would redo (undo an undo). */
-  private boolean isRedo = false;
+    public UndoService() {
+        redoActions = new Stack<Runnable>();
+        undoActions = new Stack<Runnable>();
+        nextRedoAction = Optional.absent();
+    }
 
-  /** Undo the most recent action. */
-  private void undo() {
-    undoMostRecentAction.run();
+    /** Undo the most recent action. */
+    public void undo() {
+        undoActions.pop().run();
+        nextRedoAction = Optional.of(redoActions.pop());
+    }
 
-    // Swap the redo and undo.
-    Runnable swap = mostRecentAction;
-    mostRecentAction = undoMostRecentAction;
-    undoMostRecentAction = swap;
-    isRedo = !isRedo;
-  }
+    /** Redo the most recent undo action. */
+    public void redo() {
+        if (nextRedoAction.isPresent()) {
+            nextRedoAction.get().run();
+            nextRedoAction = Optional.absent();
+        }
+    }
 
-  /**
-   * Specifies the most recent action and how to undo it.
-   *
-   * <p>On undo, will call {@code undoMostRecentAction}. If undo is called twice in a row, it will
-   * redo the action by calling {@code mostRecentAction}.
-   */
-  private void setMostRecentAction(Runnable redoMostRecentAction, Runnable undoMostRecentAction) {
-    this.mostRecentAction = redoMostRecentAction;
-    this.undoMostRecentAction = undoMostRecentAction;
-    isRedo = false;
-  }
+    /**
+     * Specifies the most recent action and how to undo it.
+     */
+    public void setMostRecentAction(Runnable mostRecentAction, Runnable undoMostRecentAction) {
+        if (undoActions.size() >= MAX_STACK_SIZE) {
+            // Removes old actions when stack size becomes too large.
+            redoActions.remove(0);
+            undoActions.remove(0);
+        }
+        redoActions.push(mostRecentAction);
+        undoActions.push(undoMostRecentAction);
+    }
 
-  /** True if the next {@link #undo()} would redo (i.e. undo an undo). */
-  private boolean wouldRedo() {
-    return isRedo;
-  }
+    /**
+     * Clears all memory of actions and how to undo/redo them.
+     */
+    public void clearActions() {
+        redoActions.clear();
+        undoActions.clear();
+        nextRedoAction = Optional.absent();
+    }
+
+    /** Returns true if any undo actions are in memory, false otherwise. */
+    public boolean detectChanges() {
+        return !undoActions.isEmpty();
+    }
 }

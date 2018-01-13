@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.AddResponse;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.RemoveResponse;
@@ -43,7 +44,10 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -81,6 +85,7 @@ public class UtsuController implements Localizable {
     private final Localizer localizer;
     private final Quantizer quantizer;
     private final Scaler scaler;
+    private final UndoService undoService;
     private final Ust12Reader ust12Reader;
     private final Ust12Writer ust12Writer;
     private final Ust20Reader ust20Reader;
@@ -126,6 +131,7 @@ public class UtsuController implements Localizable {
             Localizer localizer,
             Quantizer quantizer,
             Scaler scaler,
+            UndoService undoService,
             Ust12Reader ust12Reader,
             Ust12Writer ust12Writer,
             Ust20Reader ust20Reader,
@@ -138,6 +144,7 @@ public class UtsuController implements Localizable {
         this.localizer = localizer;
         this.quantizer = quantizer;
         this.scaler = scaler;
+        this.undoService = undoService;
         this.ust12Reader = ust12Reader;
         this.ust12Writer = ust12Writer;
         this.ust20Reader = ust20Reader;
@@ -279,6 +286,7 @@ public class UtsuController implements Localizable {
 
         anchorLeft.getChildren().add(piano.initPiano());
 
+        // Reloads current
         anchorRight.getChildren().clear();
         anchorRight.getChildren().add(track.createNewTrack(songManager.getSong().getNotes()));
         anchorRight.getChildren().add(track.getNotesElement());
@@ -295,6 +303,23 @@ public class UtsuController implements Localizable {
         } else {
             saveItem.setDisable(true);
         }
+    }
+
+    /**
+     * Called whenever Utsu is closed.
+     * 
+     * @return true if window should be closed, false otherwise
+     */
+    boolean onCloseWindow() {
+        // TODO: Replace with a save dialog. Also, add this to localizer.
+        Alert alert = new Alert(
+                AlertType.CONFIRMATION,
+                "Are you sure you want to exit Utsu?  Any unsaved changes will be lost.");
+        Optional<ButtonType> result = Optional.fromJavaUtil(alert.showAndWait());
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            return true;
+        }
+        return false;
     }
 
     @FXML
@@ -329,7 +354,7 @@ public class UtsuController implements Localizable {
                     System.out.println("UST format not found!");
                     return;
                 }
-                // System.out.println(currentSong);
+                undoService.clearActions();
                 saveItem.setDisable(true);
                 songManager.getSong().setSaveLocation(file);
                 songManager.getSong().setSaveFormat(saveFormat);
