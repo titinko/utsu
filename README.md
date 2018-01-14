@@ -4,7 +4,8 @@ Compatible (in theory) with all voicebanks, files, and engines created with or f
 
 ## Installation instructions
 
-The easy way--installers!
+### The easy way--installers!
+
 For Mac:
 Download the installer [here](https://drive.google.com/open?id=1SHrB--WL492QEcgrQR8But6Jj66SCnrC).
 
@@ -14,7 +15,8 @@ Download the installer [here](installers/setup.exe).
 For Linux:
 TBA
 
-The hard way--a JAR file
+### The hard way--a JAR file
+
 For Mac, Windows, Linux:
 First, you'll need to make sure you computer runs Java.  You can download the latest Java engine [here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
