@@ -145,10 +145,8 @@ public class Song {
     }
 
     /**
-     * Adds a note to the song object at the specified location
+     * Adds a note to the song object.
      * 
-     * @param request
-     * @return the lyric of the new note.
      * @throws NoteAlreadyExistsException
      */
     public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
@@ -233,6 +231,7 @@ public class Song {
                 nextNote);
     }
 
+    /** Removes the note at the specified position from the song object. */
     public RemoveResponse removeNote(int positionMs) {
         SongNode removedNode = this.noteList.removeNote(positionMs);
         Optional<NeighborData> prevNote = Optional.absent();
@@ -282,6 +281,7 @@ public class Song {
         return new RemoveResponse(prevNote, nextNote);
     }
 
+    /** Modifies a note in-place without changing its position or duration. */
     public void modifyNote(NoteData toModify) {
         int positionMs = toModify.getPosition();
         SongNode node = this.noteList.getNote(positionMs);

@@ -39,6 +39,8 @@ import com.utsusynth.utsu.model.SongManager;
 import com.utsusynth.utsu.view.Piano;
 import com.utsusynth.utsu.view.Track;
 import com.utsusynth.utsu.view.ViewCallback;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -154,6 +156,8 @@ public class UtsuController implements Localizable {
 
     // Provide setup for other controllers.
     public void initialize() {
+        DoubleProperty scrollbarTracker = new SimpleDoubleProperty();
+        scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
         track.initialize(new ViewCallback() {
             @Override
             public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
@@ -177,9 +181,25 @@ public class UtsuController implements Localizable {
             public Mode getCurrentMode() {
                 return currentMode;
             }
+
+            @Override
+            public void adjustScrollbar(double oldWidth, double newWidth) {
+                // Note down what scrollbar position will be next time anchorRight's width changes.
+                double scrollPosition =
+                        scrollPaneRight.getHvalue() * (oldWidth - scrollPaneRight.getWidth());
+                scrollbarTracker.unbind();
+                scrollbarTracker.set(scrollPosition / (newWidth - scrollPaneRight.getWidth()));
+            }
         });
         scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneRight.vvalueProperty());
         scrollPaneRight.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
+        anchorRight.widthProperty().addListener(observable -> {
+            // Sync up the scrollbar's position with where the track thinks it should be.
+            if (!scrollbarTracker.isBound()) {
+                scrollPaneRight.setHvalue(scrollbarTracker.get());
+                scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
+            }
+        });
 
         modeChoiceBox.setItems(FXCollections.observableArrayList(Mode.ADD, Mode.EDIT, Mode.DELETE));
         modeChoiceBox.setOnAction((action) -> {

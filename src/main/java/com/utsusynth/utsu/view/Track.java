@@ -46,10 +46,12 @@ public class Track {
         this.scaler = scaler;
     }
 
+    /** Initialize track with data from the controller. Not song-specific. */
     public void initialize(ViewCallback callback) {
         this.model = callback;
     }
 
+    /** Initialize track with data for a specific song. */
     public GridPane createNewTrack(List<NoteData> notes) {
         clearTrack();
         if (notes.isEmpty()) {
@@ -122,6 +124,10 @@ public class Track {
     }
 
     private void setNumMeasures(int newNumMeasures) {
+        // Adjust the scrollbar to be in the same place when size of the grid changes.
+        double measureWidth = 4 * Math.round(scaler.scaleX(Quantizer.COL_WIDTH));
+        model.adjustScrollbar(measureWidth * numMeasures, measureWidth * newNumMeasures);
+
         if (newNumMeasures < 0) {
             return;
         } else if (newNumMeasures > numMeasures) {
