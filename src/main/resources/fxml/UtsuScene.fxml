@@ -108,13 +108,13 @@
          <center>
             <HBox prefHeight="300.0" prefWidth="700.0" BorderPane.alignment="CENTER">
                <children>
-                  <ScrollPane fx:id="scrollPaneLeft" hbarPolicy="NEVER" hmax="0.0" minViewportWidth="100.0" vbarPolicy="NEVER" vvalue="0.5">
+                  <ScrollPane fx:id="scrollPaneLeft" hbarPolicy="ALWAYS" hmax="0.0" minViewportWidth="100.0" vbarPolicy="NEVER" vvalue="0.5">
                      <content>
                       <AnchorPane fx:id="anchorLeft" maxWidth="100.0" minWidth="100.0" />
                      </content>
                   </ScrollPane>
                   <Separator orientation="VERTICAL" />
-                  <ScrollPane fx:id="scrollPaneRight" fitToHeight="true" fitToWidth="true" minViewportHeight="300.0" minViewportWidth="500.0" vvalue="0.5" HBox.hgrow="ALWAYS">
+                  <ScrollPane fx:id="scrollPaneRight" fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" minViewportHeight="300.0" minViewportWidth="500.0" vvalue="0.5" HBox.hgrow="ALWAYS">
                      <content>
                       <AnchorPane fx:id="anchorRight" />
                      </content>

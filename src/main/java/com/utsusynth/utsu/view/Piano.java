@@ -61,9 +61,5 @@ public class Piano {
                 rowNum++;
             }
         }
-        Pane extraSpace = new Pane();
-        extraSpace.setPrefSize(40, 16);
-        GridPane.setColumnSpan(extraSpace, 2);
-        pianoGrid.addRow(rowNum, extraSpace);
     }
 }
