@@ -1,8 +1,8 @@
-#UTSU - A cross-platform vocal synthesis frontend
+# UTSU - A cross-platform vocal synthesis frontend
 
 Compatible (in theory) with all voicebanks, files, and engines created with or for the UTAU software--however, the two programs have no code in common and both user features and backend processing can and will be different.
 
-##Installation instructions
+## Installation instructions
 
 The easy way--installers!
 For Mac:
@@ -29,7 +29,7 @@ TROUBLESHOOTING: If the program doesn't run properly the first time, try closing
 
 Downloading the JAR file is much more space-efficient than using the installer, if you're worried about that kind of thing.
 
-##Building from source
+## Building from source
 
 Please install Maven v. 4.0.0 or higher.
 Please ensure your Java version is 8 or higher.
