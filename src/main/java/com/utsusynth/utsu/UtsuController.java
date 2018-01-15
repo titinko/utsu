@@ -16,6 +16,7 @@ import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
 import java.util.ResourceBundle;
 import org.apache.commons.io.FileUtils;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -39,6 +40,8 @@ import com.utsusynth.utsu.model.SongManager;
 import com.utsusynth.utsu.view.Piano;
 import com.utsusynth.utsu.view.Track;
 import com.utsusynth.utsu.view.ViewCallback;
+import javafx.animation.Interpolator;
+import javafx.animation.TranslateTransition;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
@@ -61,10 +64,12 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.shape.Line;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 /**
  * 'UtsuScene.fxml' Controller Class
@@ -470,9 +475,30 @@ public class UtsuController implements Localizable {
 
     @FXML
     void renderSong(ActionEvent event) {
+        Function<Duration, Void> playbackFn = (duration) -> {
+            if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
+                // Create a playback bar.
+                Line playBar = new Line(0, 0, 0, anchorRight.getHeight());
+                playBar.getStyleClass().addAll("playback-bar");
+                anchorRight.getChildren().add(playBar);
+
+                // Move the playback bar as the song plays.
+                TranslateTransition playback = new TranslateTransition(duration, playBar);
+                double numBeats = songManager.getSong().getTempo() * duration.toMinutes();
+                playback.setByX(numBeats * scaler.scaleX(Quantizer.COL_WIDTH));
+                playback.setInterpolator(Interpolator.LINEAR);
+                playback.setOnFinished(action -> {
+                    anchorRight.getChildren().remove(playBar);
+                });
+                playback.play();
+            }
+            return null;
+        };
+
+        // Disable the render button while rendering.
         renderButton.setDisable(true);
         new Thread(() -> {
-            engine.render(songManager.getSong(), Optional.absent());
+            engine.playSong(songManager.getSong(), playbackFn);
             renderButton.setDisable(false);
         }).start();
     }
@@ -484,7 +510,7 @@ public class UtsuController implements Localizable {
         fc.getExtensionFilters().addAll(new ExtensionFilter(".wav files", "*.wav"));
         File file = fc.showSaveDialog(null);
         if (file != null) {
-            engine.render(songManager.getSong(), Optional.of(file));
+            engine.renderWav(songManager.getSong(), file);
         }
     }
 

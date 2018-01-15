@@ -3,6 +3,7 @@ package com.utsusynth.utsu.engine;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.io.FileUtils;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
@@ -13,6 +14,7 @@ import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.util.Duration;
 
 public class Engine {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
@@ -46,7 +48,26 @@ public class Engine {
         this.wavtoolPath = wavtoolPath;
     }
 
-    public void render(Song song, Optional<File> finalDestination) {
+    public void renderWav(Song song, File finalDestination) {
+        Optional<File> finalSong = render(song);
+        if (finalSong.isPresent()) {
+            finalSong.get().renameTo(finalDestination);
+        }
+    }
+
+    public void playSong(Song song, Function<Duration, Void> callback) {
+        Optional<File> finalSong = render(song);
+        if (finalSong.isPresent()) {
+            Media media = new Media(finalSong.get().toURI().toString());
+            mediaPlayer = new MediaPlayer(media);
+            mediaPlayer.setOnReady(() -> {
+                callback.apply(media.getDuration());
+            });
+            mediaPlayer.play();
+        }
+    }
+
+    private Optional<File> render(Song song) {
         // Create temporary directory for rendering.
         File tempDir = Files.createTempDir();
         File renderedNote = new File(tempDir, "rendered_note.wav");
@@ -61,7 +82,7 @@ public class Engine {
 
         SongIterator notes = song.getNoteIterator();
         if (!notes.hasNext()) {
-            return;
+            return Optional.absent();
         }
         int totalDelta = 0;
         Voicebank voicebank = song.getVoicebank();
@@ -145,11 +166,7 @@ public class Engine {
                 addSilence(silenceLength, song, renderedNote, finalSong);
             }
         }
-        if (finalDestination.isPresent()) {
-            finalSong.renameTo(finalDestination.get());
-        } else {
-            playSong(finalSong);
-        }
+        return Optional.of(finalSong);
     }
 
     private void addSilence(double duration, Song song, File renderedNote, File finalSong) {
@@ -159,12 +176,6 @@ public class Engine {
         duration = duration * (125.0 / song.getTempo());
         resampler.resampleSilence(resamplerPath, renderedNote, duration);
         wavtool.addSilence(wavtoolPath, duration, renderedNote, finalSong);
-    }
-
-    private void playSong(File wavFile) {
-        Media media = new Media(wavFile.toURI().toString());
-        mediaPlayer = new MediaPlayer(media);
-        mediaPlayer.play();
     }
 
     private int getFirstPitchStep(int totalDelta, double preutter) {

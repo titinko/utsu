@@ -1,3 +1,8 @@
+.playback-bar {
+	-fx-stroke: crimson;
+	-fx-stroke-width: 1.5;
+}
+
 .track-cell.white-key {
     -fx-background-color: lightgray, white;
     -fx-background-insets: 0, 0 1 1 0;
