@@ -10,7 +10,7 @@ For Mac:
 Download the installer [here](https://drive.google.com/open?id=1SHrB--WL492QEcgrQR8But6Jj66SCnrC).
 
 For Windows:
-Coming on 1/15/2018!
+Coming on 1/15/2018
 
 For Linux:
 TBA
