@@ -58,7 +58,7 @@ public class SongNoteStandardizer {
             // Adjust the envelopes to match overlap.
             note.setFadeIn(realOverlap);
 
-            trueLyric = note.getLyric();
+            trueLyric = config.get().getTrueLyric();
         }
 
         // Set overlap.

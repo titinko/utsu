@@ -61,6 +61,14 @@ public class UtsuModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
+    private VoicebankReader provideVoicebankReadera() {
+        return new VoicebankReader(
+                new File("./assets/voice/Iona_Beta/"),
+                new File("./assets/config/lyric_conversions.txt"));
+    }
+
+    @Provides
     private TrackLyric provideLyric(Scaler scaler) {
         return new TrackLyric("mi", scaler);
     }

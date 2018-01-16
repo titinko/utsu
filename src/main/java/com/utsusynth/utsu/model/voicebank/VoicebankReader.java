@@ -1,7 +1,5 @@
 package com.utsusynth.utsu.model.voicebank;
 
-import com.google.common.collect.ImmutableSet;
-import com.utsusynth.utsu.common.exception.ErrorLogger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -22,133 +20,155 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
 
 public class VoicebankReader {
-	private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+    private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
-	private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
+    private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
 
-	// TODO: Replace with actual default.
-	public static final File DEFAULT_PATH = new File("./assets/voice/Iona_Beta/");
+    private final File defaultVoicePath;
+    private final File lyricConversionPath;
 
-	public Voicebank loadFromDirectory(File sourceDir) {
-		File pathToVoicebank;
-		String name = "";
-		String imageName = "";
-		Map<String, LyricConfig> lyricConfigs = new HashMap<>();
+    @Inject
+    public VoicebankReader(File defaultVoicePath, File lyricConversionPath) {
+        this.defaultVoicePath = defaultVoicePath;
+        this.lyricConversionPath = lyricConversionPath;
+    }
 
-		if (!sourceDir.exists()) {
-			pathToVoicebank = DEFAULT_PATH;
-		} else {
-			if (!sourceDir.isDirectory()) {
-				pathToVoicebank = sourceDir.getParentFile();
-			} else {
-				pathToVoicebank = sourceDir;
-			}
-		}
-		System.out.println("Parsed voicebank as " + pathToVoicebank);
+    public File getDefaultPath() {
+        return defaultVoicePath;
+    }
 
-		// Parse character data.
-		String characterData = readConfigFile(pathToVoicebank.toPath(), "character.txt");
-		for (String rawLine : characterData.split("\n")) {
-			String line = rawLine.trim();
-			if (line.startsWith("name=")) {
-				name = line.substring("name=".length());
-			} else if (line.startsWith("image=")) {
-				imageName = line.substring("image=".length());
-			}
-		}
+    public Voicebank loadVoicebankFromDirectory(File sourceDir) {
+        File pathToVoicebank;
+        String name = "";
+        String imageName = "";
+        Map<String, LyricConfig> lyricConfigs = new HashMap<>();
 
-		// Parse all oto_ini.txt and oto.ini files in arbitrary order.
-		try {
-			Files.walkFileTree(
-					pathToVoicebank.toPath(),
-					EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-					10,
-					new SimpleFileVisitor<Path>() {
-						@Override
-						public FileVisitResult visitFile(Path path, BasicFileAttributes attr) {
-							for (String otoName : ImmutableSet.of("oto.ini", "oto_ini.txt")) {
-								if (path.endsWith(otoName)) {
-									Path pathToFile = path.toFile().getParentFile().toPath();
-									parseOtoIni(pathToFile, otoName, lyricConfigs);
-									break;
-								}
-							}
-							return FileVisitResult.CONTINUE;
-						}
-					});
-		} catch (IOException e) {
-			// TODO: Handle this.
-			errorLogger.logError(e);
-		}
-		return new Voicebank(pathToVoicebank, name, imageName, lyricConfigs);
-	}
+        if (!sourceDir.exists()) {
+            pathToVoicebank = defaultVoicePath;
+        } else {
+            if (!sourceDir.isDirectory()) {
+                pathToVoicebank = sourceDir.getParentFile();
+            } else {
+                pathToVoicebank = sourceDir;
+            }
+        }
+        System.out.println("Parsed voicebank as " + pathToVoicebank);
 
-	private void parseOtoIni(
-			Path pathToOtoFile,
-			String otoFile,
-			Map<String, LyricConfig> lyricConfigs) {
-		String otoData = readConfigFile(pathToOtoFile, otoFile);
-		for (String rawLine : otoData.split("\n")) {
-			String line = rawLine.trim();
-			Matcher matcher = LYRIC_PATTERN.matcher(line);
-			if (matcher.find()) {
-				String fileName = matcher.group(1); // Assuming this is a .wav file
-				String lyricName = matcher.group(2);
-				String[] configValues = line.substring(matcher.end()).split(",");
-				if (configValues.length != 5 || fileName == null || lyricName == null) {
-					System.out.println("Received unexpected results while parsing oto.ini");
-					continue;
-				}
-				lyricConfigs.put(
-						lyricName,
-						new LyricConfig(
-								pathToOtoFile.resolve(fileName).toFile().getAbsolutePath(),
-								fileName.substring(
-										fileName.lastIndexOf("/") + 1,
-										fileName.indexOf('.')),
-								configValues));
-			}
-		}
-	}
+        // Parse character data.
+        String characterData =
+                readConfigFile(pathToVoicebank.toPath().resolve("character.txt").toFile());
+        for (String rawLine : characterData.split("\n")) {
+            String line = rawLine.trim();
+            if (line.startsWith("name=")) {
+                name = line.substring("name=".length());
+            } else if (line.startsWith("image=")) {
+                imageName = line.substring("image=".length());
+            }
+        }
 
-	private String readConfigFile(Path path, String fileName) {
-		File file = path.resolve(fileName).toFile();
-		if (!file.canRead()) {
-			// This is often okay.
-			System.out.println("Unable to find file: " + fileName);
-			return "";
-		}
-		try {
-			String charset = "UTF-8";
-			CharsetDecoder utf8Decoder = Charset
-					.forName("UTF-8")
-					.newDecoder()
-					.onMalformedInput(CodingErrorAction.REPORT)
-					.onUnmappableCharacter(CodingErrorAction.REPORT);
-			try {
-				utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
-			} catch (MalformedInputException | UnmappableCharacterException e) {
-				charset = "SJIS";
-			}
-			return FileUtils.readFileToString(file, charset);
-		} catch (IOException e) {
-			// TODO Handle this.
-			errorLogger.logError(e);
-		}
-		return "";
-	}
+        // Parse all oto_ini.txt and oto.ini files in arbitrary order.
+        try {
+            Files.walkFileTree(
+                    pathToVoicebank.toPath(),
+                    EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                    10,
+                    new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(Path path, BasicFileAttributes attr) {
+                            for (String otoName : ImmutableSet.of("oto.ini", "oto_ini.txt")) {
+                                if (path.endsWith(otoName)) {
+                                    Path pathToFile = path.toFile().getParentFile().toPath();
+                                    parseOtoIni(pathToFile, otoName, lyricConfigs);
+                                    break;
+                                }
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+        } catch (IOException e) {
+            // TODO: Handle this.
+            errorLogger.logError(e);
+        }
 
-	/**
-	 * Parses a file path, and replaces the strings "${DEFAULT}" and "${HOME}" with their
-	 * corresponding directories.
-	 */
-	public static File parseFilePath(String line, String property) {
-		String pathString = line.substring(property.length());
-		pathString = pathString
-				.replaceFirst("\\$\\{DEFAULT\\}", DEFAULT_PATH.getAbsolutePath())
-				.replaceFirst("\\$\\{HOME\\}", System.getProperty("user.home"));
-		return new File(pathString);
-	}
+        // Parse conversion set for romaji-hiragana-katakana conversion.
+        DisjointLyricSet conversionSet = readLyricConversionsFromFile();
+
+        return new Voicebank(pathToVoicebank, name, imageName, lyricConfigs, conversionSet);
+    }
+
+    private void parseOtoIni(
+            Path pathToOtoFile,
+            String otoFile,
+            Map<String, LyricConfig> lyricConfigs) {
+        String otoData = readConfigFile(pathToOtoFile.resolve(otoFile).toFile());
+        for (String rawLine : otoData.split("\n")) {
+            String line = rawLine.trim();
+            Matcher matcher = LYRIC_PATTERN.matcher(line);
+            if (matcher.find()) {
+                String fileName = matcher.group(1); // Assuming this is a .wav file
+                String lyricName = matcher.group(2);
+                String[] configValues = line.substring(matcher.end()).split(",");
+                if (configValues.length != 5 || fileName == null || lyricName == null) {
+                    System.out.println("Received unexpected results while parsing oto.ini");
+                    continue;
+                }
+                lyricConfigs.put(
+                        lyricName,
+                        new LyricConfig(
+                                pathToOtoFile.resolve(fileName).toFile().getAbsolutePath(),
+                                lyricName,
+                                configValues));
+            }
+        }
+    }
+
+    /* Gets disjoint set used for romaji-hiragana-katakana conversions. */
+    private DisjointLyricSet readLyricConversionsFromFile() {
+        DisjointLyricSet conversionSet = new DisjointLyricSet();
+        String conversionData = readConfigFile(lyricConversionPath);
+        for (String line : conversionData.split("\n")) {
+            conversionSet.addGroup(line.trim().split(","));
+        }
+        return conversionSet;
+    }
+
+    private String readConfigFile(File file) {
+        if (!file.canRead()) {
+            // This is often okay.
+            System.out.println("Unable to find file: " + file.getName());
+            return "";
+        }
+        try {
+            String charset = "UTF-8";
+            CharsetDecoder utf8Decoder =
+                    Charset.forName("UTF-8").newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                            .onUnmappableCharacter(CodingErrorAction.REPORT);
+            try {
+                utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
+            } catch (MalformedInputException | UnmappableCharacterException e) {
+                charset = "SJIS";
+            }
+            return FileUtils.readFileToString(file, charset);
+        } catch (IOException e) {
+            // TODO Handle this.
+            errorLogger.logError(e);
+        }
+        return "";
+    }
+
+    /**
+     * Parses a file path, and replaces the strings "${DEFAULT}" and "${HOME}" with their
+     * corresponding directories.
+     */
+    public File parseFilePath(String line, String property) {
+        String pathString = line.substring(property.length());
+        pathString = pathString.replaceFirst("\\$\\{DEFAULT\\}", defaultVoicePath.getAbsolutePath())
+                .replaceFirst("\\$\\{HOME\\}", System.getProperty("user.home"));
+        return new File(pathString);
+    }
 }

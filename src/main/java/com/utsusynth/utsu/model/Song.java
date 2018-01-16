@@ -108,7 +108,8 @@ public class Song {
         }
 
         public Song build() {
-            newSong.voicebank = newSong.voicebankReader.loadFromDirectory(newSong.voiceDirectory);
+            newSong.voicebank =
+                    newSong.voicebankReader.loadVoicebankFromDirectory(newSong.voiceDirectory);
             noteListBuilder.standardize(newSong.standardizer, newSong.voicebank);
             newSong.noteList = noteListBuilder.build();
             return newSong;
@@ -126,9 +127,9 @@ public class Song {
         this.saveFormat = "UST 2.0 (UTF-8)";
         this.noteList = songNoteList;
         this.pitchbends = pitchbends;
-        this.voiceDirectory = VoicebankReader.DEFAULT_PATH;
+        this.voiceDirectory = voicebankReader.getDefaultPath();
         this.outputFile = new File("outputFile");
-        this.voicebank = voicebankReader.loadFromDirectory(this.voiceDirectory);
+        this.voicebank = voicebankReader.loadVoicebankFromDirectory(this.voiceDirectory);
         this.tempo = 125.0;
         this.projectName = "(no title)";
         this.flags = "";
