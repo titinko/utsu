@@ -10,10 +10,7 @@ For Mac:
 Download the installer [here](https://drive.google.com/open?id=1SHrB--WL492QEcgrQR8But6Jj66SCnrC).
 
 For Windows:
-The windows installer can be found on the [releases page](https://github.com/titinko/utsu/releases/tag/0.1)
-
-For Linux:
-Unzip the latest release release, and run java -jar utsu-<version>.jar
+The windows installer can be found on the [releases page](https://github.com/titinko/utsu/releases/tag/0.1).
 
 ### The hard way--a JAR file
 
