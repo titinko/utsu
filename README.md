@@ -23,7 +23,7 @@ You'll need Java 8, not Java 7 or Java 9, and you'll want a JRE, not a JDK.
 Next, download the Utsu executable [here](https://drive.google.com/open?id=14p_ZhsqQsPaiw2QmlwfzTH-RmCvfpCm3). 
 
 Unzip the downloaded file and you should see a JAR file and an assets folder.  Confirm that the assets folder and the Utsu file are in the same parent folder, and double-click the JAR file to start Utsu.  If the program doesn't run properly the first time, try closing and double-clicking the JAR file again.  If it still doesn't work, you can try running it from the terminal:
-> java -jar /path/to/jarfile/utsu-0.1.jar
+> java -jar /path/to/jarfile/utsu-0.1-jfx.jar
 
 Downloading the JAR file is much more space-efficient than using the installer, if you're worried about that kind of thing.
 
