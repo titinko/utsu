@@ -228,7 +228,12 @@ public class SongNote {
             envelopeHeight[3] = Double.parseDouble(envelopeValues[6]); // v4
         }
         if (envelopeValues.length > 7) {
-            envelopeOverlap = Double.parseDouble(envelopeValues[7]); // overlap
+            try {
+                // Sometimes this number is set to weird values.
+                envelopeOverlap = Double.parseDouble(envelopeValues[7]); // overlap
+            } catch (Exception e) {
+                envelopeOverlap = 0;
+            }
             envelopeWidth[3] = Double.parseDouble(envelopeValues[8]); // p4
         }
         if (envelopeValues.length > 9) {
