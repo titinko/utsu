@@ -1,11 +1,15 @@
 package com.utsusynth.utsu.model;
 
 import com.google.common.base.Optional;
+import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 
 /** Standardizes a song note and prepares it for rendering. */
 public class SongNoteStandardizer {
+
+    // This function should be called in the order: last note -> first note
     void standardize(
             Optional<SongNote> prev,
             SongNote note,
@@ -16,8 +20,15 @@ public class SongNoteStandardizer {
         double realOverlap = 0;
         double autoStartPoint = 0;
         String trueLyric = "";
-        Optional<LyricConfig> config = voicebank.getLyricConfig(note.getLyric(), note.getNoteNum());
+
+        // Find lyric config, applying auto-aliasing if necessary.
+        String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
+        String prevLyric = getNearbyPrevLyric(prev);
+        Optional<LyricConfig> config = voicebank.getLyricConfig(prevLyric, note.getLyric(), pitch);
+
         if (config.isPresent()) {
+            trueLyric = config.get().getTrueLyric();
+
             // Cap the preutterance at start of prev note or start of track.
             realPreutter = Math.min(config.get().getPreutterance(), note.getDelta());
             realOverlap = config.get().getOverlap();
@@ -33,10 +44,10 @@ public class SongNoteStandardizer {
                     autoStartPoint = oldPreutter - realPreutter;
                 }
             }
-            realDuration = getAdjustedLength(voicebank, note, realPreutter, next);
+            realDuration = getAdjustedLength(voicebank, note, trueLyric, realPreutter, next);
 
             // Case where there is an adjacent next node.
-            if (next.isPresent() && areNotesTouching(note, next.get(), voicebank)) {
+            if (next.isPresent() && areNotesTouching(note, trueLyric, next.get(), voicebank)) {
                 note.setFadeOut(next.get().getFadeIn());
             } else {
                 note.setFadeOut(Math.min(35, realDuration)); // Default fade out.
@@ -57,8 +68,6 @@ public class SongNoteStandardizer {
 
             // Adjust the envelopes to match overlap.
             note.setFadeIn(realOverlap);
-
-            trueLyric = config.get().getTrueLyric();
         }
 
         // Set overlap.
@@ -70,10 +79,20 @@ public class SongNoteStandardizer {
         // TODO: Enforce pitchbend size/location limits.
     }
 
+    // Returns empty string if there is no nearby (within DEFAULT_NOTE_DURATION) previous note.
+    private static String getNearbyPrevLyric(Optional<SongNote> prev) {
+        if (prev.isPresent() && prev.get().getLength()
+                - prev.get().getDuration() < Quantizer.DEFAULT_NOTE_DURATION / 2) {
+            return prev.get().getLyric();
+        }
+        return "";
+    }
+
     // Find length of a note taking into account preutterance and overlap, but not tempo.
-    private double getAdjustedLength(
+    private static double getAdjustedLength(
             Voicebank voicebank,
             SongNote cur,
+            String trueLyric,
             double realPreutterance,
             Optional<SongNote> next) {
         // Increase length by this note's preutterance.
@@ -84,14 +103,13 @@ public class SongNoteStandardizer {
             return noteLength;
         }
 
-        Optional<LyricConfig> nextConfig =
-                voicebank.getLyricConfig(next.get().getLyric(), next.get().getNoteNum());
-        if (!nextConfig.isPresent()) {
-            // Ignore next note if it has an invalid lyric.
+        Optional<LyricConfig> nextConfig = voicebank.getLyricConfig(next.get().getTrueLyric());
+        if (next.get().getTrueLyric().isEmpty()) {
+            // Ignore next note if it doesn't have a true lyric set.
             return noteLength;
         }
 
-        if (!areNotesTouching(cur, next.get(), voicebank)) {
+        if (!areNotesTouching(cur, trueLyric, next.get(), voicebank)) {
             // Ignore next note if it doesn't touch current note.
             return noteLength;
         }
@@ -108,13 +126,14 @@ public class SongNoteStandardizer {
         return noteLength;
     }
 
-    private boolean areNotesTouching(SongNote note, SongNote nextNote, Voicebank voicebank) {
-        // TODO: Find a safe way to precalculate this.
-        Optional<LyricConfig> currentConfig =
-                voicebank.getLyricConfig(note.getLyric(), note.getNoteNum());
-        Optional<LyricConfig> nextConfig =
-                voicebank.getLyricConfig(nextNote.getLyric(), nextNote.getNoteNum());
-        if (!currentConfig.isPresent() || !nextConfig.isPresent()) {
+    private static boolean areNotesTouching(
+            SongNote note,
+            String trueLyric,
+            SongNote nextNote,
+            Voicebank voicebank) {
+        // Confirm both notes can be rendered.
+        if (!voicebank.getLyricConfig(trueLyric).isPresent()
+                || !voicebank.getLyricConfig(nextNote.getTrueLyric()).isPresent()) {
             return false;
         }
 

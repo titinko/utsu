@@ -8,6 +8,7 @@ import com.google.common.base.Optional;
 import com.google.common.io.Files;
 import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongIterator;
 import com.utsusynth.utsu.model.SongNote;
@@ -98,8 +99,13 @@ public class Engine {
                 config = voicebank.getLyricConfig(note.getTrueLyric());
             }
             if (!config.isPresent()) {
+                // Make one last valiant effort to find the true lyric.
+                String prevLyric = getNearbyPrevLyric(notes.peekPrev());
                 String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
-                config = voicebank.getLyricConfig(note.getLyric(), pitch);
+                config = voicebank.getLyricConfig(prevLyric, note.getLyric(), pitch);
+                if (config.isPresent()) {
+                    note.setTrueLyric(config.get().getTrueLyric());
+                }
             }
 
             // Find preutterance of current and next notes.
@@ -190,16 +196,25 @@ public class Engine {
         wavtool.addSilence(wavtoolPath, duration, renderedNote, finalSong);
     }
 
-    private int getFirstPitchStep(int totalDelta, double preutter) {
+    // Returns empty string if there is no nearby (within DEFAULT_NOTE_DURATION) previous note.
+    private static String getNearbyPrevLyric(Optional<SongNote> prev) {
+        if (prev.isPresent() && prev.get().getLength()
+                - prev.get().getDuration() > Quantizer.DEFAULT_NOTE_DURATION) {
+            return prev.get().getLyric();
+        }
+        return "";
+    }
+
+    private static int getFirstPitchStep(int totalDelta, double preutter) {
         return (int) Math.ceil((totalDelta - preutter) / 5.0);
     }
 
-    private int getLastPitchStep(int totalDelta, double preutter, double adjustedLength) {
+    private static int getLastPitchStep(int totalDelta, double preutter, double adjustedLength) {
         return (int) Math.floor((totalDelta - preutter + adjustedLength) / 5.0);
     }
 
     // Determines whether two notes are "touching" given the second note's preutterance.
-    private boolean areNotesTouching(
+    private static boolean areNotesTouching(
             Optional<SongNote> note,
             Voicebank voicebank,
             Optional<Double> nextPreutter) {
@@ -207,7 +222,8 @@ public class Engine {
             return false;
         }
 
-        if (!voicebank.getLyricConfig(note.get().getLyric(), note.get().getNoteNum()).isPresent()) {
+        // Return false if current note cannot be rendered.
+        if (!voicebank.getLyricConfig(note.get().getTrueLyric()).isPresent()) {
             return false;
         }
 

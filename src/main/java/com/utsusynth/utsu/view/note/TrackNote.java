@@ -281,6 +281,11 @@ public class TrackNote {
         adjustDragEdge(getDuration());
     }
 
+    /** Sets the lyric that will be used to render the note. */
+    public void setTrueLyric(String trueLyric) {
+        this.lyric.setVisibleAlias(trueLyric);
+    }
+
     private void deleteNote() {
         contextMenu.hide();
         lyric.closeTextFieldIfNeeded();
@@ -355,8 +360,7 @@ public class TrackNote {
                     envelope,
                     pitchbend,
                     Optional.absent());
-            String trueLyric = track.addSongNote(this, toAdd);
-            this.lyric.setVisibleAlias(trueLyric);
+            track.addSongNote(this, toAdd);
         } catch (NoteAlreadyExistsException e) {
             setValid(false);
             // System.out.println("WARNING: New note is invalid!");

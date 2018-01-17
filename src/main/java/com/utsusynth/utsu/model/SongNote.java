@@ -31,6 +31,7 @@ public class SongNote {
     private int[] vibrato;
 
     // Values calculated in-program and not saved to any file.
+    // These are set in SongNoteStandardizer
     private double realPreutter;
     private double realDuration;
     private double autoStartPoint; // This is added to the user-added startPoint.

@@ -17,7 +17,7 @@ public interface TrackNoteCallback {
 
     boolean isInBounds(int rowNum);
 
-    String addSongNote(TrackNote note, NoteData toAdd) throws NoteAlreadyExistsException;
+    void addSongNote(TrackNote note, NoteData toAdd) throws NoteAlreadyExistsException;
 
     void removeSongNote(int position);
 

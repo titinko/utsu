@@ -1,11 +1,13 @@
 package com.utsusynth.utsu.model.voicebank;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
-import com.utsusynth.utsu.common.PitchUtils;
+import com.google.common.collect.ImmutableList;
 
 /**
  * In-code representation of a voice bank. Compatible with oto.ini files. TODO: Support oto_ini.txt
@@ -36,36 +38,35 @@ public class Voicebank {
         this.conversionSet = conversionSet;
     }
 
-    public Optional<LyricConfig> getLyricConfig(String lyric) {
-        return getLyricConfig(lyric, "");
+    /**
+     * Should be called when lyric is expected to have an exact match in voicebank.
+     */
+    public Optional<LyricConfig> getLyricConfig(String trueLyric) {
+        return getLyricConfig("", trueLyric, "");
     }
 
-    public Optional<LyricConfig> getLyricConfig(String lyric, int noteNum) {
-        return getLyricConfig(lyric, PitchUtils.noteNumToPitch(noteNum));
-    }
+    public Optional<LyricConfig> getLyricConfig(String prevLyric, String lyric, String pitch) {
+        String prefix = getVowel(prevLyric) + " "; // Most common VCV format.
+        String suffix = pitchMap.containsKey(pitch) ? pitchMap.get(pitch) : ""; // Pitch suffix.
 
-    public Optional<LyricConfig> getLyricConfig(String lyric, String pitch) {
-        // Exact lyric match is prioritized first.
-        if (lyricConfigs.keySet().contains(lyric)) {
-            return Optional.of(lyricConfigs.get(lyric));
-        }
-
-        // Attempt to add pitch suffix.
-        String suffix = pitchMap.containsKey(pitch) ? pitchMap.get(pitch) : "";
-        if (lyricConfigs.containsKey(lyric + suffix)) {
-            return Optional.of(lyricConfigs.get(lyric + suffix));
+        // Check all possible prefix/lyric/suffix combinations.
+        for (String combo : allCombinations(prefix, lyric, suffix)) {
+            if (lyricConfigs.containsKey(combo)) {
+                return Optional.of(lyricConfigs.get(combo));
+            }
         }
 
         SortedSet<LyricConfig> matches = new TreeSet<>();
         for (String convertedLyric : conversionSet.getGroup(lyric)) {
-            if (lyricConfigs.keySet().contains(convertedLyric)) {
-                matches.add(lyricConfigs.get(convertedLyric));
+            if (convertedLyric.equals(lyric)) {
+                // Don't check the same lyric twice.
+                continue;
             }
 
-            // Attempt to add pitch suffix.
-            // TODO: Dot product this with lyric conversion group and later VCV group.
-            if (lyricConfigs.containsKey(convertedLyric + suffix)) {
-                matches.add(lyricConfigs.get(convertedLyric + suffix));
+            for (String combo : allCombinations(prefix, convertedLyric, suffix)) {
+                if (lyricConfigs.containsKey(combo)) {
+                    matches.add(lyricConfigs.get(combo));
+                }
             }
         }
         // For now, arbitrarily but consistently return the first match.
@@ -74,6 +75,22 @@ public class Voicebank {
         }
 
         return Optional.absent();
+    }
+
+    // Finds the vowel sound of a lyric by converting to ASCII and taking the last character.
+    private char getVowel(String prevLyric) {
+        for (String convertedLyric : conversionSet.getGroup(prevLyric)) {
+            if (CharMatcher.ascii().matchesAllOf(convertedLyric)) {
+                return convertedLyric.toLowerCase().charAt(convertedLyric.length() - 1);
+            }
+        }
+        // Return this if no vowel found.
+        return '-';
+    }
+
+    private List<String> allCombinations(String prefix, String lyric, String suffix) {
+        // Exact lyric match is prioritized first.
+        return ImmutableList.of(lyric, lyric + suffix, prefix + lyric + suffix, prefix + lyric);
     }
 
     public String getName() {

@@ -169,7 +169,10 @@ public class Song {
         int positionMs = toAdd.getPosition();
         SongNode insertedNode = this.noteList.insertNote(note, positionMs);
 
-        // Standardize note lengths and envelopes.
+        // Standardize note lengths and envelopes, in last -> first order.
+        if (insertedNode.getNext().isPresent()) {
+            insertedNode.getNext().get().standardize(standardizer, voicebank);
+        }
         insertedNode.standardize(standardizer, voicebank);
         if (insertedNode.getPrev().isPresent()) {
             insertedNode.getPrev().get().standardize(standardizer, voicebank);
@@ -183,7 +186,8 @@ public class Song {
                     new NeighborData(
                             note.getDelta(),
                             prevSongNote.getEnvelope(),
-                            prevSongNote.getPitchbends()));
+                            prevSongNote.getPitchbends(),
+                            prevSongNote.getConfigData()));
         }
         Optional<NeighborData> nextNote = Optional.absent();
         if (insertedNode.getNext().isPresent()) {
@@ -205,7 +209,8 @@ public class Song {
                     new NeighborData(
                             note.getLength(),
                             nextSongNote.getEnvelope(),
-                            nextSongNote.getPitchbends()));
+                            nextSongNote.getPitchbends(),
+                            nextSongNote.getConfigData()));
         }
 
         // Add this note's pitchbends.
@@ -235,18 +240,28 @@ public class Song {
     /** Removes the note at the specified position from the song object. */
     public RemoveResponse removeNote(int positionMs) {
         SongNode removedNode = this.noteList.removeNote(positionMs);
-        Optional<NeighborData> prevNote = Optional.absent();
+
+        // Do standardization separately as it must happen in back -> front order.
+        if (removedNode.getNext().isPresent()) {
+            // Adjust envelope, preutterance, and length of next note.
+            removedNode.getNext().get().standardize(standardizer, voicebank);
+        }
         if (removedNode.getPrev().isPresent()) {
             // Adjust envelope, preutterance, and length of previous note.
             removedNode.getPrev().get().standardize(standardizer, voicebank);
+        }
 
+        Optional<NeighborData> prevNote = Optional.absent();
+        if (removedNode.getPrev().isPresent()) {
             SongNote prevSongNote = removedNode.getPrev().get().getNote();
             prevNote = Optional.of(
                     new NeighborData(
                             removedNode.getNote().getDelta(),
                             prevSongNote.getEnvelope(),
-                            prevSongNote.getPitchbends()));
+                            prevSongNote.getPitchbends(),
+                            prevSongNote.getConfigData()));
         }
+
         Optional<NeighborData> nextNote = Optional.absent();
         if (removedNode.getNext().isPresent()) {
             // Modify the next note's portamento.
@@ -270,7 +285,8 @@ public class Song {
                     new NeighborData(
                             removedNode.getNote().getLength(),
                             nextSongNote.getEnvelope(),
-                            nextSongNote.getPitchbends()));
+                            nextSongNote.getPitchbends(),
+                            nextSongNote.getConfigData()));
         }
 
         // Remove this note's pitchbends.
@@ -282,7 +298,7 @@ public class Song {
         return new RemoveResponse(prevNote, nextNote);
     }
 
-    /** Modifies a note in-place without changing its position or duration. */
+    /** Modifies a note in-place without changing its lyric, position, or duration. */
     public void modifyNote(NoteData toModify) {
         int positionMs = toModify.getPosition();
         SongNode node = this.noteList.getNote(positionMs);

@@ -229,8 +229,7 @@ public class Track {
         }
 
         @Override
-        public String addSongNote(TrackNote note, NoteData toAdd)
-                throws NoteAlreadyExistsException {
+        public void addSongNote(TrackNote note, NoteData toAdd) throws NoteAlreadyExistsException {
             int position = toAdd.getPosition();
             if (noteMap.hasNote(position)) {
                 throw new NoteAlreadyExistsException();
@@ -255,6 +254,8 @@ public class Track {
                     NeighborData next = response.getNext().get();
                     int nextDelta = next.getDelta();
                     note.adjustForOverlap(nextDelta);
+                    noteMap.getNote(position + nextDelta)
+                            .setTrueLyric(next.getConfig().getTrueLyric());
                     noteMap.putEnvelope(
                             position + nextDelta,
                             next.getEnvelope(),
@@ -283,10 +284,9 @@ public class Track {
                     setNumMeasures((position / Quantizer.COL_WIDTH / 4) + 4);
                 }
 
+                // Set the true lyric for this note.
                 if (response.getNote().getConfig().isPresent()) {
-                    return response.getNote().getConfig().get().getTrueLyric();
-                } else {
-                    return "";
+                    note.setTrueLyric(response.getNote().getConfig().get().getTrueLyric());
                 }
             }
         }
@@ -314,6 +314,7 @@ public class Track {
             if (response.getNext().isPresent()) {
                 NeighborData next = response.getNext().get();
                 int nextDelta = next.getDelta();
+                noteMap.getNote(position + nextDelta).setTrueLyric(next.getConfig().getTrueLyric());
                 noteMap.putEnvelope(
                         position + nextDelta,
                         next.getEnvelope(),

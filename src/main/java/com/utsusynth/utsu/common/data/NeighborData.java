@@ -7,11 +7,17 @@ public class NeighborData {
     private final int delta;
     private final EnvelopeData envelope;
     private final PitchbendData pitchbend;
+    private final NoteConfigData config;
 
-    public NeighborData(int delta, EnvelopeData envelope, PitchbendData pitchbend) {
+    public NeighborData(
+            int delta,
+            EnvelopeData envelope,
+            PitchbendData pitchbend,
+            NoteConfigData config) {
         this.delta = delta;
         this.envelope = envelope;
         this.pitchbend = pitchbend;
+        this.config = config;
     }
 
     public int getDelta() {
@@ -24,5 +30,9 @@ public class NeighborData {
 
     public PitchbendData getPitchbend() {
         return this.pitchbend;
+    }
+
+    public NoteConfigData getConfig() {
+        return this.config;
     }
 }

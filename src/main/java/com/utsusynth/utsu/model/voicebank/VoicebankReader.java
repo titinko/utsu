@@ -145,6 +145,7 @@ public class VoicebankReader {
         String pitchData = readConfigFile(pitchMapFile);
         for (String rawLine : pitchData.split("\n")) {
             String line = rawLine.trim();
+            // TODO: Handle the case of prefixes rather than suffixes.
             Matcher matcher = PITCH_PATTERN.matcher(line);
             if (matcher.find()) {
                 String pitch = matcher.group(1);
