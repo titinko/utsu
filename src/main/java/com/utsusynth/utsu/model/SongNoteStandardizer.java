@@ -16,7 +16,7 @@ public class SongNoteStandardizer {
         double realOverlap = 0;
         double autoStartPoint = 0;
         String trueLyric = "";
-        Optional<LyricConfig> config = voicebank.getLyricConfig(note.getLyric());
+        Optional<LyricConfig> config = voicebank.getLyricConfig(note.getLyric(), note.getNoteNum());
         if (config.isPresent()) {
             // Cap the preutterance at start of prev note or start of track.
             realPreutter = Math.min(config.get().getPreutterance(), note.getDelta());
@@ -84,7 +84,8 @@ public class SongNoteStandardizer {
             return noteLength;
         }
 
-        Optional<LyricConfig> nextConfig = voicebank.getLyricConfig(next.get().getLyric());
+        Optional<LyricConfig> nextConfig =
+                voicebank.getLyricConfig(next.get().getLyric(), next.get().getNoteNum());
         if (!nextConfig.isPresent()) {
             // Ignore next note if it has an invalid lyric.
             return noteLength;
@@ -108,8 +109,12 @@ public class SongNoteStandardizer {
     }
 
     private boolean areNotesTouching(SongNote note, SongNote nextNote, Voicebank voicebank) {
-        if (!voicebank.getLyricConfig(note.getLyric()).isPresent()
-                || !voicebank.getLyricConfig(nextNote.getLyric()).isPresent()) {
+        // TODO: Find a safe way to precalculate this.
+        Optional<LyricConfig> currentConfig =
+                voicebank.getLyricConfig(note.getLyric(), note.getNoteNum());
+        Optional<LyricConfig> nextConfig =
+                voicebank.getLyricConfig(nextNote.getLyric(), nextNote.getNoteNum());
+        if (!currentConfig.isPresent() || !nextConfig.isPresent()) {
             return false;
         }
 

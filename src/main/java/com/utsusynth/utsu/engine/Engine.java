@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
+import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.model.Song;
 import com.utsusynth.utsu.model.SongIterator;
@@ -90,7 +91,18 @@ public class Engine {
         while (notes.hasNext()) {
             SongNote note = notes.next();
             totalDelta += note.getDelta();
-            Optional<LyricConfig> config = voicebank.getLyricConfig(note.getLyric());
+
+            // Get lyric config.
+            Optional<LyricConfig> config = Optional.absent();
+            if (!note.getTrueLyric().isEmpty()) {
+                config = voicebank.getLyricConfig(note.getTrueLyric());
+            }
+            if (!config.isPresent()) {
+                String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
+                config = voicebank.getLyricConfig(note.getLyric(), pitch);
+            }
+
+            // Find preutterance of current and next notes.
             double preutter = note.getRealPreutter();
             Optional<Double> nextPreutter = Optional.absent();
             if (notes.peekNext().isPresent()) {
@@ -195,7 +207,7 @@ public class Engine {
             return false;
         }
 
-        if (!voicebank.getLyricConfig(note.get().getLyric()).isPresent()) {
+        if (!voicebank.getLyricConfig(note.get().getLyric(), note.get().getNoteNum()).isPresent()) {
             return false;
         }
 

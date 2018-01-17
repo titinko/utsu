@@ -28,6 +28,7 @@ public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
     private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
+    private static final Pattern PITCH_PATTERN = Pattern.compile("([a-gA-G]#?[1-7])\\s+(\\S.*)");
 
     private final File defaultVoicePath;
     private final File lyricConversionPath;
@@ -47,6 +48,7 @@ public class VoicebankReader {
         String name = "";
         String imageName = "";
         Map<String, LyricConfig> lyricConfigs = new HashMap<>();
+        Map<String, String> pitchMap = new HashMap<>();
 
         if (!sourceDir.exists()) {
             pathToVoicebank = defaultVoicePath;
@@ -95,10 +97,22 @@ public class VoicebankReader {
             errorLogger.logError(e);
         }
 
+        // Parse pitch map in arbitrary order, if present.
+        for (String pitchMapName : ImmutableSet.of("prefixmap", "prefix.map")) {
+            // For some reason, "prefix.map" is a list of pitch suffixes.
+            parsePitchMap(pathToVoicebank.toPath().resolve(pitchMapName).toFile(), pitchMap);
+        }
+
         // Parse conversion set for romaji-hiragana-katakana conversion.
         DisjointLyricSet conversionSet = readLyricConversionsFromFile();
 
-        return new Voicebank(pathToVoicebank, name, imageName, lyricConfigs, conversionSet);
+        return new Voicebank(
+                pathToVoicebank,
+                name,
+                imageName,
+                lyricConfigs,
+                pitchMap,
+                conversionSet);
     }
 
     private void parseOtoIni(
@@ -127,6 +141,19 @@ public class VoicebankReader {
         }
     }
 
+    private void parsePitchMap(File pitchMapFile, Map<String, String> pitchMap) {
+        String pitchData = readConfigFile(pitchMapFile);
+        for (String rawLine : pitchData.split("\n")) {
+            String line = rawLine.trim();
+            Matcher matcher = PITCH_PATTERN.matcher(line);
+            if (matcher.find()) {
+                String pitch = matcher.group(1);
+                String suffix = matcher.group(2);
+                pitchMap.put(pitch, suffix);
+            }
+        }
+    }
+
     /* Gets disjoint set used for romaji-hiragana-katakana conversions. */
     private DisjointLyricSet readLyricConversionsFromFile() {
         DisjointLyricSet conversionSet = new DisjointLyricSet();
@@ -140,7 +167,6 @@ public class VoicebankReader {
     private String readConfigFile(File file) {
         if (!file.canRead()) {
             // This is often okay.
-            System.out.println("Unable to find file: " + file.getName());
             return "";
         }
         try {
