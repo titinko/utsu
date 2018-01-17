@@ -126,14 +126,15 @@ public class Engine {
             // Add silence in place of note if lyric not found.
             if (!config.isPresent()) {
                 System.out.println("Could not find config for lyric: " + note.getLyric());
-                if (nextPreutter.isPresent()) {
+                if (notes.peekNext().isPresent()) {
                     addSilence(
-                            note.getLength() - nextPreutter.get(),
+                            note.getLength() - notes.peekNext().get().getRealPreutter(),
                             song,
                             renderedNote,
                             finalSong);
                 } else {
-                    addSilence(note.getLength(), song, renderedNote, finalSong);
+                    // Case where the last note in the song is silent.
+                    addFinalSilence(note.getLength(), song, renderedNote, finalSong);
                 }
                 continue;
             }
@@ -169,7 +170,9 @@ public class Engine {
                     renderedNote,
                     finalSong,
                     // Whether to include overlap in the wavtool.
-                    areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter)));
+                    areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter)),
+                    // Whether this is the last note in the song.
+                    !notes.peekNext().isPresent());
 
             // Possible silence after each note.
             if (notes.peekNext().isPresent()
@@ -193,7 +196,14 @@ public class Engine {
         }
         duration = duration * (125.0 / song.getTempo());
         resampler.resampleSilence(resamplerPath, renderedNote, duration);
-        wavtool.addSilence(wavtoolPath, duration, renderedNote, finalSong);
+        wavtool.addSilence(wavtoolPath, duration, renderedNote, finalSong, false);
+    }
+
+    private void addFinalSilence(double duration, Song song, File renderedNote, File finalSong) {
+        // The final note must be passed to the wavtool.
+        duration = Math.max(duration, 0) * (125.0 / song.getTempo());
+        resampler.resampleSilence(resamplerPath, renderedNote, duration);
+        wavtool.addSilence(wavtoolPath, duration, renderedNote, finalSong, true);
     }
 
     // Returns empty string if there is no nearby (within DEFAULT_NOTE_DURATION) previous note.
