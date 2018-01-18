@@ -72,7 +72,7 @@ public class Engine {
     private Optional<File> render(Song song) {
         // Create temporary directory for rendering.
         File tempDir = Files.createTempDir();
-        File renderedNote = new File(tempDir, "rendered_note.wav");
+        File renderedSilence = new File(tempDir, "rendered_silence.wav");
         File finalSong = new File(tempDir, "final_song.wav");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
@@ -91,7 +91,7 @@ public class Engine {
         boolean isFirstNote = true;
         while (notes.hasNext()) {
             SongNote note = notes.next();
-            totalDelta += note.getDelta();
+            totalDelta += note.getDelta(); // Unique for every note in a single track.
 
             // Get lyric config.
             Optional<LyricConfig> config = Optional.absent();
@@ -118,7 +118,7 @@ public class Engine {
             // Possible silence before first note.
             if (isFirstNote) {
                 if (note.getDelta() - preutter > 0) {
-                    addSilence(note.getDelta() - preutter, song, renderedNote, finalSong);
+                    addSilence(note.getDelta() - preutter, song, renderedSilence, finalSong);
                 }
                 isFirstNote = false;
             }
@@ -130,11 +130,11 @@ public class Engine {
                     addSilence(
                             note.getLength() - notes.peekNext().get().getRealPreutter(),
                             song,
-                            renderedNote,
+                            renderedSilence,
                             finalSong);
                 } else {
                     // Case where the last note in the song is silent.
-                    addFinalSilence(note.getLength(), song, renderedNote, finalSong);
+                    addFinalSilence(note.getLength(), song, renderedSilence, finalSong);
                 }
                 continue;
             }
@@ -151,6 +151,7 @@ public class Engine {
             String pitchString = song.getPitchString(firstStep, lastStep, note.getNoteNum());
 
             // Re-samples lyric and puts result into renderedNote file.
+            File renderedNote = new File(tempDir, "rendered_note" + totalDelta + ".wav");
             resampler.resample(
                     resamplerPath,
                     note,
@@ -184,7 +185,7 @@ public class Engine {
                 } else {
                     silenceLength = note.getLength() - note.getDuration();
                 }
-                addSilence(silenceLength, song, renderedNote, finalSong);
+                addSilence(silenceLength, song, renderedSilence, finalSong);
             }
         }
         return Optional.of(finalSong);

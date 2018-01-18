@@ -56,7 +56,7 @@ public class Wavtool {
                 envelope[8], // p4
                 envelope[9], // p5
                 envelope[10], // v5
-                triggerSynthesis ? "LAST_NOTE" : "NOT_LAST"); // Triggers final song processing.
+                triggerSynthesis ? "LAST_NOTE" : ""); // Triggers final song processing.
     }
 
     void addSilence(
@@ -87,6 +87,6 @@ public class Wavtool {
                 envelope[8], // p4
                 envelope[9], // p5
                 envelope[10], // v5
-                triggerSynthesis ? "LAST_NOTE" : "NOT_LAST"); // Triggers final song processing.
+                triggerSynthesis ? "LAST_NOTE" : ""); // Triggers final song processing.
     }
 }
