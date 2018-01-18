@@ -40,7 +40,7 @@
             <RowConstraints minHeight="-Infinity" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Slider fx:id="tempoSlider" blockIncrement="1.0" max="250.0" min="50.0" minorTickCount="25" snapToTicks="true" value="125.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+            <Slider fx:id="tempoSlider" blockIncrement="1.0" max="260.0" min="50.0" minorTickCount="25" snapToTicks="true" value="125.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
             <Label fx:id="projectNameLabel" text="Project Name" GridPane.halignment="CENTER" />
             <Label fx:id="outputFileLabel" text="Output File" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
             <Label fx:id="flagsLabel" text="Flags" GridPane.halignment="CENTER" GridPane.rowIndex="2" />

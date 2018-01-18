@@ -217,6 +217,7 @@ public class SongNote {
     }
 
     public void setEnvelope(String[] envelopeValues) {
+        // Parse ust envelope values.
         if (envelopeValues.length > 0) {
             envelopeWidth[0] = Double.parseDouble(envelopeValues[0]); // p1
             envelopeWidth[1] = Double.parseDouble(envelopeValues[1]); // p2
@@ -240,6 +241,18 @@ public class SongNote {
         if (envelopeValues.length > 9) {
             envelopeWidth[4] = Double.parseDouble(envelopeValues[9]); // p5
             envelopeHeight[4] = Double.parseDouble(envelopeValues[10]); // v5
+        }
+
+        // Try to catch an envelope that's V2/V3 crossfaded.
+        if (envelopeHeight[0] < 1 && envelopeHeight[3] < 1) {
+            // TODO: Ask the user if the weird envelope values were intentional.
+            // Convert to V1/V4 crossfading.
+            envelopeWidth[0] = envelopeWidth[1];
+            envelopeWidth[1] = 1;
+            envelopeHeight[0] = envelopeHeight[1];
+            envelopeWidth[3] = envelopeWidth[2];
+            envelopeWidth[2] = 1;
+            envelopeHeight[3] = envelopeHeight[2];
         }
     }
 
