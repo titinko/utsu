@@ -419,10 +419,18 @@ public class UtsuController implements Localizable {
     void saveFileAs(ActionEvent event) {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
-        fc.getExtensionFilters().addAll(
-                new ExtensionFilter("UST 2.0 (UTF-8)", "*.ust"),
-                new ExtensionFilter("UST 2.0 (Shift JIS)", "*.ust"),
-                new ExtensionFilter("UST 1.2 (Shift JIS)", "*.ust"));
+        if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+            fc.getExtensionFilters().addAll(
+                    new ExtensionFilter("UST 2.0 (UTF-8)", "*.ust"),
+                    new ExtensionFilter("UST 2.0 (Shift JIS)", "*.ust"),
+                    new ExtensionFilter("UST 1.2 (Shift JIS)", "*.ust"));
+        } else {
+            // For now, default to 1.2 format for Windows and Linux users.
+            fc.getExtensionFilters().addAll(
+                    new ExtensionFilter("UST 1.2 (Shift JIS)", "*.ust"),
+                    new ExtensionFilter("UST 2.0 (UTF-8)", "*.ust"),
+                    new ExtensionFilter("UST 2.0 (Shift JIS)", "*.ust"));
+        }
         File file = fc.showSaveDialog(null);
         if (file != null) {
             ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
