@@ -125,7 +125,7 @@ public class Track {
 
     private void clearTrack() {
         // Remove current track.
-        playbackManager.clearHighlights();
+        playbackManager.clear();
         noteMap.clear();
         track = new GridPane();
         dynamics = new GridPane();
@@ -225,7 +225,7 @@ public class Track {
         public void setHighlighted(TrackNote note, boolean highlighted) {
             playbackManager.clearHighlights();
             if (highlighted) {
-                playbackManager.addHighlight(note);
+                playbackManager.highlightTo(note);
             }
         }
 

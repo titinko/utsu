@@ -1,6 +1,17 @@
+.start-bar, .playback-bar, .end-bar {
+	-fx-stroke-width: 2;
+}
+
+.start-bar {
+	-fx-stroke: darkred;
+}
+
 .playback-bar {
 	-fx-stroke: crimson;
-	-fx-stroke-width: 1.5;
+}
+
+.end-bar {
+	-fx-stroke: lightpink;
 }
 
 .track-cell.white-key {
