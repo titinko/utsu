@@ -7,6 +7,9 @@ public class PitchUtils {
             ImmutableList.of("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B");
     public static final ImmutableList<String> REVERSE_PITCHES = PITCHES.reverse();
 
+    public static final int NUM_OCTAVES = 7;
+    public static final int TOTAL_NUM_PITCHES = NUM_OCTAVES * PITCHES.size();
+
     private PitchUtils() {}
 
     /**

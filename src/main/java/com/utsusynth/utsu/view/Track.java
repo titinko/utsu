@@ -22,9 +22,10 @@ import com.utsusynth.utsu.view.note.portamento.TrackPortamentoCallback;
 import javafx.scene.Group;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.util.Duration;
 
 public class Track {
-    private final Highlighter highlighter;
+    private final PlaybackBarManager playbackManager;
     private final TrackNoteFactory noteFactory;
     private final TrackNoteMap noteMap;
     private final Scaler scaler;
@@ -36,11 +37,11 @@ public class Track {
 
     @Inject
     public Track(
-            Highlighter highlighter,
+            PlaybackBarManager playbackManager,
             TrackNoteFactory trackNoteFactory,
             TrackNoteMap noteMap,
             Scaler scaler) {
-        this.highlighter = highlighter;
+        this.playbackManager = playbackManager;
         this.noteFactory = trackNoteFactory;
         this.noteMap = noteMap;
         this.scaler = scaler;
@@ -112,9 +113,19 @@ public class Track {
         return noteMap.getPitchbendsElement();
     }
 
+    public Group getPlaybackElement() {
+        return playbackManager.getElement();
+    }
+
+    /** Start the playback bar animation. It will end on its own. */
+    public Void startPlayback(Duration duration, double tempo) {
+        playbackManager.startPlayback(duration, tempo);
+        return null;
+    }
+
     private void clearTrack() {
         // Remove current track.
-        highlighter.clearHighlights();
+        playbackManager.clearHighlights();
         noteMap.clear();
         track = new GridPane();
         dynamics = new GridPane();
@@ -181,7 +192,7 @@ public class Track {
                             noteMap.addNoteElement(newNote);
                         }
                         // Clear highlights regardless of current mode.
-                        highlighter.clearHighlights();
+                        playbackManager.clearHighlights();
                     });
                     track.add(newCell, colNum, rowNum);
                 }
@@ -212,15 +223,15 @@ public class Track {
     private final TrackNoteCallback noteCallback = new TrackNoteCallback() {
         @Override
         public void setHighlighted(TrackNote note, boolean highlighted) {
-            highlighter.clearHighlights();
+            playbackManager.clearHighlights();
             if (highlighted) {
-                highlighter.addHighlight(note);
+                playbackManager.addHighlight(note);
             }
         }
 
         @Override
         public boolean isHighlighted(TrackNote note) {
-            return highlighter.isHighlighted(note);
+            return playbackManager.isHighlighted(note);
         }
 
         @Override
@@ -354,7 +365,7 @@ public class Track {
 
         @Override
         public void removeTrackNote(TrackNote trackNote) {
-            highlighter.clearHighlights();
+            playbackManager.clearHighlights();
             noteMap.removeNoteElement(trackNote);
         }
 

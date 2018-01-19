@@ -40,8 +40,6 @@ import com.utsusynth.utsu.model.SongManager;
 import com.utsusynth.utsu.view.Piano;
 import com.utsusynth.utsu.view.Track;
 import com.utsusynth.utsu.view.ViewCallback;
-import javafx.animation.Interpolator;
-import javafx.animation.TranslateTransition;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
@@ -64,7 +62,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.shape.Line;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
@@ -316,6 +313,7 @@ public class UtsuController implements Localizable {
         anchorRight.getChildren().add(track.createNewTrack(songManager.getSong().getNotes()));
         anchorRight.getChildren().add(track.getNotesElement());
         anchorRight.getChildren().add(track.getPitchbendsElement());
+        anchorRight.getChildren().add(track.getPlaybackElement());
         anchorBottom.getChildren().clear();
         anchorBottom.getChildren().add(track.getDynamicsElement());
         anchorBottom.getChildren().add(track.getEnvelopesElement());
@@ -483,25 +481,8 @@ public class UtsuController implements Localizable {
 
     @FXML
     void renderSong(ActionEvent event) {
-        Function<Duration, Void> playbackFn = (duration) -> {
-            if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
-                // Create a playback bar.
-                Line playBar = new Line(0, 0, 0, anchorRight.getHeight());
-                playBar.getStyleClass().addAll("playback-bar");
-                anchorRight.getChildren().add(playBar);
-
-                // Move the playback bar as the song plays.
-                TranslateTransition playback = new TranslateTransition(duration, playBar);
-                double numBeats = songManager.getSong().getTempo() * duration.toMinutes();
-                playback.setByX(numBeats * scaler.scaleX(Quantizer.COL_WIDTH));
-                playback.setInterpolator(Interpolator.LINEAR);
-                playback.setOnFinished(action -> {
-                    anchorRight.getChildren().remove(playBar);
-                });
-                playback.play();
-            }
-            return null;
-        };
+        double tempo = songManager.getSong().getTempo();
+        Function<Duration, Void> playbackFn = (duration) -> track.startPlayback(duration, tempo);
 
         // Disable the render button while rendering.
         renderButton.setDisable(true);
