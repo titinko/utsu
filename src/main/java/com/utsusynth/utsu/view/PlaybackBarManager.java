@@ -1,8 +1,10 @@
 package com.utsusynth.utsu.view;
 
-import java.util.LinkedList;
+import java.util.Collection;
+import java.util.HashSet;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.note.TrackNote;
@@ -16,8 +18,10 @@ import javafx.util.Duration;
  * Keeps track of what notes are currently highlighted.
  */
 public class PlaybackBarManager {
+    private static final int totalHeight = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
+
     private final Scaler scaler;
-    private final LinkedList<TrackNote> highlighted;
+    private final HashSet<TrackNote> highlighted;
     private final TranslateTransition playback;
 
     private Line startBar;
@@ -27,7 +31,7 @@ public class PlaybackBarManager {
     @Inject
     public PlaybackBarManager(Scaler scaler) {
         this.scaler = scaler;
-        highlighted = new LinkedList<>();
+        highlighted = new HashSet<>();
         playback = new TranslateTransition();
         clear();
     }
@@ -40,7 +44,6 @@ public class PlaybackBarManager {
     void startPlayback(Duration duration, double tempo) {
         if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             // Create a playback bar.
-            int totalHeight = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
             Line playBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
             playBar.getStyleClass().addAll("playback-bar");
             bars.getChildren().add(playBar);
@@ -59,22 +62,36 @@ public class PlaybackBarManager {
         }
     }
 
-    void highlightTo(TrackNote note) {
+    void highlightTo(TrackNote highlightToMe, Collection<TrackNote> allNotes) {
+        // All values maintain their current scale.
+        RegionBounds noteBounds = highlightToMe.getBounds();
+        RegionBounds addRegion;
         if (highlighted.isEmpty()) {
-            // Only the current note needs to be highlighted.
-            highlighted.add(note);
-            note.setHighlighted(true);
-            // Set start and stop bars.
-            startBar.setTranslateX(scaler.scaleX(note.getAbsPosition()));
+            // Add region is defined only by the note.
+            addRegion = noteBounds;
+            // Add start and stop bars to the track.
             if (!bars.getChildren().contains(startBar)) {
                 bars.getChildren().add(startBar);
             }
-            endBar.setTranslateX(scaler.scaleX(note.getAbsPosition() + note.getDuration()));
             if (!bars.getChildren().contains(endBar)) {
                 bars.getChildren().add(endBar);
             }
         } else {
-            // TODO: Add this note and everything in between to highlighted sequence.
+            int startBarX = (int) Math.round(scaler.unscaleX(startBar.getTranslateX()));
+            int endBarX = (int) Math.round(scaler.unscaleX(endBar.getTranslateX()));
+            addRegion = new RegionBounds(startBarX, endBarX).mergeWith(noteBounds);
+        }
+        // Move startBar and endBar to the right locations.
+        startBar.setTranslateX(scaler.scaleX(addRegion.getMinMs()));
+        endBar.setTranslateX(scaler.scaleX(addRegion.getMaxMs()));
+
+        // Highlight all notes within the add region.
+        for (TrackNote note : allNotes) {
+            if (addRegion.intersects(note.getBounds())) {
+                // These operations are idempotent.
+                highlighted.add(note);
+                note.setHighlighted(true);
+            }
         }
     }
 
@@ -84,7 +101,6 @@ public class PlaybackBarManager {
         clearHighlights();
 
         // Recreate start and end bars, as scale might have changed.
-        int totalHeight = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
         startBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
         startBar.getStyleClass().add("start-bar");
         endBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
@@ -99,7 +115,7 @@ public class PlaybackBarManager {
         bars.getChildren().removeAll(startBar, endBar);
     }
 
-    boolean isHighlighted(TrackNote note) {
-        return highlighted.contains(note);
+    boolean isExclusivelyHighlighted(TrackNote note) {
+        return highlighted.size() == 1 && highlighted.contains(note);
     }
 }

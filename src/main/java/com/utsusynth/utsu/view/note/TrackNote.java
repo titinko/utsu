@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.note;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.UtsuController.Mode;
 import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.PitchbendData;
@@ -110,10 +111,12 @@ public class TrackNote {
                 deleteNote();
             } else if (subMode == SubMode.CLICKING) {
                 contextMenu.hide();
-                if (this.track.isHighlighted(this)) {
+                if (event.isShiftDown()) {
+                    this.track.highlightInclusive(this);
+                } else if (this.track.isExclusivelyHighlighted(this)) {
                     this.lyric.openTextField();
                 } else {
-                    this.track.highlight(this);
+                    this.track.highlightExclusive(this);
                 }
             }
             subMode = SubMode.CLICKING;
@@ -229,19 +232,24 @@ public class TrackNote {
     }
 
     public int getAbsPosition() {
-        return (int) scaler.unscaleX(layout.getTranslateX());
+        return (int) Math.round(scaler.unscaleX(layout.getTranslateX()));
     }
 
     public int getDuration() {
-        return (int) scaler.unscaleX(note.getWidth() + 1);
+        return (int) Math.round(scaler.unscaleX(note.getWidth() + 1));
     }
 
     public String getLyric() {
         return lyric.getLyric();
     }
 
+    public RegionBounds getBounds() {
+        int absPosition = getAbsPosition();
+        return new RegionBounds(absPosition, absPosition + getDuration());
+    }
+
     /**
-     * Sets a note's highlighted state. Should only be called from track.
+     * Sets a note's highlighted state. Idempotent. Should only be called from track.
      * 
      * @param highlighted Whether the note should be highlighted.
      */

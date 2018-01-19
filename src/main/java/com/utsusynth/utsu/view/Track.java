@@ -20,6 +20,7 @@ import com.utsusynth.utsu.view.note.TrackNoteFactory;
 import com.utsusynth.utsu.view.note.envelope.TrackEnvelopeCallback;
 import com.utsusynth.utsu.view.note.portamento.TrackPortamentoCallback;
 import javafx.scene.Group;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
@@ -184,6 +185,11 @@ public class Track {
                     final int currentRowNum = rowNum;
                     final int currentColNum = colNum;
                     newCell.setOnMouseClicked((event) -> {
+                        // Clear highlights regardless of current button or current mode.
+                        playbackManager.clearHighlights();
+                        if (event.getButton() != MouseButton.PRIMARY) {
+                            return;
+                        }
                         Mode currentMode = model.getCurrentMode();
                         if (currentMode == Mode.ADD) {
                             // Create note.
@@ -191,8 +197,6 @@ public class Track {
                                     .createDefaultNote(currentRowNum, currentColNum, noteCallback);
                             noteMap.addNoteElement(newNote);
                         }
-                        // Clear highlights regardless of current mode.
-                        playbackManager.clearHighlights();
                     });
                     track.add(newCell, colNum, rowNum);
                 }
@@ -222,19 +226,19 @@ public class Track {
 
     private final TrackNoteCallback noteCallback = new TrackNoteCallback() {
         @Override
-        public void highlight(TrackNote note) {
+        public void highlightExclusive(TrackNote note) {
             playbackManager.clearHighlights();
-            playbackManager.highlightTo(note);
+            playbackManager.highlightTo(note, noteMap.getAllNotes());
         }
 
         @Override
         public void highlightInclusive(TrackNote note) {
-            // TODO: Implement this.
+            playbackManager.highlightTo(note, noteMap.getAllNotes());
         }
 
         @Override
-        public boolean isHighlighted(TrackNote note) {
-            return playbackManager.isHighlighted(note);
+        public boolean isExclusivelyHighlighted(TrackNote note) {
+            return playbackManager.isExclusivelyHighlighted(note);
         }
 
         @Override

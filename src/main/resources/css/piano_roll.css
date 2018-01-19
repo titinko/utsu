@@ -2,11 +2,7 @@
 	-fx-stroke-width: 2;
 }
 
-.start-bar {
-	-fx-stroke: crimson;
-}
-
-.playback-bar {
+.start-bar, .playback-bar {
 	-fx-stroke: crimson;
 }
 

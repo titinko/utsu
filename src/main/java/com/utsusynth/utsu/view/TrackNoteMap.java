@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import com.google.inject.Inject;
@@ -61,6 +62,10 @@ public class TrackNoteMap {
 
     TrackNote getNote(int position) {
         return noteMap.get(position);
+    }
+
+    Collection<TrackNote> getAllNotes() {
+        return noteMap.values();
     }
 
     void putNote(int position, TrackNote note) throws NoteAlreadyExistsException {

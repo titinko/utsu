@@ -11,11 +11,11 @@ import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
  * A way of communicating TrackNote information back to its parent Track.
  */
 public interface TrackNoteCallback {
-    void highlight(TrackNote note);
+    void highlightExclusive(TrackNote note);
 
     void highlightInclusive(TrackNote note);
 
-    boolean isHighlighted(TrackNote note);
+    boolean isExclusivelyHighlighted(TrackNote note);
 
     boolean isInBounds(int rowNum);
 
