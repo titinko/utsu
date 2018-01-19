@@ -222,11 +222,14 @@ public class Track {
 
     private final TrackNoteCallback noteCallback = new TrackNoteCallback() {
         @Override
-        public void setHighlighted(TrackNote note, boolean highlighted) {
+        public void highlight(TrackNote note) {
             playbackManager.clearHighlights();
-            if (highlighted) {
-                playbackManager.highlightTo(note);
-            }
+            playbackManager.highlightTo(note);
+        }
+
+        @Override
+        public void highlightInclusive(TrackNote note) {
+            // TODO: Implement this.
         }
 
         @Override

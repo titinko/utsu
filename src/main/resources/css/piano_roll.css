@@ -3,7 +3,7 @@
 }
 
 .start-bar {
-	-fx-stroke: darkred;
+	-fx-stroke: crimson;
 }
 
 .playback-bar {
@@ -11,7 +11,7 @@
 }
 
 .end-bar {
-	-fx-stroke: lightpink;
+	-fx-stroke: cornflowerblue;
 }
 
 .track-cell.white-key {

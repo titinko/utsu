@@ -25,6 +25,9 @@ public class TrackLyric {
         this.textField.setFont(Font.font(9));
         this.textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 2);
         this.textField.setMaxWidth(scaler.scaleX(Quantizer.COL_WIDTH) - 2);
+        this.textField.setOnAction((event) -> {
+            closeTextFieldIfNeeded();
+        });
 
         // Initialize with text active.
         activeNode = new Group();
@@ -33,9 +36,6 @@ public class TrackLyric {
 
     /** Connect this lyric to a track note. */
     void initialize(TrackLyricCallback callback) {
-        this.textField.setOnAction((event) -> {
-            callback.setHighlighted(false);
-        });
         this.trackNote = callback;
     }
 

@@ -65,11 +65,6 @@ public class TrackNote {
         TrackNote thisNote = this;
         lyric.initialize(new TrackLyricCallback() {
             @Override
-            public void setHighlighted(boolean highlighted) {
-                callback.setHighlighted(thisNote, false);
-            }
-
-            @Override
             public void setSongLyric(String newLyric) {
                 thisNote.updateNote(
                         thisNote.getAbsPosition(),
@@ -118,7 +113,7 @@ public class TrackNote {
                 if (this.track.isHighlighted(this)) {
                     this.lyric.openTextField();
                 } else {
-                    this.track.setHighlighted(this, true);
+                    this.track.highlight(this);
                 }
             }
             subMode = SubMode.CLICKING;
