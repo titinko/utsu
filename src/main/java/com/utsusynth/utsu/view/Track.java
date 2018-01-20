@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.UtsuController.Mode;
 import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.AddResponse;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NeighborData;
@@ -122,6 +123,10 @@ public class Track {
     public Void startPlayback(Duration duration, double tempo) {
         playbackManager.startPlayback(duration, tempo);
         return null;
+    }
+
+    public RegionBounds getSelectedTrack() {
+        return playbackManager.getRegionBounds();
     }
 
     private void clearTrack() {

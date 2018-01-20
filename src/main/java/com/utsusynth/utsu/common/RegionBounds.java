@@ -8,6 +8,8 @@ public class RegionBounds {
     private final int minMs;
     private final int maxMs;
 
+    public static RegionBounds WHOLE_SONG = new RegionBounds(0, Integer.MAX_VALUE);
+
     public RegionBounds(int minMs, int maxMs) {
         this.minMs = minMs;
         this.maxMs = maxMs;

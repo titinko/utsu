@@ -44,7 +44,8 @@ public class PlaybackBarManager {
     void startPlayback(Duration duration, double tempo) {
         if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             // Create a playback bar.
-            Line playBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
+            double barX = bars.getChildren().contains(startBar) ? startBar.getTranslateX() : 0;
+            Line playBar = new Line(barX, 0, barX, scaler.scaleY(totalHeight));
             playBar.getStyleClass().addAll("playback-bar");
             bars.getChildren().add(playBar);
 
@@ -63,7 +64,6 @@ public class PlaybackBarManager {
     }
 
     void highlightTo(TrackNote highlightToMe, Collection<TrackNote> allNotes) {
-        // All values maintain their current scale.
         RegionBounds noteBounds = highlightToMe.getBounds();
         RegionBounds addRegion;
         if (highlighted.isEmpty()) {
@@ -117,5 +117,19 @@ public class PlaybackBarManager {
 
     boolean isExclusivelyHighlighted(TrackNote note) {
         return highlighted.size() == 1 && highlighted.contains(note);
+    }
+
+    RegionBounds getRegionBounds() {
+        int startBarX = (int) Math.round(scaler.unscaleX(startBar.getTranslateX()));
+        int endBarX = (int) Math.round(scaler.unscaleX(endBar.getTranslateX()));
+        if (bars.getChildren().contains(startBar) && bars.getChildren().contains(endBar)) {
+            return new RegionBounds(startBarX, endBarX);
+        } else if (bars.getChildren().contains(startBar)) {
+            return new RegionBounds(startBarX, Integer.MAX_VALUE);
+        } else if (bars.getChildren().contains(endBar)) {
+            return new RegionBounds(0, endBarX);
+        } else {
+            return RegionBounds.WHOLE_SONG;
+        }
     }
 }

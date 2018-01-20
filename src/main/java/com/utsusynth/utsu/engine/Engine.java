@@ -7,6 +7,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
 import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.model.Song;
@@ -51,14 +52,14 @@ public class Engine {
     }
 
     public void renderWav(Song song, File finalDestination) {
-        Optional<File> finalSong = render(song);
+        Optional<File> finalSong = render(song, RegionBounds.WHOLE_SONG);
         if (finalSong.isPresent()) {
             finalSong.get().renameTo(finalDestination);
         }
     }
 
-    public void playSong(Song song, Function<Duration, Void> callback) {
-        Optional<File> finalSong = render(song);
+    public void playSong(Song song, Function<Duration, Void> callback, RegionBounds bounds) {
+        Optional<File> finalSong = render(song, bounds);
         if (finalSong.isPresent()) {
             Media media = new Media(finalSong.get().toURI().toString());
             mediaPlayer = new MediaPlayer(media);
@@ -69,7 +70,7 @@ public class Engine {
         }
     }
 
-    private Optional<File> render(Song song) {
+    private Optional<File> render(Song song, RegionBounds bounds) {
         // Create temporary directory for rendering.
         File tempDir = Files.createTempDir();
         File renderedSilence = new File(tempDir, "rendered_silence.wav");
@@ -82,16 +83,16 @@ public class Engine {
             }
         }));
 
-        SongIterator notes = song.getNoteIterator();
+        SongIterator notes = song.getNoteIterator(bounds);
         if (!notes.hasNext()) {
             return Optional.absent();
         }
-        int totalDelta = 0;
+        int totalDelta = notes.getCurDelta(); // Absolute position of current note.
         Voicebank voicebank = song.getVoicebank();
         boolean isFirstNote = true;
         while (notes.hasNext()) {
             SongNote note = notes.next();
-            totalDelta += note.getDelta(); // Unique for every note in a single track.
+            totalDelta += note.getDelta(); // Unique for every note in a single sequence.
 
             // Get lyric config.
             Optional<LyricConfig> config = Optional.absent();
@@ -117,8 +118,9 @@ public class Engine {
 
             // Possible silence before first note.
             if (isFirstNote) {
-                if (note.getDelta() - preutter > 0) {
-                    addSilence(note.getDelta() - preutter, song, renderedSilence, finalSong);
+                if (notes.getCurDelta() - preutter > bounds.getMinMs()) {
+                    double startDelta = notes.getCurDelta() - preutter - bounds.getMinMs();
+                    addSilence(startDelta, song, renderedSilence, finalSong);
                 }
                 isFirstNote = false;
             }

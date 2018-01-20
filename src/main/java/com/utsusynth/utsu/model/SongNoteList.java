@@ -3,6 +3,7 @@ package com.utsusynth.utsu.model;
 import java.util.HashMap;
 import java.util.Map;
 import com.google.common.base.Optional;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 
@@ -198,6 +199,10 @@ public class SongNoteList implements Iterable<SongNote> {
 
     @Override
     public SongIterator iterator() {
-        return new SongIterator(this.head);
+        return new SongIterator(this.head, RegionBounds.WHOLE_SONG);
+    }
+
+    SongIterator boundedIterator(RegionBounds bounds) {
+        return new SongIterator(this.head, bounds);
     }
 }

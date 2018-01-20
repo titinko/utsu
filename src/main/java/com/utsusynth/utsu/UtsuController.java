@@ -487,7 +487,7 @@ public class UtsuController implements Localizable {
         // Disable the render button while rendering.
         renderButton.setDisable(true);
         new Thread(() -> {
-            engine.playSong(songManager.getSong(), playbackFn);
+            engine.playSong(songManager.getSong(), playbackFn, track.getSelectedTrack());
             renderButton.setDisable(false);
         }).start();
     }

@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.AddResponse;
 import com.utsusynth.utsu.common.data.NeighborData;
 import com.utsusynth.utsu.common.data.NoteData;
@@ -361,6 +362,10 @@ public class Song {
 
     public SongIterator getNoteIterator() {
         return noteList.iterator();
+    }
+
+    public SongIterator getNoteIterator(RegionBounds bounds) {
+        return noteList.boundedIterator(bounds);
     }
 
     public String getFlags() {
