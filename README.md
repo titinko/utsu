@@ -6,10 +6,8 @@ Compatible (in theory) with all voicebanks, files, and engines created with or f
 
 ### The easy way--installers!
 
-For Mac:
 The Mac installer can be found on the [releases page](https://github.com/titinko/utsu/releases/tag/0.1.1).
 
-For Windows:
 The Windows installer can be found on the [releases page](https://github.com/titinko/utsu/releases/tag/0.1.1).
 
 ### The reliable way--a JAR file
