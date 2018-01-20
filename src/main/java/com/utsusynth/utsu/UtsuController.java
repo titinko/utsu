@@ -208,25 +208,20 @@ public class UtsuController implements Localizable {
             currentMode = modeChoiceBox.getValue();
         });
         modeChoiceBox.setValue(Mode.ADD);
-        quantizeChoiceBox.setItems(
-                FXCollections.observableArrayList(
-                        "1 per beat",
-                        "2 per beat",
-                        "4 per beat",
-                        "8 per beat"));
+        quantizeChoiceBox.setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32"));
         quantizeChoiceBox.setOnAction((action) -> {
             String quantization = quantizeChoiceBox.getValue();
-            if (quantization.equals("1 per beat")) {
+            if (quantization.equals("1/4")) {
                 quantizer.changeQuant(quantizer.getQuant(), 1);
-            } else if (quantization.equals("2 per beat")) {
+            } else if (quantization.equals("1/8")) {
                 quantizer.changeQuant(quantizer.getQuant(), 2);
-            } else if (quantization.equals("4 per beat")) {
+            } else if (quantization.equals("1/16")) {
                 quantizer.changeQuant(quantizer.getQuant(), 4);
-            } else if (quantization.equals("8 per beat")) {
+            } else if (quantization.equals("1/32")) {
                 quantizer.changeQuant(quantizer.getQuant(), 8);
             }
         });
-        quantizeChoiceBox.setValue("1 per beat");
+        quantizeChoiceBox.setValue("1/4");
 
         languageChoiceBox.setItems(FXCollections.observableArrayList(localizer.getAllLocales()));
         languageChoiceBox
