@@ -3,8 +3,8 @@ package com.utsusynth.utsu.files;
 import java.util.regex.Pattern;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.model.Song;
-import com.utsusynth.utsu.model.SongNote;
+import com.utsusynth.utsu.model.song.Song;
+import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.voicebank.VoicebankReader;
 
 /**
@@ -59,7 +59,7 @@ public class Ust20Reader {
     }
 
     private int parseNote(String[] lines, int noteStart, Song.Builder builder) {
-        SongNote note = new SongNote();
+        Note note = new Note();
         boolean outsideMainTrack = false;
         for (int i = noteStart; i < lines.length; i++) {
             String line = lines[i].trim();

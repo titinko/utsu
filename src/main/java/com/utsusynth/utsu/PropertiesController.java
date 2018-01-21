@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.engine.Engine;
-import com.utsusynth.utsu.model.SongManager;
+import com.utsusynth.utsu.model.song.SongManager;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankReader;
 import javafx.event.ActionEvent;
