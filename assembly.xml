@@ -33,7 +33,7 @@
         </fileSet>
         <!-- Bundled assets, for testing (voicebank, wavtool, resampler). -->
         <fileSet>
-            <directory>${project.build.directory}/assets/</directory>
+            <directory>${project.build.directory}/assets/assets/</directory>
             <outputDirectory>/utsu/assets/</outputDirectory>
             <includes>
                 <include>**</include>
@@ -46,7 +46,7 @@
         </fileSet>
         <!-- Licenses for bundled assets -->
         <fileSet>
-            <directory>${project.build.directory}/assets/</directory>
+            <directory>${project.build.directory}/assets/assets/</directory>
             <outputDirectory>/utsu/assets/</outputDirectory>
             <includes>
                 <include>**/LICENSES</include>
