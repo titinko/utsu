@@ -61,6 +61,7 @@
           <mainClass>com.utsusynth.utsu.UtsuApp</mainClass>
           <identifier>utsu</identifier>
           <vendor>utsu synth</vendor>
+          <additionalAppResources>assets</additionalAppResources>
         </configuration>
         <executions>
           <execution>
