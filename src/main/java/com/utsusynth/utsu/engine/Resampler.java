@@ -4,8 +4,8 @@ import java.io.File;
 
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.PitchUtils;
-import com.utsusynth.utsu.model.Song;
-import com.utsusynth.utsu.model.SongNote;
+import com.utsusynth.utsu.model.song.Song;
+import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Resampler {
@@ -20,7 +20,7 @@ public class Resampler {
 
 	void resample(
 			File resamplerPath,
-			SongNote note,
+			Note note,
 			double noteLength,
 			LyricConfig config,
 			File outputFile,

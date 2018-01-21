@@ -2,8 +2,8 @@ package com.utsusynth.utsu.engine;
 
 import java.io.File;
 import com.google.inject.Inject;
-import com.utsusynth.utsu.model.Song;
-import com.utsusynth.utsu.model.SongNote;
+import com.utsusynth.utsu.model.song.Song;
+import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Wavtool {
@@ -17,7 +17,7 @@ public class Wavtool {
     void addNewNote(
             File wavtoolPath,
             Song song,
-            SongNote note,
+            Note note,
             double noteLength,
             LyricConfig config,
             File inputFile,

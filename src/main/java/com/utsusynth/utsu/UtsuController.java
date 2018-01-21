@@ -36,10 +36,10 @@ import com.utsusynth.utsu.files.Ust12Reader;
 import com.utsusynth.utsu.files.Ust12Writer;
 import com.utsusynth.utsu.files.Ust20Reader;
 import com.utsusynth.utsu.files.Ust20Writer;
-import com.utsusynth.utsu.model.SongManager;
-import com.utsusynth.utsu.view.Piano;
-import com.utsusynth.utsu.view.Track;
-import com.utsusynth.utsu.view.ViewCallback;
+import com.utsusynth.utsu.model.song.SongManager;
+import com.utsusynth.utsu.view.song.Piano;
+import com.utsusynth.utsu.view.song.SongEditor;
+import com.utsusynth.utsu.view.song.SongCallback;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
@@ -84,7 +84,7 @@ public class UtsuController implements Localizable {
     // Helper classes go here.
     private final SongManager songManager;
     private final Engine engine;
-    private final Track track;
+    private final SongEditor track;
     private final Piano piano;
     private final Localizer localizer;
     private final Quantizer quantizer;
@@ -130,7 +130,7 @@ public class UtsuController implements Localizable {
     public UtsuController(
             SongManager songManager,
             Engine engine,
-            Track track,
+            SongEditor track,
             Piano piano,
             Localizer localizer,
             Quantizer quantizer,
@@ -160,7 +160,7 @@ public class UtsuController implements Localizable {
     public void initialize() {
         DoubleProperty scrollbarTracker = new SimpleDoubleProperty();
         scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
-        track.initialize(new ViewCallback() {
+        track.initialize(new SongCallback() {
             @Override
             public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
                 onSongChange();

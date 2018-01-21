@@ -5,8 +5,8 @@ import java.text.DecimalFormat;
 import java.util.Iterator;
 
 import com.google.common.collect.ImmutableList;
-import com.utsusynth.utsu.model.Song;
-import com.utsusynth.utsu.model.SongNote;
+import com.utsusynth.utsu.model.song.Song;
+import com.utsusynth.utsu.model.song.Note;
 
 /**
  * Writes a song to a Unicode UST 2.0 file.
@@ -26,10 +26,10 @@ public class Ust20Writer {
 		ps.println("Flags=" + song.getFlags());
 		ps.println("Mode2=" + (song.getMode2() ? "True" : "False"));
 
-		Iterator<SongNote> iterator = song.getNoteIterator();
+		Iterator<Note> iterator = song.getNoteIterator();
 		int index = 0;
 		while (iterator.hasNext()) {
-			SongNote note = iterator.next();
+			Note note = iterator.next();
 			ps.println(getNoteLabel(index));
 			ps.println("Delta=" + note.getDelta());
 			ps.println("Duration=" + note.getDuration());

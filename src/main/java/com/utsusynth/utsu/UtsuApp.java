@@ -3,6 +3,8 @@ package com.utsusynth.utsu;
 import java.io.InputStream;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.utsusynth.utsu.model.ModelModule;
+import com.utsusynth.utsu.view.ViewModule;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -16,7 +18,8 @@ public class UtsuApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         // Set up Guice.
-        Injector injector = Guice.createInjector(new UtsuModule());
+        Injector injector =
+                Guice.createInjector(new UtsuModule(), new ModelModule(), new ViewModule());
         FXMLLoader loader = injector.getInstance(FXMLLoader.class);
 
         // Construct scene.

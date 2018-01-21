@@ -5,8 +5,8 @@ import java.text.DecimalFormat;
 import java.util.Iterator;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.utsusynth.utsu.model.Song;
-import com.utsusynth.utsu.model.SongNote;
+import com.utsusynth.utsu.model.song.Song;
+import com.utsusynth.utsu.model.song.Note;
 
 /**
  * Writes a song to a Shift-JIS UST 1.2 file.
@@ -24,12 +24,12 @@ public class Ust12Writer {
         ps.println("Flags=" + song.getFlags());
         ps.println("Mode2=" + (song.getMode2() ? "True" : "False"));
 
-        Iterator<SongNote> iterator = song.getNoteIterator();
+        Iterator<Note> iterator = song.getNoteIterator();
         int index = 0;
-        Optional<SongNote> prevNote = Optional.absent();
+        Optional<Note> prevNote = Optional.absent();
         while (iterator.hasNext()) {
             int prevDuration = prevNote.isPresent() ? prevNote.get().getDuration() : 0;
-            SongNote note = iterator.next();
+            Note note = iterator.next();
             if (note.getDelta() > prevDuration) {
                 int numRestNotes = (note.getDelta() - prevDuration) / 480;
                 int leftoverMs = (note.getDelta() - prevDuration) % 480;

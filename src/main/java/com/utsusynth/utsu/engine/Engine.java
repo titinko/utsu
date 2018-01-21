@@ -10,9 +10,9 @@ import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.quantize.Quantizer;
-import com.utsusynth.utsu.model.Song;
-import com.utsusynth.utsu.model.SongIterator;
-import com.utsusynth.utsu.model.SongNote;
+import com.utsusynth.utsu.model.song.Song;
+import com.utsusynth.utsu.model.song.NoteIterator;
+import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import javafx.scene.media.Media;
@@ -83,7 +83,7 @@ public class Engine {
             }
         }));
 
-        SongIterator notes = song.getNoteIterator(bounds);
+        NoteIterator notes = song.getNoteIterator(bounds);
         if (!notes.hasNext()) {
             return Optional.absent();
         }
@@ -91,7 +91,7 @@ public class Engine {
         Voicebank voicebank = song.getVoicebank();
         boolean isFirstNote = true;
         while (notes.hasNext()) {
-            SongNote note = notes.next();
+            Note note = notes.next();
             totalDelta += note.getDelta(); // Unique for every note in a single sequence.
 
             // Get lyric config.
@@ -210,7 +210,7 @@ public class Engine {
     }
 
     // Returns empty string if there is no nearby (within DEFAULT_NOTE_DURATION) previous note.
-    private static String getNearbyPrevLyric(Optional<SongNote> prev) {
+    private static String getNearbyPrevLyric(Optional<Note> prev) {
         if (prev.isPresent() && prev.get().getLength()
                 - prev.get().getDuration() > Quantizer.DEFAULT_NOTE_DURATION) {
             return prev.get().getLyric();
@@ -228,7 +228,7 @@ public class Engine {
 
     // Determines whether two notes are "touching" given the second note's preutterance.
     private static boolean areNotesTouching(
-            Optional<SongNote> note,
+            Optional<Note> note,
             Voicebank voicebank,
             Optional<Double> nextPreutter) {
         if (!note.isPresent() || !nextPreutter.isPresent()) {
