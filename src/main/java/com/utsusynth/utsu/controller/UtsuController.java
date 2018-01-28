@@ -11,16 +11,10 @@ import java.util.ResourceBundle;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.files.Ust12Reader;
-import com.utsusynth.utsu.files.Ust12Writer;
-import com.utsusynth.utsu.files.Ust20Reader;
-import com.utsusynth.utsu.files.Ust20Writer;
-import com.utsusynth.utsu.model.song.SongManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -58,16 +52,7 @@ public class UtsuController implements Localizable {
     private BorderPane rootPane;
 
     @Inject
-    public UtsuController(
-            SongManager songManager,
-            Localizer localizer,
-            Scaler scaler,
-            UndoService undoService,
-            Ust12Reader ust12Reader,
-            Ust12Writer ust12Writer,
-            Ust20Reader ust20Reader,
-            Ust20Writer ust20Writer,
-            Provider<FXMLLoader> fxmlLoaders) {
+    public UtsuController(Localizer localizer, Scaler scaler, Provider<FXMLLoader> fxmlLoaders) {
         this.localizer = localizer;
         this.scaler = scaler;
         this.fxmlLoaderProvider = fxmlLoaders;

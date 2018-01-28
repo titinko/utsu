@@ -32,7 +32,7 @@ import com.utsusynth.utsu.files.Ust12Reader;
 import com.utsusynth.utsu.files.Ust12Writer;
 import com.utsusynth.utsu.files.Ust20Reader;
 import com.utsusynth.utsu.files.Ust20Writer;
-import com.utsusynth.utsu.model.song.SongManager;
+import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.view.song.Piano;
 import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
@@ -72,7 +72,7 @@ public class SongController implements EditorController, Localizable {
     private EditorCallback callback;
 
     // Helper classes go here.
-    private final SongManager songManager;
+    private final SongContainer songContainer;
     private final Engine engine;
     private final SongEditor track;
     private final Piano piano;
@@ -117,7 +117,7 @@ public class SongController implements EditorController, Localizable {
 
     @Inject
     public SongController(
-            SongManager songManager, // Inject an empty song.
+            SongContainer songContainer, // Inject an empty song.
             Engine engine,
             SongEditor track,
             Piano piano,
@@ -129,7 +129,7 @@ public class SongController implements EditorController, Localizable {
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
             Provider<FXMLLoader> fxmlLoaders) {
-        this.songManager = songManager;
+        this.songContainer = songContainer;
         this.engine = engine;
         this.track = track;
         this.piano = piano;
@@ -152,19 +152,19 @@ public class SongController implements EditorController, Localizable {
             @Override
             public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
                 onSongChange();
-                return songManager.getSong().addNote(toAdd);
+                return songContainer.getSong().addNote(toAdd);
             }
 
             @Override
             public RemoveResponse removeNote(int position) {
                 onSongChange();
-                return songManager.getSong().removeNote(position);
+                return songContainer.getSong().removeNote(position);
             }
 
             @Override
             public void modifyNote(NoteData toModify) {
                 onSongChange();
-                songManager.getSong().modifyNote(toModify);
+                songContainer.getSong().modifyNote(toModify);
             }
 
             @Override
@@ -242,14 +242,14 @@ public class SongController implements EditorController, Localizable {
     @Override
     public void refreshView() {
         // Set song image.
-        Image image = new Image("file:" + songManager.getSong().getVoicebank().getImagePath());
+        Image image = new Image("file:" + songContainer.getSong().getVoicebank().getImagePath());
         voicebankImage.setImage(image);
 
         anchorLeft.getChildren().add(piano.initPiano());
 
         // Reloads current
         anchorRight.getChildren().clear();
-        anchorRight.getChildren().add(track.createNewTrack(songManager.getSong().getNotes()));
+        anchorRight.getChildren().add(track.createNewTrack(songContainer.getSong().getNotes()));
         anchorRight.getChildren().add(track.getNotesElement());
         anchorRight.getChildren().add(track.getPitchbendsElement());
         anchorRight.getChildren().add(track.getPlaybackElement());
@@ -285,10 +285,10 @@ public class SongController implements EditorController, Localizable {
                 }
                 String content = FileUtils.readFileToString(file, charset);
                 if (content.contains("UST Version1.2")) {
-                    songManager.setSong(ust12Reader.loadSong(content));
+                    songContainer.setSong(ust12Reader.loadSong(content));
                     saveFormat = "UST 1.2 (Shift JIS)";
                 } else if (content.contains("UST Version2.0")) {
-                    songManager.setSong(ust20Reader.loadSong(content));
+                    songContainer.setSong(ust20Reader.loadSong(content));
                     saveFormat = "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
                 } else {
                     // TODO: Deal with this error.
@@ -297,8 +297,8 @@ public class SongController implements EditorController, Localizable {
                 }
                 undoService.clearActions();
                 callback.enableSave(false);
-                songManager.getSong().setSaveLocation(file);
-                songManager.getSong().setSaveFormat(saveFormat);
+                songContainer.setLocation(file);
+                songContainer.setSaveFormat(saveFormat);
                 refreshView();
                 return file.getName();
             } catch (IOException e) {
@@ -312,18 +312,18 @@ public class SongController implements EditorController, Localizable {
     @Override
     public String saveFile() {
         callback.enableSave(false);
-        if (songManager.getSong().getSaveLocation().isPresent()) {
-            String saveFormat = songManager.getSong().getSaveFormat();
+        if (songContainer.hasPermanentLocation()) {
+            String saveFormat = songContainer.getSaveFormat();
             String charset = "UTF-8";
             if (saveFormat.contains("Shift JIS")) {
                 charset = "SJIS";
             }
-            File saveLocation = songManager.getSong().getSaveLocation().get();
+            File saveLocation = songContainer.getLocation();
             try (PrintStream ps = new PrintStream(saveLocation, charset)) {
                 if (saveFormat.contains("UST 1.2")) {
-                    ust12Writer.writeSong(songManager.getSong(), ps);
+                    ust12Writer.writeSong(songContainer.getSong(), ps);
                 } else {
-                    ust20Writer.writeSong(songManager.getSong(), ps, charset);
+                    ust20Writer.writeSong(songContainer.getSong(), ps, charset);
                 }
                 ps.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
@@ -361,17 +361,17 @@ public class SongController implements EditorController, Localizable {
             }
             try (PrintStream ps = new PrintStream(file, charset)) {
                 if (chosenFormat.getDescription().contains("UST 1.2")) {
-                    ust12Writer.writeSong(songManager.getSong(), ps);
+                    ust12Writer.writeSong(songContainer.getSong(), ps);
                 } else {
-                    ust20Writer.writeSong(songManager.getSong(), ps, charset);
+                    ust20Writer.writeSong(songContainer.getSong(), ps, charset);
                 }
                 ps.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 // TODO: Handle this.
                 errorLogger.logError(e);
             }
-            songManager.getSong().setSaveLocation(file);
-            songManager.getSong().setSaveFormat(chosenFormat.getDescription());
+            songContainer.setLocation(file);
+            songContainer.setSaveFormat(chosenFormat.getDescription());
             return file.getName();
         }
         // Default file name.
@@ -380,7 +380,7 @@ public class SongController implements EditorController, Localizable {
 
     /** Called whenever a Song is changed. */
     private void onSongChange() {
-        if (songManager.getSong().getSaveLocation().isPresent()) {
+        if (songContainer.hasPermanentLocation()) {
             callback.enableSave(true);
         } else {
             callback.enableSave(false);
@@ -389,13 +389,13 @@ public class SongController implements EditorController, Localizable {
 
     @FXML
     void renderSong(ActionEvent event) {
-        double tempo = songManager.getSong().getTempo();
+        double tempo = songContainer.getSong().getTempo();
         Function<Duration, Void> playbackFn = (duration) -> track.startPlayback(duration, tempo);
 
         // Disable the render button while rendering.
         renderButton.setDisable(true);
         new Thread(() -> {
-            engine.playSong(songManager.getSong(), playbackFn, track.getSelectedTrack());
+            engine.playSong(songContainer.getSong(), playbackFn, track.getSelectedTrack());
             renderButton.setDisable(false);
         }).start();
     }
@@ -407,7 +407,7 @@ public class SongController implements EditorController, Localizable {
         fc.getExtensionFilters().addAll(new ExtensionFilter(".wav files", "*.wav"));
         File file = fc.showSaveDialog(null);
         if (file != null) {
-            engine.renderWav(songManager.getSong(), file);
+            engine.renderWav(songContainer.getSong(), file);
         }
     }
 
@@ -423,7 +423,7 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);
             PropertiesController controller = (PropertiesController) loader.getController();
-            controller.setSongManager(songManager);
+            controller.setSongContainer(songContainer);
             propertiesWindow.setScene(new Scene(propertiesPane));
             propertiesWindow.showAndWait();
         } catch (IOException e) {

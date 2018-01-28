@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.engine.Engine;
-import com.utsusynth.utsu.model.song.SongManager;
+import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankReader;
 import javafx.event.ActionEvent;
@@ -28,7 +28,7 @@ public class PropertiesController implements Localizable {
     private final Localizer localizer;
     private VoicebankReader voicebankReader;
 
-    private SongManager songManager;
+    private SongContainer songContainer;
     private File resamplerPath;
     private File wavtoolPath;
     private Voicebank voicebank;
@@ -96,19 +96,19 @@ public class PropertiesController implements Localizable {
         localizer.localize(this);
     }
 
-    /* Initializes properties panel with a SongManager contaning the song to edit. */
-    void setSongManager(SongManager songManager) {
-        this.songManager = songManager;
+    /* Initializes properties panel with a SongContainer with the song to edit. */
+    void setSongContainer(SongContainer songContainer) {
+        this.songContainer = songContainer;
 
         // Set values to save.
         resamplerPath = engine.getResamplerPath();
         wavtoolPath = engine.getWavtoolPath();
-        voicebank = songManager.getSong().getVoicebank();
+        voicebank = songContainer.getSong().getVoicebank();
 
         // Set text boxes.
-        projectNameTF.setText(songManager.getSong().getProjectName());
-        outputFileTF.setText(songManager.getSong().getOutputFile().getAbsolutePath());
-        flagsTF.setText(songManager.getSong().getFlags());
+        projectNameTF.setText(songContainer.getSong().getProjectName());
+        outputFileTF.setText(songContainer.getSong().getOutputFile().getAbsolutePath());
+        flagsTF.setText(songContainer.getSong().getFlags());
         resamplerName.setText(resamplerPath.getName());
         wavtoolName.setText(wavtoolPath.getName());
         voicebankName.setText(voicebank.getName());
@@ -119,7 +119,7 @@ public class PropertiesController implements Localizable {
             tempoSlider.setValue(sliderValue);
             curTempo.setText(Integer.toString(sliderValue));
         });
-        tempoSlider.setValue(songManager.getSong().getTempo());
+        tempoSlider.setValue(songContainer.getSong().getTempo());
     }
 
     @Override
@@ -176,8 +176,8 @@ public class PropertiesController implements Localizable {
 
     @FXML
     void applyProperties(ActionEvent event) {
-        songManager.setSong(
-                songManager.getSong().toBuilder().setProjectName(projectNameTF.getText())
+        songContainer.setSong(
+                songContainer.getSong().toBuilder().setProjectName(projectNameTF.getText())
                         .setOutputFile(new File(outputFileTF.getText())).setFlags(flagsTF.getText())
                         .setVoiceDirectory(voicebank.getPathToVoicebank())
                         .setTempo((int) Math.round(tempoSlider.getValue())).build());

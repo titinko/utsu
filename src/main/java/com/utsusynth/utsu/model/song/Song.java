@@ -23,10 +23,6 @@ public class Song {
     private final VoicebankReader voicebankReader;
     private final NoteStandardizer standardizer;
 
-    // Cached save format and location.
-    private Optional<File> saveLocation;
-    private String saveFormat;
-
     // Settings. (Anything marked with [#SETTING])
     // TODO:Insert Time signatures here
     private double tempo;
@@ -124,8 +120,6 @@ public class Song {
             PitchCurve pitchbends) {
         this.voicebankReader = voicebankReader;
         this.standardizer = standardizer;
-        this.saveLocation = Optional.absent();
-        this.saveFormat = "UST 2.0 (UTF-8)";
         this.noteList = songNoteList;
         this.pitchbends = pitchbends;
         this.voiceDirectory = voicebankReader.getDefaultPath();
@@ -382,22 +376,6 @@ public class Song {
 
     public String getPitchString(int firstPitchStep, int lastPitchStep, int noteNum) {
         return pitchbends.renderPitchbends(firstPitchStep, lastPitchStep, noteNum);
-    }
-
-    public Optional<File> getSaveLocation() {
-        return saveLocation;
-    }
-
-    public void setSaveLocation(File newPath) {
-        this.saveLocation = Optional.of(newPath);
-    }
-
-    public String getSaveFormat() {
-        return saveFormat;
-    }
-
-    public void setSaveFormat(String saveFormat) {
-        this.saveFormat = saveFormat;
     }
 
     @Override
