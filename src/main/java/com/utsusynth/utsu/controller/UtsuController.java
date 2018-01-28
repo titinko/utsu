@@ -151,12 +151,6 @@ public class UtsuController implements Localizable {
         fileMenu.setVisible(true);
     }
 
-    private void refreshView() {
-        if (!tabs.getTabs().isEmpty()) {
-            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).refreshView();
-        }
-    }
-
     /**
      * Called whenever Utsu is closed.
      * 
@@ -275,7 +269,9 @@ public class UtsuController implements Localizable {
         if (newScale > Scaler.MIN_HORIZONTAL_SCALE) {
             zoomOutItem.setDisable(false);
         }
-        refreshView();
+        for (Tab tab : tabs.getTabs()) {
+            editors.get(tab.getId()).refreshView();
+        }
     }
 
     @FXML
@@ -288,7 +284,9 @@ public class UtsuController implements Localizable {
         if (newScale < Scaler.MAX_HORIZONTAL_SCALE) {
             zoomInItem.setDisable(false);
         }
-        refreshView();
+        for (Tab tab : tabs.getTabs()) {
+            editors.get(tab.getId()).refreshView();
+        }
     }
 
     @FXML
