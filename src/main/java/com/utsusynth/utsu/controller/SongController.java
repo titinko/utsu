@@ -1,7 +1,5 @@
-package com.utsusynth.utsu;
+package com.utsusynth.utsu.controller;
 
-import static javafx.scene.input.KeyCombination.CONTROL_DOWN;
-import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,7 +15,6 @@ import java.nio.charset.UnmappableCharacterException;
 import java.util.ResourceBundle;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.UndoService;
@@ -30,7 +27,6 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
-import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.files.Ust12Reader;
 import com.utsusynth.utsu.files.Ust12Writer;
@@ -47,19 +43,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
@@ -69,9 +58,9 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
- * 'UtsuScene.fxml' Controller Class
+ * 'SongScene.fxml' Controller Class
  */
-public class UtsuController implements Localizable {
+public class SongController implements EditorController, Localizable {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
     public enum Mode {
@@ -80,6 +69,7 @@ public class UtsuController implements Localizable {
 
     // User session data goes here.
     private Mode currentMode;
+    private EditorCallback callback;
 
     // Helper classes go here.
     private final SongManager songManager;
@@ -88,11 +78,10 @@ public class UtsuController implements Localizable {
     private final Piano piano;
     private final Localizer localizer;
     private final Quantizer quantizer;
-    private final Scaler scaler;
     private final UndoService undoService;
     private final Ust12Reader ust12Reader;
-    private final Ust12Writer ust12Writer;
     private final Ust20Reader ust20Reader;
+    private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
@@ -127,18 +116,17 @@ public class UtsuController implements Localizable {
     private ChoiceBox<NativeLocale> languageChoiceBox; // Value injected by FXMLLoader
 
     @Inject
-    public UtsuController(
-            SongManager songManager,
+    public SongController(
+            SongManager songManager, // Inject an empty song.
             Engine engine,
             SongEditor track,
             Piano piano,
             Localizer localizer,
             Quantizer quantizer,
-            Scaler scaler,
             UndoService undoService,
             Ust12Reader ust12Reader,
-            Ust12Writer ust12Writer,
             Ust20Reader ust20Reader,
+            Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
             Provider<FXMLLoader> fxmlLoaders) {
         this.songManager = songManager;
@@ -147,16 +135,16 @@ public class UtsuController implements Localizable {
         this.piano = piano;
         this.localizer = localizer;
         this.quantizer = quantizer;
-        this.scaler = scaler;
         this.undoService = undoService;
         this.ust12Reader = ust12Reader;
-        this.ust12Writer = ust12Writer;
         this.ust20Reader = ust20Reader;
+        this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
         this.fxmlLoaderProvider = fxmlLoaders;
     }
 
-    // Provide setup for other controllers.
+    // Provide setup for other frontend song management.
+    // This is called automatically when fxml loads.
     public void initialize() {
         DoubleProperty scrollbarTracker = new SimpleDoubleProperty();
         scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
@@ -235,30 +223,6 @@ public class UtsuController implements Localizable {
     }
 
     @FXML
-    private Menu fileMenu; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem openItem; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem saveItem; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem saveAsItem; // Value injected by FXMLLoader
-    @FXML
-    private Menu editMenu; // Value injected by FXMLLoader
-    @FXML
-    private Menu viewMenu; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem zoomInItem; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem zoomOutItem; // Value injected by FXMLLoader
-    @FXML
-    private Menu projectMenu; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem propertiesItem; // Value injected by FXMLLoader
-    @FXML
-    private Menu helpMenu; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem aboutItem; // Value injected by FXMLLoader
-    @FXML
     private Label modeLabel; // Value injected by FXMLLoader
     @FXML
     private Label quantizationLabel; // Value injected by FXMLLoader
@@ -269,34 +233,14 @@ public class UtsuController implements Localizable {
 
     @Override
     public void localize(ResourceBundle bundle) {
-        fileMenu.setText(bundle.getString("menu.file"));
-        openItem.setText(bundle.getString("menu.file.open"));
-        saveItem.setText(bundle.getString("menu.file.save"));
-        saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, CONTROL_DOWN));
-        saveAsItem.setText(bundle.getString("menu.file.saveAs"));
-        saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, CONTROL_DOWN, SHIFT_DOWN));
-        editMenu.setText(bundle.getString("menu.edit"));
-        viewMenu.setText(bundle.getString("menu.view"));
-        zoomInItem.setText(bundle.getString("menu.view.zoomIn"));
-        zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, CONTROL_DOWN));
-        zoomOutItem.setText(bundle.getString("menu.view.zoomOut"));
-        zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, CONTROL_DOWN));
-        projectMenu.setText(bundle.getString("menu.project"));
-        propertiesItem.setText(bundle.getString("menu.project.properties"));
-        helpMenu.setText(bundle.getString("menu.help"));
-        helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, CONTROL_DOWN, SHIFT_DOWN));
-        aboutItem.setText(bundle.getString("menu.help.about"));
         modeLabel.setText(bundle.getString("top.mode"));
         quantizationLabel.setText(bundle.getString("top.quantization"));
         renderButton.setText(bundle.getString("top.render"));
         exportWavButton.setText(bundle.getString("top.exportWav"));
-
-        // Force the menu to refresh.
-        fileMenu.setVisible(false);
-        fileMenu.setVisible(true);
     }
 
-    private void refreshView() {
+    @Override
+    public void refreshView() {
         // Set song image.
         Image image = new Image("file:" + songManager.getSong().getVoicebank().getImagePath());
         voicebankImage.setImage(image);
@@ -314,34 +258,13 @@ public class UtsuController implements Localizable {
         anchorBottom.getChildren().add(track.getEnvelopesElement());
     }
 
-    /** Called whenever a Song is changed. */
-    private void onSongChange() {
-        if (songManager.getSong().getSaveLocation().isPresent()) {
-            saveItem.setDisable(false);
-        } else {
-            saveItem.setDisable(true);
-        }
+    @Override
+    public void openEditor(EditorCallback callback) {
+        this.callback = callback;
     }
 
-    /**
-     * Called whenever Utsu is closed.
-     * 
-     * @return true if window should be closed, false otherwise
-     */
-    boolean onCloseWindow() {
-        // TODO: Replace with a save dialog. Also, add this to localizer.
-        Alert alert = new Alert(
-                AlertType.CONFIRMATION,
-                "Are you sure you want to exit Utsu?  Any unsaved changes will be lost.");
-        Optional<ButtonType> result = Optional.fromJavaUtil(alert.showAndWait());
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            return true;
-        }
-        return false;
-    }
-
-    @FXML
-    void openFile(ActionEvent event) {
+    @Override
+    public String openFile() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         fc.getExtensionFilters().addAll(
@@ -370,22 +293,25 @@ public class UtsuController implements Localizable {
                 } else {
                     // TODO: Deal with this error.
                     System.out.println("UST format not found!");
-                    return;
+                    return "*Untitled";
                 }
                 undoService.clearActions();
-                saveItem.setDisable(true);
+                callback.enableSave(false);
                 songManager.getSong().setSaveLocation(file);
                 songManager.getSong().setSaveFormat(saveFormat);
                 refreshView();
+                return file.getName();
             } catch (IOException e) {
                 // TODO Handle this.
                 errorLogger.logError(e);
             }
         }
+        return "*Untitled";
     }
 
-    @FXML
-    void saveFile(ActionEvent event) {
+    @Override
+    public String saveFile() {
+        callback.enableSave(false);
         if (songManager.getSong().getSaveLocation().isPresent()) {
             String saveFormat = songManager.getSong().getSaveFormat();
             String charset = "UTF-8";
@@ -404,12 +330,14 @@ public class UtsuController implements Localizable {
                 // TODO: Handle this.
                 errorLogger.logError(e);
             }
+            return saveLocation.getName();
         }
-        saveItem.setDisable(true);
+        return "*Untitled";
     }
 
-    @FXML
-    void saveFileAs(ActionEvent event) {
+    @Override
+    public String saveFileAs() {
+        callback.enableSave(false);
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
@@ -444,34 +372,19 @@ public class UtsuController implements Localizable {
             }
             songManager.getSong().setSaveLocation(file);
             songManager.getSong().setSaveFormat(chosenFormat.getDescription());
-            saveItem.setDisable(true);
+            return file.getName();
         }
+        // Default file name.
+        return "*Untitled";
     }
 
-    @FXML
-    void zoomIn(ActionEvent event) {
-        double newScale = scaler.getHorizontalScale() + Scaler.HORIZONTAL_SCALE_INDREMENT;
-        scaler.changeHorizontalScale(scaler.getHorizontalScale(), newScale);
-        if (newScale >= Scaler.MAX_HORIZONTAL_SCALE) {
-            zoomInItem.setDisable(true);
+    /** Called whenever a Song is changed. */
+    private void onSongChange() {
+        if (songManager.getSong().getSaveLocation().isPresent()) {
+            callback.enableSave(true);
+        } else {
+            callback.enableSave(false);
         }
-        if (newScale > Scaler.MIN_HORIZONTAL_SCALE) {
-            zoomOutItem.setDisable(false);
-        }
-        refreshView();
-    }
-
-    @FXML
-    void zoomOut(ActionEvent event) {
-        double newScale = scaler.getHorizontalScale() - Scaler.HORIZONTAL_SCALE_INDREMENT;
-        scaler.changeHorizontalScale(scaler.getHorizontalScale(), newScale);
-        if (newScale <= Scaler.MIN_HORIZONTAL_SCALE) {
-            zoomOutItem.setDisable(true);
-        }
-        if (newScale < Scaler.MAX_HORIZONTAL_SCALE) {
-            zoomInItem.setDisable(false);
-        }
-        refreshView();
     }
 
     @FXML
@@ -498,8 +411,8 @@ public class UtsuController implements Localizable {
         }
     }
 
-    @FXML
-    void openProperties(ActionEvent event) {
+    @Override
+    public void openProperties() {
         // Open properties modal.
         InputStream fxml = getClass().getResourceAsStream("/fxml/PropertiesScene.fxml");
         FXMLLoader loader = fxmlLoaderProvider.get();
@@ -509,6 +422,8 @@ public class UtsuController implements Localizable {
             propertiesWindow.initModality(Modality.APPLICATION_MODAL);
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);
+            PropertiesController controller = (PropertiesController) loader.getController();
+            controller.setSongManager(songManager);
             propertiesWindow.setScene(new Scene(propertiesPane));
             propertiesWindow.showAndWait();
         } catch (IOException e) {

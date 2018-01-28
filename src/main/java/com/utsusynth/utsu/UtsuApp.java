@@ -3,6 +3,7 @@ package com.utsusynth.utsu;
 import java.io.InputStream;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.utsusynth.utsu.controller.UtsuController;
 import com.utsusynth.utsu.model.ModelModule;
 import com.utsusynth.utsu.view.ViewModule;
 import javafx.application.Application;

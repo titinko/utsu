@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongController">
+   <top>
+      <AnchorPane prefHeight="100.0" BorderPane.alignment="CENTER">
+         <children>
+            <HBox layoutX="118.0" prefHeight="100.0" prefWidth="693.0" spacing="20.0">
+               <children>
+                  <VBox prefHeight="200.0" prefWidth="100.0" spacing="30.0">
+                     <children>
+                        <Label fx:id="modeLabel" text="Mode" />
+                        <Label fx:id="quantizationLabel" text="Quantization" />
+                     </children>
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                     <padding>
+                        <Insets top="10.0" />
+                     </padding>
+                  </VBox>
+                  <VBox prefHeight="200.0" prefWidth="100.0" spacing="20.0">
+                     <children>
+                        <ChoiceBox fx:id="modeChoiceBox" prefWidth="150.0" />
+                        <ChoiceBox fx:id="quantizeChoiceBox" prefWidth="150.0" />
+                     </children>
+                  </VBox>
+                  <Button fx:id="renderButton" mnemonicParsing="false" onAction="#renderSong" text="Render" />
+                  <Button fx:id="exportWavButton" mnemonicParsing="false" onAction="#exportSongAsWav" text="Export WAV File" />
+                  <ChoiceBox fx:id="languageChoiceBox" prefWidth="150.0" />
+               </children>
+               <padding>
+                  <Insets top="15.0" />
+               </padding>
+            </HBox>
+            <ImageView fx:id="voicebankImage" fitHeight="90.0" fitWidth="90.0" layoutX="14.0" layoutY="13.0" pickOnBounds="true" preserveRatio="true" />
+         </children>
+      </AnchorPane>
+   </top>
+   <bottom>
+      <HBox maxHeight="100.0" prefHeight="100.0" prefWidth="700.0" spacing="10.0" BorderPane.alignment="CENTER">
+         <children>
+            <AnchorPane maxHeight="100.0" maxWidth="100.0" minWidth="100.0" />
+            <ScrollPane fx:id="scrollPaneBottom" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="500.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">
+              <content>
+                <AnchorPane fx:id="anchorBottom" maxHeight="100.0" minHeight="100.0" />
+              </content>
+               <HBox.margin>
+                  <Insets right="15.0" />
+               </HBox.margin>
+            </ScrollPane>
+         </children>
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </padding>
+      </HBox>
+   </bottom>
+         <center>
+            <HBox prefHeight="300.0" prefWidth="700.0" BorderPane.alignment="CENTER">
+               <children>
+                  <ScrollPane fx:id="scrollPaneLeft" hbarPolicy="ALWAYS" hmax="0.0" minViewportWidth="100.0" vbarPolicy="NEVER" vvalue="0.5">
+                     <content>
+                      <AnchorPane fx:id="anchorLeft" maxWidth="100.0" minWidth="100.0" />
+                     </content>
+                  </ScrollPane>
+                  <Separator orientation="VERTICAL" />
+                  <ScrollPane fx:id="scrollPaneRight" fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" minViewportHeight="300.0" minViewportWidth="500.0" vvalue="0.5" HBox.hgrow="ALWAYS">
+                     <content>
+                      <AnchorPane fx:id="anchorRight" />
+                     </content>
+                  </ScrollPane>
+               </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+            </HBox>
+         </center>
+</BorderPane>

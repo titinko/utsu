@@ -1,4 +1,4 @@
-package com.utsusynth.utsu;
+package com.utsusynth.utsu.controller;
 
 public class VoicebankController {
 

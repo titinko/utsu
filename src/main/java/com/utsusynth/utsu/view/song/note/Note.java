@@ -1,7 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
 import com.google.common.base.Optional;
-import com.utsusynth.utsu.UtsuController.Mode;
 import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
@@ -10,6 +9,7 @@ import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.controller.SongController.Mode;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.CheckMenuItem;

@@ -1,4 +1,4 @@
-package com.utsusynth.utsu;
+package com.utsusynth.utsu.controller;
 
 import java.io.File;
 import java.util.ResourceBundle;
@@ -24,11 +24,11 @@ import javafx.stage.Stage;
  * 'PropertiesScene.fxml' Controller Class
  */
 public class PropertiesController implements Localizable {
-    private final SongManager songManager;
     private final Engine engine;
     private final Localizer localizer;
     private VoicebankReader voicebankReader;
 
+    private SongManager songManager;
     private File resamplerPath;
     private File wavtoolPath;
     private Voicebank voicebank;
@@ -83,17 +83,23 @@ public class PropertiesController implements Localizable {
 
     @Inject
     public PropertiesController(
-            SongManager songManager,
             Engine engine,
             Localizer localizer,
             VoicebankReader voicebankReader) {
-        this.songManager = songManager;
         this.engine = engine;
         this.localizer = localizer;
         this.voicebankReader = voicebankReader;
     }
 
     public void initialize() {
+        // Set up localization.
+        localizer.localize(this);
+    }
+
+    /* Initializes properties panel with a SongManager contaning the song to edit. */
+    void setSongManager(SongManager songManager) {
+        this.songManager = songManager;
+
         // Set values to save.
         resamplerPath = engine.getResamplerPath();
         wavtoolPath = engine.getWavtoolPath();
@@ -114,9 +120,6 @@ public class PropertiesController implements Localizable {
             curTempo.setText(Integer.toString(sliderValue));
         });
         tempoSlider.setValue(songManager.getSong().getTempo());
-
-        // Set up localization.
-        localizer.localize(this);
     }
 
     @Override
