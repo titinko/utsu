@@ -19,7 +19,7 @@ public class SongContainer {
         hasPermanentLocation = false;
     }
 
-    public Song getSong() {
+    public Song get() {
         return songManager.getSong(location);
     }
 

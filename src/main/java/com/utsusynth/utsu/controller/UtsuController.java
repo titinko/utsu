@@ -27,7 +27,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.layout.BorderPane;
 
 /**
  * 'UtsuScene.fxml' Controller Class
@@ -40,7 +39,6 @@ public class UtsuController implements Localizable {
     }
 
     // User session data goes here.
-    private TabPane tabs;
     private final Map<String, EditorController> editors;
 
     // Helper classes go here.
@@ -49,7 +47,7 @@ public class UtsuController implements Localizable {
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
     @FXML
-    private BorderPane rootPane;
+    private TabPane tabs;
 
     @Inject
     public UtsuController(Localizer localizer, Scaler scaler, Provider<FXMLLoader> fxmlLoaders) {
@@ -63,10 +61,6 @@ public class UtsuController implements Localizable {
     // Provide setup for other controllers.
     // This is called automatically.
     public void initialize() {
-        // Initialize tabs.
-        tabs = new TabPane();
-        rootPane.setCenter(tabs);
-
         // Create an empty song editor.
         createEditor(EditorType.SONG);
 
@@ -179,8 +173,10 @@ public class UtsuController implements Localizable {
                 if (tab.isSelected()) {
                     if (type == EditorType.SONG) {
                         propertiesItem.setDisable(false);
+                        saveAsItem.setDisable(false);
                     } else {
                         propertiesItem.setDisable(true);
+                        saveAsItem.setDisable(true);
                     }
                 }
             });
@@ -215,14 +211,14 @@ public class UtsuController implements Localizable {
     @FXML
     void openSong(ActionEvent event) {
         Tab newTab = createEditor(EditorType.SONG);
-        String newName = editors.get(newTab.getId()).openFile();
+        String newName = editors.get(newTab.getId()).open();
         newTab.setText(newName);
     }
 
     @FXML
     void openVoicebank(ActionEvent event) {
         Tab newTab = createEditor(EditorType.VOICEBANK);
-        String newName = editors.get(newTab.getId()).openFile();
+        String newName = editors.get(newTab.getId()).open();
         newTab.setText(newName);
     }
 
@@ -230,7 +226,7 @@ public class UtsuController implements Localizable {
     void saveFile(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            String newName = editors.get(curTab.getId()).saveFile();
+            String newName = editors.get(curTab.getId()).save();
             curTab.setText(newName);
         }
     }
@@ -239,7 +235,7 @@ public class UtsuController implements Localizable {
     void saveFileAs(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            String newName = editors.get(curTab.getId()).saveFileAs();
+            String newName = editors.get(curTab.getId()).saveAs();
             curTab.setText(newName);
         }
     }

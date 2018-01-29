@@ -5,13 +5,16 @@ interface EditorController {
     /** Initializes an editor with a callback to the menu. */
     void openEditor(EditorCallback callback);
 
+    /** Closes an editor and deletes stored data. */
+    // TODO: implement closeEditor
+
     void refreshView();
 
-    String openFile();
+    String open();
 
-    String saveFile();
+    String save();
 
-    String saveFileAs();
+    String saveAs();
 
     void openProperties();
 }

@@ -13,7 +13,7 @@ public class LyricConfig implements Comparable<LyricConfig> {
     private double preutterance; // Number of ms that go before note officially starts.
     private double overlap; // Number of ms that overlap with previous note.
 
-    LyricConfig(String pathToFile, String trueLyric, String[] configValues) {
+    public LyricConfig(String pathToFile, String trueLyric, String[] configValues) {
         assert (configValues.length == 5);
         this.pathToFile = pathToFile;
         this.trueLyric = trueLyric;

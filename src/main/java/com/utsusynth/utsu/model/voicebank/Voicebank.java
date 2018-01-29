@@ -23,7 +23,7 @@ public class Voicebank {
     private final Map<String, LyricConfig> lyricConfigs;
     private final Map<String, String> pitchMap;
 
-    Voicebank(
+    public Voicebank(
             File pathToVoicebank,
             String name,
             String imageName,

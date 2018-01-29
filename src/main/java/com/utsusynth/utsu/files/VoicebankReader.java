@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.model.voicebank;
+package com.utsusynth.utsu.files;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +23,9 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.model.voicebank.DisjointLyricSet;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
+import com.utsusynth.utsu.model.voicebank.Voicebank;
 
 public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();

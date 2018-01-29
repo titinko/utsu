@@ -7,8 +7,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.model.song.SongContainer;
-import com.utsusynth.utsu.model.voicebank.Voicebank;
-import com.utsusynth.utsu.model.voicebank.VoicebankReader;
+import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -26,12 +25,11 @@ import javafx.stage.Stage;
 public class PropertiesController implements Localizable {
     private final Engine engine;
     private final Localizer localizer;
-    private VoicebankReader voicebankReader;
+    private final VoicebankContainer voicebankContainer;
 
     private SongContainer songContainer;
     private File resamplerPath;
     private File wavtoolPath;
-    private Voicebank voicebank;
 
     @FXML // fx:id="root"
     private BorderPane root; // Value injected by FXMLLoader
@@ -85,10 +83,10 @@ public class PropertiesController implements Localizable {
     public PropertiesController(
             Engine engine,
             Localizer localizer,
-            VoicebankReader voicebankReader) {
+            VoicebankContainer voicebankContainer) {
         this.engine = engine;
         this.localizer = localizer;
-        this.voicebankReader = voicebankReader;
+        this.voicebankContainer = voicebankContainer;
     }
 
     public void initialize() {
@@ -103,15 +101,15 @@ public class PropertiesController implements Localizable {
         // Set values to save.
         resamplerPath = engine.getResamplerPath();
         wavtoolPath = engine.getWavtoolPath();
-        voicebank = songContainer.getSong().getVoicebank();
+        voicebankContainer.setVoicebank(songContainer.get().getVoiceDir());
 
         // Set text boxes.
-        projectNameTF.setText(songContainer.getSong().getProjectName());
-        outputFileTF.setText(songContainer.getSong().getOutputFile().getAbsolutePath());
-        flagsTF.setText(songContainer.getSong().getFlags());
+        projectNameTF.setText(songContainer.get().getProjectName());
+        outputFileTF.setText(songContainer.get().getOutputFile().getAbsolutePath());
+        flagsTF.setText(songContainer.get().getFlags());
         resamplerName.setText(resamplerPath.getName());
         wavtoolName.setText(wavtoolPath.getName());
-        voicebankName.setText(voicebank.getName());
+        voicebankName.setText(voicebankContainer.get().getName());
 
         // Setup tempo slider.
         tempoSlider.valueProperty().addListener((event) -> {
@@ -119,7 +117,7 @@ public class PropertiesController implements Localizable {
             tempoSlider.setValue(sliderValue);
             curTempo.setText(Integer.toString(sliderValue));
         });
-        tempoSlider.setValue(songContainer.getSong().getTempo());
+        tempoSlider.setValue(songContainer.get().getTempo());
     }
 
     @Override
@@ -169,17 +167,17 @@ public class PropertiesController implements Localizable {
         dc.setTitle("Select voicebank");
         File file = dc.showDialog(null);
         if (file != null) {
-            voicebank = voicebankReader.loadVoicebankFromDirectory(file);
-            voicebankName.setText(voicebank.getName());
+            voicebankContainer.setVoicebank(file);
+            voicebankName.setText(voicebankContainer.get().getName());
         }
     }
 
     @FXML
     void applyProperties(ActionEvent event) {
         songContainer.setSong(
-                songContainer.getSong().toBuilder().setProjectName(projectNameTF.getText())
+                songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
                         .setOutputFile(new File(outputFileTF.getText())).setFlags(flagsTF.getText())
-                        .setVoiceDirectory(voicebank.getPathToVoicebank())
+                        .setVoiceDirectory(voicebankContainer.getLocation())
                         .setTempo((int) Math.round(tempoSlider.getValue())).build());
         engine.setResamplerPath(resamplerPath);
         engine.setWavtoolPath(wavtoolPath);

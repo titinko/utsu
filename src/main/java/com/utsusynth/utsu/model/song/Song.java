@@ -14,13 +14,13 @@ import com.utsusynth.utsu.common.data.RemoveResponse;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.model.song.pitch.PitchCurve;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
-import com.utsusynth.utsu.model.voicebank.VoicebankReader;
+import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 
 /**
  * In-code representation of a song. Compatible with UST versions 1.2 and 2.0.
  */
 public class Song {
-    private final VoicebankReader voicebankReader;
+    private final VoicebankContainer voicebank;
     private final NoteStandardizer standardizer;
 
     // Settings. (Anything marked with [#SETTING])
@@ -28,8 +28,7 @@ public class Song {
     private double tempo;
     private String projectName;
     private File outputFile;
-    private File voiceDirectory; // Pulled directly from the oto file.
-    private Voicebank voicebank;
+    // private File voiceDirectory; // Pulled directly from the oto file.
     private String flags;
     private boolean mode2 = true;
 
@@ -64,7 +63,7 @@ public class Song {
         }
 
         public Builder setVoiceDirectory(File voiceDirectory) {
-            newSong.voiceDirectory = voiceDirectory;
+            newSong.voicebank.setVoicebank(voiceDirectory);
             return this;
         }
 
@@ -105,26 +104,22 @@ public class Song {
         }
 
         public Song build() {
-            newSong.voicebank =
-                    newSong.voicebankReader.loadVoicebankFromDirectory(newSong.voiceDirectory);
-            noteListBuilder.standardize(newSong.standardizer, newSong.voicebank);
+            noteListBuilder.standardize(newSong.standardizer, newSong.voicebank.get());
             newSong.noteList = noteListBuilder.build();
             return newSong;
         }
     }
 
     public Song(
-            VoicebankReader voicebankReader,
+            VoicebankContainer voicebankContainer,
             NoteStandardizer standardizer,
             NoteList songNoteList,
             PitchCurve pitchbends) {
-        this.voicebankReader = voicebankReader;
+        this.voicebank = voicebankContainer;
         this.standardizer = standardizer;
         this.noteList = songNoteList;
         this.pitchbends = pitchbends;
-        this.voiceDirectory = voicebankReader.getDefaultPath();
         this.outputFile = new File("outputFile");
-        this.voicebank = voicebankReader.loadVoicebankFromDirectory(this.voiceDirectory);
         this.tempo = 125.0;
         this.projectName = "(no title)";
         this.flags = "";
@@ -134,10 +129,9 @@ public class Song {
         // Returns the builder of a new Song with this one's attributes.
         // The old Song's noteList and pitchbends objects are used in the new Song.
         return new Builder(
-                new Song(this.voicebankReader, this.standardizer, this.noteList, this.pitchbends))
+                new Song(this.voicebank, this.standardizer, this.noteList, this.pitchbends))
                         .setTempo(this.tempo).setProjectName(this.projectName)
-                        .setOutputFile(this.outputFile).setVoiceDirectory(this.voiceDirectory)
-                        .setFlags(this.flags).setMode2(this.mode2);
+                        .setOutputFile(this.outputFile).setFlags(this.flags).setMode2(this.mode2);
     }
 
     /**
@@ -166,11 +160,11 @@ public class Song {
 
         // Standardize note lengths and envelopes, in last -> first order.
         if (insertedNode.getNext().isPresent()) {
-            insertedNode.getNext().get().standardize(standardizer, voicebank);
+            insertedNode.getNext().get().standardize(standardizer, voicebank.get());
         }
-        insertedNode.standardize(standardizer, voicebank);
+        insertedNode.standardize(standardizer, voicebank.get());
         if (insertedNode.getPrev().isPresent()) {
-            insertedNode.getPrev().get().standardize(standardizer, voicebank);
+            insertedNode.getPrev().get().standardize(standardizer, voicebank.get());
         }
 
         // Find neighbors to newly added note.
@@ -239,11 +233,11 @@ public class Song {
         // Do standardization separately as it must happen in back -> front order.
         if (removedNode.getNext().isPresent()) {
             // Adjust envelope, preutterance, and length of next note.
-            removedNode.getNext().get().standardize(standardizer, voicebank);
+            removedNode.getNext().get().standardize(standardizer, voicebank.get());
         }
         if (removedNode.getPrev().isPresent()) {
             // Adjust envelope, preutterance, and length of previous note.
-            removedNode.getPrev().get().standardize(standardizer, voicebank);
+            removedNode.getPrev().get().standardize(standardizer, voicebank.get());
         }
 
         Optional<NeighborData> prevNote = Optional.absent();
@@ -347,11 +341,11 @@ public class Song {
     }
 
     public File getVoiceDir() {
-        return voiceDirectory;
+        return voicebank.getLocation();
     }
 
     public Voicebank getVoicebank() {
-        return voicebank;
+        return voicebank.get();
     }
 
     public NoteIterator getNoteIterator() {
@@ -387,6 +381,6 @@ public class Song {
             result += iterator.next() + "\n";
         }
         result += voicebank + "\n";
-        return result + tempo + projectName + outputFile + voiceDirectory + flags + mode2;
+        return result + tempo + projectName + outputFile + voicebank.getLocation() + flags + mode2;
     }
 }

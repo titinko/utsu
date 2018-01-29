@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.Note;
-import com.utsusynth.utsu.model.voicebank.VoicebankReader;
 
 /**
  * Reads a song from a Unicode UST 1.2 file.
