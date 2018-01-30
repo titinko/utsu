@@ -15,15 +15,13 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
-import com.utsusynth.utsu.model.voicebank.DisjointLyricSet;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 
@@ -35,11 +33,16 @@ public class VoicebankReader {
 
     private final File defaultVoicePath;
     private final File lyricConversionPath;
+    private final Provider<Voicebank> voicebankProvider;
 
     @Inject
-    public VoicebankReader(File defaultVoicePath, File lyricConversionPath) {
+    public VoicebankReader(
+            File defaultVoicePath,
+            File lyricConversionPath,
+            Provider<Voicebank> voicebankProvider) {
         this.defaultVoicePath = defaultVoicePath;
         this.lyricConversionPath = lyricConversionPath;
+        this.voicebankProvider = voicebankProvider;
     }
 
     public File getDefaultPath() {
@@ -47,12 +50,9 @@ public class VoicebankReader {
     }
 
     public Voicebank loadVoicebankFromDirectory(File sourceDir) {
-        File pathToVoicebank;
-        String name = "";
-        String imageName = "";
-        Map<String, LyricConfig> lyricConfigs = new HashMap<>();
-        Map<String, String> pitchMap = new HashMap<>();
+        Voicebank.Builder builder = voicebankProvider.get().toBuilder();
 
+        File pathToVoicebank;
         if (!sourceDir.exists()) {
             pathToVoicebank = defaultVoicePath;
         } else {
@@ -62,6 +62,7 @@ public class VoicebankReader {
                 pathToVoicebank = sourceDir;
             }
         }
+        builder.setPathToVoicebank(pathToVoicebank);
         System.out.println("Parsed voicebank as " + pathToVoicebank);
 
         // Parse character data.
@@ -70,11 +71,17 @@ public class VoicebankReader {
         for (String rawLine : characterData.split("\n")) {
             String line = rawLine.trim();
             if (line.startsWith("name=")) {
-                name = line.substring("name=".length());
+                builder.setName(line.substring("name=".length()));
+            } else if (line.startsWith("author=")) {
+                builder.setAuthor(line.substring("author=".length()));
             } else if (line.startsWith("image=")) {
-                imageName = line.substring("image=".length());
+                builder.setImageName(line.substring("image=".length()));
             }
         }
+
+        // Parse description.
+        File readmeFile = pathToVoicebank.toPath().resolve("readme.txt").toFile();
+        builder.setDescription(readConfigFile(readmeFile));
 
         // Parse all oto_ini.txt and oto.ini files in arbitrary order.
         try {
@@ -88,7 +95,7 @@ public class VoicebankReader {
                             for (String otoName : ImmutableSet.of("oto.ini", "oto_ini.txt")) {
                                 if (path.endsWith(otoName)) {
                                     Path pathToFile = path.toFile().getParentFile().toPath();
-                                    parseOtoIni(pathToFile, otoName, lyricConfigs);
+                                    parseOtoIni(pathToFile, otoName, builder);
                                     break;
                                 }
                             }
@@ -103,25 +110,16 @@ public class VoicebankReader {
         // Parse pitch map in arbitrary order, if present.
         for (String pitchMapName : ImmutableSet.of("prefixmap", "prefix.map")) {
             // For some reason, "prefix.map" is a list of pitch suffixes.
-            parsePitchMap(pathToVoicebank.toPath().resolve(pitchMapName).toFile(), pitchMap);
+            parsePitchMap(pathToVoicebank.toPath().resolve(pitchMapName).toFile(), builder);
         }
 
         // Parse conversion set for romaji-hiragana-katakana conversion.
-        DisjointLyricSet conversionSet = readLyricConversionsFromFile();
+        readLyricConversionsFromFile(builder);
 
-        return new Voicebank(
-                pathToVoicebank,
-                name,
-                imageName,
-                lyricConfigs,
-                pitchMap,
-                conversionSet);
+        return builder.build();
     }
 
-    private void parseOtoIni(
-            Path pathToOtoFile,
-            String otoFile,
-            Map<String, LyricConfig> lyricConfigs) {
+    private void parseOtoIni(Path pathToOtoFile, String otoFile, Voicebank.Builder builder) {
         String otoData = readConfigFile(pathToOtoFile.resolve(otoFile).toFile());
         for (String rawLine : otoData.split("\n")) {
             String line = rawLine.trim();
@@ -134,8 +132,7 @@ public class VoicebankReader {
                     System.out.println("Received unexpected results while parsing oto.ini");
                     continue;
                 }
-                lyricConfigs.put(
-                        lyricName,
+                builder.addLyric(
                         new LyricConfig(
                                 pathToOtoFile.resolve(fileName).toFile().getAbsolutePath(),
                                 lyricName,
@@ -144,7 +141,7 @@ public class VoicebankReader {
         }
     }
 
-    private void parsePitchMap(File pitchMapFile, Map<String, String> pitchMap) {
+    private void parsePitchMap(File pitchMapFile, Voicebank.Builder builder) {
         String pitchData = readConfigFile(pitchMapFile);
         for (String rawLine : pitchData.split("\n")) {
             String line = rawLine.trim();
@@ -153,19 +150,17 @@ public class VoicebankReader {
             if (matcher.find()) {
                 String pitch = matcher.group(1);
                 String suffix = matcher.group(2);
-                pitchMap.put(pitch, suffix);
+                builder.addPitchSuffix(pitch, suffix);
             }
         }
     }
 
     /* Gets disjoint set used for romaji-hiragana-katakana conversions. */
-    private DisjointLyricSet readLyricConversionsFromFile() {
-        DisjointLyricSet conversionSet = new DisjointLyricSet();
+    private void readLyricConversionsFromFile(Voicebank.Builder builder) {
         String conversionData = readConfigFile(lyricConversionPath);
         for (String line : conversionData.split("\n")) {
-            conversionSet.addGroup(line.trim().split(","));
+            builder.addConversionGroup(line.trim().split(","));
         }
-        return conversionSet;
     }
 
     private String readConfigFile(File file) {

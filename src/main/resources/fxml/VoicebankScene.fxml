@@ -21,7 +21,7 @@
    <bottom>
       <HBox maxHeight="100.0" prefHeight="100.0" prefWidth="700.0" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
-            <ScrollPane fx:id="scrollPaneBottom" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="500.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">
+            <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="500.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">
               <content>
                 <AnchorPane fx:id="anchorBottom" maxHeight="100.0" minHeight="100.0" />
               </content>
@@ -64,12 +64,12 @@
                                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                  </GridPane.margin>
                               </Label>
-                              <TextField GridPane.columnIndex="1">
+                              <TextField fx:id="nameTextField" GridPane.columnIndex="1">
                                  <GridPane.margin>
                                     <Insets right="10.0" />
                                  </GridPane.margin>
                               </TextField>
-                              <TextField GridPane.columnIndex="1" GridPane.rowIndex="1">
+                              <TextField fx:id="authorTextField" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                  <GridPane.margin>
                                     <Insets right="10.0" />
                                  </GridPane.margin>
@@ -84,14 +84,14 @@
                         <content>
                           <AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="400.0">
                                  <children>
-                                    <TextArea prefWidth="400.0" promptText="Enter description here..." />
+                                    <TextArea fx:id="descriptionTextArea" prefWidth="400.0" promptText="Enter description here..." />
                                  </children>
                               </AnchorPane>
                         </content>
                       </Tab>
                       <Tab text="Pitch">
                         <content>
-                          <AnchorPane />
+                          <AnchorPane fx:id="anchorPitch" />
                         </content>
                       </Tab>
                     </tabs>
@@ -102,9 +102,9 @@
                </children>
             </VBox>
                   <Separator orientation="VERTICAL" />
-                  <ScrollPane fx:id="scrollPaneRight" fitToHeight="true" fitToWidth="true" minViewportHeight="300.0" minViewportWidth="400.0" vvalue="0.5" HBox.hgrow="ALWAYS">
+                  <ScrollPane fitToHeight="true" fitToWidth="true" minViewportHeight="300.0" minViewportWidth="400.0" vvalue="0.5" HBox.hgrow="ALWAYS">
                      <content>
-                      <AnchorPane fx:id="anchorRight" />
+                      <AnchorPane fx:id="anchorOto" />
                      </content>
                   </ScrollPane>
                </children>

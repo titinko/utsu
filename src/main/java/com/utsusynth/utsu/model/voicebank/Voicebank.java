@@ -14,28 +14,84 @@ import com.google.common.collect.ImmutableList;
  * as well
  */
 public class Voicebank {
-    // TODO: Once you have a VoicebankManager, make this common to all voicebanks.
+    // TODO: Once you have a VoicebankManager, consider sharing between voicebanks.
     private final DisjointLyricSet conversionSet;
-
-    private final File pathToVoicebank; // Example: "/Library/Iona.utau/"
-    private final String name; // Example: "Iona"
-    private final String imageName; // Example: "img.bmp"
     private final Map<String, LyricConfig> lyricConfigs;
     private final Map<String, String> pitchMap;
 
+    private File pathToVoicebank; // Example: "/Library/Iona.utau/"
+    private String name; // Example: "Iona"
+    private String author; // Example: "Lethe"
+    private String description; // Contents of readme.txt
+    private String imageName; // Example: "img.bmp"
+
+    public class Builder {
+        private final Voicebank newVoicebank;
+
+        private Builder(Voicebank newVoicebank) {
+            this.newVoicebank = newVoicebank;
+        }
+
+        public Builder setPathToVoicebank(File pathToVoicebank) {
+            newVoicebank.pathToVoicebank = pathToVoicebank;
+            return this;
+        }
+
+        public Builder setName(String name) {
+            newVoicebank.name = name;
+            return this;
+        }
+
+        public Builder setAuthor(String author) {
+            newVoicebank.author = author;
+            return this;
+        }
+
+        public Builder setDescription(String description) {
+            newVoicebank.description = description;
+            return this;
+        }
+
+        public Builder setImageName(String imageName) {
+            newVoicebank.imageName = imageName;
+            return this;
+        }
+
+        public Builder addLyric(LyricConfig config) {
+            lyricConfigs.put(config.getTrueLyric(), config);
+            return this;
+        }
+
+        public Builder addPitchSuffix(String pitch, String suffix) {
+            pitchMap.put(pitch, suffix);
+            return this;
+        }
+
+        public Builder addConversionGroup(String... members) {
+            conversionSet.addGroup(members);
+            return this;
+        }
+
+        public Voicebank build() {
+            return newVoicebank;
+        }
+    }
+
     public Voicebank(
-            File pathToVoicebank,
-            String name,
-            String imageName,
             Map<String, LyricConfig> lyricConfigs,
             Map<String, String> pitchMap,
             DisjointLyricSet conversionSet) {
-        this.pathToVoicebank = pathToVoicebank;
-        this.name = name;
-        this.imageName = imageName;
         this.lyricConfigs = lyricConfigs;
         this.pitchMap = pitchMap;
         this.conversionSet = conversionSet;
+    }
+
+    public Builder toBuilder() {
+        // Returns the builder of a new Voicebank with this one's attributes.
+        // The old Voicebank's lyricConfigs, pitchMap, and conversionSet objects are used.
+        return new Builder(new Voicebank(this.lyricConfigs, this.pitchMap, this.conversionSet))
+                .setPathToVoicebank(this.pathToVoicebank).setName(this.name).setAuthor(this.author)
+                .setDescription(this.description).setImageName(this.imageName);
     }
 
     /**
@@ -97,8 +153,20 @@ public class Voicebank {
         return name;
     }
 
+    public String getAuthor() {
+        return author;
+    }
+
+    public String getImageName() {
+        return imageName;
+    }
+
     public String getImagePath() {
         return new File(pathToVoicebank, imageName).getAbsolutePath();
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public File getPathToVoicebank() {

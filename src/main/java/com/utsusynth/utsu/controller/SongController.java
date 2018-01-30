@@ -233,10 +233,10 @@ public class SongController implements EditorController, Localizable {
 
     @Override
     public void localize(ResourceBundle bundle) {
-        modeLabel.setText(bundle.getString("top.mode"));
-        quantizationLabel.setText(bundle.getString("top.quantization"));
-        renderButton.setText(bundle.getString("top.render"));
-        exportWavButton.setText(bundle.getString("top.exportWav"));
+        modeLabel.setText(bundle.getString("song.mode"));
+        quantizationLabel.setText(bundle.getString("song.quantization"));
+        renderButton.setText(bundle.getString("song.render"));
+        exportWavButton.setText(bundle.getString("song.exportWav"));
     }
 
     @Override
@@ -325,6 +325,7 @@ public class SongController implements EditorController, Localizable {
                 } else {
                     ust20Writer.writeSong(song.get(), ps, charset);
                 }
+                ps.flush();
                 ps.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 // TODO: Handle this.
@@ -365,6 +366,7 @@ public class SongController implements EditorController, Localizable {
                 } else {
                     ust20Writer.writeSong(song.get(), ps, charset);
                 }
+                ps.flush();
                 ps.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 // TODO: Handle this.

@@ -22,6 +22,10 @@ public class VoicebankContainer {
         return voicebankManager.getVoicebank(location);
     }
 
+    public void mutate(Voicebank newVoicebank) {
+        voicebankManager.setVoicebank(location, newVoicebank);
+    }
+
     public Voicebank setVoicebank(File newLocation) {
         location = newLocation;
         if (voicebankManager.hasVoicebank(location)) {
