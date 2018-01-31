@@ -16,7 +16,7 @@ import com.google.common.collect.ImmutableList;
 public class Voicebank {
     // TODO: Once you have a VoicebankManager, consider sharing between voicebanks.
     private final DisjointLyricSet conversionSet;
-    private final Map<String, LyricConfig> lyricConfigs;
+    private final LyricConfigMap lyricConfigs;
     private final Map<String, String> pitchMap;
 
     private File pathToVoicebank; // Example: "/Library/Iona.utau/"
@@ -58,7 +58,7 @@ public class Voicebank {
         }
 
         public Builder addLyric(LyricConfig config) {
-            lyricConfigs.put(config.getTrueLyric(), config);
+            lyricConfigs.addConfig(config);
             return this;
         }
 
@@ -78,7 +78,7 @@ public class Voicebank {
     }
 
     public Voicebank(
-            Map<String, LyricConfig> lyricConfigs,
+            LyricConfigMap lyricConfigs,
             Map<String, String> pitchMap,
             DisjointLyricSet conversionSet) {
         this.lyricConfigs = lyricConfigs;
@@ -107,8 +107,8 @@ public class Voicebank {
 
         // Check all possible prefix/lyric/suffix combinations.
         for (String combo : allCombinations(prefix, lyric, suffix)) {
-            if (lyricConfigs.containsKey(combo)) {
-                return Optional.of(lyricConfigs.get(combo));
+            if (lyricConfigs.hasLyric(combo)) {
+                return Optional.of(lyricConfigs.getConfig(combo));
             }
         }
 
@@ -120,8 +120,8 @@ public class Voicebank {
             }
 
             for (String combo : allCombinations(prefix, convertedLyric, suffix)) {
-                if (lyricConfigs.containsKey(combo)) {
-                    matches.add(lyricConfigs.get(combo));
+                if (lyricConfigs.hasLyric(combo)) {
+                    matches.add(lyricConfigs.getConfig(combo));
                 }
             }
         }
@@ -177,9 +177,6 @@ public class Voicebank {
     public String toString() {
         // Crappy string representation of a Voicebank object.
         String result = "";
-        for (String lyric : lyricConfigs.keySet()) {
-            result += lyric + " = " + lyricConfigs.get(lyric) + "\n";
-        }
         return result + " " + pathToVoicebank + " " + name + " " + imageName;
     }
 }

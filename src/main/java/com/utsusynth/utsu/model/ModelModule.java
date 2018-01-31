@@ -14,6 +14,7 @@ import com.utsusynth.utsu.model.song.SongManager;
 import com.utsusynth.utsu.model.song.pitch.PitchCurve;
 import com.utsusynth.utsu.model.song.pitch.portamento.PortamentoFactory;
 import com.utsusynth.utsu.model.voicebank.DisjointLyricSet;
+import com.utsusynth.utsu.model.voicebank.LyricConfigMap;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import com.utsusynth.utsu.model.voicebank.VoicebankManager;
@@ -37,8 +38,10 @@ public class ModelModule extends AbstractModule {
     }
 
     @Provides
-    private Voicebank provideEmptyVoicebank(DisjointLyricSet conversionSet) {
-        return new Voicebank(new HashMap<>(), new HashMap<>(), conversionSet);
+    private Voicebank provideEmptyVoicebank(
+            LyricConfigMap configMap,
+            DisjointLyricSet conversionSet) {
+        return new Voicebank(configMap, new HashMap<>(), conversionSet);
     }
 
     @Provides

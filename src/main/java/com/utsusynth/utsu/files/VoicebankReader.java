@@ -95,7 +95,7 @@ public class VoicebankReader {
                             for (String otoName : ImmutableSet.of("oto.ini", "oto_ini.txt")) {
                                 if (path.endsWith(otoName)) {
                                     Path pathToFile = path.toFile().getParentFile().toPath();
-                                    parseOtoIni(pathToFile, otoName, builder);
+                                    parseOtoIni(pathToVoicebank, pathToFile, otoName, builder);
                                     break;
                                 }
                             }
@@ -119,7 +119,11 @@ public class VoicebankReader {
         return builder.build();
     }
 
-    private void parseOtoIni(Path pathToOtoFile, String otoFile, Voicebank.Builder builder) {
+    private void parseOtoIni(
+            File pathToVoicebank,
+            Path pathToOtoFile,
+            String otoFile,
+            Voicebank.Builder builder) {
         String otoData = readConfigFile(pathToOtoFile.resolve(otoFile).toFile());
         for (String rawLine : otoData.split("\n")) {
             String line = rawLine.trim();
@@ -134,7 +138,8 @@ public class VoicebankReader {
                 }
                 builder.addLyric(
                         new LyricConfig(
-                                pathToOtoFile.resolve(fileName).toFile().getAbsolutePath(),
+                                pathToVoicebank,
+                                pathToOtoFile.resolve(fileName).toFile(),
                                 lyricName,
                                 configValues));
             }

@@ -1,11 +1,14 @@
 package com.utsusynth.utsu.model.voicebank;
 
+import java.io.File;
+
 /**
  * Internal representation of the configuration of a single lyric in a voicebank. Parsed from an
  * oto.ini or oto_ini.txt file.
  */
 public class LyricConfig implements Comparable<LyricConfig> {
-    private String pathToFile; // example: /Library/Iona.utau/C3/de.wav
+    private File pathToFile; // example: /Library/Iona.utau/C3/de.wav
+    private String fileName; // example: C3/de.wqv
     private String trueLyric; // example: de
     private double offset; // Time in wav file before note starts, in ms.
     private double consonant; // Time in wav file before consonant ends, in ms.
@@ -13,9 +16,15 @@ public class LyricConfig implements Comparable<LyricConfig> {
     private double preutterance; // Number of ms that go before note officially starts.
     private double overlap; // Number of ms that overlap with previous note.
 
-    public LyricConfig(String pathToFile, String trueLyric, String[] configValues) {
+    public LyricConfig(
+            File pathToVoicebank,
+            File pathToFile,
+            String trueLyric,
+            String[] configValues) {
         assert (configValues.length == 5);
         this.pathToFile = pathToFile;
+        this.fileName =
+                pathToFile.getAbsolutePath().substring(pathToVoicebank.getAbsolutePath().length());
         this.trueLyric = trueLyric;
         this.offset = Double.parseDouble(configValues[0]);
         this.consonant = Double.parseDouble(configValues[1]);
@@ -44,8 +53,12 @@ public class LyricConfig implements Comparable<LyricConfig> {
         return overlap;
     }
 
-    public String getPathToFile() {
+    public File getPathToFile() {
         return pathToFile;
+    }
+
+    public String getFilename() {
+        return fileName;
     }
 
     public String getTrueLyric() {
@@ -60,7 +73,12 @@ public class LyricConfig implements Comparable<LyricConfig> {
 
     @Override
     public int compareTo(LyricConfig other) {
-        // TODO Auto-generated method stub
-        return trueLyric.compareTo(other.getTrueLyric());
+        String thisLyric = fileName + trueLyric;
+        String otherLyric = other.fileName + other.trueLyric;
+        return thisLyric.compareTo(otherLyric);
+    }
+
+    public boolean equals(LyricConfig other) {
+        return this.compareTo(other) == 0;
     }
 }
