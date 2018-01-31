@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.model.voicebank;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -8,6 +9,7 @@ import java.util.TreeSet;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.data.LyricConfigData;
 
 /**
  * In-code representation of a voice bank. Compatible with oto.ini files. TODO: Support oto_ini.txt
@@ -147,6 +149,24 @@ public class Voicebank {
     private List<String> allCombinations(String prefix, String lyric, String suffix) {
         // Exact lyric match is prioritized first.
         return ImmutableList.of(lyric, lyric + suffix, prefix + lyric + suffix, prefix + lyric);
+    }
+
+    /**
+     * Gets iterator of lyric config data sets to print to the frontend.
+     */
+    public Iterator<LyricConfigData> getLyricConfigData() {
+        Iterator<LyricConfig> configIterator = lyricConfigs.iterator();
+        return new Iterator<LyricConfigData>() {
+            @Override
+            public boolean hasNext() {
+                return configIterator.hasNext();
+            }
+
+            @Override
+            public LyricConfigData next() {
+                return configIterator.next().getData();
+            }
+        };
     }
 
     public String getName() {

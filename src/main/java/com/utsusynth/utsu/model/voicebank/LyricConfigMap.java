@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.model.voicebank;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -8,7 +9,7 @@ import java.util.TreeSet;
 /**
  * A map of lyric to LyricConfig where the values can be retrieved at any time in sorted order.
  */
-public class LyricConfigMap {
+public class LyricConfigMap implements Iterable<LyricConfig> {
     private final SortedSet<LyricConfig> configSet;
     private final Map<String, LyricConfig> configMap;
 
@@ -53,5 +54,10 @@ public class LyricConfigMap {
     public void removeConfig(LyricConfig config) {
         configMap.remove(config.getTrueLyric());
         configSet.remove(config);
+    }
+
+    @Override
+    public Iterator<LyricConfig> iterator() {
+        return configSet.iterator();
     }
 }

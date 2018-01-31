@@ -8,6 +8,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
+import com.utsusynth.utsu.view.voicebank.VoicebankEditor;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -26,6 +27,7 @@ public class VoicebankController implements EditorController, Localizable {
 
     // Helper classes go here.
     private final VoicebankContainer voicebank;
+    private final VoicebankEditor editor;
     private final Localizer localizer;
     private final UndoService undoService;
     private final VoicebankWriter voicebankWriter;
@@ -54,10 +56,12 @@ public class VoicebankController implements EditorController, Localizable {
     @Inject
     public VoicebankController(
             VoicebankContainer voicebankContainer, // Start with default voicebank.
+            VoicebankEditor editor,
             Localizer localizer,
             UndoService undoService,
             VoicebankWriter voicebankWriter) {
         this.voicebank = voicebankContainer;
+        this.editor = editor;
         this.localizer = localizer;
         this.undoService = undoService;
         this.voicebankWriter = voicebankWriter;
@@ -113,6 +117,8 @@ public class VoicebankController implements EditorController, Localizable {
         descriptionTextArea.setText(voicebank.get().getDescription());
 
         // Reload voicebank editor.
+        anchorOto.getChildren().clear();
+        anchorOto.getChildren().add(editor.createNew(voicebank.get().getLyricConfigData()));
         // anchorRight.getChildren().clear();
         // anchorRight.getChildren().add(track.createNewTrack(songContainer.get().getNotes()));
         // anchorRight.getChildren().add(track.getNotesElement());
