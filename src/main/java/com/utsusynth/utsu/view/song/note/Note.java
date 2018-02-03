@@ -262,7 +262,7 @@ public class Note {
     }
 
     public void setValid(boolean isValid) {
-        note.getStyleClass().set(1, isValid ? "valid-note" : "invalid-note");
+        note.getStyleClass().set(1, isValid ? "valid" : "invalid");
         if (!isValid) {
             lyric.setVisibleAlias("");
             adjustForOverlap(Integer.MAX_VALUE);
@@ -292,7 +292,7 @@ public class Note {
     private void deleteNote() {
         contextMenu.hide();
         lyric.closeTextFieldIfNeeded();
-        if (note.getStyleClass().contains("valid-note")) {
+        if (note.getStyleClass().contains("valid")) {
             track.removeSongNote(getAbsPosition());
         }
         track.removeTrackNote(this);
@@ -337,7 +337,7 @@ public class Note {
         // System.out.println("***");
         Optional<EnvelopeData> envelope = Optional.absent();
         Optional<PitchbendData> portamento = Optional.absent();
-        if (note.getStyleClass().contains("valid-note")) {
+        if (note.getStyleClass().contains("valid")) {
             // System.out.println(String.format(
             // "Moving from valid %d, %s", oldQuant, lyric.getLyric()));
             envelope = track.getEnvelope(oldPosition);

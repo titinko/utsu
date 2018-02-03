@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import com.google.common.base.CharMatcher;
@@ -152,10 +153,19 @@ public class Voicebank {
     }
 
     /**
+     * Returns a list of sub-folders for WAV files in the voicebank.
+     * 
+     * @return
+     */
+    public Set<String> getCategories() {
+        return lyricConfigs.getCategories();
+    }
+
+    /**
      * Gets iterator of lyric config data sets to print to the frontend.
      */
-    public Iterator<LyricConfigData> getLyricConfigData() {
-        Iterator<LyricConfig> configIterator = lyricConfigs.iterator();
+    public Iterator<LyricConfigData> getLyricData(String category) {
+        Iterator<LyricConfig> configIterator = lyricConfigs.getConfigs(category);
         return new Iterator<LyricConfigData>() {
             @Override
             public boolean hasNext() {
@@ -167,6 +177,28 @@ public class Voicebank {
                 return configIterator.next().getData();
             }
         };
+    }
+
+    public boolean addLyricData(LyricConfigData data) {
+        LyricConfig newConfig = new LyricConfig(
+                pathToVoicebank,
+                data.getLyric(),
+                data.getFileName(),
+                data.getConfigValues());
+        return lyricConfigs.addConfig(newConfig);
+    }
+
+    public void removeLyricConfig(String lyric) {
+        lyricConfigs.removeConfig(lyric);
+    }
+
+    public void modifyLyricData(LyricConfigData data) {
+        LyricConfig newConfig = new LyricConfig(
+                pathToVoicebank,
+                data.getLyric(),
+                data.getFileName(),
+                data.getConfigValues());
+        lyricConfigs.setConfig(newConfig);
     }
 
     public String getName() {
@@ -187,10 +219,6 @@ public class Voicebank {
 
     public String getDescription() {
         return description;
-    }
-
-    public File getPathToVoicebank() {
-        return pathToVoicebank;
     }
 
     @Override

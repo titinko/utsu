@@ -17,21 +17,39 @@ public class LyricConfig implements Comparable<LyricConfig> {
     private double preutterance; // Number of ms that go before note officially starts.
     private double overlap; // Number of ms that overlap with previous note.
 
+    /** Used when reading from file. */
     public LyricConfig(
             File pathToVoicebank,
             File pathToFile,
             String trueLyric,
             String[] configValues) {
+        this(
+                pathToVoicebank,
+                trueLyric,
+                pathToFile.getAbsolutePath()
+                        .substring(pathToVoicebank.getAbsolutePath().length() + 1),
+                Double.parseDouble(configValues[0]),
+                Double.parseDouble(configValues[1]),
+                Double.parseDouble(configValues[2]),
+                Double.parseDouble(configValues[3]),
+                Double.parseDouble(configValues[4]));
+    }
+
+    /** Used when converting LyricConfigData into a LyricConfig. */
+    public LyricConfig(
+            File pathToVoicebank,
+            String trueLyric,
+            String fileName,
+            double... configValues) {
         assert (configValues.length == 5);
-        this.pathToFile = pathToFile;
-        this.fileName = pathToFile.getAbsolutePath()
-                .substring(pathToVoicebank.getAbsolutePath().length() + 1);
+        this.pathToFile = pathToVoicebank.toPath().resolve(fileName).toFile();
+        this.fileName = fileName;
         this.trueLyric = trueLyric;
-        this.offset = Double.parseDouble(configValues[0]);
-        this.consonant = Double.parseDouble(configValues[1]);
-        this.cutoff = Double.parseDouble(configValues[2]);
-        this.preutterance = Double.parseDouble(configValues[3]);
-        this.overlap = Double.parseDouble(configValues[4]);
+        this.offset = configValues[0];
+        this.consonant = configValues[1];
+        this.cutoff = configValues[2];
+        this.preutterance = configValues[3];
+        this.overlap = configValues[4];
     }
 
     public double getOffset() {

@@ -1,20 +1,24 @@
 package com.utsusynth.utsu.model.voicebank;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
  * A map of lyric to LyricConfig where the values can be retrieved at any time in sorted order.
  */
-public class LyricConfigMap implements Iterable<LyricConfig> {
-    private final SortedSet<LyricConfig> configSet;
+public class LyricConfigMap {
+    private final SortedMap<String, SortedSet<LyricConfig>> configSets;
     private final Map<String, LyricConfig> configMap;
 
     public LyricConfigMap() {
-        configSet = new TreeSet<>();
+        configSets = new TreeMap<>();
         configMap = new HashMap<>();
     }
 
@@ -26,6 +30,17 @@ public class LyricConfigMap implements Iterable<LyricConfig> {
         return configMap.get(lyric);
     }
 
+    public Set<String> getCategories() {
+        return configSets.keySet();
+    }
+
+    public Iterator<LyricConfig> getConfigs(String category) {
+        if (configSets.containsKey(category)) {
+            return configSets.get(category).iterator();
+        }
+        return new TreeSet<LyricConfig>().iterator();
+    }
+
     /**
      * Adds a lyric config if configMap doesn't have a config for that lyric already.
      * 
@@ -35,7 +50,13 @@ public class LyricConfigMap implements Iterable<LyricConfig> {
         if (configMap.containsKey(config.getTrueLyric())) {
             return false;
         }
-        configSet.add(config);
+
+        // Add category if it doesn't already exist.
+        String category = getCategory(config);
+        if (!configSets.containsKey(category)) {
+            configSets.put(category, new TreeSet<>());
+        }
+        configSets.get(category).add(config);
         configMap.put(config.getTrueLyric(), config);
         return true;
     }
@@ -45,19 +66,38 @@ public class LyricConfigMap implements Iterable<LyricConfig> {
      */
     public void setConfig(LyricConfig config) {
         if (configMap.containsKey(config.getTrueLyric())) {
-            configSet.remove(configMap.get(config.getTrueLyric()));
+            LyricConfig oldConfig = configMap.get(config.getTrueLyric());
+            String oldCategory = getCategory(oldConfig);
+            if (configSets.containsKey(oldCategory)) {
+                configSets.get(oldCategory).remove(oldConfig);
+            }
         }
-        configSet.add(config);
+
+        // Add category if it doesn't already exist.
+        String category = getCategory(config);
+        if (!configSets.containsKey(category)) {
+            configSets.put(category, new TreeSet<>());
+        }
+        configSets.get(category).add(config);
         configMap.put(config.getTrueLyric(), config);
     }
 
-    public void removeConfig(LyricConfig config) {
-        configMap.remove(config.getTrueLyric());
-        configSet.remove(config);
+    public void removeConfig(String lyric) {
+        if (configMap.containsKey(lyric)) {
+            LyricConfig toRemove = configMap.get(lyric);
+            String category = getCategory(toRemove);
+            if (configSets.containsKey(category)) {
+                configSets.get(category).remove(toRemove);
+            }
+        }
+        configMap.remove(lyric);
     }
 
-    @Override
-    public Iterator<LyricConfig> iterator() {
-        return configSet.iterator();
+    private static String getCategory(LyricConfig config) {
+        String category = new File(config.getFilename()).getParent();
+        if (category == null) {
+            category = "Main";
+        }
+        return category;
     }
 }

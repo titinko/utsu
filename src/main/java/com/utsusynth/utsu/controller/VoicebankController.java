@@ -1,13 +1,16 @@
 package com.utsusynth.utsu.controller;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.ResourceBundle;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.UndoService;
+import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
+import com.utsusynth.utsu.view.voicebank.VoicebankCallback;
 import com.utsusynth.utsu.view.voicebank.VoicebankEditor;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -16,6 +19,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
 
 /**
@@ -35,8 +39,8 @@ public class VoicebankController implements EditorController, Localizable {
     @FXML // fx:id="anchorPitch"
     private AnchorPane anchorPitch; // Value injected by FXMLLoader
 
-    @FXML // fx:id="anchorOto"
-    private AnchorPane anchorOto; // Value injected by FXMLLoader
+    @FXML // fx:id="otoPane"
+    private HBox otoPane; // Value injected by FXMLLoader
 
     @FXML // fx:id="anchorBottom"
     private AnchorPane anchorBottom; // Value injected by FXMLLoader
@@ -87,6 +91,33 @@ public class VoicebankController implements EditorController, Localizable {
         });
 
         // Pass callback to voicebank editor.
+        editor.initialize(new VoicebankCallback() {
+            @Override
+            public Iterator<LyricConfigData> getLyricData(String category) {
+                return voicebank.get().getLyricData(category);
+            }
+
+            @Override
+            public boolean addLyric(LyricConfigData lyricData) {
+                onVoicebankChange();
+                return voicebank.get().addLyricData(lyricData);
+                // TODO: Refresh lyrics/envelopes after this.
+            }
+
+            @Override
+            public void removeLyric(String lyric) {
+                onVoicebankChange();
+                voicebank.get().removeLyricConfig(lyric);
+                // TODO: Refresh lyrics/envelopes after this.
+            }
+
+            @Override
+            public void modifyLyric(LyricConfigData lyricData) {
+                onVoicebankChange();
+                voicebank.get().modifyLyricData(lyricData);
+                // TODO: Refresh lyrics/envelopes after this.
+            }
+        });
 
         refreshView();
 
@@ -117,16 +148,8 @@ public class VoicebankController implements EditorController, Localizable {
         descriptionTextArea.setText(voicebank.get().getDescription());
 
         // Reload voicebank editor.
-        anchorOto.getChildren().clear();
-        anchorOto.getChildren().add(editor.createNew(voicebank.get().getLyricConfigData()));
-        // anchorRight.getChildren().clear();
-        // anchorRight.getChildren().add(track.createNewTrack(songContainer.get().getNotes()));
-        // anchorRight.getChildren().add(track.getNotesElement());
-        // anchorRight.getChildren().add(track.getPitchbendsElement());
-        // anchorRight.getChildren().add(track.getPlaybackElement());
-        // anchorBottom.getChildren().clear();
-        // anchorBottom.getChildren().add(track.getDynamicsElement());
-        // anchorBottom.getChildren().add(track.getEnvelopesElement());
+        otoPane.getChildren().clear();
+        otoPane.getChildren().add(editor.createNew(voicebank.get().getCategories()));
     }
 
     @Override

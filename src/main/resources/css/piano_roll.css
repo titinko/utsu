@@ -40,19 +40,24 @@
 	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
 }
 
-.track-note.valid-note.not-highlighted {
+.track-note.valid.not-highlighted {
     -fx-fill: skyblue;
     -fx-stroke: dodgerblue;
 }
 
-.track-note.valid-note.highlighted {
+.track-note.valid.highlighted {
     -fx-fill: azure;
     -fx-stroke: skyblue;
 }
 
-.track-note.invalid-note.not-highlighted {
+.track-note.invalid.not-highlighted {
     -fx-fill: gray;
     -fx-stroke: darkslategray;
+}
+
+.track-note.invalid.highlighted {
+    -fx-fill: lightgray;
+    -fx-stroke: silver;
 }
 
 .note-overlap {
@@ -60,14 +65,14 @@
 	-fx-stroke: transparent;
 }
 
-.track-note.invalid-note.highlighted {
-    -fx-fill: lightgray;
-    -fx-stroke: silver;
+.table-row-cell:selected {
+	-fx-background-color: skyblue, azure;
+	-fx-table-cell-border-color: gainsboro;
+	-fx-background-insets: 0, 1 0 1 0;
 }
 
-.track-note.partial-note {
-	-fx-stroke-dash-array: 212;
-	-fx-stroke-dash-offset: -20;
+.table-cell {
+	-fx-text-fill: black;
 }
 
 .piano-black-key {

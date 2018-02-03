@@ -24,6 +24,7 @@ import javafx.scene.Group;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 
 public class SongEditor {
@@ -175,7 +176,7 @@ public class SongEditor {
             for (String pitch : PitchUtils.REVERSE_PITCHES) {
                 // Add row to track.
                 for (int colNum = numColumns; colNum < numColumns + 4; colNum++) {
-                    AnchorPane newCell = new AnchorPane();
+                    Pane newCell = new Pane();
                     newCell.setPrefSize(
                             Math.round(scaler.scaleX(Quantizer.COL_WIDTH)),
                             Math.round(scaler.scaleY(Quantizer.ROW_HEIGHT)));

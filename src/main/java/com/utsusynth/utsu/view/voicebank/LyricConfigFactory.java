@@ -17,21 +17,21 @@ public class LyricConfigFactory {
         this.scaler = scaler;
     }
 
-    public LyricConfig createLyricConfig(LyricConfigData data) {
-        return new LyricConfig(
-                createCell(data.getLyric()),
-                createCell(data.getFileName()),
-                createCell(String.valueOf(data.getOffset())),
-                createCell(String.valueOf(data.getConsonant())),
-                createCell(String.valueOf(data.getCutoff())),
-                createCell(String.valueOf(data.getPreutter())),
-                createCell(String.valueOf(data.getOverlap())));
+    public LyricConfig createLyricConfig(LyricConfigCallback callback, LyricConfigData data) {
+        return new LyricConfig(callback);
+        // createCell(data.getLyric()),
+        // createCell(data.getFileName()),
+        // createCell(String.valueOf(data.getOffset())),
+        // createCell(String.valueOf(data.getConsonant())),
+        // createCell(String.valueOf(data.getCutoff())),
+        // createCell(String.valueOf(data.getPreutter())),
+        // createCell(String.valueOf(data.getOverlap())));
     }
 
     public StackPane createCell(String content) {
         StackPane cell = new StackPane();
         cell.setPrefHeight(Math.round(scaler.scaleY(Quantizer.ROW_HEIGHT)));
-        cell.getStyleClass().addAll("track-cell", "white-key");
+        cell.getStyleClass().addAll("text-cell", "valid", "not-highlighted");
         Text text = new Text(content);
         StackPane.setAlignment(text, Pos.CENTER_LEFT);
         StackPane.setMargin(text, new Insets(2));
