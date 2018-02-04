@@ -6,14 +6,20 @@ import java.util.ResourceBundle;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.LyricConfigData;
+import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
+import com.utsusynth.utsu.view.voicebank.PitchCallback;
+import com.utsusynth.utsu.view.voicebank.PitchEditor;
 import com.utsusynth.utsu.view.voicebank.VoicebankCallback;
 import com.utsusynth.utsu.view.voicebank.VoicebankEditor;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -31,13 +37,14 @@ public class VoicebankController implements EditorController, Localizable {
 
     // Helper classes go here.
     private final VoicebankContainer voicebank;
-    private final VoicebankEditor editor;
+    private final VoicebankEditor voiceEditor;
+    private final PitchEditor pitchEditor;
     private final Localizer localizer;
     private final UndoService undoService;
     private final VoicebankWriter voicebankWriter;
 
-    @FXML // fx:id="anchorPitch"
-    private AnchorPane anchorPitch; // Value injected by FXMLLoader
+    @FXML // fx:id="pitchPane"
+    private ScrollPane pitchPane; // Value injected by FXMLLoader
 
     @FXML // fx:id="otoPane"
     private HBox otoPane; // Value injected by FXMLLoader
@@ -57,15 +64,20 @@ public class VoicebankController implements EditorController, Localizable {
     @FXML // fx:id="descriptionTextArea"
     private TextArea descriptionTextArea; // Value injected by FXMLLoader
 
+    @FXML // fx:id="suffixTextField"
+    private TextField suffixTextField;
+
     @Inject
     public VoicebankController(
             VoicebankContainer voicebankContainer, // Start with default voicebank.
-            VoicebankEditor editor,
+            VoicebankEditor voiceEditor,
+            PitchEditor pitchEditor,
             Localizer localizer,
             UndoService undoService,
             VoicebankWriter voicebankWriter) {
         this.voicebank = voicebankContainer;
-        this.editor = editor;
+        this.voiceEditor = voiceEditor;
+        this.pitchEditor = pitchEditor;
         this.localizer = localizer;
         this.undoService = undoService;
         this.voicebankWriter = voicebankWriter;
@@ -91,7 +103,7 @@ public class VoicebankController implements EditorController, Localizable {
         });
 
         // Pass callback to voicebank editor.
-        editor.initialize(new VoicebankCallback() {
+        voiceEditor.initialize(new VoicebankCallback() {
             @Override
             public Iterator<LyricConfigData> getLyricData(String category) {
                 return voicebank.get().getLyricData(category);
@@ -99,23 +111,30 @@ public class VoicebankController implements EditorController, Localizable {
 
             @Override
             public boolean addLyric(LyricConfigData lyricData) {
+                boolean wasSuccessful = voicebank.get().addLyricData(lyricData);
                 onVoicebankChange();
-                return voicebank.get().addLyricData(lyricData);
-                // TODO: Refresh lyrics/envelopes after this.
+                return wasSuccessful;
             }
 
             @Override
             public void removeLyric(String lyric) {
-                onVoicebankChange();
                 voicebank.get().removeLyricConfig(lyric);
-                // TODO: Refresh lyrics/envelopes after this.
+                onVoicebankChange();
             }
 
             @Override
             public void modifyLyric(LyricConfigData lyricData) {
-                onVoicebankChange();
                 voicebank.get().modifyLyricData(lyricData);
-                // TODO: Refresh lyrics/envelopes after this.
+                onVoicebankChange();
+            }
+        });
+
+        // Pass callback to pitch editor.
+        pitchEditor.initialize(new PitchCallback() {
+            @Override
+            public void setPitch(PitchMapData pitchData) {
+                voicebank.get().setPitchData(pitchData);
+                onVoicebankChange();
             }
         });
 
@@ -129,11 +148,14 @@ public class VoicebankController implements EditorController, Localizable {
     private Label nameLabel; // Value injected by FXMLLoader
     @FXML // fx:id="authorLabel"
     private Label authorLabel; // Value injected by FXMLLoader
+    @FXML // fx:id="applySuffixButton"
+    private Button applySuffixButton; // Value injected by FXMLLoader
 
     @Override
     public void localize(ResourceBundle bundle) {
         nameLabel.setText(bundle.getString("voice.name"));
         authorLabel.setText(bundle.getString("voice.author"));
+        applySuffixButton.setText(bundle.getString("voice.applySuffix"));
     }
 
     @Override
@@ -149,7 +171,10 @@ public class VoicebankController implements EditorController, Localizable {
 
         // Reload voicebank editor.
         otoPane.getChildren().clear();
-        otoPane.getChildren().add(editor.createNew(voicebank.get().getCategories()));
+        otoPane.getChildren().add(voiceEditor.createNew(voicebank.get().getCategories()));
+
+        // Reload pitch map editor.
+        pitchPane.setContent(pitchEditor.createPitchView(voicebank.get().getPitchData()));
     }
 
     @Override
@@ -184,12 +209,20 @@ public class VoicebankController implements EditorController, Localizable {
         return voicebank.getLocation().getName();
     }
 
+    @FXML
+    public void applySuffix(ActionEvent event) {
+        String suffix = suffixTextField.getText() != null ? suffixTextField.getText() : "";
+        pitchEditor.setSelected(suffix);
+        onVoicebankChange();
+    }
+
     /** Called whenever voicebank is changed. */
     private void onVoicebankChange() {
         // TODO: Add handling of the undo service.
         if (callback != null) {
             callback.enableSave(true);
         }
+        // TODO: Refresh lyrics/envelopes after this.
     }
 
     @Override

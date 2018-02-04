@@ -65,13 +65,18 @@
 	-fx-stroke: transparent;
 }
 
-.table-row-cell:selected {
-	-fx-background-color: skyblue, azure;
+.table-row-cell {
 	-fx-table-cell-border-color: gainsboro;
-	-fx-background-insets: 0, 1 0 1 0;
 }
 
-.table-cell {
+.table-row-cell:selected {
+	-fx-background-color: gainsboro, lightgray;
+	-fx-background-insets: 0, 0 0 1 0;
+}
+
+.table-view:focused .table-row-cell:selected .table-cell {
+	-fx-background-color: gainsboro, azure;
+	-fx-background-insets: 0, 0 0 1 0;
 	-fx-text-fill: black;
 }
 

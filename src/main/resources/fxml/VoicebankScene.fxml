@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.Group?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.VoicebankController">
+<BorderPane xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.VoicebankController">
    <bottom>
       <HBox maxHeight="100.0" prefHeight="100.0" prefWidth="700.0" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
@@ -83,28 +83,43 @@
                     <tabs>
                       <Tab text="Description">
                         <content>
-                          <ScrollPane fitToHeight="true" minViewportHeight="0.0" minViewportWidth="400.0">
+                          <ScrollPane fitToHeight="true" fitToWidth="true" minViewportHeight="0.0" minViewportWidth="300">
                                  <content>
-                                    <TextArea fx:id="descriptionTextArea" prefWidth="400.0" promptText="Enter description here..." />
+                                    <TextArea fx:id="descriptionTextArea" promptText="Enter description here..." />
                                  </content>
                               </ScrollPane>
                         </content>
                       </Tab>
                       <Tab text="Pitch">
                         <content>
-                          <AnchorPane fx:id="anchorPitch" />
+                              <HBox>
+                                 <children>
+                                <ScrollPane fx:id="pitchPane" fitToHeight="true" fitToWidth="true" minViewportHeight="0.0" prefViewportWidth="250.0" />
+                                    <AnchorPane minHeight="180.0" prefWidth="122.0" style="-fx-background-insets: 0, 0 1 1 0; -fx-background-color: lightgray, white">
+                                       <children>
+                                          <TextField fx:id="suffixTextField" layoutX="12.0" layoutY="63.0" prefHeight="27.0" prefWidth="100.0" />
+                                          <Button fx:id="applySuffixButton" layoutX="32.0" layoutY="109.0" mnemonicParsing="false" onAction="#applySuffix" text="Apply" />
+                                       </children>
+                                       <opaqueInsets>
+                                          <Insets />
+                                       </opaqueInsets>
+                                    </AnchorPane>
+                                 </children>
+                              </HBox>
                         </content>
                       </Tab>
                     </tabs>
                      <VBox.margin>
-                        <Insets top="5.0" />
+                        <Insets right="10.0" top="5.0" />
                      </VBox.margin>
                   </TabPane>
                </children>
             </VBox>
                   <Separator orientation="VERTICAL" />
-            <HBox fx:id="otoPane" HBox.hgrow="ALWAYS" />
-               <!-- </content></ScrollPane> -->
+            <HBox fx:id="otoPane" HBox.hgrow="ALWAYS">
+               <HBox.margin>
+                  <Insets left="8.0" />
+               </HBox.margin></HBox>
                </children>
                <padding>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

@@ -1,7 +1,6 @@
 package com.utsusynth.utsu.model;
 
 import java.io.File;
-import java.util.HashMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -15,6 +14,7 @@ import com.utsusynth.utsu.model.song.pitch.PitchCurve;
 import com.utsusynth.utsu.model.song.pitch.portamento.PortamentoFactory;
 import com.utsusynth.utsu.model.voicebank.DisjointLyricSet;
 import com.utsusynth.utsu.model.voicebank.LyricConfigMap;
+import com.utsusynth.utsu.model.voicebank.PitchMap;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import com.utsusynth.utsu.model.voicebank.VoicebankManager;
@@ -40,8 +40,9 @@ public class ModelModule extends AbstractModule {
     @Provides
     private Voicebank provideEmptyVoicebank(
             LyricConfigMap configMap,
+            PitchMap pitchMap,
             DisjointLyricSet conversionSet) {
-        return new Voicebank(configMap, new HashMap<>(), conversionSet);
+        return new Voicebank(configMap, pitchMap, conversionSet);
     }
 
     @Provides

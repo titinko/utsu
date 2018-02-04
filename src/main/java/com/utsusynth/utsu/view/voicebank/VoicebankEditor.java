@@ -106,18 +106,23 @@ public class VoicebankEditor {
         TableColumn<LyricConfigData, Double> offsetCol = new TableColumn<>("Offset");
         offsetCol.setCellValueFactory(data -> data.getValue().offsetProperty().asObject());
         offsetCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
+        offsetCol.setSortable(false);
         TableColumn<LyricConfigData, Double> consonantCol = new TableColumn<>("Consonant");
         consonantCol.setCellValueFactory(data -> data.getValue().consonantProperty().asObject());
         consonantCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
+        consonantCol.setSortable(false);
         TableColumn<LyricConfigData, Double> cutoffCol = new TableColumn<>("Cutoff");
         cutoffCol.setCellValueFactory(data -> data.getValue().cutoffProperty().asObject());
         cutoffCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
+        cutoffCol.setSortable(false);
         TableColumn<LyricConfigData, Double> preutterCol = new TableColumn<>("Preutter");
         preutterCol.setCellValueFactory(data -> data.getValue().preutterProperty().asObject());
         preutterCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
+        preutterCol.setSortable(false);
         TableColumn<LyricConfigData, Double> overlapCol = new TableColumn<>("Overlap");
         overlapCol.setCellValueFactory(data -> data.getValue().overlapProperty().asObject());
         overlapCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
+        overlapCol.setSortable(false);
         table.getColumns().setAll(
                 ImmutableList.of(
                         lyricCol,

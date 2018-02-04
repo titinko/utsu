@@ -28,7 +28,6 @@ public class Song {
     private double tempo;
     private String projectName;
     private File outputFile;
-    // private File voiceDirectory; // Pulled directly from the oto file.
     private String flags;
     private boolean mode2 = true;
 

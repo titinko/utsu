@@ -3,7 +3,6 @@ package com.utsusynth.utsu.model.voicebank;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -11,6 +10,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.LyricConfigData;
+import com.utsusynth.utsu.common.data.PitchMapData;
 
 /**
  * In-code representation of a voice bank. Compatible with oto.ini files. TODO: Support oto_ini.txt
@@ -20,7 +20,7 @@ public class Voicebank {
     // TODO: Once you have a VoicebankManager, consider sharing between voicebanks.
     private final DisjointLyricSet conversionSet;
     private final LyricConfigMap lyricConfigs;
-    private final Map<String, String> pitchMap;
+    private final PitchMap pitchMap;
 
     private File pathToVoicebank; // Example: "/Library/Iona.utau/"
     private String name; // Example: "Iona"
@@ -82,7 +82,7 @@ public class Voicebank {
 
     public Voicebank(
             LyricConfigMap lyricConfigs,
-            Map<String, String> pitchMap,
+            PitchMap pitchMap,
             DisjointLyricSet conversionSet) {
         this.lyricConfigs = lyricConfigs;
         this.pitchMap = pitchMap;
@@ -106,7 +106,7 @@ public class Voicebank {
 
     public Optional<LyricConfig> getLyricConfig(String prevLyric, String lyric, String pitch) {
         String prefix = getVowel(prevLyric) + " "; // Most common VCV format.
-        String suffix = pitchMap.containsKey(pitch) ? pitchMap.get(pitch) : ""; // Pitch suffix.
+        String suffix = pitchMap.get(pitch); // Pitch suffix.
 
         // Check all possible prefix/lyric/suffix combinations.
         for (String combo : allCombinations(prefix, lyric, suffix)) {
@@ -154,8 +154,6 @@ public class Voicebank {
 
     /**
      * Returns a list of sub-folders for WAV files in the voicebank.
-     * 
-     * @return
      */
     public Set<String> getCategories() {
         return lyricConfigs.getCategories();
@@ -174,7 +172,11 @@ public class Voicebank {
 
             @Override
             public LyricConfigData next() {
-                return configIterator.next().getData();
+                LyricConfig config = configIterator.next();
+                if (config != null) {
+                    return config.getData();
+                }
+                return null;
             }
         };
     }
@@ -199,6 +201,27 @@ public class Voicebank {
                 data.getFileName(),
                 data.getConfigValues());
         lyricConfigs.setConfig(newConfig);
+    }
+
+    public Iterator<PitchMapData> getPitchData() {
+        Iterator<String> pitchIterator = pitchMap.getOrderedPitches();
+        return new Iterator<PitchMapData>() {
+            @Override
+            public boolean hasNext() {
+                return pitchIterator.hasNext();
+            }
+
+            @Override
+            public PitchMapData next() {
+                String pitch = pitchIterator.next();
+                return new PitchMapData(pitch, pitchMap.get(pitch));
+            }
+        };
+    }
+
+    public void setPitchData(PitchMapData data) {
+        // Replace value that has changed, leave others the same.
+        pitchMap.put(data.getPitch(), data.getSuffix());
     }
 
     public String getName() {
