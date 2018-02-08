@@ -18,19 +18,40 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.VoicebankController">
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.VoicebankController">
    <bottom>
-      <HBox maxHeight="100.0" prefHeight="100.0" prefWidth="700.0" spacing="10.0" BorderPane.alignment="CENTER">
+      <HBox maxHeight="150.0" prefHeight="150.0" prefWidth="700.0" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
-            <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="500.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">
+            <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="AS_NEEDED" minViewportHeight="150.0" minViewportWidth="400.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">
               <content>
-                <AnchorPane fx:id="anchorBottom" maxHeight="100.0" minHeight="100.0" />
+                <AnchorPane fx:id="anchorBottom" minHeight="150.0" />
               </content>
                <HBox.margin>
-                  <Insets right="15.0" />
+                  <Insets right="10.0" />
                </HBox.margin>
             </ScrollPane>
-            <AnchorPane maxHeight="100.0" maxWidth="100.0" minWidth="100.0" />
+            <GridPane minWidth="120.0" prefHeight="150.0" prefWidth="120.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <Label fx:id="offsetLabel" styleClass="offset" text="Offset" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                  <Label fx:id="cutoffLabel" styleClass="cutoff" text="Cutoff" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                  <Label fx:id="consonantLabel" styleClass="consonant" text="Consonant" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+                  <Label fx:id="preutteranceLabel" styleClass="preutterance" text="Preutterance" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
+                  <Label fx:id="overlapLabel" styleClass="overlap" text="Overlap" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER" />
+               </children>
+               <HBox.margin>
+                  <Insets bottom="10.0" right="10.0" top="10.0" />
+               </HBox.margin>
+            </GridPane>
          </children>
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" />

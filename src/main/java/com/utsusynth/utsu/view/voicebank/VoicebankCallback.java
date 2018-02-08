@@ -7,6 +7,11 @@ public interface VoicebankCallback {
     Iterator<LyricConfigData> getLyricData(String category);
 
     /**
+     * Displays a lyric in the lyric config editor.
+     */
+    void displayLyric(LyricConfigData lyricData);
+
+    /**
      * Adds a new lyric, unless it would replace an existing one.
      * 
      * @return Whether the new lyric had a name collision.

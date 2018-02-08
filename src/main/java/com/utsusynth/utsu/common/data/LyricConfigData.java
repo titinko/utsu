@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.common.data;
 
+import java.io.File;
 import java.util.List;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.property.DoubleProperty;
@@ -9,6 +10,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class LyricConfigData {
+    private final File pathToFile;
     private final StringProperty lyric;
     private final StringProperty fileName;
     private final DoubleProperty offset; // Time in wav file before note starts, in ms.
@@ -18,6 +20,7 @@ public class LyricConfigData {
     private final DoubleProperty overlap; // Number of ms that overlap with previous note.
 
     public LyricConfigData(
+            File pathToFile,
             String lyric,
             String fileName,
             double offset,
@@ -25,6 +28,7 @@ public class LyricConfigData {
             double cutoff,
             double preutter,
             double overlap) {
+        this.pathToFile = pathToFile;
         this.lyric = new SimpleStringProperty(lyric);
         this.fileName = new SimpleStringProperty(fileName);
         this.offset = new SimpleDoubleProperty(offset);
@@ -32,6 +36,10 @@ public class LyricConfigData {
         this.cutoff = new SimpleDoubleProperty(cutoff);
         this.preutter = new SimpleDoubleProperty(preutter);
         this.overlap = new SimpleDoubleProperty(overlap);
+    }
+
+    public File getPathToFile() {
+        return pathToFile;
     }
 
     public String getLyric() {

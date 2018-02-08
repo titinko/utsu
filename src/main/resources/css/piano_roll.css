@@ -70,14 +70,69 @@
 }
 
 .table-row-cell:selected {
-	-fx-background-color: gainsboro, lightgray;
-	-fx-background-insets: 0, 0 0 1 0;
+	-fx-background-color: skyblue, azure;
+	-fx-background-insets: 0, 1 0 1 0;
 }
 
-.table-view:focused .table-row-cell:selected .table-cell {
-	-fx-background-color: gainsboro, azure;
-	-fx-background-insets: 0, 0 0 1 0;
+.table-cell {
 	-fx-text-fill: black;
+}
+
+.background.offset, .background.cutoff {
+	-fx-background-color: gainsboro;
+}
+
+.background.consonant {
+	-fx-background-color: azure;
+}
+
+.background.vowel {
+	-fx-background-color: white;
+}
+
+.chart, .chart-content, .chart-plot-background {
+	-fx-background-color: transparent;
+	-fx-padding: 0px;
+}
+
+.chart-series-line {    
+    -fx-stroke-width: 1px;
+    -fx-effect: null;
+}
+ 
+.default-color0.chart-series-line {
+	-fx-stroke: royalblue;
+}
+
+.default-color1.chart-series-line {
+	-fx-stroke: crimson;
+}
+
+.offset, .cutoff {
+	-fx-stroke: darkgray;
+	-fx-text-fill: dimgray;
+	-fx-stroke-width: 2;
+	
+}
+
+.consonant {
+	-fx-stroke: skyblue;
+	-fx-text-fill: deepskyblue;
+	-fx-stroke-width: 2;
+}
+
+.preutterance, .overlap {
+	-fx-stroke-width: 2.5;
+}
+
+.preutterance {
+	-fx-stroke: goldenrod;
+	-fx-text-fill: goldenrod;
+}
+
+.overlap {
+	-fx-stroke: steelblue;
+	-fx-text-fill: steelblue;
 }
 
 .piano-black-key {

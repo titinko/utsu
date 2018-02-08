@@ -11,6 +11,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
+import com.utsusynth.utsu.view.voicebank.LyricConfigEditor;
 import com.utsusynth.utsu.view.voicebank.PitchCallback;
 import com.utsusynth.utsu.view.voicebank.PitchEditor;
 import com.utsusynth.utsu.view.voicebank.VoicebankCallback;
@@ -39,6 +40,7 @@ public class VoicebankController implements EditorController, Localizable {
     private final VoicebankContainer voicebank;
     private final VoicebankEditor voiceEditor;
     private final PitchEditor pitchEditor;
+    private final LyricConfigEditor configEditor;
     private final Localizer localizer;
     private final UndoService undoService;
     private final VoicebankWriter voicebankWriter;
@@ -72,12 +74,14 @@ public class VoicebankController implements EditorController, Localizable {
             VoicebankContainer voicebankContainer, // Start with default voicebank.
             VoicebankEditor voiceEditor,
             PitchEditor pitchEditor,
+            LyricConfigEditor configEditor,
             Localizer localizer,
             UndoService undoService,
             VoicebankWriter voicebankWriter) {
         this.voicebank = voicebankContainer;
         this.voiceEditor = voiceEditor;
         this.pitchEditor = pitchEditor;
+        this.configEditor = configEditor;
         this.localizer = localizer;
         this.undoService = undoService;
         this.voicebankWriter = voicebankWriter;
@@ -107,6 +111,15 @@ public class VoicebankController implements EditorController, Localizable {
             @Override
             public Iterator<LyricConfigData> getLyricData(String category) {
                 return voicebank.get().getLyricData(category);
+            }
+
+            @Override
+            public void displayLyric(LyricConfigData lyricData) {
+                // Load lyric config editor.
+                anchorBottom.getChildren().clear();
+                anchorBottom.getChildren().add(configEditor.createConfigEditor(lyricData));
+                anchorBottom.getChildren().add(configEditor.getControlElement());
+                anchorBottom.getChildren().add(configEditor.getChartElement());
             }
 
             @Override

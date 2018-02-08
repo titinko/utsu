@@ -2,8 +2,10 @@ package com.utsusynth.utsu.view.voicebank;
 
 import java.util.Iterator;
 import java.util.Set;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.LyricConfigData;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -79,9 +81,8 @@ public class VoicebankEditor {
             TableRow<LyricConfigData> row = new TableRow<>();
             ContextMenu contextMenu = new ContextMenu();
             MenuItem addAliasItem = new MenuItem("Add Alias");
-            addAliasItem.setOnAction(event -> {
-                // blah
-            });
+            // TODO: Implement this.
+            addAliasItem.setDisable(true);
             MenuItem deleteItem = new MenuItem("Delete");
             deleteItem.setOnAction(event -> {
                 table.getItems().remove(row.getItem());
@@ -94,6 +95,11 @@ public class VoicebankEditor {
                     contextMenu.show(row, event.getScreenX(), event.getScreenY());
                 }
             });
+            row.setOnMouseClicked(event -> {
+                if (event.isShiftDown()) {
+                    model.displayLyric(row.getItem());
+                }
+            });
             return row;
         });
 
@@ -103,26 +109,16 @@ public class VoicebankEditor {
         lyricCol.setCellFactory(col -> new EditableCell<>(stringToString));
         TableColumn<LyricConfigData, String> fileCol = new TableColumn<>("File");
         fileCol.setCellValueFactory(data -> data.getValue().fileNameProperty());
-        TableColumn<LyricConfigData, Double> offsetCol = new TableColumn<>("Offset");
-        offsetCol.setCellValueFactory(data -> data.getValue().offsetProperty().asObject());
-        offsetCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
-        offsetCol.setSortable(false);
-        TableColumn<LyricConfigData, Double> consonantCol = new TableColumn<>("Consonant");
-        consonantCol.setCellValueFactory(data -> data.getValue().consonantProperty().asObject());
-        consonantCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
-        consonantCol.setSortable(false);
-        TableColumn<LyricConfigData, Double> cutoffCol = new TableColumn<>("Cutoff");
-        cutoffCol.setCellValueFactory(data -> data.getValue().cutoffProperty().asObject());
-        cutoffCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
-        cutoffCol.setSortable(false);
-        TableColumn<LyricConfigData, Double> preutterCol = new TableColumn<>("Preutter");
-        preutterCol.setCellValueFactory(data -> data.getValue().preutterProperty().asObject());
-        preutterCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
-        preutterCol.setSortable(false);
-        TableColumn<LyricConfigData, Double> overlapCol = new TableColumn<>("Overlap");
-        overlapCol.setCellValueFactory(data -> data.getValue().overlapProperty().asObject());
-        overlapCol.setCellFactory(col -> new EditableCell<>(stringToDouble));
-        overlapCol.setSortable(false);
+        TableColumn<LyricConfigData, Double> offsetCol =
+                createNumberCol("Offset", config -> config.offsetProperty());
+        TableColumn<LyricConfigData, Double> consonantCol =
+                createNumberCol("Consonant", config -> config.consonantProperty());
+        TableColumn<LyricConfigData, Double> cutoffCol =
+                createNumberCol("Cutoff", config -> config.cutoffProperty());
+        TableColumn<LyricConfigData, Double> preutterCol =
+                createNumberCol("Preutter", config -> config.preutterProperty());
+        TableColumn<LyricConfigData, Double> overlapCol =
+                createNumberCol("Overlap", config -> config.overlapProperty());
         table.getColumns().setAll(
                 ImmutableList.of(
                         lyricCol,
@@ -152,6 +148,21 @@ public class VoicebankEditor {
             }
         }
         return scrollPane;
+    }
+
+    private TableColumn<LyricConfigData, Double> createNumberCol(
+            String title,
+            Function<LyricConfigData, DoubleProperty> property) {
+        TableColumn<LyricConfigData, Double> col = new TableColumn<>(title);
+        col.setCellValueFactory(data -> property.apply(data.getValue()).asObject());
+        col.setCellFactory(source -> new EditableCell<>(stringToDouble));
+        col.setSortable(false);
+        col.setOnEditCommit(event -> {
+            property.apply(event.getRowValue()).set(event.getNewValue());
+            // Re-create config editor if necessary.
+            model.displayLyric(event.getRowValue());
+        });
+        return col;
     }
 
     private void clear() {

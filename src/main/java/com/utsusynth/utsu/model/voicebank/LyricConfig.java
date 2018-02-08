@@ -86,6 +86,7 @@ public class LyricConfig implements Comparable<LyricConfig> {
 
     LyricConfigData getData() {
         return new LyricConfigData(
+                pathToFile,
                 trueLyric,
                 fileName,
                 offset,
