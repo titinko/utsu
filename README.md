@@ -16,7 +16,9 @@ For Mac, Windows, Linux:
 First, you'll need to make sure you computer runs Java.  You can download the latest Java engine [here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
 ![Here's what the download page should look like.](images/java_screenshot.png)
-You'll need Java 8, not Java 7 or Java 9, and you'll want a JRE, not a JDK.
+You'll need Java 8, not Java 7 or Java 9, and you'll want a JRE, not a JDK.  
+
+NOTE FOR LINUX USERS: You'll need to download [Oracle Java](https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-get-on-ubuntu-16-04) as Utsu does not work with the default OpenJDK.
 
 Next, download the Utsu executable as a ZIP from the [releases page](https://github.com/titinko/utsu/releases/tag/0.1.1).
 
