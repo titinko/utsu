@@ -18,14 +18,20 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.shape.Line;
+import javafx.util.Duration;
 
 public class LyricConfigEditor {
-    private static final int MAX_AMPLITUDE = 32767;
-    private static final double SCALE_X = 0.8;
-    private static final int HEIGHT = 150;
+    private static final int maxAmplitude = 32767;
+    private static final double scaleX = 0.8;
+    private static final int height = 150;
+    private static MediaPlayer mediaPlayer; // Used for audio playback.
 
     private final SoundFileReader soundFileReader;
 
@@ -46,10 +52,6 @@ public class LyricConfigEditor {
         controlBars = new Group();
     }
 
-    public Optional<LyricConfigData> getCurrentConfig() {
-        return configData;
-    }
-
     public GridPane createConfigEditor(LyricConfigData config) {
         this.configData = Optional.of(config);
         double lengthMs = createLineChart(config);
@@ -67,16 +69,15 @@ public class LyricConfigEditor {
         curLength -= cutoffLength;
         double consonantLength = Math.max(Math.min(config.consonantProperty().get(), curLength), 0);
 
-        double totalX = lengthMs * SCALE_X;
-        double offsetBarX = offsetLength * SCALE_X;
-        double consonantBarX = (offsetLength + consonantLength) * SCALE_X;
-        double cutoffBarX = (lengthMs - cutoffLength) * SCALE_X;
+        double totalX = lengthMs * scaleX;
+        double offsetBarX = offsetLength * scaleX;
+        double consonantBarX = (offsetLength + consonantLength) * scaleX;
+        double cutoffBarX = (lengthMs - cutoffLength) * scaleX;
         double preutterBarX = Math.min(
-                Math.max((offsetLength + config.preutterProperty().get()) * SCALE_X, 0),
+                Math.max((offsetLength + config.preutterProperty().get()) * scaleX, 0),
                 totalX);
-        double overlapBarX = Math.min(
-                Math.max((offsetLength + config.overlapProperty().get()) * SCALE_X, 0),
-                totalX);
+        double overlapBarX = Math
+                .min(Math.max((offsetLength + config.overlapProperty().get()) * scaleX, 0), totalX);
 
         // Background colors.
         Pane offsetPane = createBackground(offsetBarX, "offset");
@@ -95,6 +96,26 @@ public class LyricConfigEditor {
         controlBars.getChildren()
                 .setAll(offsetBar, overlapBar, preutterBar, consonantBar, cutoffBar);
 
+        // Context menu for config editor.
+        MenuItem playItem = new MenuItem("Play");
+        playItem.setOnAction(event -> {
+            playSound();
+        });
+        ContextMenu contextMenu = new ContextMenu(playItem);
+        background.setOnContextMenuRequested(event -> {
+            contextMenu.show(background, event.getScreenX(), event.getScreenY());
+        });
+        controlBars.setOnContextMenuRequested(event -> {
+            contextMenu.show(controlBars, event.getScreenX(), event.getScreenY());
+        });
+        background.setOnMousePressed(event -> {
+            contextMenu.hide();
+        });
+        controlBars.setOnMousePressed(event -> {
+            contextMenu.hide();
+        });
+
+        // Enable dragging bars to change config values.
         offsetBar.setOnMouseDragged(event -> {
             double newX = Math.min(
                     Math.max(event.getX(), 0),
@@ -106,7 +127,7 @@ public class LyricConfigEditor {
             consonantBar.setEndX(consonantBar.getEndX() + addedX);
             offsetPane.setPrefWidth(offsetPane.getPrefWidth() + addedX);
             vowelPane.setPrefWidth(vowelPane.getPrefWidth() - addedX);
-            config.offsetProperty().set(newX / SCALE_X);
+            config.offsetProperty().set(newX / scaleX);
 
             // Move preutter bar along with offset bar.
             double rawPreutterX = preutterBar.getStartX() + addedX;
@@ -114,7 +135,7 @@ public class LyricConfigEditor {
             preutterBar.setStartX(preutterX);
             preutterBar.setEndX(preutterX);
             if (rawPreutterX != preutterX) {
-                config.preutterProperty().set((preutterX - newX) / SCALE_X);
+                config.preutterProperty().set((preutterX - newX) / scaleX);
             }
             // Move overlap bar along with offset bar.
             double rawOverlapX = overlapBar.getStartX() + addedX;
@@ -122,7 +143,7 @@ public class LyricConfigEditor {
             overlapBar.setStartX(overlapX);
             overlapBar.setEndX(overlapX);
             if (rawOverlapX != overlapX) {
-                config.overlapProperty().set((overlapX - newX) / SCALE_X);
+                config.overlapProperty().set((overlapX - newX) / scaleX);
             }
         });
         consonantBar.setOnMouseDragged(event -> {
@@ -133,7 +154,7 @@ public class LyricConfigEditor {
             consonantBar.setEndX(newX);
             consonantPane.setPrefWidth(consonantPane.getPrefWidth() + addedX);
             vowelPane.setPrefWidth(vowelPane.getPrefWidth() - addedX);
-            config.consonantProperty().set(consonantPane.getPrefWidth() / SCALE_X);
+            config.consonantProperty().set(consonantPane.getPrefWidth() / scaleX);
         });
         cutoffBar.setOnMouseDragged(event -> {
             double newX = Math.min(Math.max(event.getX(), consonantBar.getStartX()), totalX);
@@ -142,21 +163,21 @@ public class LyricConfigEditor {
             cutoffBar.setEndX(newX);
             vowelPane.setPrefWidth(vowelPane.getPrefWidth() + addedX);
             cutoffPane.setPrefWidth(cutoffPane.getPrefWidth() - addedX);
-            config.cutoffProperty().set(cutoffPane.getPrefWidth() / SCALE_X);
+            config.cutoffProperty().set(cutoffPane.getPrefWidth() / scaleX);
         });
         preutterBar.setOnMouseDragged(event -> {
             double newX = Math.min(Math.max(event.getX(), 0), totalX);
             preutterBar.setStartX(newX);
             preutterBar.setEndX(newX);
             double newPreutterX = newX - offsetBar.getStartX();
-            config.preutterProperty().set(newPreutterX / SCALE_X);
+            config.preutterProperty().set(newPreutterX / scaleX);
         });
         overlapBar.setOnMouseDragged(event -> {
             double newX = Math.min(Math.max(event.getX(), 0), totalX);
             overlapBar.setStartX(newX);
             overlapBar.setEndX(newX);
             double newOverlapX = newX - offsetBar.getStartX();
-            config.overlapProperty().set(newOverlapX / SCALE_X);
+            config.overlapProperty().set(newOverlapX / scaleX);
         });
 
         return background;
@@ -170,16 +191,38 @@ public class LyricConfigEditor {
         return controlBars;
     }
 
+    private void playSound() {
+        if (!configData.isPresent()) {
+            return;
+        }
+        Media media = new Media(configData.get().getPathToFile().toURI().toString());
+        mediaPlayer = new MediaPlayer(media);
+        mediaPlayer.setOnReady(() -> {
+            double lengthMs = media.getDuration().toMillis();
+            double offsetLengthMs =
+                    Math.max(Math.min(configData.get().offsetProperty().get(), lengthMs), 0);
+            double cutoffLengthMs = configData.get().cutoffProperty().get();
+            if (cutoffLengthMs >= 0) {
+                cutoffLengthMs = Math.max(Math.min(cutoffLengthMs, lengthMs - offsetLengthMs), 0);
+            } else {
+                cutoffLengthMs = Math.max(lengthMs - offsetLengthMs + cutoffLengthMs, 0);
+            }
+            mediaPlayer.setStartTime(Duration.millis(offsetLengthMs));
+            mediaPlayer.setStopTime(Duration.millis(lengthMs - cutoffLengthMs));
+            mediaPlayer.play();
+        });
+    }
+
     private Pane createBackground(double widthX, String style) {
         Pane pane = new Pane();
         pane.setPrefWidth(widthX);
-        pane.setPrefHeight(HEIGHT);
+        pane.setPrefHeight(height);
         pane.getStyleClass().addAll("background", style);
         return pane;
     }
 
     private Line createControlBar(double xPos, double totalX, String style) {
-        Line bar = new Line(xPos, 0, xPos, HEIGHT);
+        Line bar = new Line(xPos, 0, xPos, height);
         bar.getStyleClass().add(style);
         bar.setOnMouseEntered(event -> {
             bar.getScene().setCursor(Cursor.W_RESIZE);
@@ -198,9 +241,9 @@ public class LyricConfigEditor {
         xAxis.setMinorTickVisible(false);
         NumberAxis yAxis = new NumberAxis();
         yAxis.setAutoRanging(false);
-        yAxis.setLowerBound(-MAX_AMPLITUDE);
-        yAxis.setUpperBound(MAX_AMPLITUDE);
-        yAxis.setTickUnit(MAX_AMPLITUDE / 5);
+        yAxis.setLowerBound(-maxAmplitude);
+        yAxis.setUpperBound(maxAmplitude);
+        yAxis.setTickUnit(maxAmplitude / 5);
         yAxis.setSide(Side.RIGHT);
         yAxis.setOpacity(0);
         yAxis.setTickLabelsVisible(false);
@@ -212,7 +255,7 @@ public class LyricConfigEditor {
         chart.setVerticalGridLinesVisible(false);
         chart.setVerticalZeroLineVisible(false);
         chart.setCreateSymbols(false);
-        chart.setPrefHeight(HEIGHT);
+        chart.setPrefHeight(height);
 
         // Initialize chart data sets.
         ObservableList<Data<Number, Number>> wavSamples = FXCollections.observableArrayList();
@@ -239,7 +282,7 @@ public class LyricConfigEditor {
                 currentTimeMs += msPerSample;
             }
             // Preferred width is 800 pixels per second.
-            chart.setPrefWidth(wavData.get().getLengthMs() * SCALE_X);
+            chart.setPrefWidth(wavData.get().getLengthMs() * scaleX);
         } else {
             // Make chart invisible if wav file can't be read.
             chart.setOpacity(0);
@@ -279,8 +322,8 @@ public class LyricConfigEditor {
                 // Scale to a value of [-10, 10] to make a good logistic function input.
                 double scaledFrq = (frqValue - avgFreq) * 10 / avgFreq;
                 // Apply logistic function to enhance central values.
-                double squashedFrq = (MAX_AMPLITUDE * 2 / (1 + Math.exp(-scaledFrq)));
-                frqSamples.add(new Data<>(currentTimeMs, squashedFrq - MAX_AMPLITUDE));
+                double squashedFrq = (maxAmplitude * 2 / (1 + Math.exp(-scaledFrq)));
+                frqSamples.add(new Data<>(currentTimeMs, squashedFrq - maxAmplitude));
                 currentTimeMs += msPerFrqValue;
             }
         }
