@@ -89,9 +89,9 @@ public class VoicebankWriter {
                         stream.print(roundDecimal(config.getPreutterance(), "#.#") + ",");
                         stream.print(roundDecimal(config.getOverlap(), "#.#") + "\n");
                     }
-                    ps.flush();
-                    ps.close();
                 }
+                ps.flush();
+                ps.close();
             }
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             // TODO: Handle this.
@@ -113,9 +113,9 @@ public class VoicebankWriter {
                         continue;
                     }
                     ps.print(data.getPitch() + "\t\t" + data.getSuffix() + "\n");
-                    ps.flush();
-                    ps.close();
                 }
+                ps.flush();
+                ps.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 // TODO: Handle this.
                 errorLogger.logError(e);
