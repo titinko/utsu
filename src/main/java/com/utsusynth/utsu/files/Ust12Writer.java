@@ -5,8 +5,8 @@ import java.text.DecimalFormat;
 import java.util.Iterator;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.Note;
+import com.utsusynth.utsu.model.song.Song;
 
 /**
  * Writes a song to a Shift-JIS UST 1.2 file.
@@ -91,6 +91,7 @@ public class Ust12Writer {
             }
 
             // Envelope.
+            ps.print("Envelope=");
             for (String value : note.getFullEnvelope()) {
                 ps.print(value + ",");
             }

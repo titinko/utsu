@@ -175,13 +175,7 @@ public class Note {
     public void setPBS(String[] pbsValues) {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbsValues) {
-            double toAdd;
-            try {
-                toAdd = Double.parseDouble(value);
-            } catch (Exception e) {
-                toAdd = 0;
-            }
-            builder.add(toAdd);
+            builder.add(safeParseDouble(value, 0));
         }
         pbs = builder.build();
     }
@@ -193,13 +187,7 @@ public class Note {
     public void setPBW(String[] pbwValues) {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbwValues) {
-            double toAdd;
-            try {
-                toAdd = Double.parseDouble(value);
-            } catch (Exception e) {
-                toAdd = 0;
-            }
-            builder.add(toAdd);
+            builder.add(safeParseDouble(value, 1));
         }
         pbw = builder.build();
     }
@@ -211,13 +199,7 @@ public class Note {
     public void setPBY(String[] pbyValues) {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbyValues) {
-            double toAdd;
-            try {
-                toAdd = Double.parseDouble(value);
-            } catch (Exception e) {
-                toAdd = 0;
-            }
-            builder.add(toAdd);
+            builder.add(safeParseDouble(value, 0));
         }
         pby = builder.build();
     }
@@ -237,28 +219,23 @@ public class Note {
     public void setEnvelope(String[] envelopeValues) {
         // Parse ust envelope values.
         if (envelopeValues.length > 0) {
-            envelopeWidth[0] = Double.parseDouble(envelopeValues[0]); // p1
-            envelopeWidth[1] = Double.parseDouble(envelopeValues[1]); // p2
-            envelopeWidth[2] = Double.parseDouble(envelopeValues[2]); // p3
-            envelopeHeight[0] = Double.parseDouble(envelopeValues[3]); // v1
-            envelopeHeight[1] = Double.parseDouble(envelopeValues[4]); // v2
-            envelopeHeight[2] = Double.parseDouble(envelopeValues[5]); // v3
+            envelopeWidth[0] = safeParseDouble(envelopeValues[0], envelopeWidth[0]); // p1
+            envelopeWidth[1] = safeParseDouble(envelopeValues[1], envelopeWidth[1]); // p2
+            envelopeWidth[2] = safeParseDouble(envelopeValues[2], envelopeWidth[2]); // p3
+            envelopeHeight[0] = safeParseDouble(envelopeValues[3], envelopeHeight[0]); // v1
+            envelopeHeight[1] = safeParseDouble(envelopeValues[4], envelopeHeight[1]); // v2
+            envelopeHeight[2] = safeParseDouble(envelopeValues[5], envelopeHeight[2]); // v3
         }
         if (envelopeValues.length > 6) {
-            envelopeHeight[3] = Double.parseDouble(envelopeValues[6]); // v4
+            envelopeHeight[3] = safeParseDouble(envelopeValues[6], envelopeHeight[3]); // v4
         }
         if (envelopeValues.length > 7) {
-            try {
-                // Sometimes this number is set to weird values.
-                envelopeOverlap = Double.parseDouble(envelopeValues[7]); // overlap
-            } catch (Exception e) {
-                envelopeOverlap = 0;
-            }
-            envelopeWidth[3] = Double.parseDouble(envelopeValues[8]); // p4
+            envelopeOverlap = safeParseDouble(envelopeValues[7], envelopeOverlap); // useless
+            envelopeWidth[3] = safeParseDouble(envelopeValues[8], envelopeWidth[3]); // p4
         }
         if (envelopeValues.length > 9) {
-            envelopeWidth[4] = Double.parseDouble(envelopeValues[9]); // p5
-            envelopeHeight[4] = Double.parseDouble(envelopeValues[10]); // v5
+            envelopeWidth[4] = safeParseDouble(envelopeValues[9], envelopeWidth[4]); // p5
+            envelopeHeight[4] = safeParseDouble(envelopeValues[10], envelopeHeight[4]); // v5
         }
 
         // Try to catch an envelope that's V2/V3 crossfaded.
@@ -316,7 +293,7 @@ public class Note {
         for (int i = 0; i < 10; i++) {
             // Leave all unfilled vibrato values as the defaults.
             if (vibratoValues.length > i) {
-                vibrato[i] = Integer.parseInt(vibratoValues[i]);
+                vibrato[i] = safeParseInt(vibratoValues[i], 0);
             }
         }
     }
@@ -369,6 +346,24 @@ public class Note {
                 intensity,
                 modulation,
                 noteFlags);
+    }
+
+    private static int safeParseInt(String fromMe, int fallback) {
+        try {
+            return Integer.parseInt(fromMe);
+        } catch (Exception e) {
+            System.out.println("Warning: failed to parse int from " + fromMe);
+            return fallback;
+        }
+    }
+
+    private static double safeParseDouble(String fromMe, double fallback) {
+        try {
+            return Double.parseDouble(fromMe);
+        } catch (Exception e) {
+            System.out.println("Warning: failed to parse double from " + fromMe);
+            return fallback;
+        }
     }
 
     @Override
