@@ -136,12 +136,16 @@ public class VoicebankReader {
                     System.out.println("Received unexpected results while parsing oto.ini");
                     continue;
                 }
+                // Search for a frq file.
+                String frqName = fileName.substring(0, fileName.length() - 4) + "_wav.frq";
+                File frqFile = pathToOtoFile.resolve(frqName).toFile();
                 builder.addLyric(
                         new LyricConfig(
                                 pathToVoicebank,
                                 pathToOtoFile.resolve(fileName).toFile(),
                                 lyricName,
-                                configValues));
+                                configValues),
+                        frqFile.canRead());
             }
         }
     }

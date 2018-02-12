@@ -78,6 +78,23 @@
 	-fx-text-fill: black;
 }
 
+.frq-cell {
+	-fx-background-insets: 0, 1 0 1 0;
+	-fx-alignment: center;
+}
+
+.frq-cell.valid {
+	-fx-background-color: transparent, #92ff77;
+}
+
+.frq-cell.invalid {
+	-fx-background-color: transparent, #ff9d89;
+}
+
+.frq-cell.loading {
+	-fx-background-color: transparent, #ffda7c;
+}
+
 .background.offset, .background.cutoff {
 	-fx-background-color: gainsboro;
 }

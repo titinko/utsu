@@ -2,6 +2,7 @@ package com.utsusynth.utsu.model.voicebank;
 
 import java.io.File;
 import com.utsusynth.utsu.common.data.LyricConfigData;
+import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 
 /**
  * Internal representation of the configuration of a single lyric in a voicebank. Parsed from an
@@ -84,11 +85,12 @@ public class LyricConfig implements Comparable<LyricConfig> {
         return trueLyric;
     }
 
-    LyricConfigData getData() {
+    LyricConfigData getData(boolean hasFrq) {
         return new LyricConfigData(
                 pathToFile,
                 trueLyric,
                 fileName,
+                hasFrq ? FrqStatus.VALID : FrqStatus.INVALID,
                 offset,
                 consonant,
                 cutoff,

@@ -21,4 +21,6 @@ public interface VoicebankCallback {
     void removeLyric(String lyric);
 
     void modifyLyric(LyricConfigData lyricData);
+
+    void generateFrqFiles(Iterator<LyricConfigData> configData);
 }

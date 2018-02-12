@@ -9,6 +9,17 @@ No changes have been made to its code. Because utsu does not link to it,
 utsu's source is unaffected by the terms of the macres license. If at any
 point the above link becomes defunct, feel free to request that it be updated.
 
+## frq0003gen
+frq0003gen is licensed under the GNU GPL V3.
+
+As of this writing, its license can be found at:
+  https://github.com/titinko/frq0003gen/blob/master/LICENSE
+and the code also found in said repository. 
+
+No changes have been made to its code. Because utsu does not link to it, 
+utsu's source is unaffected by the terms of the frq0003gen license. If at any
+point the above link becomes defunct, feel free to request that it be updated.
+
 ## wavtool_yawu
 wavtool_yawu is licensed under the GNU LGPL V3.
 

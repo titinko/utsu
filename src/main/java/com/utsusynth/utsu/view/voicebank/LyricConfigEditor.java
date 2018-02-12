@@ -6,8 +6,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.LyricConfigData;
+import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import com.utsusynth.utsu.common.data.WavData;
-import com.utsusynth.utsu.files.FrqReader;
+import com.utsusynth.utsu.files.SoundFileReader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Side;
@@ -26,25 +27,33 @@ public class LyricConfigEditor {
     private static final double SCALE_X = 0.8;
     private static final int HEIGHT = 150;
 
-    private final FrqReader frqReader;
+    private final SoundFileReader soundFileReader;
 
+    private Optional<LyricConfigData> configData;
     private GridPane background;
     private LineChart<Number, Number> chart;
     private Group controlBars;
 
     @Inject
-    public LyricConfigEditor(FrqReader frqReader) {
-        this.frqReader = frqReader;
+    public LyricConfigEditor(SoundFileReader soundFileReader) {
+        this.soundFileReader = soundFileReader;
 
         // Initialize with dummy data.
+        configData = Optional.absent();
         background = new GridPane();
         chart = new LineChart<>(new NumberAxis(), new NumberAxis());
         chart.setOpacity(0);
         controlBars = new Group();
     }
 
+    public Optional<LyricConfigData> getCurrentConfig() {
+        return configData;
+    }
+
     public GridPane createConfigEditor(LyricConfigData config) {
-        double lengthMs = createLineChart(config.getPathToFile());
+        this.configData = Optional.of(config);
+        double lengthMs = createLineChart(config);
+
         background = new GridPane();
         double curLength = lengthMs;
         double offsetLength = Math.max(Math.min(config.offsetProperty().get(), curLength), 0);
@@ -62,10 +71,12 @@ public class LyricConfigEditor {
         double offsetBarX = offsetLength * SCALE_X;
         double consonantBarX = (offsetLength + consonantLength) * SCALE_X;
         double cutoffBarX = (lengthMs - cutoffLength) * SCALE_X;
-        double preutterBarX = Math
-                .min(Math.max((offsetBarX + config.preutterProperty().get()) * SCALE_X, 0), totalX);
-        double overlapBarX = Math
-                .min(Math.max((offsetBarX + config.overlapProperty().get()) * SCALE_X, 0), totalX);
+        double preutterBarX = Math.min(
+                Math.max((offsetLength + config.preutterProperty().get()) * SCALE_X, 0),
+                totalX);
+        double overlapBarX = Math.min(
+                Math.max((offsetLength + config.overlapProperty().get()) * SCALE_X, 0),
+                totalX);
 
         // Background colors.
         Pane offsetPane = createBackground(offsetBarX, "offset");
@@ -179,7 +190,7 @@ public class LyricConfigEditor {
         return bar;
     }
 
-    private double createLineChart(File pathToWav) {
+    private double createLineChart(LyricConfigData config) {
         NumberAxis xAxis = new NumberAxis();
         xAxis.setOpacity(0);
         xAxis.setTickLabelsVisible(false);
@@ -211,7 +222,7 @@ public class LyricConfigEditor {
         chart.getData().setAll(ImmutableList.of(waveform, frequency));
 
         // Populate wav chart data.
-        Optional<WavData> wavData = frqReader.loadWavData(pathToWav);
+        Optional<WavData> wavData = soundFileReader.loadWavData(config.getPathToFile());
         double msPerSample = 0;
         if (wavData.isPresent()) {
             msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
@@ -235,10 +246,30 @@ public class LyricConfigEditor {
         }
 
         // Populate frequency chart data.
-        String wavName = pathToWav.getName();
-        String frqName = wavName.substring(0, wavName.length() - 4) + "_wav.frq";
-        File frqFile = pathToWav.getParentFile().toPath().resolve(frqName).toFile();
-        Optional<FrequencyData> frqData = frqReader.loadFrqData(frqFile);
+        populateFrqValues(frqSamples, config.getPathToFile(), wavData);
+        config.frqStatusProperty().addListener(event -> {
+            if (config.frqStatusProperty().get().equals(FrqStatus.VALID.toString())) {
+                populateFrqValues(frqSamples, config.getPathToFile(), wavData);
+            }
+        });
+
+        return wavData.isPresent() ? wavData.get().getLengthMs() : 0.0;
+    }
+
+    private void populateFrqValues(
+            ObservableList<Data<Number, Number>> frqSamples,
+            File wavFile,
+            Optional<WavData> wavData) {
+        if (!wavData.isPresent()) {
+            return;
+        }
+        double msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
+
+        // Populate frequency chart data.
+        String wavName = wavFile.getName();
+        String frqName = wavFile.getName().substring(0, wavName.length() - 4) + "_wav.frq";
+        File frqFile = wavFile.getParentFile().toPath().resolve(frqName).toFile();
+        Optional<FrequencyData> frqData = soundFileReader.loadFrqData(frqFile);
         // Don't bother populating frq data if there is no wav data.
         if (wavData.isPresent() && frqData.isPresent()) {
             double avgFreq = frqData.get().getAverageFreq();
@@ -253,6 +284,5 @@ public class LyricConfigEditor {
                 currentTimeMs += msPerFrqValue;
             }
         }
-        return wavData.isPresent() ? wavData.get().getLengthMs() : 0.0;
     }
 }

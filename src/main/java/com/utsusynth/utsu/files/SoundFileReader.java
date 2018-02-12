@@ -15,12 +15,15 @@ import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 
-public class FrqReader {
+/**
+ * Reads .frq and .wav files.
+ */
+public class SoundFileReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
     public Optional<FrequencyData> loadFrqData(File frqFile) {
         if (!frqFile.canRead()) {
-            System.out.println("Error: frq file not found: " + frqFile.getAbsolutePath());
+            System.out.println("Warning: frq file not found: " + frqFile.getAbsolutePath());
             return Optional.absent();
         }
         try {
@@ -37,7 +40,7 @@ public class FrqReader {
             double average = buffer.getDouble(); // Average F0 (pitch) of the sound.
             buffer.get(new byte[16]); // 16 bytes of empty space.
 
-            // Parse frequency/amplidute values.
+            // Parse frequency/amplitude values.
             int numBlocks = buffer.getInt();
             double[] frqs = new double[numBlocks];
             double[] amplitudes = new double[numBlocks];

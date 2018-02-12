@@ -13,6 +13,8 @@ import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.engine.Engine;
+import com.utsusynth.utsu.engine.ExternalProcessRunner;
+import com.utsusynth.utsu.engine.FrqGenerator;
 import com.utsusynth.utsu.engine.Resampler;
 import com.utsusynth.utsu.engine.Wavtool;
 import javafx.fxml.FXMLLoader;
@@ -44,7 +46,7 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private Engine engine(Resampler resampler, Wavtool wavtool) {
+    private Engine provideEngine(Resampler resampler, Wavtool wavtool) {
         String os = System.getProperty("os.name").toLowerCase();
         String resamplerPath;
         String wavtoolPath;
@@ -61,6 +63,21 @@ public class UtsuModule extends AbstractModule {
         File resamplerFile = new File(resamplerPath);
         File wavtoolFile = new File(wavtoolPath);
         return new Engine(resampler, wavtool, resamplerFile, wavtoolFile);
+    }
+
+    @Provides
+    @Singleton
+    private FrqGenerator provideFrqGenerator(ExternalProcessRunner runner) {
+        String os = System.getProperty("os.name").toLowerCase();
+        String frqGeneratorPath;
+        if (os.contains("win")) {
+            frqGeneratorPath = "assets/win64/frq0003gen.exe";
+        } else if (os.contains("mac")) {
+            frqGeneratorPath = "assets/Mac/frq0003gen";
+        } else {
+            frqGeneratorPath = "assets/linux64/frq0003gen";
+        }
+        return new FrqGenerator(runner, new File(frqGeneratorPath), 256);
     }
 
     @Provides

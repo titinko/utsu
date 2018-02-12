@@ -1,10 +1,12 @@
 package com.utsusynth.utsu.view.voicebank;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.Set;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.LyricConfigData;
+import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
@@ -20,6 +22,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -51,6 +54,7 @@ public class VoicebankEditor {
             Tab tab = new Tab(category);
             tab.setOnSelectionChanged(event -> {
                 if (tab.isSelected()) {
+                    // Generate new tab if not already present.
                     if (tab.getContent() == null) {
                         tab.setContent(newTable(model.getLyricData(category)));
                     }
@@ -83,11 +87,18 @@ public class VoicebankEditor {
             MenuItem addAliasItem = new MenuItem("Add Alias");
             // TODO: Implement this.
             addAliasItem.setDisable(true);
+            MenuItem genFrqItem = new MenuItem("Generate .frq File");
+            genFrqItem.setOnAction(event -> {
+                File wavFile = row.getItem().getPathToFile();
+                model.generateFrqFiles(
+                        lyrics.filtered(data -> data.getPathToFile().equals(wavFile)).iterator());
+            });
             MenuItem deleteItem = new MenuItem("Delete");
             deleteItem.setOnAction(event -> {
+                // TODO: Remove this from backend as well.
                 table.getItems().remove(row.getItem());
             });
-            contextMenu.getItems().addAll(addAliasItem, deleteItem);
+            contextMenu.getItems().addAll(addAliasItem, genFrqItem, deleteItem);
             row.setOnContextMenuRequested(event -> {
                 // Don't show context menu for empty rows.
                 if (row.getItem() != null) {
@@ -96,7 +107,7 @@ public class VoicebankEditor {
                 }
             });
             row.setOnMouseClicked(event -> {
-                if (event.isShiftDown()) {
+                if (event.getButton().equals(MouseButton.PRIMARY)) {
                     model.displayLyric(row.getItem());
                 }
             });
@@ -109,6 +120,7 @@ public class VoicebankEditor {
         lyricCol.setCellFactory(col -> new EditableCell<>(stringToString));
         TableColumn<LyricConfigData, String> fileCol = new TableColumn<>("File");
         fileCol.setCellValueFactory(data -> data.getValue().fileNameProperty());
+        TableColumn<LyricConfigData, String> frqStatusCol = createFrqStatusCol(lyrics);
         TableColumn<LyricConfigData, Double> offsetCol =
                 createNumberCol("Offset", config -> config.offsetProperty());
         TableColumn<LyricConfigData, Double> consonantCol =
@@ -123,6 +135,7 @@ public class VoicebankEditor {
                 ImmutableList.of(
                         lyricCol,
                         fileCol,
+                        frqStatusCol,
                         offsetCol,
                         consonantCol,
                         cutoffCol,
@@ -150,6 +163,28 @@ public class VoicebankEditor {
         return scrollPane;
     }
 
+    private TableColumn<LyricConfigData, String> createFrqStatusCol(
+            ObservableList<LyricConfigData> lyrics) {
+        TableColumn<LyricConfigData, String> col = new TableColumn<>("Frq");
+        col.setCellValueFactory(data -> data.getValue().frqStatusProperty());
+        col.setCellFactory(source -> new FrqStatusCell());
+        col.setSortable(false);
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem generateAllFrqItem = new MenuItem("Generate Missing .frq Files");
+        generateAllFrqItem.setOnAction(event -> {
+            model.generateFrqFiles(
+                    lyrics.filtered(
+                            data -> !data.frqStatusProperty().get()
+                                    .equals(FrqStatus.VALID.toString()))
+                            .iterator());
+        });
+        MenuItem regenerateAllFrqItem = new MenuItem("Replace all .frq Files");
+        regenerateAllFrqItem.setOnAction(event -> model.generateFrqFiles(lyrics.iterator()));
+        contextMenu.getItems().addAll(generateAllFrqItem, regenerateAllFrqItem);
+        col.setContextMenu(contextMenu);
+        return col;
+    }
+
     private TableColumn<LyricConfigData, Double> createNumberCol(
             String title,
             Function<LyricConfigData, DoubleProperty> property) {
@@ -170,6 +205,39 @@ public class VoicebankEditor {
         tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         HBox.setHgrow(tabPane, Priority.ALWAYS);
+    }
+
+    private class FrqStatusCell extends TableCell<LyricConfigData, String> {
+        @Override
+        public void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+                setText(null);
+                getStyleClass().clear();
+            } else {
+                FrqStatus status = null;
+                try {
+                    status = FrqStatus.valueOf(item);
+                } catch (Exception e) {
+                    setText(null);
+                    getStyleClass().clear();
+                }
+                switch (status) {
+                    case INVALID:
+                        setText("N");
+                        getStyleClass().setAll("frq-cell", "invalid");
+                        break;
+                    case LOADING:
+                        setText("L");
+                        getStyleClass().setAll("frq-cell", "loading");
+                        break;
+                    case VALID:
+                        setText("Y");
+                        getStyleClass().setAll("frq-cell", "valid");
+                        break;
+                }
+            }
+        }
     }
 
     private class EditableCell<T> extends TableCell<LyricConfigData, T> {
