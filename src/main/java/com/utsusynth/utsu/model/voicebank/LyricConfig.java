@@ -90,7 +90,7 @@ public class LyricConfig implements Comparable<LyricConfig> {
                 pathToFile,
                 trueLyric,
                 fileName,
-                hasFrq ? FrqStatus.VALID : FrqStatus.INVALID,
+                hasFrq ? FrqStatus.VALID.toString() : FrqStatus.INVALID.toString(),
                 offset,
                 consonant,
                 cutoff,

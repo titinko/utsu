@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.LyricConfigData;
-import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.files.SoundFileReader;
 import javafx.collections.FXCollections;
@@ -265,7 +264,8 @@ public class LyricConfigEditor {
         chart.getData().setAll(ImmutableList.of(waveform, frequency));
 
         // Populate wav chart data.
-        Optional<WavData> wavData = soundFileReader.loadWavData(config.getPathToFile());
+        File pathToWav = config.getPathToFile();
+        Optional<WavData> wavData = soundFileReader.loadWavData(pathToWav);
         double msPerSample = 0;
         if (wavData.isPresent()) {
             msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
@@ -289,12 +289,7 @@ public class LyricConfigEditor {
         }
 
         // Populate frequency chart data.
-        populateFrqValues(frqSamples, config.getPathToFile(), wavData);
-        config.frqStatusProperty().addListener(event -> {
-            if (config.frqStatusProperty().get().equals(FrqStatus.VALID.toString())) {
-                populateFrqValues(frqSamples, config.getPathToFile(), wavData);
-            }
-        });
+        populateFrqValues(frqSamples, pathToWav, wavData);
 
         return wavData.isPresent() ? wavData.get().getLengthMs() : 0.0;
     }
@@ -315,6 +310,7 @@ public class LyricConfigEditor {
         Optional<FrequencyData> frqData = soundFileReader.loadFrqData(frqFile);
         // Don't bother populating frq data if there is no wav data.
         if (wavData.isPresent() && frqData.isPresent()) {
+            frqSamples.clear();
             double avgFreq = frqData.get().getAverageFreq();
             double msPerFrqValue = frqData.get().getSamplesPerFreqValue() * msPerSample;
             double currentTimeMs = msPerFrqValue / 2; // Data point is halfway through frq value.

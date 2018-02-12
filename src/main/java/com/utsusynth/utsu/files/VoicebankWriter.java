@@ -77,7 +77,11 @@ public class VoicebankWriter {
                         if (!charset.equals("SJIS") && stream.equals(ps)) {
                             continue;
                         }
-                        stream.print(config.getFilename() + "=");
+                        if (stream.equals(utfPs)) {
+                            stream.print(config.getFilename() + "=");
+                        } else {
+                            stream.print(config.getPathToFile().getName() + "=");
+                        }
                         stream.print(config.getTrueLyric() + ",");
                         stream.print(roundDecimal(config.getOffset(), "#.#") + ",");
                         stream.print(roundDecimal(config.getConsonant(), "#.#") + ",");

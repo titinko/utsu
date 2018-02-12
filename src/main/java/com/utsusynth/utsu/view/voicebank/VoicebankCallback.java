@@ -14,7 +14,7 @@ public interface VoicebankCallback {
     /**
      * Adds a new lyric, unless it would replace an existing one.
      * 
-     * @return Whether the new lyric had a name collision.
+     * @return False if the new lyric had a name collision, true otherwise.
      */
     boolean addLyric(LyricConfigData lyricData);
 
