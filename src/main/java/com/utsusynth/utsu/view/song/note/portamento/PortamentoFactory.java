@@ -38,7 +38,10 @@ public class PortamentoFactory {
             if (i == widths.size() - 1) {
                 curY = finalY;
             } else {
-                curY = finalY - (pitchbend.getPBY().get(i) / 10) * Quantizer.ROW_HEIGHT;
+                if (pitchbend.getPBY().size() > i) {
+                    // Leave curY as-is if PBY has no value for this width.
+                    curY = finalY - (pitchbend.getPBY().get(i) / 10) * Quantizer.ROW_HEIGHT;
+                }
             }
             String type = pitchbend.getPBM().size() > i ? pitchbend.getPBM().get(i) : "";
             pitchCurves.add(

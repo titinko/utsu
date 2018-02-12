@@ -175,7 +175,13 @@ public class Note {
     public void setPBS(String[] pbsValues) {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbsValues) {
-            builder.add(Double.parseDouble(value));
+            double toAdd;
+            try {
+                toAdd = Double.parseDouble(value);
+            } catch (Exception e) {
+                toAdd = 0;
+            }
+            builder.add(toAdd);
         }
         pbs = builder.build();
     }
@@ -187,7 +193,13 @@ public class Note {
     public void setPBW(String[] pbwValues) {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbwValues) {
-            builder.add(Double.parseDouble(value));
+            double toAdd;
+            try {
+                toAdd = Double.parseDouble(value);
+            } catch (Exception e) {
+                toAdd = 0;
+            }
+            builder.add(toAdd);
         }
         pbw = builder.build();
     }
@@ -199,7 +211,13 @@ public class Note {
     public void setPBY(String[] pbyValues) {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbyValues) {
-            builder.add(Double.parseDouble(value));
+            double toAdd;
+            try {
+                toAdd = Double.parseDouble(value);
+            } catch (Exception e) {
+                toAdd = 0;
+            }
+            builder.add(toAdd);
         }
         pby = builder.build();
     }
@@ -296,7 +314,10 @@ public class Note {
 
     public void setVibrato(String[] vibratoValues) {
         for (int i = 0; i < 10; i++) {
-            vibrato[i] = Integer.parseInt(vibratoValues[i]);
+            // Leave all unfilled vibrato values as the defaults.
+            if (vibratoValues.length > i) {
+                vibrato[i] = Integer.parseInt(vibratoValues[i]);
+            }
         }
     }
 

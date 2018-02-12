@@ -3,8 +3,8 @@ package com.utsusynth.utsu.files;
 import java.util.regex.Pattern;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.Note;
+import com.utsusynth.utsu.model.song.Song;
 
 /**
  * Reads a song from a Unicode UST 1.2 file.
@@ -78,7 +78,7 @@ public class Ust12Reader {
             } else if (line.startsWith("Flags=")) {
                 note.setNoteFlags(line.substring("Flags=".length()));
             } else if (line.startsWith("PBS=")) {
-                note.setPBS(line.substring("PBS=".length()).split(","));
+                note.setPBS(line.substring("PBS=".length()).split("[,;]"));
             } else if (line.startsWith("PBW=")) {
                 note.setPBW(line.substring("PBW=".length()).split(","));
             } else if (line.startsWith("PBY=")) {

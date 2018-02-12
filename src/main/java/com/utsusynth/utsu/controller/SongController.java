@@ -291,9 +291,9 @@ public class SongController implements EditorController, Localizable {
                     song.setSong(ust20Reader.loadSong(content));
                     saveFormat = "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
                 } else {
-                    // TODO: Deal with this error.
-                    System.out.println("UST format not found!");
-                    return "*Untitled";
+                    // If no version found, assume UST 1.2 for now.
+                    song.setSong(ust12Reader.loadSong(content));
+                    saveFormat = "UST 1.2 (Shift JIS)";
                 }
                 undoService.clearActions();
                 callback.enableSave(false);

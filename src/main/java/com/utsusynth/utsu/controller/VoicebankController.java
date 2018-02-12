@@ -140,6 +140,14 @@ public class VoicebankController implements EditorController, Localizable {
                 voicebank.get().modifyLyricData(lyricData);
                 onVoicebankChange();
             }
+
+            @Override
+            public void generateFrqFiles(Iterator<LyricConfigData> lyricIterator) {
+                new Thread(() -> {
+                    voicebank.get().generateFrqs(lyricIterator);
+                    // Change cannot be saved or undone, so don't call onVoicebankChange.
+                }).start();
+            }
         });
 
         // Pass callback to pitch editor.

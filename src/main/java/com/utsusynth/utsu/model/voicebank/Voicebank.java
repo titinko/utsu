@@ -10,7 +10,9 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.LyricConfigData;
+import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import com.utsusynth.utsu.common.data.PitchMapData;
+import com.utsusynth.utsu.engine.FrqGenerator;
 
 /**
  * In-code representation of a voice bank. Compatible with oto.ini files. TODO: Support oto_ini.txt
@@ -21,6 +23,8 @@ public class Voicebank {
     private final DisjointLyricSet conversionSet;
     private final LyricConfigMap lyricConfigs;
     private final PitchMap pitchMap;
+    private final Set<File> soundFiles;
+    private final FrqGenerator frqGenerator;
 
     private File pathToVoicebank; // Example: "/Library/Iona.utau/"
     private String name; // Example: "Iona"
@@ -60,8 +64,11 @@ public class Voicebank {
             return this;
         }
 
-        public Builder addLyric(LyricConfig config) {
+        public Builder addLyric(LyricConfig config, boolean hasFrq) {
             lyricConfigs.addConfig(config);
+            if (hasFrq) {
+                soundFiles.add(config.getPathToFile());
+            }
             return this;
         }
 
@@ -83,18 +90,28 @@ public class Voicebank {
     public Voicebank(
             LyricConfigMap lyricConfigs,
             PitchMap pitchMap,
-            DisjointLyricSet conversionSet) {
+            DisjointLyricSet conversionSet,
+            Set<File> soundFiles,
+            FrqGenerator frqGenerator) {
         this.lyricConfigs = lyricConfigs;
         this.pitchMap = pitchMap;
         this.conversionSet = conversionSet;
+        this.soundFiles = soundFiles;
+        this.frqGenerator = frqGenerator;
     }
 
     public Builder toBuilder() {
         // Returns the builder of a new Voicebank with this one's attributes.
-        // The old Voicebank's lyricConfigs, pitchMap, and conversionSet objects are used.
-        return new Builder(new Voicebank(this.lyricConfigs, this.pitchMap, this.conversionSet))
-                .setPathToVoicebank(this.pathToVoicebank).setName(this.name).setAuthor(this.author)
-                .setDescription(this.description).setImageName(this.imageName);
+        // The old Voicebank's final fields are used--the objects are not regenerated.
+        return new Builder(
+                new Voicebank(
+                        this.lyricConfigs,
+                        this.pitchMap,
+                        this.conversionSet,
+                        this.soundFiles,
+                        this.frqGenerator)).setPathToVoicebank(this.pathToVoicebank)
+                                .setName(this.name).setAuthor(this.author)
+                                .setDescription(this.description).setImageName(this.imageName);
     }
 
     /**
@@ -174,7 +191,7 @@ public class Voicebank {
             public LyricConfigData next() {
                 LyricConfig config = configIterator.next();
                 if (config != null) {
-                    return config.getData();
+                    return config.getData(soundFiles.contains(config.getPathToFile()));
                 }
                 return null;
             }
@@ -222,6 +239,37 @@ public class Voicebank {
     public void setPitchData(PitchMapData data) {
         // Replace value that has changed, leave others the same.
         pitchMap.put(data.getPitch(), data.getSuffix());
+    }
+
+    private boolean generateFrq(File wavFile) {
+        String wavName = wavFile.getName();
+        String frqName = wavName.substring(0, wavName.length() - 4) + "_wav.frq";
+        File frqFile = wavFile.getParentFile().toPath().resolve(frqName).toFile();
+        frqGenerator.genFrqFile(wavFile, frqFile);
+        if (frqFile.canRead()) {
+            soundFiles.remove(frqFile); // Removes existing frq file, if present.
+            soundFiles.add(frqFile);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Generates the specified frq files and updates each piece of data.
+     */
+    public void generateFrqs(Iterator<LyricConfigData> dataIterator) {
+        while (dataIterator.hasNext()) {
+            LyricConfigData data = dataIterator.next();
+            if (data == null) {
+                continue;
+            }
+            data.setFrqStatus(FrqStatus.LOADING);
+            if (generateFrq(data.getPathToFile())) {
+                data.setFrqStatus(FrqStatus.VALID);
+            } else {
+                data.setFrqStatus(FrqStatus.INVALID);
+            }
+        }
     }
 
     public String getName() {

@@ -9,10 +9,16 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+/** Data about a lyric config, meant to be used in a TableView. */
 public class LyricConfigData {
+    public enum FrqStatus {
+        INVALID, LOADING, VALID
+    }
+
     private final File pathToFile;
     private final StringProperty lyric;
     private final StringProperty fileName;
+    private final StringProperty frqStatus;
     private final DoubleProperty offset; // Time in wav file before note starts, in ms.
     private final DoubleProperty consonant; // Time in wav file before consonant ends, in ms.
     private final DoubleProperty cutoff; // Time in wav file before note ends, in ms.
@@ -23,6 +29,7 @@ public class LyricConfigData {
             File pathToFile,
             String lyric,
             String fileName,
+            FrqStatus frqStatus,
             double offset,
             double consonant,
             double cutoff,
@@ -31,6 +38,7 @@ public class LyricConfigData {
         this.pathToFile = pathToFile;
         this.lyric = new SimpleStringProperty(lyric);
         this.fileName = new SimpleStringProperty(fileName);
+        this.frqStatus = new SimpleStringProperty(frqStatus.toString());
         this.offset = new SimpleDoubleProperty(offset);
         this.consonant = new SimpleDoubleProperty(consonant);
         this.cutoff = new SimpleDoubleProperty(cutoff);
@@ -52,6 +60,14 @@ public class LyricConfigData {
 
     public String getFileName() {
         return fileName.get();
+    }
+
+    public StringProperty frqStatusProperty() {
+        return frqStatus;
+    }
+
+    public void setFrqStatus(FrqStatus status) {
+        frqStatus.set(status.toString());
     }
 
     public StringProperty fileNameProperty() {

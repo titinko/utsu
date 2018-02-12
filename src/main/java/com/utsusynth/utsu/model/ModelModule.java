@@ -1,10 +1,12 @@
 package com.utsusynth.utsu.model;
 
 import java.io.File;
+import java.util.HashSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.utsusynth.utsu.engine.FrqGenerator;
 import com.utsusynth.utsu.files.VoicebankReader;
 import com.utsusynth.utsu.model.song.NoteList;
 import com.utsusynth.utsu.model.song.NoteStandardizer;
@@ -41,8 +43,9 @@ public class ModelModule extends AbstractModule {
     private Voicebank provideEmptyVoicebank(
             LyricConfigMap configMap,
             PitchMap pitchMap,
-            DisjointLyricSet conversionSet) {
-        return new Voicebank(configMap, pitchMap, conversionSet);
+            DisjointLyricSet conversionSet,
+            FrqGenerator frqGen) {
+        return new Voicebank(configMap, pitchMap, conversionSet, new HashSet<>(), frqGen);
     }
 
     @Provides
