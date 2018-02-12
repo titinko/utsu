@@ -29,7 +29,8 @@ public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
     private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
-    private static final Pattern PITCH_PATTERN = Pattern.compile("([a-gA-G]#?[1-7])\\s+(\\S.*)");
+    private static final Pattern PITCH_PATTERN =
+            Pattern.compile("([a-gA-G]#?[1-7])\\t\\S*\\t(\\S.*)");
 
     private final File defaultVoicePath;
     private final File lyricConversionPath;

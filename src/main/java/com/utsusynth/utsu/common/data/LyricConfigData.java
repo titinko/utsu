@@ -58,16 +58,16 @@ public class LyricConfigData {
         return lyric;
     }
 
-    public String getFileName() {
-        return fileName.get();
+    public void setFrqStatus(FrqStatus status) {
+        frqStatus.set(status.toString());
     }
 
     public StringProperty frqStatusProperty() {
         return frqStatus;
     }
 
-    public void setFrqStatus(FrqStatus status) {
-        frqStatus.set(status.toString());
+    public String getFileName() {
+        return fileName.get();
     }
 
     public StringProperty fileNameProperty() {

@@ -64,22 +64,22 @@ public class Ust12Writer {
             ImmutableList<Double> pbs = note.getPBS();
             ps.print("PBS=");
             for (int i = 0; i < pbs.size() - 1; i++) {
-                ps.print(Double.toString(pbs.get(i)) + ",");
+                ps.print(roundDecimal(pbs.get(i), "#.#") + ",");
             }
-            ps.println(Double.toString(pbs.get(pbs.size() - 1)));
+            ps.println(roundDecimal(pbs.get(pbs.size() - 1), "#.#"));
             ImmutableList<Double> pbw = note.getPBW();
             ps.print("PBW=");
             for (int i = 0; i < pbw.size() - 1; i++) {
-                ps.print(Double.toString(pbw.get(i)) + ",");
+                ps.print(roundDecimal(pbw.get(i), "#.#") + ",");
             }
-            ps.println(Double.toString(pbw.get(pbw.size() - 1)));
+            ps.println(roundDecimal(pbw.get(pbw.size() - 1), "#.#"));
             ImmutableList<Double> pby = note.getPBY();
             if (!pby.isEmpty()) {
                 ps.print("PBY=");
                 for (int i = 0; i < pby.size() - 1; i++) {
-                    ps.print(Double.toString(pby.get(i)) + ",");
+                    ps.print(roundDecimal(pby.get(i), "#.#") + ",");
                 }
-                ps.println(Double.toString(pbw.get(pbw.size() - 1)));
+                ps.println(roundDecimal(pbw.get(pbw.size() - 1), "#.#"));
             }
             ImmutableList<String> pbm = note.getPBM();
             if (!pbm.isEmpty()) {
@@ -92,8 +92,8 @@ public class Ust12Writer {
 
             // Envelope.
             ps.print("Envelope=");
-            for (String value : note.getFullEnvelope()) {
-                ps.print(value + ",");
+            for (double value : note.getRawFullEnvelope()) {
+                ps.print(roundDecimal(value, "#.#") + ",");
             }
             ps.println("0.0"); // Not sure what the meaning of this value is.
 

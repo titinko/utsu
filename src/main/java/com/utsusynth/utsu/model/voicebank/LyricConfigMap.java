@@ -14,6 +14,8 @@ import java.util.TreeSet;
  * A map of lyric to LyricConfig where the values can be retrieved at any time in sorted order.
  */
 public class LyricConfigMap {
+    public static final String MAIN_CATEGORY = "Main";
+
     private final SortedMap<String, SortedSet<LyricConfig>> configSets;
     private final Map<String, LyricConfig> configMap;
 
@@ -96,7 +98,7 @@ public class LyricConfigMap {
     private static String getCategory(LyricConfig config) {
         String category = new File(config.getFilename()).getParent();
         if (category == null) {
-            category = "Main";
+            category = MAIN_CATEGORY;
         }
         return category;
     }

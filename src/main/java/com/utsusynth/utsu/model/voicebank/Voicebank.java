@@ -176,6 +176,10 @@ public class Voicebank {
         return lyricConfigs.getCategories();
     }
 
+    public Iterator<LyricConfig> getLyricConfigs(String category) {
+        return lyricConfigs.getConfigs(category);
+    }
+
     /**
      * Gets iterator of lyric config data sets to print to the frontend.
      */

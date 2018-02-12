@@ -267,6 +267,22 @@ public class Note {
         return envelope;
     }
 
+    public double[] getRawFullEnvelope() {
+        double[] envelope = new double[11];
+        envelope[0] = envelopeWidth[0]; // p1
+        envelope[1] = envelopeWidth[1]; // p2
+        envelope[2] = envelopeWidth[2]; // p3
+        envelope[3] = envelopeHeight[0]; // v1
+        envelope[4] = envelopeHeight[1]; // v2
+        envelope[5] = envelopeHeight[2]; // v3
+        envelope[6] = envelopeHeight[3]; // v4
+        envelope[7] = envelopeOverlap; // overlap
+        envelope[8] = envelopeWidth[3]; // p4
+        envelope[9] = envelopeWidth[4]; // p5
+        envelope[10] = envelopeHeight[4]; // v5
+        return envelope;
+    }
+
     public void setEnvelope(EnvelopeData envelopeData) {
         // Ignore the envPreutter and envLength received from the view.
         envelopeWidth = envelopeData.getWidths();
