@@ -17,7 +17,10 @@ import com.utsusynth.utsu.view.voicebank.PitchEditor;
 import com.utsusynth.utsu.view.voicebank.VoicebankCallback;
 import com.utsusynth.utsu.view.voicebank.VoicebankEditor;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -25,8 +28,12 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.DirectoryChooser;
 
 /**
@@ -120,6 +127,7 @@ public class VoicebankController implements EditorController, Localizable {
                 anchorBottom.getChildren().add(configEditor.createConfigEditor(lyricData));
                 anchorBottom.getChildren().add(configEditor.getControlElement());
                 anchorBottom.getChildren().add(configEditor.getChartElement());
+                bindLabelsAndControlBars(configEditor.getControlElement());
             }
 
             @Override
@@ -171,6 +179,16 @@ public class VoicebankController implements EditorController, Localizable {
     private Label authorLabel; // Value injected by FXMLLoader
     @FXML // fx:id="applySuffixButton"
     private Button applySuffixButton; // Value injected by FXMLLoader
+    @FXML // fx:id="offsetLabel"
+    private Label offsetLabel; // Value injected by FXMLLoader
+    @FXML // fx:id="cutoffLabel"
+    private Label cutoffLabel; // Value injected by FXMLLoader
+    @FXML // fx:id="consonantLabel"
+    private Label consonantLabel; // Value injected by FXMLLoader
+    @FXML // fx:id="preutteranceLabel"
+    private Label preutteranceLabel; // Value injected by FXMLLoader
+    @FXML // fx:id="overlapLabel"
+    private Label overlapLabel; // Value injected by FXMLLoader
 
     @Override
     public void localize(ResourceBundle bundle) {
@@ -244,6 +262,36 @@ public class VoicebankController implements EditorController, Localizable {
             callback.enableSave(true);
         }
         // TODO: Refresh lyrics/envelopes after this.
+    }
+
+    private void bindLabelsAndControlBars(Group controlBars) {
+        for (Node node : controlBars.getChildren()) {
+            Line controlBar = (Line) node;
+            Label label;
+            if (controlBar.getStyleClass().contains("offset")) {
+                label = offsetLabel;
+            } else if (controlBar.getStyleClass().contains("cutoff")) {
+                label = cutoffLabel;
+            } else if (controlBar.getStyleClass().contains("consonant")) {
+                label = consonantLabel;
+            } else if (controlBar.getStyleClass().contains("preutterance")) {
+                label = preutteranceLabel;
+            } else {
+                label = overlapLabel;
+            }
+            EventHandler<? super MouseEvent> onMouseEntered = controlBar.getOnMouseEntered();
+            label.onMouseEnteredProperty().bindBidirectional(controlBar.onMouseEnteredProperty());
+            label.setOnMouseEntered(event -> {
+                onMouseEntered.handle(event);
+                label.setFont(Font.font("verdana", FontWeight.EXTRA_BOLD, 12));
+            });
+            EventHandler<? super MouseEvent> onMouseExited = controlBar.getOnMouseExited();
+            label.onMouseExitedProperty().bindBidirectional(controlBar.onMouseExitedProperty());
+            label.setOnMouseExited(event -> {
+                onMouseExited.handle(event);
+                label.setFont(Font.font("verdana", FontWeight.NORMAL, 12));
+            });
+        }
     }
 
     @Override

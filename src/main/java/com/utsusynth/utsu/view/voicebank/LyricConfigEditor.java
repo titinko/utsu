@@ -224,10 +224,18 @@ public class LyricConfigEditor {
         Line bar = new Line(xPos, 0, xPos, height);
         bar.getStyleClass().add(style);
         bar.setOnMouseEntered(event -> {
-            bar.getScene().setCursor(Cursor.W_RESIZE);
+            if (Math.abs(event.getX() - bar.getStartX()) <= 3) {
+                bar.getScene().setCursor(Cursor.W_RESIZE);
+            }
+            if (!bar.getStyleClass().contains("selected")) {
+                bar.getStyleClass().add("selected");
+            }
         });
         bar.setOnMouseExited(event -> {
             bar.getScene().setCursor(Cursor.DEFAULT);
+            if (bar.getStyleClass().contains("selected")) {
+                bar.getStyleClass().remove("selected");
+            }
         });
         return bar;
     }

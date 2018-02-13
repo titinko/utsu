@@ -129,7 +129,6 @@
 	-fx-stroke: darkgray;
 	-fx-text-fill: dimgray;
 	-fx-stroke-width: 2;
-	
 }
 
 .consonant {
@@ -150,6 +149,10 @@
 .overlap {
 	-fx-stroke: steelblue;
 	-fx-text-fill: steelblue;
+}
+
+.offset.selected, .cutoff.selected, .consonant.selected, .preutterance.selected, .overlap.selected {
+	-fx-stroke-width: 4px;
 }
 
 .piano-black-key {
