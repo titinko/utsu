@@ -74,7 +74,7 @@ public class SongController implements EditorController, Localizable {
     // Helper classes go here.
     private final SongContainer song;
     private final Engine engine;
-    private final SongEditor track;
+    private final SongEditor songEditor;
     private final Piano piano;
     private final Localizer localizer;
     private final Quantizer quantizer;
@@ -119,7 +119,7 @@ public class SongController implements EditorController, Localizable {
     public SongController(
             SongContainer songContainer, // Inject an empty song.
             Engine engine,
-            SongEditor track,
+            SongEditor songEditor,
             Piano piano,
             Localizer localizer,
             Quantizer quantizer,
@@ -131,7 +131,7 @@ public class SongController implements EditorController, Localizable {
             Provider<FXMLLoader> fxmlLoaders) {
         this.song = songContainer;
         this.engine = engine;
-        this.track = track;
+        this.songEditor = songEditor;
         this.piano = piano;
         this.localizer = localizer;
         this.quantizer = quantizer;
@@ -148,7 +148,7 @@ public class SongController implements EditorController, Localizable {
     public void initialize() {
         DoubleProperty scrollbarTracker = new SimpleDoubleProperty();
         scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
-        track.initialize(new SongCallback() {
+        songEditor.initialize(new SongCallback() {
             @Override
             public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
                 onSongChange();
@@ -181,13 +181,25 @@ public class SongController implements EditorController, Localizable {
                 scrollbarTracker.set(scrollPosition / (newWidth - scrollPaneRight.getWidth()));
             }
         });
-        scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneRight.vvalueProperty());
-        scrollPaneRight.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
-        anchorRight.widthProperty().addListener(observable -> {
-            // Sync up the scrollbar's position with where the track thinks it should be.
+        anchorRight.widthProperty().addListener(event -> {
+            // Sync up the scrollbar's position with where the editor thinks it should be.
             if (!scrollbarTracker.isBound()) {
                 scrollPaneRight.setHvalue(scrollbarTracker.get());
                 scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
+            }
+        });
+        scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneRight.vvalueProperty());
+        scrollPaneRight.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
+        scrollPaneRight.hvalueProperty().addListener(event -> {
+            double hvalue = scrollPaneRight.getHvalue();
+            double margin = scrollPaneRight.getViewportBounds().getWidth();
+            songEditor.selectivelyShowRegion(hvalue, margin);
+        });
+        scrollPaneRight.viewportBoundsProperty().addListener((event, oldValue, newValue) -> {
+            if (oldValue.getWidth() != newValue.getWidth()) {
+                double hvalue = scrollPaneRight.getHvalue();
+                double margin = scrollPaneRight.getViewportBounds().getWidth();
+                songEditor.selectivelyShowRegion(hvalue, margin);
             }
         });
 
@@ -249,13 +261,13 @@ public class SongController implements EditorController, Localizable {
 
         // Reloads current
         anchorRight.getChildren().clear();
-        anchorRight.getChildren().add(track.createNewTrack(song.get().getNotes()));
-        anchorRight.getChildren().add(track.getNotesElement());
-        anchorRight.getChildren().add(track.getPitchbendsElement());
-        anchorRight.getChildren().add(track.getPlaybackElement());
+        anchorRight.getChildren().add(songEditor.createNewTrack(song.get().getNotes()));
+        anchorRight.getChildren().add(songEditor.getNotesElement());
+        anchorRight.getChildren().add(songEditor.getPitchbendsElement());
+        anchorRight.getChildren().add(songEditor.getPlaybackElement());
         anchorBottom.getChildren().clear();
-        anchorBottom.getChildren().add(track.getDynamicsElement());
-        anchorBottom.getChildren().add(track.getEnvelopesElement());
+        anchorBottom.getChildren().add(songEditor.getDynamicsElement());
+        anchorBottom.getChildren().add(songEditor.getEnvelopesElement());
     }
 
     @Override
@@ -392,12 +404,13 @@ public class SongController implements EditorController, Localizable {
     @FXML
     void renderSong(ActionEvent event) {
         double tempo = song.get().getTempo();
-        Function<Duration, Void> playbackFn = (duration) -> track.startPlayback(duration, tempo);
+        Function<Duration, Void> playbackFn =
+                (duration) -> songEditor.startPlayback(duration, tempo);
 
         // Disable the render button while rendering.
         renderButton.setDisable(true);
         new Thread(() -> {
-            engine.playSong(song.get(), playbackFn, track.getSelectedTrack());
+            engine.playSong(song.get(), playbackFn, songEditor.getSelectedTrack());
             renderButton.setDisable(false);
         }).start();
     }

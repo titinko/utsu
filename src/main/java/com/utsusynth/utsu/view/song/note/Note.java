@@ -68,18 +68,18 @@ public class Note {
             @Override
             public void setSongLyric(String newLyric) {
                 thisNote.updateNote(
-                        thisNote.getAbsPosition(),
-                        thisNote.getAbsPosition(),
-                        thisNote.getDuration(),
+                        thisNote.getAbsPositionMs(),
+                        thisNote.getAbsPositionMs(),
+                        thisNote.getDurationMs(),
                         thisNote.getRow(),
-                        thisNote.getDuration(),
+                        thisNote.getDurationMs(),
                         newLyric);
             }
 
             @Override
             public void adjustColumnSpan() {
                 // TODO: Factor lyric width into this.
-                thisNote.adjustDragEdge(thisNote.getDuration());
+                thisNote.adjustDragEdge(thisNote.getDurationMs());
             }
         });
 
@@ -95,7 +95,7 @@ public class Note {
             } else {
                 vibrato.clearVibrato();
             }
-            track.modifySongVibrato(getAbsPosition()); // Update backend.
+            track.modifySongVibrato(getAbsPositionMs()); // Update backend.
         });
         contextMenu.getItems().addAll(deleteMenuItem, vibratoMenuItem);
         layout.setOnContextMenuRequested(event -> {
@@ -126,15 +126,15 @@ public class Note {
                 // Find quantized mouse position.
                 int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
                 int newQuant = (int) Math.floor(
-                        (scaler.unscaleX(event.getX()) * 1.0 + getAbsPosition()) / quantSize);
+                        (scaler.unscaleX(event.getX()) * 1.0 + getAbsPositionMs()) / quantSize);
 
                 // Find what to compare quantized mouse position to.
-                int oldEndPos = getAbsPosition() + getDuration();
+                int oldEndPos = getAbsPositionMs() + getDurationMs();
                 int increasingQuantEnd = (int) Math.floor(oldEndPos * 1.0 / quantSize);
                 int decreasingQuantEnd = (int) (Math.ceil(oldEndPos * 1.0 / quantSize)) - 1;
 
                 // Calculate actual change in duration.
-                int oldPosition = getAbsPosition();
+                int oldPosition = getAbsPositionMs();
                 int newPosition = newQuant * (Quantizer.COL_WIDTH / quantizer.getQuant());
                 int positionChange = newPosition - oldPosition;
 
@@ -158,15 +158,15 @@ public class Note {
                 int curQuant = quantizer.getQuant(); // Ensure constant quantization.
                 int curQuantSize = Quantizer.COL_WIDTH / curQuant;
                 // Determine whether a note is aligned with the current quantization.
-                boolean aligned = getAbsPosition() % curQuantSize == 0;
+                boolean aligned = getAbsPositionMs() % curQuantSize == 0;
                 int oldQuantInNote = positionInNote / (Quantizer.COL_WIDTH / curQuant);
                 int newQuantInNote =
                         (int) Math.floor(scaler.unscaleX(event.getX()) * 1.0 / curQuantSize);
                 int quantChange = newQuantInNote - oldQuantInNote;
                 if (!aligned) {
                     // Possibly increase quantChange by 1.
-                    int minBound = getDuration();
-                    int ceilQuantDur = (int) Math.ceil(getDuration() * 1.0 / curQuantSize);
+                    int minBound = getDurationMs();
+                    int ceilQuantDur = (int) Math.ceil(getDurationMs() * 1.0 / curQuantSize);
                     if (scaler.unscaleX(event.getX()) > minBound && newQuantInNote < ceilQuantDur) {
                         quantChange++;
                     }
@@ -174,8 +174,8 @@ public class Note {
                     quantChange *= (Quantizer.COL_WIDTH / curQuant);
                     // Both values are in the smallest quantization.
                     int truncatedStart =
-                            getAbsPosition() / curQuantSize * (Quantizer.COL_WIDTH / curQuant);
-                    int actualStart = getAbsPosition();
+                            getAbsPositionMs() / curQuantSize * (Quantizer.COL_WIDTH / curQuant);
+                    int actualStart = getAbsPositionMs();
                     // Align start quant with true quantization.
                     if (quantChange > 0) {
                         // Subtract from quantChange.
@@ -231,11 +231,11 @@ public class Note {
         return vibrato.getVibrato();
     }
 
-    public int getAbsPosition() {
+    public int getAbsPositionMs() {
         return (int) Math.round(scaler.unscaleX(layout.getTranslateX()));
     }
 
-    public int getDuration() {
+    public int getDurationMs() {
         return (int) Math.round(scaler.unscaleX(note.getWidth() + 1));
     }
 
@@ -244,8 +244,8 @@ public class Note {
     }
 
     public RegionBounds getBounds() {
-        int absPosition = getAbsPosition();
-        return new RegionBounds(absPosition, absPosition + getDuration());
+        int absPosition = getAbsPositionMs();
+        return new RegionBounds(absPosition, absPosition + getDurationMs());
     }
 
     /**
@@ -279,9 +279,9 @@ public class Note {
         }
         // Resize note if necessary.
         if (overlap.getWidth() < oldOverlap) {
-            resizeNote(getDuration());
+            resizeNote(getDurationMs());
         }
-        adjustDragEdge(getDuration());
+        adjustDragEdge(getDurationMs());
     }
 
     /** Sets the lyric that will be used to render the note. */
@@ -293,7 +293,7 @@ public class Note {
         contextMenu.hide();
         lyric.closeTextFieldIfNeeded();
         if (note.getStyleClass().contains("valid")) {
-            track.removeSongNote(getAbsPosition());
+            track.removeSongNote(getAbsPositionMs());
         }
         track.removeTrackNote(this);
     }
@@ -302,9 +302,9 @@ public class Note {
         note.setWidth(scaler.scaleX(newDuration) - 1);
         adjustDragEdge(newDuration);
         updateNote(
-                getAbsPosition(),
-                getAbsPosition(),
-                getDuration(),
+                getAbsPositionMs(),
+                getAbsPositionMs(),
+                getDurationMs(),
                 getRow(),
                 newDuration,
                 lyric.getLyric());
@@ -315,7 +315,7 @@ public class Note {
         int newPosition = newQuant * (Quantizer.COL_WIDTH / quantization);
         layout.setTranslateX(scaler.scaleX(newPosition));
         layout.setTranslateY(scaler.scaleY(newRow * Quantizer.ROW_HEIGHT));
-        int curDuration = getDuration();
+        int curDuration = getDurationMs();
         adjustDragEdge(curDuration);
         updateNote(oldPosition, newPosition, curDuration, newRow, curDuration, lyric.getLyric());
     }
@@ -328,11 +328,11 @@ public class Note {
     }
 
     private void updateNote(
-            int oldPosition,
-            int newPosition,
-            int oldDuration,
+            int oldPositionMs,
+            int newPositionMs,
+            int oldDurationMs,
             int newRow,
-            int newDuration,
+            int newDurationMs,
             String newLyric) {
         // System.out.println("***");
         Optional<EnvelopeData> envelope = Optional.absent();
@@ -340,9 +340,9 @@ public class Note {
         if (note.getStyleClass().contains("valid")) {
             // System.out.println(String.format(
             // "Moving from valid %d, %s", oldQuant, lyric.getLyric()));
-            envelope = track.getEnvelope(oldPosition);
-            portamento = track.getPortamento(oldPosition);
-            track.removeSongNote(oldPosition);
+            envelope = track.getEnvelope(oldPositionMs);
+            portamento = track.getPortamento(oldPositionMs);
+            track.removeSongNote(oldPositionMs);
         } else {
             // System.out.println(String.format(
             // "Moving from invalid %d, %s", oldQuant, lyric.getLyric()));
@@ -356,8 +356,8 @@ public class Note {
             }
             String newPitch = PitchUtils.rowNumToPitch(newRow);
             NoteData toAdd = new NoteData(
-                    newPosition,
-                    newDuration,
+                    newPositionMs,
+                    newDurationMs,
                     newPitch,
                     newLyric,
                     envelope,
@@ -375,6 +375,6 @@ public class Note {
     }
 
     private int getQuantizedStart(int quantization) {
-        return getAbsPosition() / (Quantizer.COL_WIDTH / quantization);
+        return getAbsPositionMs() / (Quantizer.COL_WIDTH / quantization);
     }
 }

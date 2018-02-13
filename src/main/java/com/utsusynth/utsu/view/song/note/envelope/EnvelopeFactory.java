@@ -15,13 +15,10 @@ public class EnvelopeFactory {
         this.scaler = scaler;
     }
 
-    public Envelope createEnvelope(
-            Note note,
-            EnvelopeData envelope,
-            EnvelopeCallback callback) {
+    public Envelope createEnvelope(Note note, EnvelopeData envelope, EnvelopeCallback callback) {
         double preutter = envelope.getPreutter().isPresent() ? envelope.getPreutter().get() : 0;
         double length = envelope.getLength().isPresent() ? envelope.getLength().get() : 0;
-        double startPos = note.getAbsPosition() - preutter;
+        double startPos = note.getAbsPositionMs() - preutter;
         double endPos = startPos + length;
 
         double[] widths = envelope.getWidths();

@@ -26,7 +26,7 @@ public class PortamentoFactory {
             PortamentoCallback callback) {
         double finalY = (note.getRow() + .5) * Quantizer.ROW_HEIGHT;
 
-        double curX = note.getAbsPosition() + pitchbend.getPBS().get(0);
+        double curX = note.getAbsPositionMs() + pitchbend.getPBS().get(0);
         double curY = (PitchUtils.pitchToRowNum(prevPitch) + .5) * Quantizer.ROW_HEIGHT;
 
         ArrayList<Curve> pitchCurves = new ArrayList<>();

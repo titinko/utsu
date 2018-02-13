@@ -130,6 +130,21 @@ public class SongEditor {
         return playbackManager.getRegionBounds();
     }
 
+    public void selectivelyShowRegion(double centerPercent, double margin) {
+        int measureWidthMs = 4 * Quantizer.COL_WIDTH;
+        int marginMeasures = ((int) (margin / Math.round(scaler.scaleX(measureWidthMs)))) + 3;
+        int centerMeasure = (int) Math.round((numMeasures - 1) * centerPercent);
+        int clampedStartMeasure =
+                Math.min(Math.max(centerMeasure - marginMeasures, 0), numMeasures - 1);
+        int clampedEndMeasure =
+                Math.min(Math.max(centerMeasure + marginMeasures, 0), numMeasures - 1);
+        // Use measures to we don't have to redraw the visible region too much.
+        noteMap.setVisibleRegion(
+                new RegionBounds(
+                        clampedStartMeasure * measureWidthMs,
+                        (clampedEndMeasure + 1) * measureWidthMs));
+    }
+
     private void clearTrack() {
         // Remove current track.
         playbackManager.clear();
@@ -368,7 +383,7 @@ public class SongEditor {
             Note toModify = noteMap.getNote(position);
             NoteData mutation = new NoteData(
                     position,
-                    toModify.getDuration(),
+                    toModify.getDurationMs(),
                     PitchUtils.rowNumToPitch(toModify.getRow()),
                     toModify.getLyric(),
                     noteMap.getPortamento(position).getData(position)
@@ -410,8 +425,8 @@ public class SongEditor {
             public void modifySongEnvelope() {
                 Note toModify = noteMap.getNote(position);
                 NoteData mutation = new NoteData(
-                        toModify.getAbsPosition(),
-                        toModify.getDuration(),
+                        toModify.getAbsPositionMs(),
+                        toModify.getDurationMs(),
                         PitchUtils.rowNumToPitch(toModify.getRow()),
                         toModify.getLyric(),
                         noteMap.getEnvelope(position).getData());
@@ -427,7 +442,7 @@ public class SongEditor {
                 Note toModify = noteMap.getNote(position);
                 NoteData mutation = new NoteData(
                         position,
-                        toModify.getDuration(),
+                        toModify.getDurationMs(),
                         PitchUtils.rowNumToPitch(toModify.getRow()),
                         toModify.getLyric(),
                         noteMap.getPortamento(position).getData(position)
