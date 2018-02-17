@@ -60,7 +60,7 @@ public class Ust20Writer {
                 for (int i = 0; i < pby.size() - 1; i++) {
                     ps.print(roundDecimal(pby.get(i), "#.#") + ",");
                 }
-                ps.println(roundDecimal(pbw.get(pbw.size() - 1), "#.#"));
+                ps.println(roundDecimal(pby.get(pby.size() - 1), "#.#"));
             }
             ImmutableList<String> pbm = note.getPBM();
             if (!pbm.isEmpty()) {

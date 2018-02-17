@@ -6,15 +6,19 @@ interface EditorController {
     void openEditor(EditorCallback callback);
 
     /** Closes an editor and deletes stored data. */
-    // TODO: implement closeEditor
+    void closeEditor();
 
     void refreshView();
 
-    String open();
+    String getFileName();
 
-    String save();
+    boolean hasPermanentLocation();
 
-    String saveAs();
+    void open();
+
+    void save();
+
+    void saveAs();
 
     void openProperties();
 }

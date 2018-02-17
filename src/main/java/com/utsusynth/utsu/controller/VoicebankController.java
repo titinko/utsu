@@ -194,7 +194,7 @@ public class VoicebankController implements EditorController, Localizable {
     public void localize(ResourceBundle bundle) {
         nameLabel.setText(bundle.getString("voice.name"));
         authorLabel.setText(bundle.getString("voice.author"));
-        applySuffixButton.setText(bundle.getString("voice.applySuffix"));
+        applySuffixButton.setText(bundle.getString("general.apply"));
     }
 
     @Override
@@ -222,7 +222,23 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
-    public String open() {
+    public void closeEditor() {
+        // Remove this voicebank from memory, forcing songs using it to reload.
+        voicebank.removeVoicebank();
+    }
+
+    @Override
+    public String getFileName() {
+        return voicebank.getLocation().getName();
+    }
+
+    @Override
+    public boolean hasPermanentLocation() {
+        return true;
+    }
+
+    @Override
+    public void open() {
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle("Select Voicebank Directory");
         File file = dc.showDialog(null);
@@ -232,20 +248,17 @@ public class VoicebankController implements EditorController, Localizable {
             refreshView();
             callback.enableSave(false);
         }
-        return voicebank.getLocation().getName();
     }
 
     @Override
-    public String save() {
+    public void save() {
         callback.enableSave(false);
         voicebankWriter.writeVoicebankToDirectory(voicebank.get(), voicebank.getLocation());
-        return voicebank.getLocation().getName();
     }
 
     @Override
-    public String saveAs() {
+    public void saveAs() {
         // TODO: Enable Save As for voicebank.
-        return voicebank.getLocation().getName();
     }
 
     @FXML
@@ -258,9 +271,11 @@ public class VoicebankController implements EditorController, Localizable {
     /** Called whenever voicebank is changed. */
     private void onVoicebankChange() {
         // TODO: Add handling of the undo service.
-        if (callback != null) {
-            callback.enableSave(true);
+        if (callback == null) {
+            return;
         }
+        callback.markChanged();
+        callback.enableSave(true);
         // TODO: Refresh lyrics/envelopes after this.
     }
 

@@ -8,9 +8,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.utsusynth.utsu.common.dialog.SaveWarningDialog;
+import com.utsusynth.utsu.common.dialog.SaveWarningDialog.Decision;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -18,15 +19,13 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
+import javafx.stage.Stage;
 
 /**
  * 'UtsuScene.fxml' Controller Class
@@ -44,15 +43,21 @@ public class UtsuController implements Localizable {
     // Helper classes go here.
     private final Localizer localizer;
     private final Scaler scaler;
+    private final Provider<SaveWarningDialog> saveWarningProvider;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
     @FXML
     private TabPane tabs;
 
     @Inject
-    public UtsuController(Localizer localizer, Scaler scaler, Provider<FXMLLoader> fxmlLoaders) {
+    public UtsuController(
+            Localizer localizer,
+            Scaler scaler,
+            Provider<SaveWarningDialog> saveWarningProvider,
+            Provider<FXMLLoader> fxmlLoaders) {
         this.localizer = localizer;
         this.scaler = scaler;
+        this.saveWarningProvider = saveWarningProvider;
         this.fxmlLoaderProvider = fxmlLoaders;
 
         this.editors = new HashMap<>();
@@ -109,7 +114,7 @@ public class UtsuController implements Localizable {
         newVoicebankItem.setText(bundle.getString("menu.file.new.voicebank"));
         openSongItem.setText(bundle.getString("menu.file.openSong"));
         openVoicebankItem.setText(bundle.getString("menu.file.openVoicebank"));
-        saveItem.setText(bundle.getString("menu.file.saveFile"));
+        saveItem.setText(bundle.getString("general.save"));
         saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, CONTROL_DOWN));
         saveAsItem.setText(bundle.getString("menu.file.saveFileAs"));
         saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, CONTROL_DOWN, SHIFT_DOWN));
@@ -136,15 +141,31 @@ public class UtsuController implements Localizable {
      * @return true if window should be closed, false otherwise
      */
     public boolean onCloseWindow() {
-        // TODO: Replace with a save dialog. Also, add this to localizer.
-        Alert alert = new Alert(
-                AlertType.CONFIRMATION,
-                "Are you sure you want to exit Utsu?  Any unsaved changes will be lost.");
-        Optional<ButtonType> result = Optional.fromJavaUtil(alert.showAndWait());
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            return true;
+        for (Tab tab : tabs.getTabs()) {
+            if (!onCloseTab(tab)) {
+                return false;
+            }
         }
-        return false;
+        return true;
+    }
+
+    private boolean onCloseTab(Tab tab) {
+        String fileName = editors.get(tab.getId()).getFileName();
+        if (fileName.length() < tab.getText().length()) {
+            // If tab has unsaved changes, confirm close.
+            Stage parent = (Stage) tabs.getScene().getWindow();
+            Decision decision = saveWarningProvider.get().popup(parent, fileName);
+            switch (decision) {
+                case CANCEL:
+                    return false;
+                case CLOSE_WITHOUT_SAVING:
+                    return true;
+                case SAVE_AND_CLOSE:
+                    editors.get(tab.getId()).save();
+                    return true;
+            }
+        }
+        return true;
     }
 
     @FXML
@@ -166,40 +187,55 @@ public class UtsuController implements Localizable {
             FXMLLoader loader = fxmlLoaderProvider.get();
 
             // Create tab.
-            Tab tab = new Tab("*Untitled", loader.load(fxml));
+            Tab tab = new Tab("Untitled", loader.load(fxml));
             String tabId = "tab" + new Date().getTime(); // Use current timestamp for id.
             tab.setId(tabId);
             tab.setOnSelectionChanged(event -> {
                 if (tab.isSelected()) {
+                    // Enable saveItem if tab can be saved.
+                    EditorController editor = editors.get(tabId);
+                    boolean fileChanged = editor.getFileName().length() < tab.getText().length();
+                    saveItem.setDisable(!fileChanged || !editor.hasPermanentLocation());
                     if (type == EditorType.SONG) {
                         propertiesItem.setDisable(false);
                         saveAsItem.setDisable(false);
-                    } else {
+                    } else if (type == EditorType.VOICEBANK) {
                         propertiesItem.setDisable(true);
                         saveAsItem.setDisable(true);
                     }
                 }
             });
-            tab.setOnClosed(event -> {
-                this.editors.remove(tabId);
+            tab.setOnCloseRequest(event -> {
+                if (!onCloseTab(tab)) {
+                    event.consume();
+                }
             });
-            // Add and select new tab.
-            tabs.getTabs().add(tab);
-            tabs.getSelectionModel().select(tab);
-
+            tab.setOnClosed(event -> {
+                editors.get(tabId).closeEditor();
+                editors.remove(tabId);
+            });
             EditorController editor = (EditorController) loader.getController();
             editors.put(tab.getId(), editor);
             editor.openEditor(new EditorCallback() {
                 @Override
-                public void enableSave(boolean enabled) {
-                    saveItem.setDisable(!enabled);
-                    // Adds a handy * to indicate unsaved files.
-                    if (enabled && !tab.getText().startsWith("*")) {
+                public void markChanged() {
+                    // Adds a handy * to indicate unsaved changes.
+                    if (!tab.getText().startsWith("*")) {
                         tab.setText("*" + tab.getText());
                     }
                 }
+
+                @Override
+                public void enableSave(boolean enabled) {
+                    saveItem.setDisable(!enabled);
+                }
             });
             editor.refreshView();
+            tab.setText(editor.getFileName()); // Uses file name for tab name.
+
+            // Add and select new tab.
+            tabs.getTabs().add(tab);
+            tabs.getSelectionModel().select(tab);
             return tab;
         } catch (IOException e) {
             // TODO Handle this
@@ -211,23 +247,23 @@ public class UtsuController implements Localizable {
     @FXML
     void openSong(ActionEvent event) {
         Tab newTab = createEditor(EditorType.SONG);
-        String newName = editors.get(newTab.getId()).open();
-        newTab.setText(newName);
+        editors.get(newTab.getId()).open();
+        newTab.setText(editors.get(newTab.getId()).getFileName());
     }
 
     @FXML
     void openVoicebank(ActionEvent event) {
         Tab newTab = createEditor(EditorType.VOICEBANK);
-        String newName = editors.get(newTab.getId()).open();
-        newTab.setText(newName);
+        editors.get(newTab.getId()).open();
+        newTab.setText(editors.get(newTab.getId()).getFileName());
     }
 
     @FXML
     void saveFile(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            String newName = editors.get(curTab.getId()).save();
-            curTab.setText(newName);
+            editors.get(curTab.getId()).save();
+            curTab.setText(editors.get(curTab.getId()).getFileName());
         }
     }
 
@@ -235,8 +271,8 @@ public class UtsuController implements Localizable {
     void saveFileAs(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            String newName = editors.get(curTab.getId()).saveAs();
-            curTab.setText(newName);
+            editors.get(curTab.getId()).saveAs();
+            curTab.setText(editors.get(curTab.getId()).getFileName());
         }
     }
 

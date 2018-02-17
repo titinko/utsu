@@ -22,6 +22,7 @@ import com.utsusynth.utsu.common.data.AddResponse;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.RemoveResponse;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -276,7 +277,23 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
-    public String open() {
+    public void closeEditor() {
+        // Remove this song from local memory.
+        song.removeSong();
+    }
+
+    @Override
+    public String getFileName() {
+        return song.getLocation().getName();
+    }
+
+    @Override
+    public boolean hasPermanentLocation() {
+        return song.hasPermanentLocation();
+    }
+
+    @Override
+    public void open() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         fc.getExtensionFilters().addAll(
@@ -284,6 +301,13 @@ public class SongController implements EditorController, Localizable {
                 new ExtensionFilter("All files", "*.*"));
         File file = fc.showOpenDialog(null);
         if (file != null) {
+            try {
+                song.setLocation(file);
+            } catch (FileAlreadyOpenException e) {
+                // TODO: Show alert to user.
+                System.out.println("Error: Cannot open the same file in two tabs.");
+                return;
+            }
             try {
                 String saveFormat; // Format to save this song in the future.
                 String charset = "UTF-8";
@@ -309,20 +333,17 @@ public class SongController implements EditorController, Localizable {
                 }
                 undoService.clearActions();
                 callback.enableSave(false);
-                song.setLocation(file);
                 song.setSaveFormat(saveFormat);
                 refreshView();
-                return file.getName();
             } catch (IOException e) {
-                // TODO Handle this.
+                // TODO Handle this better.
                 errorLogger.logError(e);
             }
         }
-        return "*Untitled";
     }
 
     @Override
-    public String save() {
+    public void save() {
         callback.enableSave(false);
         if (song.hasPermanentLocation()) {
             String saveFormat = song.getSaveFormat();
@@ -343,13 +364,14 @@ public class SongController implements EditorController, Localizable {
                 // TODO: Handle this.
                 errorLogger.logError(e);
             }
-            return saveLocation.getName();
+        } else {
+            // Default to "Save As" if no permanent location found.
+            saveAs();
         }
-        return "*Untitled";
     }
 
     @Override
-    public String saveAs() {
+    public void saveAs() {
         callback.enableSave(false);
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
@@ -367,6 +389,13 @@ public class SongController implements EditorController, Localizable {
         }
         File file = fc.showSaveDialog(null);
         if (file != null) {
+            try {
+                song.setLocation(file);
+            } catch (FileAlreadyOpenException e) {
+                // TODO: Show alert to user.
+                System.out.println("Error: Cannot open the same file in two tabs.");
+                return;
+            }
             ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
             String charset = "UTF-8";
             if (chosenFormat.getDescription().contains("Shift JIS")) {
@@ -381,19 +410,19 @@ public class SongController implements EditorController, Localizable {
                 ps.flush();
                 ps.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
-                // TODO: Handle this.
+                // TODO: Handle this better.
                 errorLogger.logError(e);
             }
-            song.setLocation(file);
             song.setSaveFormat(chosenFormat.getDescription());
-            return file.getName();
         }
-        // Default file name.
-        return "*Untitled";
     }
 
     /** Called whenever a Song is changed. */
     private void onSongChange() {
+        if (callback == null) {
+            return;
+        }
+        callback.markChanged();
         if (song.hasPermanentLocation()) {
             callback.enableSave(true);
         } else {

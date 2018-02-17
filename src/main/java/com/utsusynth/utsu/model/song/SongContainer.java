@@ -2,6 +2,7 @@ package com.utsusynth.utsu.model.song;
 
 import java.io.File;
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 
 /** Manages a single song and its save settings. */
 public class SongContainer {
@@ -31,12 +32,17 @@ public class SongContainer {
         return location;
     }
 
-    public void setLocation(File newLocation) {
+    public void setLocation(File newLocation) throws FileAlreadyOpenException {
         if (!newLocation.equals(location)) {
             songManager.moveSong(location, newLocation);
         }
         location = newLocation;
         hasPermanentLocation = true;
+    }
+
+    public void removeSong() {
+        // Editors opening this song in the future will have to reload it from file.
+        songManager.removeSong(location);
     }
 
     public String getSaveFormat() {
