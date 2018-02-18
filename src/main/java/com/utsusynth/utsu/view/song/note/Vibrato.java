@@ -2,34 +2,49 @@ package com.utsusynth.utsu.view.song.note;
 
 import com.google.common.base.Optional;
 
+/**
+ * Visual representation of the vibrato of a single note.
+ */
 public class Vibrato {
-    private Optional<int[]> vibrato;
+    private int[] vibrato;
 
-    Vibrato(Optional<int[]> vibrato) {
+    /**
+     * Constructor to create an empty vibrato (all values are zero).
+     */
+    Vibrato() {
+        clearVibrato();
+    }
+
+    Vibrato(int[] vibrato) {
         this.vibrato = vibrato;
     }
 
     Optional<int[]> getVibrato() {
-        return vibrato;
+        for (int value : vibrato) {
+            if (value != 0) {
+                return Optional.of(vibrato);
+            }
+        }
+        // Return absent if all vibrato values are 0.
+        return Optional.absent();
     }
 
     int[] addDefaultVibrato() {
-        int[] ustVibrato = new int[10];
-        ustVibrato[0] = 70;
-        ustVibrato[1] = 185;
-        ustVibrato[2] = 40;
-        ustVibrato[3] = 20;
-        ustVibrato[4] = 20;
-        ustVibrato[5] = 0;
-        ustVibrato[6] = 0;
-        ustVibrato[7] = 100;
-        ustVibrato[8] = 0;
-        ustVibrato[9] = 0;
-        vibrato = Optional.of(ustVibrato);
-        return vibrato.get();
+        vibrato = new int[10];
+        vibrato[0] = 70;
+        vibrato[1] = 185;
+        vibrato[2] = 40;
+        vibrato[3] = 20;
+        vibrato[4] = 20;
+        vibrato[5] = 0;
+        vibrato[6] = 0;
+        vibrato[7] = 100;
+        vibrato[8] = 0;
+        vibrato[9] = 0;
+        return vibrato;
     }
 
     void clearVibrato() {
-        vibrato = Optional.absent();
+        vibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     }
 }

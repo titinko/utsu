@@ -1,6 +1,5 @@
 package com.utsusynth.utsu.view.song.note;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.PitchUtils;
@@ -56,9 +55,9 @@ public class NoteFactory {
         Lyric lyric = lyricProvider.get();
         Vibrato vibrato;
         if (note.getPitchbend().isPresent()) {
-            vibrato = new Vibrato(Optional.of(note.getPitchbend().get().getVibrato()));
+            vibrato = new Vibrato(note.getPitchbend().get().getVibrato());
         } else {
-            vibrato = new Vibrato(Optional.absent());
+            vibrato = new Vibrato();
         }
 
         Note trackNote =
@@ -94,7 +93,7 @@ public class NoteFactory {
         layout.setTranslateX(scaler.scaleX(column * Quantizer.COL_WIDTH));
 
         Lyric lyric = lyricProvider.get();
-        Vibrato vibrato = new Vibrato(Optional.absent());
+        Vibrato vibrato = new Vibrato();
 
         Note trackNote =
                 new Note(note, edge, overlap, lyric, vibrato, layout, callback, quantizer, scaler);

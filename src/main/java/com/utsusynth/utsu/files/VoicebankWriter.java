@@ -99,6 +99,7 @@ public class VoicebankWriter {
         }
 
         // Save pitch map.
+        // TODO: Don't try to save Unicode characters to prefix.map.
         for (String prefixmapName : ImmutableSet.of("prefixmap", "prefix.map")) {
             File pitchFile = saveDir.toPath().resolve(prefixmapName).toFile();
             String charset = prefixmapName.equals("prefix.map") ? "SJIS" : "UTF-8";
