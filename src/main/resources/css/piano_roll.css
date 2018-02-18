@@ -50,14 +50,9 @@
     -fx-stroke: skyblue;
 }
 
-.track-note.invalid.not-highlighted {
+.track-note.invalid {
     -fx-fill: gray;
     -fx-stroke: darkslategray;
-}
-
-.track-note.invalid.highlighted {
-    -fx-fill: lightgray;
-    -fx-stroke: silver;
 }
 
 .note-overlap {

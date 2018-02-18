@@ -248,6 +248,15 @@ public class Note {
         return new RegionBounds(absPosition, absPosition + getDurationMs());
     }
 
+    public RegionBounds getValidBounds() {
+        if (note.getStyleClass().contains("invalid")) {
+            return RegionBounds.INVALID;
+        }
+        int absPosition = getAbsPositionMs();
+        int validDur = (int) Math.round(scaler.unscaleX(note.getWidth() - overlap.getWidth()));
+        return new RegionBounds(absPosition, absPosition + validDur);
+    }
+
     /**
      * Sets a note's highlighted state. Idempotent. Should only be called from track.
      * 

@@ -64,7 +64,7 @@ public class PlaybackBarManager {
     }
 
     void highlightTo(Note highlightToMe, Collection<Note> allNotes) {
-        RegionBounds noteBounds = highlightToMe.getBounds();
+        RegionBounds noteBounds = highlightToMe.getValidBounds();
         RegionBounds addRegion;
         if (highlighted.isEmpty()) {
             // Add region is defined only by the note.
@@ -87,11 +87,26 @@ public class PlaybackBarManager {
 
         // Highlight all notes within the add region.
         for (Note note : allNotes) {
-            if (addRegion.intersects(note.getBounds())) {
+            if (addRegion.intersects(note.getValidBounds())) {
                 // These operations are idempotent.
                 highlighted.add(note);
                 note.setHighlighted(true);
             }
+        }
+    }
+
+    void refreshHighlights(Note refreshMe) {
+        int startBarX = (int) Math.round(scaler.unscaleX(startBar.getTranslateX()));
+        int endBarX = (int) Math.round(scaler.unscaleX(endBar.getTranslateX()));
+        RegionBounds highlightedRegion = new RegionBounds(startBarX, endBarX);
+
+        if (highlightedRegion.intersects(refreshMe.getValidBounds())) {
+            // This operation is idempotent.
+            highlighted.add(refreshMe);
+            refreshMe.setHighlighted(true);
+        } else if (highlighted.contains(refreshMe)) {
+            highlighted.remove(refreshMe);
+            refreshMe.setHighlighted(false);
         }
     }
 

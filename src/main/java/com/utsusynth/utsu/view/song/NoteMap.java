@@ -110,7 +110,7 @@ public class NoteMap {
         return noteMap.get(position);
     }
 
-    Collection<Note> getAllNotes() {
+    Collection<Note> getAllValidNotes() {
         return noteMap.values();
     }
 

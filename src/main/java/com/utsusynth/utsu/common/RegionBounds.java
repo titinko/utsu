@@ -9,6 +9,7 @@ public class RegionBounds {
     private final int maxMs;
 
     public static RegionBounds WHOLE_SONG = new RegionBounds(0, Integer.MAX_VALUE);
+    public static RegionBounds INVALID = new RegionBounds(Integer.MIN_VALUE, Integer.MIN_VALUE);
 
     public RegionBounds(int minMs, int maxMs) {
         this.minMs = minMs;

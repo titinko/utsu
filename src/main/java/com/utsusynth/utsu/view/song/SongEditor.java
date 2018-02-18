@@ -254,12 +254,12 @@ public class SongEditor {
         @Override
         public void highlightExclusive(Note note) {
             playbackManager.clearHighlights();
-            playbackManager.highlightTo(note, noteMap.getAllNotes());
+            playbackManager.highlightTo(note, noteMap.getAllValidNotes());
         }
 
         @Override
         public void highlightInclusive(Note note) {
-            playbackManager.highlightTo(note, noteMap.getAllNotes());
+            playbackManager.highlightTo(note, noteMap.getAllValidNotes());
         }
 
         @Override
@@ -310,7 +310,10 @@ public class SongEditor {
                             next.getPitchbend(),
                             getPitchbendCallback(position + nextDelta));
                 }
-                // Add envelope after adjusting note for overlap.
+                // Refresh whether note is highlighted, must be after adjusting for overlap.
+                playbackManager.refreshHighlights(note);
+
+                // Add envelope, must be after adjusting note for overlap.
                 Optional<EnvelopeData> newEnvelope = response.getNote().getEnvelope();
                 if (newEnvelope.isPresent()) {
                     noteMap.putEnvelope(position, newEnvelope.get(), getEnvelopeCallback(position));
