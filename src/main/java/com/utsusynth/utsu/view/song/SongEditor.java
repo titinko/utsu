@@ -24,6 +24,7 @@ import javafx.scene.Group;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 
@@ -33,8 +34,8 @@ public class SongEditor {
     private final NoteMap noteMap;
     private final Scaler scaler;
 
-    private GridPane track;
-    private GridPane dynamics;
+    private HBox measures;
+    private HBox dynamics;
     private int numMeasures;
     private SongCallback model;
 
@@ -56,10 +57,10 @@ public class SongEditor {
     }
 
     /** Initialize track with data for a specific song. */
-    public GridPane createNewTrack(List<NoteData> notes) {
+    public HBox createNewTrack(List<NoteData> notes) {
         clearTrack();
         if (notes.isEmpty()) {
-            return track;
+            return measures;
         }
 
         // Add as many octaves as needed.
@@ -93,14 +94,14 @@ public class SongEditor {
             noteMap.addNoteElement(newNote);
             prevNote = note;
         }
-        return track;
+        return measures;
     }
 
     public Group getNotesElement() {
         return noteMap.getNotesElement();
     }
 
-    public GridPane getDynamicsElement() {
+    public HBox getDynamicsElement() {
         if (dynamics == null) {
             // TODO: Handle this;
             System.out.println("Dynamics element is empty!");
@@ -149,8 +150,8 @@ public class SongEditor {
         // Remove current track.
         playbackManager.clear();
         noteMap.clear();
-        track = new GridPane();
-        dynamics = new GridPane();
+        measures = new HBox();
+        dynamics = new HBox();
 
         numMeasures = 0;
         setNumMeasures(4);
@@ -171,40 +172,40 @@ public class SongEditor {
             // Nothing needs to be done.
             return;
         } else {
+            int maxWidth = (int) measureWidth * newNumMeasures;
             // Remove measures.
-            int desiredNumColumns = newNumMeasures * 4;
-            track.getChildren().removeIf((child) -> {
-                return GridPane.getColumnIndex(child) >= desiredNumColumns;
+            measures.getChildren().removeIf((child) -> {
+                return (int) Math.round(child.getLayoutX()) >= maxWidth;
             });
             // Remove dynamics columns.
             dynamics.getChildren().removeIf((child) -> {
-                return GridPane.getColumnIndex(child) >= desiredNumColumns;
+                return (int) Math.round(child.getLayoutX()) >= maxWidth;
             });
             numMeasures = newNumMeasures;
         }
     }
 
     private void addMeasure() {
+        GridPane newMeasure = new GridPane();
         int rowNum = 0;
-        int numColumns = numMeasures * 4;
         for (int octave = 7; octave > 0; octave--) {
             for (String pitch : PitchUtils.REVERSE_PITCHES) {
                 // Add row to track.
-                for (int colNum = numColumns; colNum < numColumns + 4; colNum++) {
+                for (int colNum = 0; colNum < 4; colNum++) {
                     Pane newCell = new Pane();
                     newCell.setPrefSize(
                             Math.round(scaler.scaleX(Quantizer.COL_WIDTH)),
                             Math.round(scaler.scaleY(Quantizer.ROW_HEIGHT)));
                     newCell.getStyleClass().add("track-cell");
                     newCell.getStyleClass().add(pitch.endsWith("#") ? "black-key" : "white-key");
-                    if (colNum % 4 == 0) {
+                    if (colNum == 0) {
                         newCell.getStyleClass().add("measure-start");
-                    } else if ((colNum + 1) % 4 == 0) {
+                    } else if (colNum == 3) {
                         newCell.getStyleClass().add("measure-end");
                     }
 
                     final int currentRowNum = rowNum;
-                    final int currentColNum = colNum;
+                    final int currentColNum = colNum + (numMeasures * 4);
                     newCell.setOnMouseClicked((event) -> {
                         // Clear highlights regardless of current button or current mode.
                         playbackManager.clearHighlights();
@@ -219,29 +220,33 @@ public class SongEditor {
                             noteMap.addNoteElement(newNote);
                         }
                     });
-                    track.add(newCell, colNum, rowNum);
+                    newMeasure.add(newCell, colNum, rowNum);
                 }
                 rowNum++;
             }
         }
+        measures.getChildren().add(newMeasure);
 
         // Add new columns to dynamics.
-        for (int colNum = numColumns; colNum < numColumns + 4; colNum++) {
+        GridPane newDynamics = new GridPane();
+        for (int colNum = 0; colNum < 4; colNum++) {
             AnchorPane topCell = new AnchorPane();
             topCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
             topCell.getStyleClass().add("dynamics-top-cell");
-            if (colNum % 4 == 0) {
+            if (colNum == 0) {
                 topCell.getStyleClass().add("measure-start");
             }
-            dynamics.add(topCell, colNum, 0);
+            newDynamics.add(topCell, colNum, 0);
             AnchorPane bottomCell = new AnchorPane();
             bottomCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
             bottomCell.getStyleClass().add("dynamics-bottom-cell");
-            if (colNum % 4 == 0) {
+            if (colNum == 0) {
                 bottomCell.getStyleClass().add("measure-start");
             }
-            dynamics.add(bottomCell, colNum, 1);
+            newDynamics.add(bottomCell, colNum, 1);
         }
+        dynamics.getChildren().add(newDynamics);
+
         numMeasures++;
     }
 
@@ -342,8 +347,6 @@ public class SongEditor {
                     prevTrackNote.adjustForOverlap(prevDelta + response.getNext().get().getDelta());
                 } else {
                     prevTrackNote.adjustForOverlap(Integer.MAX_VALUE);
-                    // Remove measures until you have 4 measures + previous note.
-                    setNumMeasures(((position - prevDelta) / Quantizer.COL_WIDTH / 4) + 4);
                 }
                 noteMap.putEnvelope(
                         position - prevDelta,
@@ -395,6 +398,7 @@ public class SongEditor {
         public void removeTrackNote(Note trackNote) {
             playbackManager.clearHighlights();
             noteMap.removeNoteElement(trackNote);
+            // TODO: If last note, remove measures until you have 4 measures + previous note.
         }
 
         @Override
