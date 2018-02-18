@@ -214,6 +214,9 @@ public class VoicebankController implements EditorController, Localizable {
 
         // Reload pitch map editor.
         pitchPane.setContent(pitchEditor.createPitchView(voicebank.get().getPitchData()));
+
+        // Remove lyric config editor.
+        anchorBottom.getChildren().clear();
     }
 
     @Override
