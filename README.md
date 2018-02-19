@@ -6,9 +6,9 @@ Compatible (in theory) with all voicebanks, files, and engines created with or f
 
 ### The easy way--installers!
 
-The Mac installer can be found on the [releases page](https://github.com/titinko/utsu/releases/tag/0.1.1).
+The Mac installer can be found on the [releases page](https://github.com/titinko/utsu/releases).
 
-The Windows installer can be found on the [releases page](https://github.com/titinko/utsu/releases/tag/0.1.1).
+The Windows installer can be found on the [releases page](https://github.com/titinko/utsu/releases).
 
 ### The reliable way--a JAR file
 
@@ -20,7 +20,7 @@ You'll need Java 8, not Java 7 or Java 9, and you'll want a JRE, not a JDK.
 
 NOTE FOR LINUX USERS: You'll need to download [Oracle Java](https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-get-on-ubuntu-16-04) as Utsu does not work with the default OpenJDK.
 
-Next, download the Utsu executable as a ZIP from the [releases page](https://github.com/titinko/utsu/releases/tag/0.1.1).
+Next, download the Utsu executable as a ZIP from the [releases page](https://github.com/titinko/utsu/releases).
 
 Unzip the downloaded file and you should see a JAR file and an assets folder.  Confirm that the assets folder and the Utsu file are in the same parent folder, and double-click the JAR file to start Utsu.  If the program doesn't run properly the first time, try closing and double-clicking the JAR file again.  If it still doesn't work, you can try running it from the terminal:
 > java -jar /path/to/jarfile/utsu-0.1-jfx.jar
