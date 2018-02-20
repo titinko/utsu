@@ -106,7 +106,7 @@ public class Ust12Reader {
             String line = lines[i].trim();
             if (line.startsWith("UST Version")) {
                 String version = line.substring("UST Version".length());
-                if (!version.equals("2.0")) {
+                if (!version.equals("1.2")) {
                     // throw error
                 }
             } else if (HEADER_PATTERN.matcher(line).matches()) {

@@ -37,7 +37,7 @@ public class Resampler {
         String cutoff = Double.toString(config.getCutoff());
         String intensity = Integer.toString(note.getIntensity());
         String modulation = Integer.toString(note.getModulation()); // TODO: Set this song-wide?
-        String tempo = "!" + Double.toString(song.getTempo()); // TODO: Override with note tempo.
+        String tempo = "T" + Double.toString(song.getTempo()); // TODO: Override with note tempo.
 
         // Call resampler.
         runner.runProcess(
@@ -46,7 +46,7 @@ public class Resampler {
                 outputFilePath,
                 pitch,
                 consonantVelocity,
-                flags,
+                flags.isEmpty() ? "?" : flags, // Uses placeholder value if there are no flags.
                 offset,
                 Double.toString(scaledLength),
                 Double.toString(consonantLength),
@@ -65,7 +65,7 @@ public class Resampler {
                 outputFile.getAbsolutePath(),
                 "C4",
                 "100",
-                "",
+                "?",
                 "0",
                 desiredLength,
                 "0",
