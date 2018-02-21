@@ -2,12 +2,14 @@ package com.utsusynth.utsu.controller;
 
 import static javafx.scene.input.KeyCombination.CONTROL_DOWN;
 import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.dialog.SaveWarningDialog;
@@ -102,6 +104,12 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem propertiesItem; // Value injected by FXMLLoader
     @FXML
+    private Menu pluginsMenu; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem openPluginItem; // Value injected by FXMLLoader
+    @FXML
+    private Menu recentPluginsMenu; // Value injected by FXMLLoader
+    @FXML
     private Menu helpMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem aboutItem; // Value injected by FXMLLoader
@@ -126,6 +134,9 @@ public class UtsuController implements Localizable {
         zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, CONTROL_DOWN));
         projectMenu.setText(bundle.getString("menu.project"));
         propertiesItem.setText(bundle.getString("menu.project.properties"));
+        pluginsMenu.setText(bundle.getString("menu.plugins"));
+        openPluginItem.setText(bundle.getString("menu.plugins.openPlugin"));
+        recentPluginsMenu.setText(bundle.getString("menu.plugins.recentPlugins"));
         helpMenu.setText(bundle.getString("menu.help"));
         helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, CONTROL_DOWN, SHIFT_DOWN));
         aboutItem.setText(bundle.getString("menu.help.about"));
@@ -197,11 +208,13 @@ public class UtsuController implements Localizable {
                     boolean fileChanged = editor.getFileName().length() < tab.getText().length();
                     saveItem.setDisable(!fileChanged || !editor.hasPermanentLocation());
                     if (type == EditorType.SONG) {
-                        propertiesItem.setDisable(false);
                         saveAsItem.setDisable(false);
+                        propertiesItem.setDisable(false);
+                        recentPluginsMenu.setDisable(recentPluginsMenu.getItems().isEmpty());
                     } else if (type == EditorType.VOICEBANK) {
-                        propertiesItem.setDisable(true);
                         saveAsItem.setDisable(true);
+                        propertiesItem.setDisable(true);
+                        recentPluginsMenu.setDisable(true);
                     }
                 }
             });
@@ -310,6 +323,30 @@ public class UtsuController implements Localizable {
     void openProperties(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             editors.get(tabs.getSelectionModel().getSelectedItem().getId()).openProperties();
+        }
+    }
+
+    @FXML
+    void openPlugin(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            Tab curTab = tabs.getSelectionModel().getSelectedItem();
+            Optional<File> plugin = editors.get(curTab.getId()).openPlugin();
+            if (plugin.isPresent()) {
+                String name = plugin.get().getName();
+                // Clean up existing shortcuts if necessary.
+                recentPluginsMenu.getItems().removeIf(item -> item.getText().equals(name));
+                if (recentPluginsMenu.getItems().size() > 10) {
+                    recentPluginsMenu.getItems().remove(9, recentPluginsMenu.getItems().size());
+                }
+                // Add shortcut to this plugin for the rest of current session.
+                MenuItem newItem = new MenuItem(plugin.get().getName());
+                newItem.setOnAction(invocation -> {
+                    Tab newCurTab = tabs.getSelectionModel().getSelectedItem();
+                    editors.get(newCurTab.getId()).invokePlugin(plugin.get());
+                });
+                recentPluginsMenu.getItems().add(0, newItem);
+                recentPluginsMenu.setDisable(false);
+            }
         }
     }
 }

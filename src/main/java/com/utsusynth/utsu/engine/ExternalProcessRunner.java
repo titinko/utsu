@@ -23,7 +23,7 @@ public class ExternalProcessRunner {
         }));
     }
 
-    void runProcess(String... args) {
+    public void runProcess(String... args) {
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.redirectErrorStream(true);
         try {

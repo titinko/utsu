@@ -15,6 +15,7 @@ import java.nio.charset.UnmappableCharacterException;
 import java.util.ResourceBundle;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.UndoService;
@@ -29,6 +30,7 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.engine.Engine;
+import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.Ust12Reader;
 import com.utsusynth.utsu.files.Ust12Writer;
 import com.utsusynth.utsu.files.Ust20Reader;
@@ -84,6 +86,7 @@ public class SongController implements EditorController, Localizable {
     private final Ust20Reader ust20Reader;
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
+    private final ExternalProcessRunner processRunner;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
     @FXML // fx:id="scrollPaneLeft"
@@ -129,6 +132,7 @@ public class SongController implements EditorController, Localizable {
             Ust20Reader ust20Reader,
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
+            ExternalProcessRunner processRunner,
             Provider<FXMLLoader> fxmlLoaders) {
         this.song = songContainer;
         this.engine = engine;
@@ -141,6 +145,7 @@ public class SongController implements EditorController, Localizable {
         this.ust20Reader = ust20Reader;
         this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
+        this.processRunner = processRunner;
         this.fxmlLoaderProvider = fxmlLoaders;
     }
 
@@ -475,5 +480,43 @@ public class SongController implements EditorController, Localizable {
             errorLogger.logError(e);
         }
         refreshView();
+    }
+
+    @Override
+    public Optional<File> openPlugin() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Select executable file");
+        fc.getExtensionFilters().addAll(
+                new ExtensionFilter("Executables", "*", "*.exe", "*.jar"),
+                new ExtensionFilter("OSX Executables", "*.out", "*.app"),
+                new ExtensionFilter("All Files", "*.*"));
+        File file = fc.showOpenDialog(null);
+        if (file != null) {
+            invokePlugin(file);
+            return Optional.of(file);
+        }
+        return Optional.absent();
+    }
+
+    @Override
+    public void invokePlugin(File plugin) {
+        if (plugin != null) {
+            try {
+                File ustFile = File.createTempFile("plugin", ".ust");
+                ustFile.deleteOnExit();
+
+                // Only give Shift-JIS UST 1.2 files to plugins for now.
+                PrintStream ps = new PrintStream(plugin, "SJIS");
+                ust12Writer.writeSong(song.get(), songEditor.getSelectedTrack(), ps);
+                ps.flush();
+                ps.close();
+
+                // Attempt to run plugin.
+                processRunner.runProcess(plugin.getAbsolutePath(), ustFile.getAbsolutePath());
+            } catch (IOException e) {
+                // TODO: Handle this.
+                errorLogger.logError(e);
+            }
+        }
     }
 }

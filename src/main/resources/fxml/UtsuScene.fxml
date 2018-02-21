@@ -43,6 +43,12 @@
                 <MenuItem fx:id="propertiesItem" mnemonicParsing="false" onAction="#openProperties" text="Properties" />
               </items>
             </Menu>
+            <Menu fx:id="pluginsMenu" mnemonicParsing="false" text="Plugins">
+              <items>
+                <MenuItem fx:id="openPluginItem" mnemonicParsing="false" onAction="#openPlugin" text="Open Plugin..." />
+                  <Menu fx:id="recentPluginsMenu" disable="true" mnemonicParsing="false" text="Recent Plugins" />
+              </items>
+            </Menu>
           <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
             <items>
               <MenuItem fx:id="aboutItem" mnemonicParsing="false" text="About" />

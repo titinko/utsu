@@ -3,6 +3,7 @@ package com.utsusynth.utsu.controller;
 import java.io.File;
 import java.util.Iterator;
 import java.util.ResourceBundle;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.LyricConfigData;
@@ -315,5 +316,16 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public void openProperties() {
         // TODO: Implement properties for voicebank, for example whether oto should be foldered.
+    }
+
+    @Override
+    public Optional<File> openPlugin() {
+        // Voicebanks do not have plugins of their own right now.
+        return Optional.absent();
+    }
+
+    @Override
+    public void invokePlugin(File plugin) {
+        // Voicebanks do not have plugins of their own right now.
     }
 }

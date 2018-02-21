@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.util.Iterator;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 
@@ -12,8 +13,12 @@ import com.utsusynth.utsu.model.song.Song;
  * Writes a song to a Shift-JIS UST 1.2 file.
  */
 public class Ust12Writer {
-
     public void writeSong(Song song, PrintStream ps) {
+        // Writes the entire song.
+        writeSong(song, RegionBounds.WHOLE_SONG, ps);
+    }
+
+    public void writeSong(Song song, RegionBounds region, PrintStream ps) {
         ps.println("[#VERSION]");
         ps.println("UST Version1.2");
         ps.println("[#SETTING]");
@@ -24,7 +29,7 @@ public class Ust12Writer {
         ps.println("Flags=" + song.getFlags());
         ps.println("Mode2=" + (song.getMode2() ? "True" : "False"));
 
-        Iterator<Note> iterator = song.getNoteIterator();
+        Iterator<Note> iterator = song.getNoteIterator(region);
         int index = 0;
         Optional<Note> prevNote = Optional.absent();
         while (iterator.hasNext()) {
