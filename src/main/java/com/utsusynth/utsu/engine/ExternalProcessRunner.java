@@ -24,6 +24,9 @@ public class ExternalProcessRunner {
     }
 
     public void runProcess(String... args) {
+        for (String arg : args) {
+            System.out.println("Arg: " + arg);
+        }
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.redirectErrorStream(true);
         try {
