@@ -4,7 +4,6 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.Iterator;
 import com.google.common.collect.ImmutableList;
-import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 
@@ -13,11 +12,6 @@ import com.utsusynth.utsu.model.song.Song;
  */
 public class Ust20Writer {
     public void writeSong(Song song, PrintStream ps, String charset) {
-        // Writes the entire song.
-        writeSong(song, RegionBounds.WHOLE_SONG, ps, charset);
-    }
-
-    public void writeSong(Song song, RegionBounds region, PrintStream ps, String charset) {
         ps.println("[#VERSION]");
         ps.println("UST Version2.0");
         ps.println("Charset=" + charset);
@@ -30,7 +24,7 @@ public class Ust20Writer {
         ps.println("Flags=" + song.getFlags());
         ps.println("Mode2=" + (song.getMode2() ? "True" : "False"));
 
-        Iterator<Note> iterator = song.getNoteIterator(region);
+        Iterator<Note> iterator = song.getNoteIterator();
         int index = 0;
         while (iterator.hasNext()) {
             Note note = iterator.next();

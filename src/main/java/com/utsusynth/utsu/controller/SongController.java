@@ -503,16 +503,19 @@ public class SongController implements EditorController, Localizable {
         if (plugin != null) {
             try {
                 File ustFile = File.createTempFile("plugin", ".ust");
+                System.out.println(ustFile.getAbsolutePath());
                 ustFile.deleteOnExit();
 
                 // Only give Shift-JIS UST 1.2 files to plugins for now.
-                PrintStream ps = new PrintStream(plugin, "SJIS");
-                ust12Writer.writeSong(song.get(), songEditor.getSelectedTrack(), ps);
+                PrintStream ps = new PrintStream(ustFile, "SJIS");
+                ust12Writer.writeToPlugin(song.get(), songEditor.getSelectedTrack(), ps);
                 ps.flush();
                 ps.close();
 
                 // Attempt to run plugin.
                 processRunner.runProcess(plugin.getAbsolutePath(), ustFile.getAbsolutePath());
+
+                // TODO: Read plugin output.
             } catch (IOException e) {
                 // TODO: Handle this.
                 errorLogger.logError(e);
