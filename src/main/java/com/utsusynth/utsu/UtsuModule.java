@@ -39,8 +39,10 @@ public class UtsuModule extends AbstractModule {
     @Singleton
     private Localizer provideLocalizer() {
         NativeLocale defaultLocale = new NativeLocale(new Locale("en"));
-        ImmutableList<NativeLocale> allLocales =
-                ImmutableList.of(defaultLocale, new NativeLocale(new Locale("ja")));
+        ImmutableList<NativeLocale> allLocales = ImmutableList.of(
+                defaultLocale,
+                new NativeLocale(new Locale("ja")),
+                new NativeLocale(new Locale("es")));
         return new Localizer(defaultLocale, allLocales);
     }
 
