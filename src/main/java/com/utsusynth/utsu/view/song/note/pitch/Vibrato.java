@@ -1,25 +1,25 @@
-package com.utsusynth.utsu.view.song.note;
+package com.utsusynth.utsu.view.song.note.pitch;
 
 import com.google.common.base.Optional;
+import javafx.scene.Group;
 
 /**
  * Visual representation of the vibrato of a single note.
  */
 public class Vibrato {
+    private final PitchbendCallback callback;
     private int[] vibrato;
 
-    /**
-     * Constructor to create an empty vibrato (all values are zero).
-     */
-    Vibrato() {
-        clearVibrato();
-    }
-
-    Vibrato(int[] vibrato) {
+    Vibrato(PitchbendCallback callback, int[] vibrato) {
+        this.callback = callback;
         this.vibrato = vibrato;
     }
 
-    Optional<int[]> getVibrato() {
+    Group getElement() {
+        return new Group();
+    }
+
+    public Optional<int[]> getVibrato() {
         for (int value : vibrato) {
             if (value != 0) {
                 return Optional.of(vibrato);
@@ -29,7 +29,7 @@ public class Vibrato {
         return Optional.absent();
     }
 
-    int[] addDefaultVibrato() {
+    public void addDefaultVibrato() {
         vibrato = new int[10];
         vibrato[0] = 70;
         vibrato[1] = 185;
@@ -41,10 +41,11 @@ public class Vibrato {
         vibrato[7] = 100;
         vibrato[8] = 0;
         vibrato[9] = 0;
-        return vibrato;
+        callback.modifySongPitchbend();
     }
 
-    void clearVibrato() {
+    public void clearVibrato() {
         vibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        callback.modifySongPitchbend();
     }
 }

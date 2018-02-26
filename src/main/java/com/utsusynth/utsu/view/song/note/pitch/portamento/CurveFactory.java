@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.song.note.portamento;
+package com.utsusynth.utsu.view.song.note.pitch.portamento;
 
 public class CurveFactory {
     public Curve createCurve(

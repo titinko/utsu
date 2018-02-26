@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.song.note.portamento;
+package com.utsusynth.utsu.view.song.note.pitch;
 
 import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
@@ -8,22 +8,35 @@ import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.Note;
+import com.utsusynth.utsu.view.song.note.pitch.portamento.Curve;
+import com.utsusynth.utsu.view.song.note.pitch.portamento.CurveFactory;
+import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 
-public class PortamentoFactory {
+public class PitchbendFactory {
     private final CurveFactory curveFactory;
     private final Scaler scaler;
 
     @Inject
-    public PortamentoFactory(CurveFactory curveFactory, Scaler scaler) {
+    public PitchbendFactory(CurveFactory curveFactory, Scaler scaler) {
         this.curveFactory = curveFactory;
         this.scaler = scaler;
     }
 
-    public Portamento createPortamento(
+    public Pitchbend createPitchbend(
             Note note,
             String prevPitch,
             PitchbendData pitchbend,
-            PortamentoCallback callback) {
+            PitchbendCallback callback) {
+        Portamento portamento = createPortamento(note, prevPitch, pitchbend, callback);
+        Vibrato vibrato = new Vibrato(callback, pitchbend.getVibrato());
+        return new Pitchbend(portamento, vibrato);
+    }
+
+    private Portamento createPortamento(
+            Note note,
+            String prevPitch,
+            PitchbendData pitchbend,
+            PitchbendCallback callback) {
         double finalY = (note.getRow() + .5) * Quantizer.ROW_HEIGHT;
 
         double curX = note.getAbsPositionMs() + pitchbend.getPBS().get(0);

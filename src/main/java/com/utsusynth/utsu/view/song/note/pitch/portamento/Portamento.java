@@ -1,10 +1,11 @@
-package com.utsusynth.utsu.view.song.note.portamento;
+package com.utsusynth.utsu.view.song.note.pitch.portamento;
 
 import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
@@ -21,13 +22,13 @@ public class Portamento {
     private final Group curveGroup; // Curves, unordered.
     private final Group squareGroup; // Control points, unordered.
     private final Group group;
-    private final PortamentoCallback callback;
+    private final PitchbendCallback callback;
     private final CurveFactory curveFactory;
     private final Scaler scaler;
 
-    Portamento(
+    public Portamento(
             ArrayList<Curve> curves,
-            PortamentoCallback callback,
+            PitchbendCallback callback,
             CurveFactory factory,
             Scaler scaler) {
         this.callback = callback;
@@ -108,7 +109,7 @@ public class Portamento {
                 }
             }
             if (changed) {
-                callback.modifySongPortamento();
+                callback.modifySongPitchbend();
             }
         });
     }
@@ -151,7 +152,7 @@ public class Portamento {
             squares.add(insertIndex, newSquare);
             initializeControlPoint(newSquare);
             squareGroup.getChildren().add(newSquare);
-            callback.modifySongPortamento();
+            callback.modifySongPitchbend();
         });
         addControlPoint.setDisable(squares.size() >= 50); // Arbitrary control point limit.
         MenuItem removeControlPoint = new MenuItem("Remove control point");
@@ -175,7 +176,7 @@ public class Portamento {
             // Remove the control point between the two curves.
             squares.remove(squareIndex);
             squareGroup.getChildren().remove(square);
-            callback.modifySongPortamento();
+            callback.modifySongPitchbend();
         });
         removeControlPoint.setDisable(squareIndex == 0 || squareIndex == squares.size() - 1);
 
@@ -211,7 +212,7 @@ public class Portamento {
             curves.set(curveIndex, newCurve);
             curveGroup.getChildren().remove(oldCurve.getElement());
             curveGroup.getChildren().add(newCurve.getElement());
-            callback.modifySongPortamento();
+            callback.modifySongPitchbend();
         });
         if (curves.get(curveIndex).getType() == curveType) {
             radioItem.setSelected(true);

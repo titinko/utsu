@@ -6,7 +6,7 @@ import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.view.song.note.portamento.CurveFactory;
+import com.utsusynth.utsu.view.song.note.pitch.portamento.CurveFactory;
 import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
@@ -53,15 +53,7 @@ public class NoteFactory {
         layout.setTranslateX(scaler.scaleX(absStart));
 
         Lyric lyric = lyricProvider.get();
-        Vibrato vibrato;
-        if (note.getPitchbend().isPresent()) {
-            vibrato = new Vibrato(note.getPitchbend().get().getVibrato());
-        } else {
-            vibrato = new Vibrato();
-        }
-
-        Note trackNote =
-                new Note(rect, edge, overlap, lyric, vibrato, layout, callback, quantizer, scaler);
+        Note trackNote = new Note(rect, edge, overlap, lyric, layout, callback, quantizer, scaler);
         lyric.setVisibleLyric(note.getLyric());
         if (note.getConfig().isPresent()) {
             lyric.setVisibleAlias(note.getConfig().get().getTrueLyric());
@@ -93,10 +85,7 @@ public class NoteFactory {
         layout.setTranslateX(scaler.scaleX(column * Quantizer.COL_WIDTH));
 
         Lyric lyric = lyricProvider.get();
-        Vibrato vibrato = new Vibrato();
-
-        Note trackNote =
-                new Note(note, edge, overlap, lyric, vibrato, layout, callback, quantizer, scaler);
+        Note trackNote = new Note(note, edge, overlap, lyric, layout, callback, quantizer, scaler);
         lyric.registerLyric();
 
         return trackNote;

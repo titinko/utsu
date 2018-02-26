@@ -6,8 +6,8 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.Lyric;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
-import com.utsusynth.utsu.view.song.note.portamento.CurveFactory;
-import com.utsusynth.utsu.view.song.note.portamento.PortamentoFactory;
+import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
+import com.utsusynth.utsu.view.song.note.pitch.portamento.CurveFactory;
 
 public class ViewModule extends AbstractModule {
 
@@ -15,7 +15,7 @@ public class ViewModule extends AbstractModule {
     protected void configure() {
         bind(NoteFactory.class).asEagerSingleton();
         bind(EnvelopeFactory.class).asEagerSingleton();
-        bind(PortamentoFactory.class).asEagerSingleton();
+        bind(PitchbendFactory.class).asEagerSingleton();
         bind(CurveFactory.class).asEagerSingleton();
     }
 

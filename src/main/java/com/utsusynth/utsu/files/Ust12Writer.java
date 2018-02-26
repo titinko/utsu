@@ -96,7 +96,7 @@ public class Ust12Writer {
         }
         ps.println("[#TRACKEND]");
 
-        // Special case where no notes are writen to plugin.
+        // Special case where no notes are written to plugin.
         if (!notesWritten) {
             headers[0] = getNoteLabel(9999);
         }

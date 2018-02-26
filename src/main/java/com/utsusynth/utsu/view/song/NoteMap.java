@@ -14,19 +14,19 @@ import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeCallback;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
-import com.utsusynth.utsu.view.song.note.portamento.Portamento;
-import com.utsusynth.utsu.view.song.note.portamento.PortamentoCallback;
-import com.utsusynth.utsu.view.song.note.portamento.PortamentoFactory;
+import com.utsusynth.utsu.view.song.note.pitch.Pitchbend;
+import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
+import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
 import javafx.scene.Group;
 
 public class NoteMap {
     private final EnvelopeFactory envelopeFactory;
-    private final PortamentoFactory portamentoFactory;
+    private final PitchbendFactory pitchbendFactory;
 
     // Maps absolute position (in ms) to track note's data.
     private Map<Integer, Note> noteMap;
     private Map<Integer, Envelope> envelopeMap;
-    private Map<Integer, Portamento> portamentoMap;
+    private Map<Integer, Pitchbend> pitchbendMap;
     private Set<Note> allNotes; // Includes invalid notes.
 
     private RegionBounds visibleRegion;
@@ -35,9 +35,9 @@ public class NoteMap {
     private Group visiblePitchbends; // Only includes pitchbends in the visible region.
 
     @Inject
-    public NoteMap(EnvelopeFactory envFactory, PortamentoFactory portFactory) {
-        this.envelopeFactory = envFactory;
-        this.portamentoFactory = portFactory;
+    public NoteMap(EnvelopeFactory envelopeFactory, PitchbendFactory pitchbendFactory) {
+        this.envelopeFactory = envelopeFactory;
+        this.pitchbendFactory = pitchbendFactory;
         clear();
     }
 
@@ -56,7 +56,7 @@ public class NoteMap {
     void clear() {
         noteMap = new HashMap<>();
         envelopeMap = new HashMap<>();
-        portamentoMap = new HashMap<>();
+        pitchbendMap = new HashMap<>();
         allNotes = new HashSet<>();
         visibleRegion = RegionBounds.WHOLE_SONG;
         visibleNotes = new Group();
@@ -78,12 +78,12 @@ public class NoteMap {
             if (newRegion.intersects(note.getBounds())) {
                 if (!visibleNotes.getChildren().contains(note.getElement())) {
                     visibleNotes.getChildren().add(note.getElement());
-                    if (envelopeMap.containsKey(pos) && portamentoMap.containsKey(pos)) {
+                    if (envelopeMap.containsKey(pos) && pitchbendMap.containsKey(pos)) {
                         Envelope envelope = envelopeMap.get(pos);
                         if (!visibleEnvelopes.getChildren().contains(envelope.getElement())) {
                             visibleEnvelopes.getChildren().add(envelope.getElement());
                         }
-                        Portamento pitchbend = portamentoMap.get(pos);
+                        Pitchbend pitchbend = pitchbendMap.get(pos);
                         if (!visiblePitchbends.getChildren().contains(pitchbend.getElement())) {
                             visiblePitchbends.getChildren().add(pitchbend.getElement());
                         }
@@ -92,9 +92,9 @@ public class NoteMap {
             } else {
                 // Removes all elements outside visible region.
                 visibleNotes.getChildren().remove(note.getElement());
-                if (envelopeMap.containsKey(pos) && portamentoMap.containsKey(pos)) {
+                if (envelopeMap.containsKey(pos) && pitchbendMap.containsKey(pos)) {
                     visibleEnvelopes.getChildren().remove(envelopeMap.get(pos).getElement());
-                    visiblePitchbends.getChildren().remove(portamentoMap.get(pos).getElement());
+                    visiblePitchbends.getChildren().remove(pitchbendMap.get(pos).getElement());
                 }
             }
         }
@@ -144,9 +144,9 @@ public class NoteMap {
             visibleEnvelopes.getChildren().remove(envelopeMap.get(position).getElement());
             envelopeMap.remove(position);
         }
-        if (portamentoMap.containsKey(position)) {
-            visiblePitchbends.getChildren().remove(portamentoMap.get(position).getElement());
-            portamentoMap.remove(position);
+        if (pitchbendMap.containsKey(position)) {
+            visiblePitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
+            pitchbendMap.remove(position);
         }
     }
 
@@ -174,34 +174,34 @@ public class NoteMap {
         return envelopeMap.get(position);
     }
 
-    void putPortamento(
+    void putPitchbend(
             int position,
             String prevPitch,
-            PitchbendData pitchbend,
-            PortamentoCallback callback) {
+            PitchbendData pitchData,
+            PitchbendCallback callback) {
         if (noteMap.containsKey(position)) {
-            Portamento portamento = portamentoFactory
-                    .createPortamento(noteMap.get(position), prevPitch, pitchbend, callback);
+            Pitchbend pitchbend = pitchbendFactory
+                    .createPitchbend(noteMap.get(position), prevPitch, pitchData, callback);
             // Overrides are expected here.
-            if (portamentoMap.containsKey(position)) {
-                visiblePitchbends.getChildren().remove(portamentoMap.get(position).getElement());
+            if (pitchbendMap.containsKey(position)) {
+                visiblePitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
             }
-            portamentoMap.put(position, portamento);
+            pitchbendMap.put(position, pitchbend);
             if (visibleRegion.intersects(noteMap.get(position).getBounds())) {
-                visiblePitchbends.getChildren().add(portamento.getElement());
+                visiblePitchbends.getChildren().add(pitchbend.getElement());
             }
         }
     }
 
-    boolean hasPortamento(int position) {
-        return portamentoMap.containsKey(position);
+    boolean hasPitchbend(int position) {
+        return pitchbendMap.containsKey(position);
     }
 
-    Portamento getPortamento(int position) {
-        return portamentoMap.get(position);
+    Pitchbend getPitchbend(int position) {
+        return pitchbendMap.get(position);
     }
 
     boolean isEmpty() {
-        return noteMap.isEmpty() && envelopeMap.isEmpty() && portamentoMap.isEmpty();
+        return noteMap.isEmpty() && envelopeMap.isEmpty() && pitchbendMap.isEmpty();
     }
 }

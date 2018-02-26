@@ -19,7 +19,7 @@ import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeCallback;
-import com.utsusynth.utsu.view.song.note.portamento.PortamentoCallback;
+import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import javafx.scene.Group;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
@@ -81,7 +81,7 @@ public class SongEditor {
                             getEnvelopeCallback(position));
                 }
                 if (note.getPitchbend().isPresent()) {
-                    noteMap.putPortamento(
+                    noteMap.putPitchbend(
                             position,
                             prevNote.getPitch(),
                             note.getPitchbend().get(),
@@ -268,11 +268,6 @@ public class SongEditor {
         }
 
         @Override
-        public boolean isInBounds(int rowNum) {
-            return rowNum >= 0 && rowNum < 7 * PitchUtils.PITCHES.size();
-        }
-
-        @Override
         public void addSongNote(Note note, NoteData toAdd) throws NoteAlreadyExistsException {
             int position = toAdd.getPosition();
             if (noteMap.hasNote(position)) {
@@ -304,7 +299,7 @@ public class SongEditor {
                             position + nextDelta,
                             next.getEnvelope(),
                             getEnvelopeCallback(position + nextDelta));
-                    noteMap.putPortamento(
+                    noteMap.putPitchbend(
                             position + nextDelta,
                             curPitch,
                             next.getPitchbend(),
@@ -319,7 +314,7 @@ public class SongEditor {
                     noteMap.putEnvelope(position, newEnvelope.get(), getEnvelopeCallback(position));
                 }
                 if (response.getNote().getPitchbend().isPresent()) {
-                    noteMap.putPortamento(
+                    noteMap.putPitchbend(
                             position,
                             prevPitch,
                             response.getNote().getPitchbend().get(),
@@ -371,7 +366,7 @@ public class SongEditor {
                             noteMap.getNote(position - response.getPrev().get().getDelta())
                                     .getRow());
                 }
-                noteMap.putPortamento(
+                noteMap.putPitchbend(
                         position + nextDelta,
                         prevPitch,
                         next.getPitchbend(),
@@ -382,19 +377,6 @@ public class SongEditor {
             if (noteMap.isEmpty()) {
                 setNumMeasures(4);
             }
-        }
-
-        @Override
-        public void modifySongVibrato(int position) {
-            Note toModify = noteMap.getNote(position);
-            NoteData mutation = new NoteData(
-                    position,
-                    toModify.getDurationMs(),
-                    PitchUtils.rowNumToPitch(toModify.getRow()),
-                    toModify.getLyric(),
-                    noteMap.getPortamento(position).getData(position)
-                            .withVibrato(toModify.getVibrato()));
-            model.modifyNote(mutation);
         }
 
         @Override
@@ -418,11 +400,26 @@ public class SongEditor {
         }
 
         @Override
-        public Optional<PitchbendData> getPortamento(int position) {
-            if (noteMap.hasPortamento(position)) {
-                return Optional.of(noteMap.getPortamento(position).getData(position));
+        public Optional<PitchbendData> getPitchbend(int position) {
+            if (noteMap.hasPitchbend(position)) {
+                return Optional.of(noteMap.getPitchbend(position).getData(position));
             }
             return Optional.absent();
+        }
+
+        @Override
+        public boolean hasVibrato(int position) {
+            if (noteMap.hasPitchbend(position)) {
+                return noteMap.getPitchbend(position).hasVibrato();
+            }
+            return false;
+        }
+
+        @Override
+        public void setHasVibrato(int position, boolean hasVibrato) {
+            if (noteMap.hasPitchbend(position)) {
+                noteMap.getPitchbend(position).setHasVibrato(hasVibrato);
+            }
         }
     };
 
@@ -442,18 +439,17 @@ public class SongEditor {
         };
     }
 
-    private PortamentoCallback getPitchbendCallback(final int position) {
-        return new PortamentoCallback() {
+    private PitchbendCallback getPitchbendCallback(final int position) {
+        return new PitchbendCallback() {
             @Override
-            public void modifySongPortamento() {
+            public void modifySongPitchbend() {
                 Note toModify = noteMap.getNote(position);
                 NoteData mutation = new NoteData(
                         position,
                         toModify.getDurationMs(),
                         PitchUtils.rowNumToPitch(toModify.getRow()),
                         toModify.getLyric(),
-                        noteMap.getPortamento(position).getData(position)
-                                .withVibrato(toModify.getVibrato()));
+                        noteMap.getPitchbend(position).getData(position));
                 model.modifyNote(mutation);
             }
         };

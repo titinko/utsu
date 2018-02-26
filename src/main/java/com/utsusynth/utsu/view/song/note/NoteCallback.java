@@ -17,19 +17,19 @@ public interface NoteCallback {
 
     boolean isExclusivelyHighlighted(Note note);
 
-    boolean isInBounds(int rowNum);
-
     void addSongNote(Note note, NoteData toAdd) throws NoteAlreadyExistsException;
 
     void removeSongNote(int position);
-
-    void modifySongVibrato(int position);
 
     void removeTrackNote(Note trackNote);
 
     Optional<EnvelopeData> getEnvelope(int position);
 
-    Optional<PitchbendData> getPortamento(int position);
+    Optional<PitchbendData> getPitchbend(int position);
+
+    boolean hasVibrato(int position);
+
+    void setHasVibrato(int position, boolean hasVibrato);
 
     Mode getCurrentMode();
 }

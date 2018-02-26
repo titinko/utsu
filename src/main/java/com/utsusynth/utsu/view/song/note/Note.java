@@ -27,7 +27,6 @@ public class Note {
     private final ContextMenu contextMenu;
     private final NoteCallback track;
     private final Lyric lyric;
-    private final Vibrato vibrato;
     private final Quantizer quantizer;
     private final Scaler scaler;
 
@@ -44,7 +43,6 @@ public class Note {
             Rectangle dragEdge,
             Rectangle overlap,
             Lyric lyric,
-            Vibrato vibrato,
             StackPane layout,
             NoteCallback callback,
             Quantizer quantizer,
@@ -58,7 +56,6 @@ public class Note {
         this.quantizer = quantizer;
         this.scaler = scaler;
         this.lyric = lyric;
-        this.vibrato = vibrato;
         this.layout = layout;
         this.layout.getChildren()
                 .addAll(this.note, this.overlap, this.lyric.getElement(), this.dragEdge);
@@ -88,14 +85,9 @@ public class Note {
         MenuItem deleteMenuItem = new MenuItem("Delete");
         deleteMenuItem.setOnAction(action -> deleteNote());
         CheckMenuItem vibratoMenuItem = new CheckMenuItem("Vibrato");
-        vibratoMenuItem.setSelected(vibrato.getVibrato().isPresent());
+        vibratoMenuItem.setSelected(track.hasVibrato(getAbsPositionMs()));
         vibratoMenuItem.setOnAction(action -> {
-            if (vibratoMenuItem.isSelected()) {
-                vibrato.addDefaultVibrato();
-            } else {
-                vibrato.clearVibrato();
-            }
-            track.modifySongVibrato(getAbsPositionMs()); // Update backend.
+            track.setHasVibrato(getAbsPositionMs(), vibratoMenuItem.isSelected());
         });
         contextMenu.getItems().addAll(deleteMenuItem, vibratoMenuItem);
         layout.setOnContextMenuRequested(event -> {
@@ -145,12 +137,13 @@ public class Note {
                     resizeNote(positionChange + quantSize);
                 }
             } else {
-                // Handle vertical movement and check against row bounds.
+                // Handle vertical movement.
                 int oldRow = getRow();
                 int newRow = ((int) Math
                         .floor(scaler.unscaleY(event.getY()) * 1.0 / Quantizer.ROW_HEIGHT))
                         + oldRow;
-                if (!track.isInBounds(newRow)) {
+                // Check whether new row is in bounds.
+                if (!(newRow >= 0 && newRow < 7 * PitchUtils.PITCHES.size())) {
                     newRow = oldRow;
                 }
 
@@ -225,10 +218,6 @@ public class Note {
 
     public int getRow() {
         return (int) scaler.unscaleY(layout.getTranslateY()) / Quantizer.ROW_HEIGHT;
-    }
-
-    public Optional<int[]> getVibrato() {
-        return vibrato.getVibrato();
     }
 
     public int getAbsPositionMs() {
@@ -345,12 +334,12 @@ public class Note {
             String newLyric) {
         // System.out.println("***");
         Optional<EnvelopeData> envelope = Optional.absent();
-        Optional<PitchbendData> portamento = Optional.absent();
+        Optional<PitchbendData> pitchbend = Optional.absent();
         if (note.getStyleClass().contains("valid")) {
             // System.out.println(String.format(
             // "Moving from valid %d, %s", oldQuant, lyric.getLyric()));
             envelope = track.getEnvelope(oldPositionMs);
-            portamento = track.getPortamento(oldPositionMs);
+            pitchbend = track.getPitchbend(oldPositionMs);
             track.removeSongNote(oldPositionMs);
         } else {
             // System.out.println(String.format(
@@ -359,10 +348,6 @@ public class Note {
         // System.out.println(String.format("Moving to %d, %d, %s", newRow, newQuant, newLyric));
         try {
             setValid(true);
-            Optional<PitchbendData> pitchbend = Optional.absent();
-            if (portamento.isPresent()) {
-                pitchbend = Optional.of(portamento.get().withVibrato(vibrato.getVibrato()));
-            }
             String newPitch = PitchUtils.rowNumToPitch(newRow);
             NoteData toAdd = new NoteData(
                     newPositionMs,
