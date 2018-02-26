@@ -16,23 +16,26 @@ import com.utsusynth.utsu.model.voicebank.LyricConfig;
 public class Ust12Writer {
     /**
      * Writes a special format of UST 1.2 used as an input to legacy UTAU plugins.
+     * 
+     * @return An array containing the header of the plugin PREV note and the header of the first
+     *         note after the plugin NEXT note.
      */
-    public void writeToPlugin(Song song, RegionBounds bounds, PrintStream ps) {
+    public String[] writeToPlugin(Song song, RegionBounds bounds, PrintStream ps) {
+        String[] headers = new String[] {getNoteLabel(0), getNoteLabel(9999)};
+
         ps.println("[#VERSION]");
         ps.println("UST Version 1.20"); // Version looks different for plugin input.
-        ps.println("[#SETTING]");
-        ps.println("Tempo=" + roundDecimal(song.getTempo(), "#.##"));
-        ps.println("ProjectName=" + song.getProjectName());
-        ps.println("OutFile=" + song.getOutputFile());
-        ps.println("VoiceDir=" + song.getVoiceDir());
-        ps.println("Flags=" + song.getFlags());
-        ps.println("Mode2=" + (song.getMode2() ? "True" : "False"));
+        writeSettings(song, ps);
 
         NoteIterator notes = song.getNoteIterator();
+        boolean notesWritten = false;
         int totalDelta = 0;
         for (int index = 0; notes.hasNext(); index++) {
             Note note = notes.next();
             totalDelta += note.getDelta();
+            int prevDuration =
+                    notes.peekPrev().isPresent() ? notes.peekPrev().get().getDuration() : 0;
+
             String noteHeader;
             if (bounds.intersects(totalDelta, totalDelta + note.getDuration())) {
                 // Case where note is in exported region.
@@ -43,38 +46,30 @@ public class Ust12Writer {
                         totalDelta + note.getLength() + notes.peekNext().get().getDuration())) {
                     // Case where note is just before exported region.
                     noteHeader = "[#PREV]";
+                    // Rest notes before PREV aren't written.
+                    index += getRestNotes(prevDuration, note).size();
+                    headers[0] = getNoteLabel(index);
                 } else if (notes.peekPrev().isPresent() && bounds.intersects(
                         totalDelta - note.getDelta(),
                         totalDelta - note.getDelta() + notes.peekPrev().get().getDuration())) {
-                    noteHeader = "[#NEXT]";
                     // Case where note is just after exported region.
+                    noteHeader = "[#NEXT]";
+                    headers[1] = getNoteLabel(index + 1);
                 } else {
+                    // Keep track of indices but ignore note.
+                    index += getRestNotes(prevDuration, note).size();
                     continue;
                 }
             }
 
             // Write preceding rest notes if necessary.
             if (!noteHeader.equals("[#PREV]")) {
-                int prevDuration =
-                        notes.peekPrev().isPresent() ? notes.peekPrev().get().getDuration() : 0;
-                if (note.getDelta() > prevDuration) {
-                    int numRestNotes = (note.getDelta() - prevDuration) / 480;
-                    int leftoverMs = (note.getDelta() - prevDuration) % 480;
-                    // Insert rest notes.
-                    for (int i = 0; i < numRestNotes; i++) {
-                        ps.println(getNoteLabel(index));
-                        index++;
-                        ps.println("Length=" + 480);
-                        ps.println("Lyric=R");
-                        ps.println("NoteNum=60");
-                    }
-                    if (leftoverMs > 0) {
-                        ps.println(getNoteLabel(index));
-                        index++;
-                        ps.println("Length=" + leftoverMs);
-                        ps.println("Lyric=R");
-                        ps.println("NoteNum=60");
-                    }
+                for (int restLength : getRestNotes(prevDuration, note)) {
+                    ps.println(getNoteLabel(index));
+                    index++;
+                    ps.println("Length=" + restLength);
+                    ps.println("Lyric=R");
+                    ps.println("NoteNum=60");
                 }
             }
             // Write current note.
@@ -82,11 +77,12 @@ public class Ust12Writer {
                 noteHeader = getNoteLabel(index);
             }
             writeNote(noteHeader, note, ps);
+            notesWritten = true;
 
             // Write extra data in plugin format.
             ps.println("@preuttr=" + note.getRealPreutter());
             ps.println("@overlap=" + note.getFadeIn());
-            ps.println("@stpoint=" + note.getStartPoint());
+            ps.println("@stpoint=" + note.getAutoStartPoint());
 
             // Write lyric data if readily available.
             if (!note.getTrueLyric().isEmpty()) {
@@ -98,7 +94,13 @@ public class Ust12Writer {
                 }
             }
         }
+        ps.println("[#TRACKEND]");
 
+        // Special case where no notes are writen to plugin.
+        if (!notesWritten) {
+            headers[0] = getNoteLabel(9999);
+        }
+        return headers;
     }
 
     public void writeSong(Song song, PrintStream ps) {
@@ -111,24 +113,13 @@ public class Ust12Writer {
             Note note = notes.next();
             int prevDuration =
                     notes.peekPrev().isPresent() ? notes.peekPrev().get().getDuration() : 0;
-            if (note.getDelta() > prevDuration) {
-                int numRestNotes = (note.getDelta() - prevDuration) / 480;
-                int leftoverMs = (note.getDelta() - prevDuration) % 480;
-                // Insert rest notes.
-                for (int i = 0; i < numRestNotes; i++) {
-                    ps.println(getNoteLabel(index));
-                    index++;
-                    ps.println("Length=" + 480);
-                    ps.println("Lyric=R");
-                    ps.println("NoteNum=60");
-                }
-                if (leftoverMs > 0) {
-                    ps.println(getNoteLabel(index));
-                    index++;
-                    ps.println("Length=" + leftoverMs);
-                    ps.println("Lyric=R");
-                    ps.println("NoteNum=60");
-                }
+            // Write rest notes.
+            for (int restLength : getRestNotes(prevDuration, note)) {
+                ps.println(getNoteLabel(index));
+                index++;
+                ps.println("Length=" + restLength);
+                ps.println("Lyric=R");
+                ps.println("NoteNum=60");
             }
             writeNote(getNoteLabel(index), note, ps);
         }
@@ -143,6 +134,21 @@ public class Ust12Writer {
         ps.println("VoiceDir=" + song.getVoiceDir());
         ps.println("Flags=" + song.getFlags());
         ps.println("Mode2=" + (song.getMode2() ? "True" : "False"));
+    }
+
+    private ImmutableList<Integer> getRestNotes(int prevDuration, Note note) {
+        ImmutableList.Builder<Integer> builder = ImmutableList.builder();
+        if (note.getDelta() > prevDuration) {
+            int numFullRestNotes = (note.getDelta() - prevDuration) / 480;
+            for (int i = 0; i < numFullRestNotes; i++) {
+                builder.add(480);
+            }
+            int leftoverMs = (note.getDelta() - prevDuration) % 480;
+            if (leftoverMs > 0) {
+                builder.add(leftoverMs);
+            }
+        }
+        return builder.build();
     }
 
     private void writeNote(String noteLabel, Note note, PrintStream ps) {

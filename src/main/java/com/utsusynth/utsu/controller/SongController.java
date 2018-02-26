@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.controller;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -479,6 +480,7 @@ public class SongController implements EditorController, Localizable {
             // TODO Handle this.
             errorLogger.logError(e);
         }
+        onSongChange();
         refreshView();
     }
 
@@ -487,7 +489,7 @@ public class SongController implements EditorController, Localizable {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select executable file");
         fc.getExtensionFilters().addAll(
-                new ExtensionFilter("Executables", "*", "*.exe", "*.jar"),
+                new ExtensionFilter("Executables", "*", "*.exe"), // TODO: Support .jar
                 new ExtensionFilter("OSX Executables", "*.out", "*.app"),
                 new ExtensionFilter("All Files", "*.*"));
         File file = fc.showOpenDialog(null);
@@ -502,20 +504,33 @@ public class SongController implements EditorController, Localizable {
     public void invokePlugin(File plugin) {
         if (plugin != null) {
             try {
-                File ustFile = File.createTempFile("plugin", ".ust");
-                System.out.println(ustFile.getAbsolutePath());
-                ustFile.deleteOnExit();
-
-                // Only give Shift-JIS UST 1.2 files to plugins for now.
-                PrintStream ps = new PrintStream(ustFile, "SJIS");
-                ust12Writer.writeToPlugin(song.get(), songEditor.getSelectedTrack(), ps);
+                // Plugin input. Only give Shift-JIS UST 1.2 files to plugins for now.
+                File pluginFile = File.createTempFile("plugin", ".ust");
+                System.out.println("Plugin input: " + pluginFile.getAbsolutePath());
+                pluginFile.deleteOnExit();
+                PrintStream ps = new PrintStream(pluginFile, "SJIS");
+                String[] headers =
+                        ust12Writer.writeToPlugin(song.get(), songEditor.getSelectedTrack(), ps);
                 ps.flush();
                 ps.close();
+                System.out.println(headers[0] + " " + headers[1]);
+
+                // Write pre-plugin song to a string.
+                ByteArrayOutputStream songBytes = new ByteArrayOutputStream();
+                ps = new PrintStream(songBytes, true, "SJIS");
+                ust12Writer.writeSong(song.get(), ps);
+                ps.close();
+                String songString = songBytes.toString("SJIS");
 
                 // Attempt to run plugin.
-                processRunner.runProcess(plugin.getAbsolutePath(), ustFile.getAbsolutePath());
+                processRunner.runProcess(plugin.getAbsolutePath(), pluginFile.getAbsolutePath());
 
-                // TODO: Read plugin output.
+                // Read song from plugin output.
+                String output = FileUtils.readFileToString(pluginFile, "SJIS");
+                song.setSong(ust12Reader.readFromPlugin(headers, songString, output));
+                onSongChange();
+                refreshView();
+
             } catch (IOException e) {
                 // TODO: Handle this.
                 errorLogger.logError(e);

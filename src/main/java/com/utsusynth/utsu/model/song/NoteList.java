@@ -118,7 +118,11 @@ public class NoteList implements Iterable<Note> {
         }
 
         public Optional<Note> getLatestNote() {
-            return tail.isPresent() ? Optional.of(tail.get().getNote()) : Optional.absent();
+            // Search for an existing non-rest note.
+            if (noteList.head.isPresent() && tail.isPresent()) {
+                return Optional.of(tail.get().getNote());
+            }
+            return Optional.absent();
         }
 
         public int getLatestDelta() {
@@ -143,8 +147,7 @@ public class NoteList implements Iterable<Note> {
      * @return The node that was added.
      * @throws NoteAlreadyExistsException
      */
-    NoteNode insertNote(Note noteToInsert, int deltaToInsert)
-            throws NoteAlreadyExistsException {
+    NoteNode insertNote(Note noteToInsert, int deltaToInsert) throws NoteAlreadyExistsException {
         NoteNode inserted;
         if (!head.isPresent()) {
             this.head = Optional.of(new NoteNode(noteToInsert));
