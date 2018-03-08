@@ -173,21 +173,21 @@
 }
 
 .dynamics-top-cell {
-	-fx-background-color: darkgray, black;
+	-fx-background-color: dimgray, #404040;
 	-fx-background-insets: 0, 0 1 1 0;
 }
 
 .dynamics-top-cell.measure-start {
-	-fx-background-color: darkgray, black;
+	-fx-background-color: dimgray, #404040;
 	-fx-background-insets: 0, 0 1 1 1;
 }
 
 .dynamics-bottom-cell {
-	-fx-background-color: darkgray, black;
+	-fx-background-color: dimgray, #404040;
 	-fx-background-insets: 0, 0 1 0 0;
 }
 
 .dynamics-bottom-cell.measure-start {
-	-fx-background-color: darkgray, black;
+	-fx-background-color: dimgray, #404040;
 	-fx-background-insets: 0, 0 1 0 1;
 }
