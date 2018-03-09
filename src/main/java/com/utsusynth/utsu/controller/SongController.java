@@ -228,7 +228,7 @@ public class SongController implements EditorController, Localizable {
                 quantizer.changeQuant(quantizer.getQuant(), 8);
             }
         });
-        quantizeChoiceBox.setValue("1/4");
+        quantizeChoiceBox.setValue("1/16");
 
         languageChoiceBox.setItems(FXCollections.observableArrayList(localizer.getAllLocales()));
         languageChoiceBox
