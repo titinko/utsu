@@ -28,7 +28,13 @@ public class PitchbendFactory {
             PitchbendData pitchbend,
             PitchbendCallback callback) {
         Portamento portamento = createPortamento(note, prevPitch, pitchbend, callback);
-        Vibrato vibrato = new Vibrato(callback, pitchbend.getVibrato());
+        Vibrato vibrato = new Vibrato(
+                note.getAbsPositionMs(),
+                note.getAbsPositionMs() + note.getDurationMs(),
+                (note.getRow() + .5) * Quantizer.ROW_HEIGHT,
+                callback,
+                scaler,
+                pitchbend.getVibrato());
         return new Pitchbend(portamento, vibrato);
     }
 
