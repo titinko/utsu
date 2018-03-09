@@ -17,7 +17,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongController">
    <top>
-      <AnchorPane prefHeight="100.0" BorderPane.alignment="CENTER">
+      <AnchorPane prefHeight="100.0" BorderPane.alignment="CENTER" style="-fx-background-color: linear-gradient(lightgray, gray)">
          <children>
             <HBox layoutX="118.0" prefHeight="100.0" prefWidth="693.0" spacing="20.0">
                <children>
@@ -27,10 +27,10 @@
                         <Label fx:id="quantizationLabel" text="Quantization" />
                      </children>
                      <HBox.margin>
-                        <Insets left="10.0" />
+                        <Insets left="5.0" />
                      </HBox.margin>
                      <padding>
-                        <Insets top="10.0" />
+                        <Insets top="5.0" />
                      </padding>
                   </VBox>
                   <VBox prefHeight="200.0" prefWidth="100.0" spacing="20.0">
@@ -47,7 +47,7 @@
                   <Insets top="15.0" />
                </padding>
             </HBox>
-            <ImageView fx:id="voicebankImage" fitHeight="90.0" fitWidth="90.0" layoutX="14.0" layoutY="13.0" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="voicebankImage" fitHeight="90.0" fitWidth="90.0" layoutX="14.0" layoutY="5.0" pickOnBounds="false" preserveRatio="true" style="-fx-effect: dropshadow(gaussian,rgba(100,100,100,100) , 10,0,0,0 );" />
          </children>
       </AnchorPane>
    </top>

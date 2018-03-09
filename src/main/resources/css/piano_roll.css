@@ -1,5 +1,5 @@
 .start-bar, .playback-bar, .end-bar {
-	-fx-stroke-width: 2;
+	-fx-stroke-width: 1;
 }
 
 .start-bar, .playback-bar {
@@ -41,18 +41,21 @@
 }
 
 .track-note.valid.not-highlighted {
-    -fx-fill: skyblue;
+    -fx-fill: linear-gradient(azure, skyblue);
     -fx-stroke: dodgerblue;
+	-fx-effect: dropshadow(gaussian, rgba(100,100,100,100), 3, 0, 0, 0);
 }
 
 .track-note.valid.highlighted {
-    -fx-fill: azure;
-    -fx-stroke: skyblue;
+    -fx-fill: linear-gradient(azure, orchid);
+    -fx-stroke: violet;
+	-fx-effect: dropshadow(gaussian, rgba(100,100,100,100), 3, 0, 0, 0);
 }
 
 .track-note.invalid {
     -fx-fill: gray;
     -fx-stroke: darkslategray;
+	-fx-effect: dropshadow(gaussian, rgba(100,100,100,100), 3, 0, 0, 0);
 }
 
 .note-overlap {
@@ -151,15 +154,17 @@
 }
 
 .piano-black-key {
-	-fx-background-color: black;
+	-fx-background-color: linear-gradient(black, darkgrey);
+	-fx-border-color: black;
 }
 
 .piano-black-key > Label {
-	-fx-text-fill: white;
+	-fx-text-fill: ghostwhite ;
+	-fx-padding: 2 0 0 0;
 }
 
 .piano-white-key {
-	-fx-background-color: black, white;
+	-fx-background-color: darkgray, white;
 	-fx-background-insets: 0, 0 0 1 0 ;
 }
 
@@ -168,21 +173,21 @@
 }
 
 .dynamics-top-cell {
-	-fx-background-color: darkgray, black;
+	-fx-background-color: dimgray, #404040;
 	-fx-background-insets: 0, 0 1 1 0;
 }
 
 .dynamics-top-cell.measure-start {
-	-fx-background-color: darkgray, black;
+	-fx-background-color: dimgray, #404040;
 	-fx-background-insets: 0, 0 1 1 1;
 }
 
 .dynamics-bottom-cell {
-	-fx-background-color: darkgray, black;
+	-fx-background-color: dimgray, #404040;
 	-fx-background-insets: 0, 0 1 0 0;
 }
 
 .dynamics-bottom-cell.measure-start {
-	-fx-background-color: darkgray, black;
+	-fx-background-color: dimgray, #404040;
 	-fx-background-insets: 0, 0 1 0 1;
 }
