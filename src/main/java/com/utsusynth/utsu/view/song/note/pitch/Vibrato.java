@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.view.song.note.pitch;
 
 import java.util.ArrayList;
+import java.util.function.Function;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -91,30 +92,56 @@ public class Vibrato {
         ArrayList<Hump> humps = new ArrayList<>();
 
         // Calculate first hump
-        int amplitudeDirection = 1; // Default when phase is 0 or 100.
+        int amplitudeDir = 1; // Defaults to positive when phase is 0 or 100.
         double firstHumpMs = humpMs; // Default when phase is 0 or 100.
         if (vibrato[5] > 0 && vibrato[5] < 50) {
             // Initial direction is positive.
-            amplitudeDirection = 1;
+            amplitudeDir = 1;
             firstHumpMs = firstHumpMs * ((50 - vibrato[5]) / 50.0);
         } else if (vibrato[5] >= 50 && vibrato[5] < 100) {
             // Initial direction is negative
-            amplitudeDirection = -1;
+            amplitudeDir = -1;
             firstHumpMs = firstHumpMs * ((100 - vibrato[5]) / 50.0);
         }
         // Find hump length and compare with vibrato length. Truncate if needed.
         firstHumpMs = Math.min(firstHumpMs, lengthMs);
-        humps.add(new Hump(firstHumpMs, vibrato[2] * amplitudeDirection));
+        humps.add(new Hump(firstHumpMs, vibrato[2] * amplitudeDir * (firstHumpMs / humpMs)));
 
         // Find each succeeding hump.
         double positionMs = firstHumpMs;
         while (positionMs + 1 < lengthMs) {
             double newHumpMs = Math.min(humpMs, lengthMs - positionMs);
-            amplitudeDirection *= -1;
-            humps.add(new Hump(newHumpMs, vibrato[2] * amplitudeDirection));
+            amplitudeDir *= -1;
+            humps.add(new Hump(newHumpMs, vibrato[2] * amplitudeDir * (newHumpMs / humpMs)));
             positionMs += newHumpMs;
         }
 
+        // Cycle through humps again, adjusting for amplitude/frequency changes.
+        positionMs = 0;
+        // Width.
+        double startMultiplier = (-1 * vibrato[8] / 200.0) + 1; // Min is 0.5, max is 1.5
+        double endMultiplier = (vibrato[8] / 200.0) + 1;
+        double slope = (endMultiplier - startMultiplier) / lengthMs;
+        Function<Double, Double> widthMultiplier = posMs -> startMultiplier + (posMs * slope);
+        // Height.
+        double phaseInMs = vibrato[3] / 100.0 * lengthMs;
+        double phaseOutMs = vibrato[4] / 100.0 * lengthMs;
+        Function<Double, Double> heightMultiplier = posMs -> {
+            double multiplier = 1.0;
+            if (posMs < phaseInMs) {
+                multiplier *= posMs / phaseInMs;
+            }
+            if (posMs > lengthMs - phaseOutMs) {
+                multiplier *= (lengthMs - posMs) / phaseOutMs;
+            }
+            return multiplier;
+        };
+        for (Hump hump : humps) {
+            positionMs = hump.adjust(widthMultiplier, heightMultiplier, positionMs);
+        }
+        // TODO: If necessary, resize humps at the end so total length is correct.
+
+        // Draw path.
         double curStartMs = noteEndMs - lengthMs;
         path.getElements().add(new MoveTo(scaler.scaleX(curStartMs), noteY));
         for (Hump hump : humps) {
@@ -124,9 +151,11 @@ public class Vibrato {
     }
 
     private class Hump {
-        public double startWidthMs;
-        public double endWidthMs;
-        public double amplitudeCents;
+        private double startWidthMs;
+        private double endWidthMs;
+        private double amplitudeCents;
+        private double startShiftCents = 0;
+        private double endShiftCents = 0;
 
         public Hump(double widthMs, double amplitudeCents) {
             this.startWidthMs = widthMs / 2;
@@ -138,6 +167,19 @@ public class Vibrato {
             return startWidthMs + endWidthMs;
         }
 
+        public double adjust(
+                Function<Double, Double> widthMultiplier,
+                Function<Double, Double> heightMultiplier,
+                double positionMs) {
+            startWidthMs *= widthMultiplier.apply(positionMs);
+            startShiftCents = vibrato[6] * heightMultiplier.apply(positionMs);
+            endWidthMs *= widthMultiplier.apply(positionMs + startWidthMs);
+            amplitudeCents *= heightMultiplier.apply(positionMs + startWidthMs);
+            amplitudeCents += vibrato[6] * heightMultiplier.apply(positionMs + startWidthMs);
+            endShiftCents = vibrato[6] * heightMultiplier.apply(positionMs + getWidthMs());
+            return positionMs + getWidthMs();
+        }
+
         public void addToPath(Path path, double startMs) {
             CubicCurveTo start = renderStart(startMs);
             CubicCurveTo end = renderEnd(startMs + startWidthMs);
@@ -147,7 +189,7 @@ public class Vibrato {
         private CubicCurveTo renderStart(double startMs) {
             double startX = scaler.scaleX(startMs);
             double endX = scaler.scaleX(startMs + startWidthMs);
-            double startY = noteY;
+            double startY = scaler.scaleY(startShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
             double endY = scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
             double controlX_1 = startX + ((endX - startX) * 0.32613); // Sine approximation.
             double controlY_1 = startY + ((endY - startY) * 0.51228); // Sine approximation.
@@ -160,7 +202,7 @@ public class Vibrato {
             double startX = scaler.scaleX(startMs);
             double endX = scaler.scaleX(startMs + endWidthMs);
             double startY = scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
-            double endY = noteY;
+            double endY = scaler.scaleY(endShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
             double controlX_1 = startX + ((endX - startX) * 0.36191); // Sine approximation.
             double controlY_1 = startY; // Sine approximation.
             double controlX_2 = startX + ((endX - startX) * 0.67387); // Sine approximation.
