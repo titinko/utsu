@@ -7,6 +7,7 @@ import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.CurveFactory;
+import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
@@ -27,7 +28,7 @@ public class NoteFactory {
         this.lyricProvider = lyricProvider;
     }
 
-    public Note createNote(NoteData note, NoteCallback callback) {
+    public Note createNote(NoteData note, NoteCallback callback, BooleanProperty vibratoEditor) {
         int absStart = note.getPosition();
         int absDuration = note.getDuration();
         Rectangle rect = new Rectangle();
@@ -53,7 +54,16 @@ public class NoteFactory {
         layout.setTranslateX(scaler.scaleX(absStart));
 
         Lyric lyric = lyricProvider.get();
-        Note trackNote = new Note(rect, edge, overlap, lyric, layout, callback, quantizer, scaler);
+        Note trackNote = new Note(
+                rect,
+                edge,
+                overlap,
+                lyric,
+                layout,
+                callback,
+                vibratoEditor,
+                quantizer,
+                scaler);
         lyric.setVisibleLyric(note.getLyric());
         if (note.getConfig().isPresent()) {
             lyric.setVisibleAlias(note.getConfig().get().getTrueLyric());
@@ -62,7 +72,11 @@ public class NoteFactory {
         return trackNote;
     }
 
-    public Note createDefaultNote(int row, int column, NoteCallback callback) {
+    public Note createDefaultNote(
+            int row,
+            int column,
+            NoteCallback callback,
+            BooleanProperty vibratoEditor) {
         Rectangle note = new Rectangle();
         note.setWidth(scaler.scaleX(Quantizer.COL_WIDTH) - 1);
         note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
@@ -85,7 +99,16 @@ public class NoteFactory {
         layout.setTranslateX(scaler.scaleX(column * Quantizer.COL_WIDTH));
 
         Lyric lyric = lyricProvider.get();
-        Note trackNote = new Note(note, edge, overlap, lyric, layout, callback, quantizer, scaler);
+        Note trackNote = new Note(
+                note,
+                edge,
+                overlap,
+                lyric,
+                layout,
+                callback,
+                vibratoEditor,
+                quantizer,
+                scaler);
         lyric.registerLyric();
 
         return trackNote;

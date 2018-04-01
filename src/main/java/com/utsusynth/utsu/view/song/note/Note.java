@@ -10,11 +10,13 @@ import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.SongController.Mode;
+import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
@@ -45,6 +47,7 @@ public class Note {
             Lyric lyric,
             StackPane layout,
             NoteCallback callback,
+            BooleanProperty vibratoEditor,
             Quantizer quantizer,
             Scaler scaler) {
         this.note = note;
@@ -89,7 +92,13 @@ public class Note {
         vibratoMenuItem.setOnAction(action -> {
             track.setHasVibrato(getAbsPositionMs(), vibratoMenuItem.isSelected());
         });
-        contextMenu.getItems().addAll(deleteMenuItem, vibratoMenuItem);
+        CheckMenuItem vibratoEditorMenuItem = new CheckMenuItem("Vibrato Editor");
+        vibratoEditorMenuItem.selectedProperty().bindBidirectional(vibratoEditor);
+        contextMenu.getItems().addAll(
+                deleteMenuItem,
+                vibratoMenuItem,
+                new SeparatorMenuItem(),
+                vibratoEditorMenuItem);
         layout.setOnContextMenuRequested(event -> {
             contextMenu.hide();
             contextMenu.show(layout, event.getScreenX(), event.getScreenY());

@@ -34,6 +34,7 @@ public class Vibrato {
         this.noteY = noteY;
         this.path = new Path();
         path.setStroke(Color.DARKSLATEBLUE);
+        path.setMouseTransparent(true);
         this.callback = callback;
         this.scaler = scaler;
 

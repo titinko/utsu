@@ -20,6 +20,8 @@ import com.utsusynth.utsu.view.song.note.NoteCallback;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
@@ -33,6 +35,9 @@ public class SongEditor {
     private final NoteFactory noteFactory;
     private final NoteMap noteMap;
     private final Scaler scaler;
+
+    // Whether the vibrato editor is active for this song editor.
+    private final BooleanProperty vibratoEditor;
 
     private HBox measures;
     private HBox dynamics;
@@ -49,6 +54,8 @@ public class SongEditor {
         this.noteFactory = trackNoteFactory;
         this.noteMap = noteMap;
         this.scaler = scaler;
+
+        vibratoEditor = new SimpleBooleanProperty(false);
     }
 
     /** Initialize track with data from the controller. Not song-specific. */
@@ -70,7 +77,7 @@ public class SongEditor {
         // Add all notes.
         NoteData prevNote = notes.get(0);
         for (NoteData note : notes) {
-            Note newNote = noteFactory.createNote(note, noteCallback);
+            Note newNote = noteFactory.createNote(note, noteCallback, vibratoEditor);
             int position = note.getPosition();
             try {
                 noteMap.putNote(position, newNote);
@@ -215,8 +222,11 @@ public class SongEditor {
                         Mode currentMode = model.getCurrentMode();
                         if (currentMode == Mode.ADD) {
                             // Create note.
-                            Note newNote = noteFactory
-                                    .createDefaultNote(currentRowNum, currentColNum, noteCallback);
+                            Note newNote = noteFactory.createDefaultNote(
+                                    currentRowNum,
+                                    currentColNum,
+                                    noteCallback,
+                                    vibratoEditor);
                             noteMap.addNoteElement(newNote);
                         }
                     });
