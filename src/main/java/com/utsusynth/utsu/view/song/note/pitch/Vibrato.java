@@ -5,8 +5,14 @@ import java.util.function.Function;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ObservableDoubleValue;
+import javafx.scene.Group;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.CubicCurveTo;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 
@@ -17,9 +23,14 @@ public class Vibrato {
     private final int noteStartMs;
     private final int noteEndMs;
     private final double noteY;
-    private final Path path;
+    private final BooleanProperty showEditor;
+
+    private final Path vibratoPath;
+    private final Group editorGroup;
     private final PitchbendCallback callback;
     private final Scaler scaler;
+
+    private Optional<Editor> editor;
     private int[] vibrato;
 
     Vibrato(
@@ -28,22 +39,33 @@ public class Vibrato {
             double noteY,
             PitchbendCallback callback,
             Scaler scaler,
-            int[] vibrato) {
+            int[] vibrato,
+            BooleanProperty showEditor) {
         this.noteStartMs = noteStartMs;
         this.noteEndMs = noteEndMs;
         this.noteY = noteY;
-        this.path = new Path();
-        path.setStroke(Color.DARKSLATEBLUE);
-        path.setMouseTransparent(true);
+        this.showEditor = showEditor;
         this.callback = callback;
         this.scaler = scaler;
-
         this.vibrato = vibrato;
-        refreshView();
+
+        vibratoPath = new Path();
+        vibratoPath.setStroke(Color.DARKSLATEBLUE);
+        vibratoPath.setMouseTransparent(true);
+        redrawVibrato();
+
+        editor = Optional.absent();
+        editorGroup = new Group();
+        redrawEditor();
+        showEditor.addListener((event, oldValue, newValue) -> {
+            if (newValue != oldValue) {
+                redrawEditor();
+            }
+        });
     }
 
-    Path getElement() {
-        return path;
+    Group getElement() {
+        return new Group(vibratoPath, editorGroup);
     }
 
     public Optional<int[]> getVibrato() {
@@ -69,17 +91,19 @@ public class Vibrato {
         vibrato[8] = 0; // Frequency slope (range of -100 to 100)
         vibrato[9] = 0; // Unused.
         callback.modifySongPitchbend();
-        refreshView();
+        redrawVibrato();
+        redrawEditor();
     }
 
     public void clearVibrato() {
         vibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         callback.modifySongPitchbend();
-        refreshView();
+        redrawVibrato();
+        redrawEditor();
     }
 
-    private void refreshView() {
-        path.getElements().clear();
+    void redrawVibrato() {
+        vibratoPath.getElements().clear();
         if (vibrato.length != 10) {
             // Ensure that vibrato values are valid.
             vibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -90,7 +114,7 @@ public class Vibrato {
         }
         double humpMs = vibrato[1] / 2.0; // One hump is half a cycle.
         double lengthMs = (noteEndMs - noteStartMs) * (vibrato[0] / 100.0); // Vibrato length.
-        ArrayList<Hump> humps = new ArrayList<>();
+        ArrayList<VibratoCurve> humps = new ArrayList<>();
 
         // Calculate first hump
         int amplitudeDir = 1; // Defaults to positive when phase is 0 or 100.
@@ -106,14 +130,24 @@ public class Vibrato {
         }
         // Find hump length and compare with vibrato length. Truncate if needed.
         firstHumpMs = Math.min(firstHumpMs, lengthMs);
-        humps.add(new Hump(firstHumpMs, vibrato[2] * amplitudeDir * (firstHumpMs / humpMs)));
+        humps.add(
+                new VibratoCurve(
+                        noteY,
+                        scaler,
+                        firstHumpMs,
+                        vibrato[2] * amplitudeDir * (firstHumpMs / humpMs)));
 
         // Find each succeeding hump.
         double positionMs = firstHumpMs;
         while (positionMs + 1 < lengthMs) {
             double newHumpMs = Math.min(humpMs, lengthMs - positionMs);
             amplitudeDir *= -1;
-            humps.add(new Hump(newHumpMs, vibrato[2] * amplitudeDir * (newHumpMs / humpMs)));
+            humps.add(
+                    new VibratoCurve(
+                            noteY,
+                            scaler,
+                            newHumpMs,
+                            vibrato[2] * amplitudeDir * (newHumpMs / humpMs)));
             positionMs += newHumpMs;
         }
 
@@ -137,78 +171,95 @@ public class Vibrato {
             }
             return multiplier;
         };
-        for (Hump hump : humps) {
-            positionMs = hump.adjust(widthMultiplier, heightMultiplier, positionMs);
+        for (VibratoCurve hump : humps) {
+            positionMs = hump.adjust(widthMultiplier, heightMultiplier, vibrato[6], positionMs);
         }
         // TODO: If necessary, resize humps at the end so total length is correct.
 
         // Draw path.
         double curStartMs = noteEndMs - lengthMs;
-        path.getElements().add(new MoveTo(scaler.scaleX(curStartMs), noteY));
-        for (Hump hump : humps) {
-            hump.addToPath(path, curStartMs);
+        vibratoPath.getElements().add(new MoveTo(scaler.scaleX(curStartMs), noteY));
+        for (VibratoCurve hump : humps) {
+            hump.addToPath(vibratoPath, curStartMs);
             curStartMs += hump.getWidthMs();
         }
     }
 
-    private class Hump {
-        private double startWidthMs;
-        private double endWidthMs;
-        private double amplitudeCents;
-        private double startShiftCents = 0;
-        private double endShiftCents = 0;
+    private void redrawEditor() {
+        // Only use when vibrato is edited by something besides the editor.
+        if (showEditor.get()) {
+            editor = Optional.of(new Editor());
+            editorGroup.getChildren().setAll(editor.get().render());
+        } else {
+            editor = Optional.absent();
+            editorGroup.getChildren().clear();
+        }
+    }
 
-        public Hump(double widthMs, double amplitudeCents) {
-            this.startWidthMs = widthMs / 2;
-            this.endWidthMs = widthMs / 2;
-            this.amplitudeCents = amplitudeCents;
+    private class Editor {
+        private final ObservableDoubleValue minX;
+        private final ObservableDoubleValue maxX;
+        private final ObservableDoubleValue baseY;
+
+        private final DoubleProperty startX;
+        private final DoubleProperty fadeInX;
+        private final DoubleProperty fadeOutX;
+
+        private final DoubleProperty centerY;
+        private final DoubleProperty amplitudeY;
+
+        public Editor() {
+            // Values that don't change.
+            this.minX = new SimpleDoubleProperty(scaler.scaleX(noteStartMs));
+            this.maxX = new SimpleDoubleProperty(scaler.scaleX(noteEndMs));
+            this.baseY = new SimpleDoubleProperty(noteY);
+
+            double lengthMs = (noteEndMs - noteStartMs) * (vibrato[0] / 100.0); // Vibrato length.
+            this.startX = new SimpleDoubleProperty(scaler.scaleX(noteEndMs - lengthMs));
+            this.fadeInX = new SimpleDoubleProperty(
+                    scaler.scaleX(noteEndMs - lengthMs + (lengthMs * (vibrato[3] / 100.0))));
+            this.fadeOutX = new SimpleDoubleProperty(
+                    scaler.scaleX(noteEndMs - (lengthMs * (vibrato[4] / 100.0))));
+
+            this.centerY = new SimpleDoubleProperty(
+                    scaler.scaleY(vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT) + noteY);
+            this.amplitudeY = new SimpleDoubleProperty(
+                    scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT));
         }
 
-        public double getWidthMs() {
-            return startWidthMs + endWidthMs;
+        public Line[] render() {
+            System.out.println(minX);
+            DoubleBinding highY = centerY.add(amplitudeY);
+            DoubleBinding lowY = centerY.subtract(amplitudeY);
+            Line[] lines = new Line[11];
+            lines[0] = createLine(startX, baseY, fadeInX, highY); // Start -> Top
+            lines[1] = createLine(startX, baseY, fadeInX, centerY); // Start -> Center
+            lines[2] = createLine(startX, baseY, fadeInX, lowY); // Start -> Bottom
+            lines[3] = createLine(fadeOutX, highY, maxX, baseY); // Top -> End
+            lines[4] = createLine(fadeOutX, centerY, maxX, baseY); // Center -> End
+            lines[5] = createLine(fadeOutX, lowY, maxX, baseY); // Bottom -> End
+
+            lines[6] = createLine(fadeInX, centerY, fadeOutX, centerY); // Center
+            lines[7] = createLine(fadeInX, highY, fadeOutX, highY); // Top
+            lines[8] = createLine(fadeInX, lowY, fadeOutX, lowY); // Bottom
+            lines[9] = createLine(fadeInX, highY, fadeInX, lowY); // Fade in
+            lines[10] = createLine(fadeOutX, highY, fadeOutX, lowY); // Fade out
+            return lines;
         }
 
-        public double adjust(
-                Function<Double, Double> widthMultiplier,
-                Function<Double, Double> heightMultiplier,
-                double positionMs) {
-            startWidthMs *= widthMultiplier.apply(positionMs);
-            startShiftCents = vibrato[6] * heightMultiplier.apply(positionMs);
-            endWidthMs *= widthMultiplier.apply(positionMs + startWidthMs);
-            amplitudeCents *= heightMultiplier.apply(positionMs + startWidthMs);
-            amplitudeCents += vibrato[6] * heightMultiplier.apply(positionMs + startWidthMs);
-            endShiftCents = vibrato[6] * heightMultiplier.apply(positionMs + getWidthMs());
-            return positionMs + getWidthMs();
-        }
-
-        public void addToPath(Path path, double startMs) {
-            CubicCurveTo start = renderStart(startMs);
-            CubicCurveTo end = renderEnd(startMs + startWidthMs);
-            path.getElements().addAll(start, end);
-        }
-
-        private CubicCurveTo renderStart(double startMs) {
-            double startX = scaler.scaleX(startMs);
-            double endX = scaler.scaleX(startMs + startWidthMs);
-            double startY = scaler.scaleY(startShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
-            double endY = scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
-            double controlX_1 = startX + ((endX - startX) * 0.32613); // Sine approximation.
-            double controlY_1 = startY + ((endY - startY) * 0.51228); // Sine approximation.
-            double controlX_2 = startX + ((endX - startX) * 0.63809); // Sine approximation.
-            double controlY_2 = endY; // Sine approximation.
-            return new CubicCurveTo(controlX_1, controlY_1, controlX_2, controlY_2, endX, endY);
-        }
-
-        private CubicCurveTo renderEnd(double startMs) {
-            double startX = scaler.scaleX(startMs);
-            double endX = scaler.scaleX(startMs + endWidthMs);
-            double startY = scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
-            double endY = scaler.scaleY(endShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
-            double controlX_1 = startX + ((endX - startX) * 0.36191); // Sine approximation.
-            double controlY_1 = startY; // Sine approximation.
-            double controlX_2 = startX + ((endX - startX) * 0.67387); // Sine approximation.
-            double controlY_2 = startY + ((endY - startY) * 0.48772); // Sine approximation.
-            return new CubicCurveTo(controlX_1, controlY_1, controlX_2, controlY_2, endX, endY);
+        private Line createLine(
+                ObservableDoubleValue x1,
+                ObservableDoubleValue y1,
+                ObservableDoubleValue x2,
+                ObservableDoubleValue y2) {
+            Line line = new Line();
+            line.setStroke(Color.STEELBLUE);
+            line.setStrokeWidth(1.8);
+            line.startXProperty().bind(x1);
+            line.startYProperty().bind(y1);
+            line.endXProperty().bind(x2);
+            line.endYProperty().bind(y2);
+            return line;
         }
     }
 }

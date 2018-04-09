@@ -17,6 +17,7 @@ import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.Pitchbend;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
+import javafx.beans.property.BooleanProperty;
 import javafx.scene.Group;
 
 public class NoteMap {
@@ -178,10 +179,15 @@ public class NoteMap {
             int position,
             String prevPitch,
             PitchbendData pitchData,
-            PitchbendCallback callback) {
+            PitchbendCallback callback,
+            BooleanProperty vibratoEditor) {
         if (noteMap.containsKey(position)) {
-            Pitchbend pitchbend = pitchbendFactory
-                    .createPitchbend(noteMap.get(position), prevPitch, pitchData, callback);
+            Pitchbend pitchbend = pitchbendFactory.createPitchbend(
+                    noteMap.get(position),
+                    prevPitch,
+                    pitchData,
+                    callback,
+                    vibratoEditor);
             // Overrides are expected here.
             if (pitchbendMap.containsKey(position)) {
                 visiblePitchbends.getChildren().remove(pitchbendMap.get(position).getElement());

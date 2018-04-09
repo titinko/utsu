@@ -11,6 +11,7 @@ import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Curve;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.CurveFactory;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
+import javafx.beans.property.BooleanProperty;
 
 public class PitchbendFactory {
     private final CurveFactory curveFactory;
@@ -26,15 +27,10 @@ public class PitchbendFactory {
             Note note,
             String prevPitch,
             PitchbendData pitchbend,
-            PitchbendCallback callback) {
+            PitchbendCallback callback,
+            BooleanProperty vibratoEditor) {
         Portamento portamento = createPortamento(note, prevPitch, pitchbend, callback);
-        Vibrato vibrato = new Vibrato(
-                note.getAbsPositionMs(),
-                note.getAbsPositionMs() + note.getDurationMs(),
-                (note.getRow() + .5) * Quantizer.ROW_HEIGHT,
-                callback,
-                scaler,
-                pitchbend.getVibrato());
+        Vibrato vibrato = createVibrato(note, pitchbend, callback, vibratoEditor);
         return new Pitchbend(portamento, vibrato);
     }
 
@@ -72,5 +68,20 @@ public class PitchbendFactory {
                             type));
         }
         return new Portamento(pitchCurves, callback, curveFactory, scaler);
+    }
+
+    private Vibrato createVibrato(
+            Note note,
+            PitchbendData pitchbend,
+            PitchbendCallback callback,
+            BooleanProperty vibratoEditor) {
+        return new Vibrato(
+                note.getAbsPositionMs(),
+                note.getAbsPositionMs() + note.getDurationMs(),
+                (note.getRow() + .5) * Quantizer.ROW_HEIGHT,
+                callback,
+                scaler,
+                pitchbend.getVibrato(),
+                vibratoEditor);
     }
 }

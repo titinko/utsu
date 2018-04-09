@@ -92,7 +92,8 @@ public class SongEditor {
                             position,
                             prevNote.getPitch(),
                             note.getPitchbend().get(),
-                            getPitchbendCallback(position));
+                            getPitchbendCallback(position),
+                            vibratoEditor);
                 }
             } catch (NoteAlreadyExistsException e) {
                 // TODO: Throw an error here?
@@ -313,7 +314,8 @@ public class SongEditor {
                             position + nextDelta,
                             curPitch,
                             next.getPitchbend(),
-                            getPitchbendCallback(position + nextDelta));
+                            getPitchbendCallback(position + nextDelta),
+                            vibratoEditor);
                 }
                 // Refresh whether note is highlighted, must be after adjusting for overlap.
                 playbackManager.refreshHighlights(note);
@@ -328,7 +330,8 @@ public class SongEditor {
                             position,
                             prevPitch,
                             response.getNote().getPitchbend().get(),
-                            getPitchbendCallback(position));
+                            getPitchbendCallback(position),
+                            vibratoEditor);
                 }
 
                 // Add measures if necessary.
@@ -380,7 +383,8 @@ public class SongEditor {
                         position + nextDelta,
                         prevPitch,
                         next.getPitchbend(),
-                        getPitchbendCallback(position + nextDelta));
+                        getPitchbendCallback(position + nextDelta),
+                        vibratoEditor);
             }
 
             // Remove all measures if necessary.
