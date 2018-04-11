@@ -5,20 +5,24 @@ import java.util.function.Function;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableDoubleValue;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
-import javafx.scene.shape.Shape;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 
 /**
  * Visual representation of the vibrato of a single note.
@@ -60,7 +64,7 @@ public class Vibrato {
 
         editor = Optional.absent();
         editorGroup = new Group();
-        editorGroup.setOnMouseExited(event -> editorGroup.getScene().setCursor(Cursor.DEFAULT));
+        // editorGroup.setOnMouseExited(event -> editorGroup.getScene().setCursor(Cursor.DEFAULT));
         redrawEditor();
         showEditor.addListener((event, oldValue, newValue) -> {
             if (newValue != oldValue) {
@@ -114,7 +118,18 @@ public class Vibrato {
         redrawEditor();
     }
 
+    private void adjustVibrato(int index, int newValue) {
+        if (index < 0 || index >= vibrato.length || vibrato[index] == newValue) {
+            return;
+        }
+        vibrato[index] = newValue;
+        callback.modifySongPitchbend();
+        redrawVibrato();
+        // This method should be called from the editor, so no need to redraw editor.
+    }
+
     private void redrawVibrato() {
+        // TODO: Validate that vibrato values are within correct ranges.
         vibratoPath.getElements().clear();
         if (vibrato.length != 10) {
             // Ensure that vibrato values are valid.
@@ -212,20 +227,30 @@ public class Vibrato {
     private class Editor {
         private final ObservableDoubleValue minX;
         private final ObservableDoubleValue maxX;
-        private final ObservableDoubleValue baseY;
+        private final DoubleProperty baseY;
+
+        private final DoubleProperty centerY;
+        private final DoubleProperty amplitudeY;
 
         private final DoubleProperty startX;
         private final DoubleProperty fadeInX;
         private final DoubleProperty fadeOutX;
 
-        private final DoubleProperty centerY;
-        private final DoubleProperty amplitudeY;
+        private final DoubleProperty maxSliderX; // Max value for the sliders below.
+        private final DoubleProperty frqX;
+        private final DoubleProperty phaseX;
+        private final DoubleProperty frqSlopeX;
 
         public Editor() {
             // Values that don't change.
             this.minX = new SimpleDoubleProperty(scaler.scaleX(noteStartMs));
             this.maxX = new SimpleDoubleProperty(scaler.scaleX(noteEndMs));
             this.baseY = new SimpleDoubleProperty(noteY);
+
+            this.centerY = new SimpleDoubleProperty(
+                    scaler.scaleY(vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT) + noteY);
+            this.amplitudeY = new SimpleDoubleProperty(
+                    scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT));
 
             double lengthMs = (noteEndMs - noteStartMs) * (vibrato[0] / 100.0); // Vibrato length.
             this.startX = new SimpleDoubleProperty(scaler.scaleX(noteEndMs - lengthMs));
@@ -234,117 +259,112 @@ public class Vibrato {
             this.fadeOutX = new SimpleDoubleProperty(
                     scaler.scaleX(noteEndMs - (lengthMs * (vibrato[4] / 100.0))));
 
-            this.centerY = new SimpleDoubleProperty(
-                    scaler.scaleY(vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT) + noteY);
-            this.amplitudeY = new SimpleDoubleProperty(
-                    scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT));
+            this.maxSliderX = new SimpleDoubleProperty(
+                    Math.min(maxX.get(), startX.get() + scaler.scaleX(Quantizer.COL_WIDTH)));
+            this.frqX = new SimpleDoubleProperty(
+                    startX.get() + (maxSliderX.get() - startX.get()) * (vibrato[1] - 64) / 448.0);
+            this.phaseX = new SimpleDoubleProperty(
+                    startX.get() + (maxSliderX.get() - startX.get()) * vibrato[5] / 100.0);
+            this.frqSlopeX = new SimpleDoubleProperty(
+                    startX.get() + (maxSliderX.get() - startX.get()) * (vibrato[8] + 100) / 200.0);
 
             // Set event handlers that change and re-draw vibrato.
+            centerY.addListener(event -> adjustVibrato(6, yToCents(centerY.get() - baseY.get())));
+            amplitudeY.addListener(event -> adjustVibrato(2, yToCents(amplitudeY.get())));
             startX.addListener(event -> {
                 double ratio = (maxX.get() - startX.get()) / (maxX.get() - minX.get());
-                int percentOfNote = (int) Math.round(ratio * 100);
-                if (percentOfNote != vibrato[0]) {
-                    vibrato[0] = percentOfNote;
-                    callback.modifySongPitchbend();
-                    redrawVibrato();
-                }
+                adjustVibrato(0, (int) Math.round(ratio * 100)); // Percent of note.
             });
             fadeInX.addListener(event -> {
                 double ratio = (fadeInX.get() - startX.get()) / (maxX.get() - startX.get());
-                int percentOfVibrato = (int) Math.round(ratio * 100);
-                if (percentOfVibrato != vibrato[3]) {
-                    vibrato[3] = percentOfVibrato;
-                    callback.modifySongPitchbend();
-                    redrawVibrato();
-                }
+                adjustVibrato(3, (int) Math.round(ratio * 100)); // Percent of vibrato.
             });
-            fadeOutX.addListener((event, oldFadeOutX, newFadeOutX) -> {
+            fadeOutX.addListener(event -> {
                 double ratio = (maxX.get() - fadeOutX.get()) / (maxX.get() - startX.get());
-                int percentOfVibrato = (int) Math.round(ratio * 100);
-                if (percentOfVibrato != vibrato[4]) {
-                    vibrato[4] = percentOfVibrato;
-                    callback.modifySongPitchbend();
-                    redrawVibrato();
-                }
+                adjustVibrato(4, (int) Math.round(ratio * 100)); // Percent of vibrato.
             });
-            centerY.addListener((event, oldCenterY, newCenterY) -> {
-                int pitchShiftCents = yToCents(centerY.get() - baseY.get());
-                if (pitchShiftCents != vibrato[6]) {
-                    vibrato[6] = pitchShiftCents;
-                    callback.modifySongPitchbend();
-                    redrawVibrato();
-                }
+            frqX.addListener(event -> {
+                double ratio = (frqX.get() - startX.get()) / (maxSliderX.get() - startX.get());
+                adjustVibrato(1, (int) Math.round(ratio * 448 + 64));
             });
-            amplitudeY.addListener((event, oldAmplitudeY, newAmplitudeY) -> {
-                int amplitudeCents = yToCents(amplitudeY.get());
-                if (amplitudeCents != vibrato[2]) {
-                    vibrato[2] = amplitudeCents;
-                    callback.modifySongPitchbend();
-                    redrawVibrato();
-                }
+            phaseX.addListener(event -> {
+                double ratio = (phaseX.get() - startX.get()) / (maxSliderX.get() - startX.get());
+                adjustVibrato(5, (int) Math.round(ratio * 100));
+            });
+            frqSlopeX.addListener(event -> {
+                double ratio = (frqSlopeX.get() - startX.get()) / (maxSliderX.get() - startX.get());
+                adjustVibrato(8, (int) Math.round(ratio * 200 - 100));
             });
         }
 
-        public Shape[] render() {
-            System.out.println(minX);
+        public Node[] render() {
             ObservableDoubleValue highY = centerY.subtract(amplitudeY);
             ObservableDoubleValue lowY = centerY.add(amplitudeY);
-            Shape[] shapes = new Shape[12];
+            ObservableDoubleValue highBaseY = baseY.subtract(centsToY(75));
+            ObservableDoubleValue lowBaseY = baseY.add(centsToY(75));
+            Node[] nodes = new Node[16];
 
-            // Non-draggable shapes.
-            shapes[0] = createLine(startX, baseY, fadeInX, highY); // Start -> Top
-            shapes[1] = createLine(startX, baseY, fadeInX, centerY); // Start -> Center
-            shapes[2] = createLine(startX, baseY, fadeInX, lowY); // Start -> Bottom
-            shapes[3] = createLine(fadeOutX, highY, maxX, baseY); // Top -> End
-            shapes[4] = createLine(fadeOutX, centerY, maxX, baseY); // Center -> End
-            shapes[5] = createLine(fadeOutX, lowY, maxX, baseY); // Bottom -> End
+            // Non-draggable nodes.
+            nodes[0] = createLine(startX, baseY, fadeInX, highY); // Start -> Top
+            nodes[1] = createLine(startX, baseY, fadeInX, centerY); // Start -> Center
+            nodes[2] = createLine(startX, baseY, fadeInX, lowY); // Start -> Bottom
+            nodes[3] = createLine(fadeOutX, highY, maxX, baseY); // Top -> End
+            nodes[4] = createLine(fadeOutX, centerY, maxX, baseY); // Center -> End
+            nodes[5] = createLine(fadeOutX, lowY, maxX, baseY); // Bottom -> End
+            Line endOfSlider = createLine(maxSliderX, highBaseY, maxSliderX, lowBaseY);
+            endOfSlider.setStroke(Color.ROYALBLUE);
+            nodes[6] = endOfSlider;
 
-            // Draggable shapes.
-            shapes[6] = createLine(fadeInX, centerY, fadeOutX, centerY, Cursor.V_RESIZE); // Center
-            shapes[6].setOnMouseDragged(event -> {
+            // Draggable nodes.
+            nodes[7] = createLine(fadeInX, centerY, fadeOutX, centerY, Cursor.V_RESIZE); // Center
+            nodes[7].setOnMouseDragged(event -> {
                 double y = event.getY();
                 if (y >= baseY.get() - centsToY(100) && y <= baseY.get() + centsToY(100)) {
                     centerY.set(y);
                 }
             });
-            shapes[7] = createLine(fadeInX, highY, fadeOutX, highY, Cursor.V_RESIZE); // Top
-            shapes[7].setOnMouseDragged(event -> {
+            nodes[8] = createLine(fadeInX, highY, fadeOutX, highY, Cursor.V_RESIZE); // Top
+            nodes[8].setOnMouseDragged(event -> {
                 double y = event.getY();
                 if (y >= centerY.get() - centsToY(200) && y <= centerY.get() - centsToY(5)) {
                     amplitudeY.set(centerY.get() - y);
                 }
             });
-            shapes[8] = createLine(fadeInX, lowY, fadeOutX, lowY, Cursor.V_RESIZE); // Bottom
-            shapes[8].setOnMouseDragged(event -> {
+            nodes[9] = createLine(fadeInX, lowY, fadeOutX, lowY, Cursor.V_RESIZE); // Bottom
+            nodes[9].setOnMouseDragged(event -> {
                 double y = event.getY();
                 if (y >= centerY.get() + centsToY(5) && y <= centerY.get() + centsToY(200)) {
                     amplitudeY.set(y - centerY.get());
                 }
             });
-            shapes[9] = createPoint(startX, baseY, Cursor.HAND); // Start point
-            shapes[9].setOnMouseDragged(event -> {
-                double x = event.getX();
-                if (x > minX.get() && x < maxX.get()) {
-                    startX.set(x);
-                    fadeInX.set(x + ((maxX.get() - x) * vibrato[3] / 100.0));
-                    fadeOutX.set(maxX.get() - ((maxX.get() - x) * vibrato[4] / 100.0));
-                }
-            });
-            shapes[10] = createLine(fadeInX, highY, fadeInX, lowY, Cursor.H_RESIZE); // Fade in
-            shapes[10].setOnMouseDragged(event -> {
+            nodes[10] = createLine(fadeInX, highY, fadeInX, lowY, Cursor.H_RESIZE); // Fade in
+            nodes[10].setOnMouseDragged(event -> {
                 double x = event.getX();
                 if (x > startX.get() && x < maxX.get()) {
                     fadeInX.set(x);
                 }
             });
-            shapes[11] = createLine(fadeOutX, highY, fadeOutX, lowY, Cursor.H_RESIZE); // Fade out
-            shapes[11].setOnMouseDragged(event -> {
+            nodes[11] = createLine(fadeOutX, highY, fadeOutX, lowY, Cursor.H_RESIZE); // Fade out
+            nodes[11].setOnMouseDragged(event -> {
                 double x = event.getX();
                 if (x > startX.get() && x < maxX.get()) {
                     fadeOutX.set(x);
                 }
             });
-            return shapes;
+            nodes[12] = createLine(startX, highBaseY, startX, lowBaseY, Cursor.H_RESIZE); // Start
+            nodes[12].setOnMouseDragged(event -> {
+                double x = event.getX();
+                if (x > minX.get() && x < maxX.get()) {
+                    startX.set(x);
+                    fadeInX.set(x + ((maxX.get() - x) * vibrato[3] / 100.0));
+                    fadeOutX.set(maxX.get() - ((maxX.get() - x) * vibrato[4] / 100.0));
+                    maxSliderX.set(Math.min(maxX.get(), x + scaler.scaleX(Quantizer.COL_WIDTH)));
+                }
+            });
+            nodes[13] = createSlider(frqX, baseY.subtract(centsToY(30)), "F"); // Frequency
+            nodes[14] = createSlider(phaseX, baseY, "P"); // Phase shift
+            nodes[15] = createSlider(frqSlopeX, baseY.add(centsToY(30)), "F'"); // Frequency slope
+            return nodes;
         }
 
         private Line createLine(
@@ -354,7 +374,7 @@ public class Vibrato {
                 ObservableDoubleValue y2,
                 Cursor cursor) {
             Line line = createLine(x1, y1, x2, y2);
-            line.setOnMouseEntered(event -> line.getScene().setCursor(cursor));
+            line.setCursor(cursor);
             return line;
         }
 
@@ -373,17 +393,31 @@ public class Vibrato {
             return line;
         }
 
-        private Circle createPoint(
-                ObservableDoubleValue x,
+        private StackPane createSlider(
+                DoubleProperty xProp,
                 ObservableDoubleValue y,
-                Cursor cursor) {
-            Circle point = new Circle(3);
+                String label) {
+            double radius = 5;
+            Circle point = new Circle(radius);
             point.setStroke(Color.CRIMSON);
-            point.setFill(Color.CRIMSON);
-            point.centerXProperty().bind(x);
-            point.centerYProperty().bind(y);
-            point.setOnMouseEntered(event -> point.getScene().setCursor(cursor));
-            return point;
+            point.setFill(Color.WHITE);
+            point.setCursor(Cursor.HAND);
+
+            Text text = new Text(label);
+            text.setFont(Font.font(9));
+            text.setFill(Color.CRIMSON);
+            text.setMouseTransparent(true);
+
+            StackPane slider = new StackPane(point, text);
+            slider.translateXProperty().bind(xProp.subtract(radius));
+            slider.translateYProperty().bind(DoubleExpression.doubleExpression(y).subtract(radius));
+            slider.setOnMouseDragged(event -> {
+                double newX = event.getX() + slider.getTranslateX();
+                if (newX >= startX.get() && newX <= maxSliderX.get()) {
+                    xProp.set(newX);
+                }
+            });
+            return slider;
         }
 
         private double centsToY(double cents) {
