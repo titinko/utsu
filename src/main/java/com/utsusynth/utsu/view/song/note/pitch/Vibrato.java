@@ -5,16 +5,20 @@ import java.util.function.Function;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableDoubleValue;
+import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import javafx.scene.shape.Shape;
 
 /**
  * Visual representation of the vibrato of a single note.
@@ -39,7 +43,7 @@ public class Vibrato {
             double noteY,
             PitchbendCallback callback,
             Scaler scaler,
-            int[] vibrato,
+            int[] startVibrato,
             BooleanProperty showEditor) {
         this.noteStartMs = noteStartMs;
         this.noteEndMs = noteEndMs;
@@ -47,7 +51,7 @@ public class Vibrato {
         this.showEditor = showEditor;
         this.callback = callback;
         this.scaler = scaler;
-        this.vibrato = vibrato;
+        this.vibrato = startVibrato;
 
         vibratoPath = new Path();
         vibratoPath.setStroke(Color.DARKSLATEBLUE);
@@ -56,12 +60,20 @@ public class Vibrato {
 
         editor = Optional.absent();
         editorGroup = new Group();
+        editorGroup.setOnMouseExited(event -> editorGroup.getScene().setCursor(Cursor.DEFAULT));
         redrawEditor();
         showEditor.addListener((event, oldValue, newValue) -> {
             if (newValue != oldValue) {
                 redrawEditor();
             }
         });
+
+        // Vibrato editor has its own context menu.
+        CheckMenuItem vibratoEditorMenuItem = new CheckMenuItem("Vibrato Editor");
+        vibratoEditorMenuItem.selectedProperty().bindBidirectional(showEditor);
+        ContextMenu menu = new ContextMenu(vibratoEditorMenuItem);
+        editorGroup.setOnContextMenuRequested(
+                event -> menu.show(editorGroup, event.getScreenX(), event.getScreenY()));
     }
 
     Group getElement() {
@@ -81,12 +93,12 @@ public class Vibrato {
     public void addDefaultVibrato() {
         vibrato = new int[10];
         vibrato[0] = 70; // Vibrato length (% of note)
-        vibrato[1] = 185; // Cycle length (ms)
-        vibrato[2] = 40; // Amplitude (cents)
+        vibrato[1] = 185; // Cycle length (ms, range of 64 to 512)
+        vibrato[2] = 40; // Amplitude (cents) (range of 5 to 200)
         vibrato[3] = 20; // Phase in (% of vibrato)
         vibrato[4] = 20; // Phase out (% of vibrato)
         vibrato[5] = 0; // Phase shift (% of cycle)
-        vibrato[6] = 0; // Pitch shift from note (cents)
+        vibrato[6] = 0; // Pitch shift from note (cents, range of -100 to 100)
         vibrato[7] = 100; // Vibrato inversion, unused.
         vibrato[8] = 0; // Frequency slope (range of -100 to 100)
         vibrato[9] = 0; // Unused.
@@ -187,7 +199,7 @@ public class Vibrato {
 
     private void redrawEditor() {
         // Only use when vibrato is edited by something besides the editor.
-        if (showEditor.get()) {
+        if (showEditor.get() && getVibrato().isPresent()) {
             editor = Optional.of(new Editor());
             editorGroup.getChildren().setAll(editor.get().render());
         } else {
@@ -227,24 +239,77 @@ public class Vibrato {
                     scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT));
         }
 
-        public Line[] render() {
+        public Shape[] render() {
             System.out.println(minX);
-            DoubleBinding highY = centerY.add(amplitudeY);
-            DoubleBinding lowY = centerY.subtract(amplitudeY);
-            Line[] lines = new Line[11];
-            lines[0] = createLine(startX, baseY, fadeInX, highY); // Start -> Top
-            lines[1] = createLine(startX, baseY, fadeInX, centerY); // Start -> Center
-            lines[2] = createLine(startX, baseY, fadeInX, lowY); // Start -> Bottom
-            lines[3] = createLine(fadeOutX, highY, maxX, baseY); // Top -> End
-            lines[4] = createLine(fadeOutX, centerY, maxX, baseY); // Center -> End
-            lines[5] = createLine(fadeOutX, lowY, maxX, baseY); // Bottom -> End
+            ObservableDoubleValue highY = centerY.subtract(amplitudeY);
+            ObservableDoubleValue lowY = centerY.add(amplitudeY);
+            Shape[] shapes = new Shape[12];
 
-            lines[6] = createLine(fadeInX, centerY, fadeOutX, centerY); // Center
-            lines[7] = createLine(fadeInX, highY, fadeOutX, highY); // Top
-            lines[8] = createLine(fadeInX, lowY, fadeOutX, lowY); // Bottom
-            lines[9] = createLine(fadeInX, highY, fadeInX, lowY); // Fade in
-            lines[10] = createLine(fadeOutX, highY, fadeOutX, lowY); // Fade out
-            return lines;
+            // Non-draggable shapes.
+            shapes[0] = createLine(startX, baseY, fadeInX, highY); // Start -> Top
+            shapes[1] = createLine(startX, baseY, fadeInX, centerY); // Start -> Center
+            shapes[2] = createLine(startX, baseY, fadeInX, lowY); // Start -> Bottom
+            shapes[3] = createLine(fadeOutX, highY, maxX, baseY); // Top -> End
+            shapes[4] = createLine(fadeOutX, centerY, maxX, baseY); // Center -> End
+            shapes[5] = createLine(fadeOutX, lowY, maxX, baseY); // Bottom -> End
+
+            // Draggable shapes.
+            shapes[6] = createLine(fadeInX, centerY, fadeOutX, centerY, Cursor.V_RESIZE); // Center
+            shapes[6].setOnMouseDragged(event -> {
+                double y = event.getY();
+                if (y >= baseY.get() - centsToY(100) && y <= baseY.get() + centsToY(100)) {
+                    centerY.set(y);
+                }
+            });
+            shapes[7] = createLine(fadeInX, highY, fadeOutX, highY, Cursor.V_RESIZE); // Top
+            shapes[7].setOnMouseDragged(event -> {
+                double y = event.getY();
+                if (y >= centerY.get() - centsToY(200) && y <= centerY.get() - centsToY(5)) {
+                    amplitudeY.set(centerY.get() - y);
+                }
+            });
+            shapes[8] = createLine(fadeInX, lowY, fadeOutX, lowY, Cursor.V_RESIZE); // Bottom
+            shapes[8].setOnMouseDragged(event -> {
+                double y = event.getY();
+                if (y >= centerY.get() + centsToY(5) && y <= centerY.get() + centsToY(200)) {
+                    amplitudeY.set(y - centerY.get());
+                }
+            });
+            shapes[9] = createPoint(startX, baseY, Cursor.HAND); // Start point
+            shapes[9].setOnMouseDragged(event -> {
+                double x = event.getX();
+                if (x > minX.get() && x < maxX.get()) {
+                    startX.set(x);
+                    fadeInX.set(x + ((maxX.get() - x) * vibrato[3] / 100.0));
+                    fadeOutX.set(maxX.get() - ((maxX.get() - x) * vibrato[4] / 100.0));
+                }
+            });
+            shapes[10] = createLine(fadeInX, highY, fadeInX, lowY, Cursor.H_RESIZE); // Fade in
+            shapes[10].setOnMouseDragged(event -> {
+                double x = event.getX();
+                if (x > startX.get() && x < maxX.get()) {
+                    fadeInX.set(x);
+                }
+            });
+            shapes[11] = createLine(fadeOutX, highY, fadeOutX, lowY, Cursor.H_RESIZE); // Fade out
+            shapes[11].setOnMouseDragged(event -> {
+                double x = event.getX();
+                if (x > startX.get() && x < maxX.get()) {
+                    fadeOutX.set(x);
+                }
+            });
+            return shapes;
+        }
+
+        private Line createLine(
+                ObservableDoubleValue x1,
+                ObservableDoubleValue y1,
+                ObservableDoubleValue x2,
+                ObservableDoubleValue y2,
+                Cursor cursor) {
+            Line line = createLine(x1, y1, x2, y2);
+            line.setOnMouseEntered(event -> line.getScene().setCursor(cursor));
+            return line;
         }
 
         private Line createLine(
@@ -253,13 +318,30 @@ public class Vibrato {
                 ObservableDoubleValue x2,
                 ObservableDoubleValue y2) {
             Line line = new Line();
-            line.setStroke(Color.STEELBLUE);
-            line.setStrokeWidth(1.8);
+            line.setStroke(Color.CRIMSON);
+            line.setStrokeWidth(2);
             line.startXProperty().bind(x1);
             line.startYProperty().bind(y1);
             line.endXProperty().bind(x2);
             line.endYProperty().bind(y2);
             return line;
+        }
+
+        private Circle createPoint(
+                ObservableDoubleValue x,
+                ObservableDoubleValue y,
+                Cursor cursor) {
+            Circle point = new Circle(3);
+            point.setStroke(Color.CRIMSON);
+            point.setFill(Color.CRIMSON);
+            point.centerXProperty().bind(x);
+            point.centerYProperty().bind(y);
+            point.setOnMouseEntered(event -> point.getScene().setCursor(cursor));
+            return point;
+        }
+
+        private double centsToY(double cents) {
+            return scaler.scaleY(cents / 100.0 * Quantizer.ROW_HEIGHT);
         }
     }
 }
