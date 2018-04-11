@@ -114,7 +114,7 @@ public class Vibrato {
         redrawEditor();
     }
 
-    void redrawVibrato() {
+    private void redrawVibrato() {
         vibratoPath.getElements().clear();
         if (vibrato.length != 10) {
             // Ensure that vibrato values are valid.
@@ -208,6 +208,7 @@ public class Vibrato {
         }
     }
 
+    // Vibrato editor. Lines can be dragged around to alter vibrato values.
     private class Editor {
         private final ObservableDoubleValue minX;
         private final ObservableDoubleValue maxX;
@@ -237,6 +238,51 @@ public class Vibrato {
                     scaler.scaleY(vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT) + noteY);
             this.amplitudeY = new SimpleDoubleProperty(
                     scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT));
+
+            // Set event handlers that change and re-draw vibrato.
+            startX.addListener(event -> {
+                double ratio = (maxX.get() - startX.get()) / (maxX.get() - minX.get());
+                int percentOfNote = (int) Math.round(ratio * 100);
+                if (percentOfNote != vibrato[0]) {
+                    vibrato[0] = percentOfNote;
+                    callback.modifySongPitchbend();
+                    redrawVibrato();
+                }
+            });
+            fadeInX.addListener(event -> {
+                double ratio = (fadeInX.get() - startX.get()) / (maxX.get() - startX.get());
+                int percentOfVibrato = (int) Math.round(ratio * 100);
+                if (percentOfVibrato != vibrato[3]) {
+                    vibrato[3] = percentOfVibrato;
+                    callback.modifySongPitchbend();
+                    redrawVibrato();
+                }
+            });
+            fadeOutX.addListener((event, oldFadeOutX, newFadeOutX) -> {
+                double ratio = (maxX.get() - fadeOutX.get()) / (maxX.get() - startX.get());
+                int percentOfVibrato = (int) Math.round(ratio * 100);
+                if (percentOfVibrato != vibrato[4]) {
+                    vibrato[4] = percentOfVibrato;
+                    callback.modifySongPitchbend();
+                    redrawVibrato();
+                }
+            });
+            centerY.addListener((event, oldCenterY, newCenterY) -> {
+                int pitchShiftCents = yToCents(centerY.get() - baseY.get());
+                if (pitchShiftCents != vibrato[6]) {
+                    vibrato[6] = pitchShiftCents;
+                    callback.modifySongPitchbend();
+                    redrawVibrato();
+                }
+            });
+            amplitudeY.addListener((event, oldAmplitudeY, newAmplitudeY) -> {
+                int amplitudeCents = yToCents(amplitudeY.get());
+                if (amplitudeCents != vibrato[2]) {
+                    vibrato[2] = amplitudeCents;
+                    callback.modifySongPitchbend();
+                    redrawVibrato();
+                }
+            });
         }
 
         public Shape[] render() {
@@ -342,6 +388,10 @@ public class Vibrato {
 
         private double centsToY(double cents) {
             return scaler.scaleY(cents / 100.0 * Quantizer.ROW_HEIGHT);
+        }
+
+        private int yToCents(double y) {
+            return (int) Math.round(scaler.unscaleY(y) / Quantizer.ROW_HEIGHT * 100);
         }
     }
 }
