@@ -147,11 +147,11 @@ public class Vibrato {
         int amplitudeDir = 1; // Defaults to positive when phase is 0 or 100.
         double firstHumpMs = humpMs; // Default when phase is 0 or 100.
         if (vibrato[5] > 0 && vibrato[5] < 50) {
-            // Initial direction is positive.
+            // Initial direction is up.
             amplitudeDir = 1;
             firstHumpMs = firstHumpMs * ((50 - vibrato[5]) / 50.0);
         } else if (vibrato[5] >= 50 && vibrato[5] < 100) {
-            // Initial direction is negative
+            // Initial direction is down.
             amplitudeDir = -1;
             firstHumpMs = firstHumpMs * ((100 - vibrato[5]) / 50.0);
         }
@@ -179,10 +179,11 @@ public class Vibrato {
         }
 
         // Cycle through humps again, adjusting for amplitude/frequency changes.
-        positionMs = 0;
+        double originalPositionMs = 0;
+        double newPositionMs = 0;
         // Width.
-        double startMultiplier = (-1 * vibrato[8] / 200.0) + 1; // Min is 0.5, max is 1.5
-        double endMultiplier = (vibrato[8] / 200.0) + 1;
+        double startMultiplier = (-1 * vibrato[8] / 125.0) + 1; // Min is 0.2, max is 1.8
+        double endMultiplier = (vibrato[8] / 125.0) + 1;
         double slope = (endMultiplier - startMultiplier) / lengthMs;
         Function<Double, Double> widthMultiplier = posMs -> startMultiplier + (posMs * slope);
         // Height.
@@ -199,9 +200,10 @@ public class Vibrato {
             return multiplier;
         };
         for (VibratoCurve hump : humps) {
-            positionMs = hump.adjust(widthMultiplier, heightMultiplier, vibrato[6], positionMs);
+            originalPositionMs = hump.adjustWidth(widthMultiplier, originalPositionMs);
+            newPositionMs = hump.adjustHeight(heightMultiplier, vibrato[6], newPositionMs);
         }
-        // TODO: If necessary, resize humps at the end so total length is correct.
+        // TODO: Resize humps at the end so total length is correct.
 
         // Draw path.
         double curStartMs = noteEndMs - lengthMs;
@@ -269,7 +271,7 @@ public class Vibrato {
                     startX.get() + (maxSliderX.get() - startX.get()) * (vibrato[8] + 100) / 200.0);
 
             // Set event handlers that change and re-draw vibrato.
-            centerY.addListener(event -> adjustVibrato(6, yToCents(centerY.get() - baseY.get())));
+            centerY.addListener(event -> adjustVibrato(6, yToCents(baseY.get() - centerY.get())));
             amplitudeY.addListener(event -> adjustVibrato(2, yToCents(amplitudeY.get())));
             startX.addListener(event -> {
                 double ratio = (maxX.get() - startX.get()) / (maxX.get() - minX.get());
@@ -359,6 +361,9 @@ public class Vibrato {
                     fadeInX.set(x + ((maxX.get() - x) * vibrato[3] / 100.0));
                     fadeOutX.set(maxX.get() - ((maxX.get() - x) * vibrato[4] / 100.0));
                     maxSliderX.set(Math.min(maxX.get(), x + scaler.scaleX(Quantizer.COL_WIDTH)));
+                    frqX.set(x + (maxSliderX.get() - x) * (vibrato[1] - 64) / 448.0);
+                    phaseX.set(x + (maxSliderX.get() - x) * vibrato[5] / 100.0);
+                    frqSlopeX.set(x + (maxSliderX.get() - x) * (vibrato[8] + 100) / 200.0);
                 }
             });
             nodes[13] = createSlider(frqX, baseY.subtract(centsToY(30)), "F"); // Frequency

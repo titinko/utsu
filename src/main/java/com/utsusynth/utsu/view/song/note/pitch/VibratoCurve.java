@@ -13,7 +13,7 @@ public class VibratoCurve {
 
     private double startWidthMs;
     private double endWidthMs;
-    private double amplitudeCents; // Negative is this is a valley.
+    private double amplitudeCents; // Positive if peak, negative if valley.
     private double startShiftCents = 0;
     private double endShiftCents = 0;
 
@@ -30,14 +30,19 @@ public class VibratoCurve {
         return startWidthMs + endWidthMs;
     }
 
-    public double adjust(
-            Function<Double, Double> widthMultiplier,
+    public double adjustWidth(Function<Double, Double> widthMultiplier, double positionMs) {
+        double originalHalfMs = positionMs + startWidthMs;
+        double originalEndMs = positionMs + getWidthMs();
+        startWidthMs *= widthMultiplier.apply(positionMs);
+        endWidthMs *= widthMultiplier.apply(originalHalfMs);
+        return originalEndMs;
+    }
+
+    public double adjustHeight(
             Function<Double, Double> heightMultiplier,
             double pitchShift,
             double positionMs) {
-        startWidthMs *= widthMultiplier.apply(positionMs);
         startShiftCents = pitchShift * heightMultiplier.apply(positionMs);
-        endWidthMs *= widthMultiplier.apply(positionMs + startWidthMs);
         amplitudeCents *= heightMultiplier.apply(positionMs + startWidthMs);
         amplitudeCents += pitchShift * heightMultiplier.apply(positionMs + startWidthMs);
         endShiftCents = pitchShift * heightMultiplier.apply(positionMs + getWidthMs());
@@ -53,8 +58,8 @@ public class VibratoCurve {
     private CubicCurveTo renderStart(double startMs) {
         double startX = scaler.scaleX(startMs);
         double endX = scaler.scaleX(startMs + startWidthMs);
-        double startY = scaler.scaleY(startShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
-        double endY = scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
+        double startY = -scaler.scaleY(startShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
+        double endY = -scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
         double controlX_1 = startX + ((endX - startX) * 0.32613); // Sine approximation.
         double controlY_1 = startY + ((endY - startY) * 0.51228); // Sine approximation.
         double controlX_2 = startX + ((endX - startX) * 0.63809); // Sine approximation.
@@ -65,8 +70,8 @@ public class VibratoCurve {
     private CubicCurveTo renderEnd(double startMs) {
         double startX = scaler.scaleX(startMs);
         double endX = scaler.scaleX(startMs + endWidthMs);
-        double startY = scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
-        double endY = scaler.scaleY(endShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
+        double startY = -scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
+        double endY = -scaler.scaleY(endShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
         double controlX_1 = startX + ((endX - startX) * 0.36191); // Sine approximation.
         double controlY_1 = startY; // Sine approximation.
         double controlX_2 = startX + ((endX - startX) * 0.67387); // Sine approximation.
