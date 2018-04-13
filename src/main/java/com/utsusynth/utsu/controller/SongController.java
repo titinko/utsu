@@ -96,8 +96,11 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="anchorLeft"
     private AnchorPane anchorLeft; // Value injected by FXMLLoader
 
+    @FXML // fx:id="anchorCenter"
+    private AnchorPane anchorCenter; // Value injected by FXMLLoader
+
     @FXML // fx:id="scrollPaneRight"
-    private ScrollPane scrollPaneRight; // Value injected by FXMLLoader
+    private ScrollPane scrollPaneCenter; // Value injected by FXMLLoader
 
     @FXML // fx:id="anchorRight"
     private AnchorPane anchorRight; // Value injected by FXMLLoader
@@ -154,7 +157,7 @@ public class SongController implements EditorController, Localizable {
     // This is called automatically when fxml loads.
     public void initialize() {
         DoubleProperty scrollbarTracker = new SimpleDoubleProperty();
-        scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
+        scrollbarTracker.bind(scrollPaneCenter.hvalueProperty());
         songEditor.initialize(new SongCallback() {
             @Override
             public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
@@ -181,31 +184,31 @@ public class SongController implements EditorController, Localizable {
 
             @Override
             public void adjustScrollbar(double oldWidth, double newWidth) {
-                // Note down what scrollbar position will be next time anchorRight's width changes.
+                // Note down what scrollbar position will be next time anchorCenter's width changes.
                 double scrollPosition =
-                        scrollPaneRight.getHvalue() * (oldWidth - scrollPaneRight.getWidth());
+                        scrollPaneCenter.getHvalue() * (oldWidth - scrollPaneCenter.getWidth());
                 scrollbarTracker.unbind();
-                scrollbarTracker.set(scrollPosition / (newWidth - scrollPaneRight.getWidth()));
+                scrollbarTracker.set(scrollPosition / (newWidth - scrollPaneCenter.getWidth()));
             }
         });
-        anchorRight.widthProperty().addListener(event -> {
+        anchorCenter.widthProperty().addListener(event -> {
             // Sync up the scrollbar's position with where the editor thinks it should be.
             if (!scrollbarTracker.isBound()) {
-                scrollPaneRight.setHvalue(scrollbarTracker.get());
-                scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
+                scrollPaneCenter.setHvalue(scrollbarTracker.get());
+                scrollbarTracker.bind(scrollPaneCenter.hvalueProperty());
             }
         });
-        scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneRight.vvalueProperty());
-        scrollPaneRight.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
-        scrollPaneRight.hvalueProperty().addListener(event -> {
-            double hvalue = scrollPaneRight.getHvalue();
-            double margin = scrollPaneRight.getViewportBounds().getWidth();
+        scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneCenter.vvalueProperty());
+        scrollPaneCenter.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
+        scrollPaneCenter.hvalueProperty().addListener(event -> {
+            double hvalue = scrollPaneCenter.getHvalue();
+            double margin = scrollPaneCenter.getViewportBounds().getWidth();
             songEditor.selectivelyShowRegion(hvalue, margin);
         });
-        scrollPaneRight.viewportBoundsProperty().addListener((event, oldValue, newValue) -> {
+        scrollPaneCenter.viewportBoundsProperty().addListener((event, oldValue, newValue) -> {
             if (oldValue.getWidth() != newValue.getWidth()) {
-                double hvalue = scrollPaneRight.getHvalue();
-                double margin = scrollPaneRight.getViewportBounds().getWidth();
+                double hvalue = scrollPaneCenter.getHvalue();
+                double margin = scrollPaneCenter.getViewportBounds().getWidth();
                 songEditor.selectivelyShowRegion(hvalue, margin);
             }
         });
@@ -267,11 +270,11 @@ public class SongController implements EditorController, Localizable {
         anchorLeft.getChildren().add(piano.initPiano());
 
         // Reloads current
-        anchorRight.getChildren().clear();
-        anchorRight.getChildren().add(songEditor.createNewTrack(song.get().getNotes()));
-        anchorRight.getChildren().add(songEditor.getNotesElement());
-        anchorRight.getChildren().add(songEditor.getPitchbendsElement());
-        anchorRight.getChildren().add(songEditor.getPlaybackElement());
+        anchorCenter.getChildren().clear();
+        anchorCenter.getChildren().add(songEditor.createNewTrack(song.get().getNotes()));
+        anchorCenter.getChildren().add(songEditor.getNotesElement());
+        anchorCenter.getChildren().add(songEditor.getPitchbendsElement());
+        anchorCenter.getChildren().add(songEditor.getPlaybackElement());
         anchorBottom.getChildren().clear();
         anchorBottom.getChildren().add(songEditor.getDynamicsElement());
         anchorBottom.getChildren().add(songEditor.getEnvelopesElement());
@@ -464,15 +467,16 @@ public class SongController implements EditorController, Localizable {
     @Override
     public void openProperties() {
         // Open properties modal.
-        InputStream fxml = getClass().getResourceAsStream("/fxml/PropertiesScene.fxml");
+        InputStream fxml = getClass().getResourceAsStream("/fxml/SongPropertiesScene.fxml");
         FXMLLoader loader = fxmlLoaderProvider.get();
         try {
-            Stage currentStage = (Stage) anchorRight.getScene().getWindow();
+            Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
             Stage propertiesWindow = new Stage();
+            propertiesWindow.setTitle("Song Properties");
             propertiesWindow.initModality(Modality.APPLICATION_MODAL);
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);
-            PropertiesController controller = (PropertiesController) loader.getController();
+            SongPropertiesController controller = (SongPropertiesController) loader.getController();
             controller.setSongContainer(song);
             propertiesWindow.setScene(new Scene(propertiesPane));
             propertiesWindow.showAndWait();

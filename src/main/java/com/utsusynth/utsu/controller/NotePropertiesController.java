@@ -20,9 +20,9 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
 /**
- * 'PropertiesScene.fxml' Controller Class
+ * 'NotePropertiesScene.fxml' Controller Class
  */
-public class PropertiesController implements Localizable {
+public class NotePropertiesController implements Localizable {
     private final Engine engine;
     private final Localizer localizer;
     private final VoicebankContainer voicebankContainer;
@@ -80,7 +80,7 @@ public class PropertiesController implements Localizable {
     private Label curTempo; // Value injected by FXMLLoader
 
     @Inject
-    public PropertiesController(
+    public NotePropertiesController(
             Engine engine,
             Localizer localizer,
             VoicebankContainer voicebankContainer) {
@@ -173,7 +173,7 @@ public class PropertiesController implements Localizable {
     }
 
     @FXML
-    void applyProperties(ActionEvent event) {
+    void restoreDefaults(ActionEvent event) {
         songContainer.setSong(
                 songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
                         .setOutputFile(new File(outputFileTF.getText())).setFlags(flagsTF.getText())
