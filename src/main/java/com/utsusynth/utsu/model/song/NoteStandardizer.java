@@ -10,11 +10,7 @@ import com.utsusynth.utsu.model.voicebank.Voicebank;
 public class NoteStandardizer {
 
     // This function should be called in the order: last note -> first note
-    void standardize(
-            Optional<Note> prev,
-            Note note,
-            Optional<Note> next,
-            Voicebank voicebank) {
+    void standardize(Optional<Note> prev, Note note, Optional<Note> next, Voicebank voicebank) {
         double realPreutter = 0;
         double realDuration = note.getDuration();
         double realOverlap = 0;
@@ -30,8 +26,11 @@ public class NoteStandardizer {
             trueLyric = config.get().getTrueLyric();
 
             // Cap the preutterance at start of prev note or start of track.
-            realPreutter = Math.min(config.get().getPreutterance(), note.getDelta());
-            realOverlap = config.get().getOverlap();
+            // Note preutter and overlap can override those in the config.
+            double preutter =
+                    note.getPreutter() >= 0 ? note.getPreutter() : config.get().getPreutterance();
+            realPreutter = Math.min(preutter, note.getDelta());
+            realOverlap = note.getOverlap() >= 0 ? note.getOverlap() : config.get().getOverlap();
 
             // Check correction factor.
             if (prev.isPresent()) {

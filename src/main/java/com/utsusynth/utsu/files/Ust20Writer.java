@@ -34,6 +34,8 @@ public class Ust20Writer {
             ps.println("Length=" + note.getLength());
             ps.println("Lyric=" + note.getLyric());
             ps.println("NoteNum=" + note.getNoteNum());
+            ps.println("PreUtterance=" + roundDecimal(note.getPreutter(), "#.##"));
+            ps.println("VoiceOverlap=" + roundDecimal(note.getOverlap(), "#.##"));
             ps.println("Velocity=" + roundDecimal(note.getVelocity(), "#.##"));
             ps.println("StartPoint=" + roundDecimal(note.getStartPoint(), "#.##"));
             ps.println("Intensity=" + note.getIntensity());

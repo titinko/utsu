@@ -12,12 +12,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
 
 /**
  * 'NotePropertiesScene.fxml' Controller Class
@@ -31,53 +28,68 @@ public class NotePropertiesController implements Localizable {
     private File resamplerPath;
     private File wavtoolPath;
 
-    @FXML // fx:id="root"
-    private BorderPane root; // Value injected by FXMLLoader
+    @FXML // fx:id="titleLabel"
+    private Label titleLabel; // Value injected by FXMLLoader
 
-    @FXML // fx:id="projectNameLabel"
-    private Label projectNameLabel;
+    @FXML // fx:id="consonantVelocityLabel"
+    private Label consonantVelocityLabel; // Value injected by FXMLLoader
 
-    @FXML // fx:id="projectNameTF"
-    private TextField projectNameTF;
+    @FXML // fx:id="consonantVelocitySlider"
+    private Slider consonantVelocitySlider; // Value injected by FXMLLoader
 
-    @FXML // fx:id="outputFileLabel"
-    private Label outputFileLabel;
+    @FXML // fx:id="curConsonantVelocity"
+    private Label curConsonantVelocity; // Value injected by FXMLLoader
 
-    @FXML // fx:id="outputFileTF"
-    private TextField outputFileTF;
+    @FXML // fx:id="preutterLabel"
+    private Label preutterLabel; // Value injected by FXMLLoader
 
-    @FXML // fx:id="flagsLabel"
-    private Label flagsLabel;
+    @FXML // fx:id="preutterSlider"
+    private Slider preutterSlider; // Value injected by FXMLLoader
 
-    @FXML // fx:id="flagsTF"
-    private TextField flagsTF;
+    @FXML // fx:id="curPreutter"
+    private Label curPreutter; // Value injected by FXMLLoader
 
-    @FXML // fx:id="resamplerLabel"
-    private Label resamplerLabel;
+    @FXML // fx:id="overlapLabel"
+    private Label overlapLabel; // Value injected by FXMLLoader
 
-    @FXML // fx:id="resamplerName"
-    private TextField resamplerName; // Value injected by FXMLLoader
+    @FXML // fx:id="overlapSlider"
+    private Slider overlapSlider; // Value injected by FXMLLoader
 
-    @FXML // fx:id="wavtoolLabel"
-    private Label wavtoolLabel;
+    @FXML // fx:id="curOverlap"
+    private Label curOverlap; // Value injected by FXMLLoader
 
-    @FXML // fx:id="wavtoolName"
-    private TextField wavtoolName; // Value injected by FXMLLoader
+    @FXML // fx:id="startPointLabel"
+    private Label startPointLabel;
 
-    @FXML // fx:id="voicebankLabel"
-    private Label voicebankLabel;
+    @FXML // fx:id="startPointSlider"
+    private Slider startPointSlider; // Value injected by FXMLLoader
 
-    @FXML // fx:id="voicebankName"
-    private TextField voicebankName; // Value injected by FXMLLoader
+    @FXML // fx:id="curStartPoint"
+    private Label curStartPoint; // Value injected by FXMLLoader
 
     @FXML // fx:id="tempoLabel"
-    private Label tempoLabel;
+    private Label tempoLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="tempoSlider"
     private Slider tempoSlider; // Value injected by FXMLLoader
 
     @FXML // fx:id="curTempo"
     private Label curTempo; // Value injected by FXMLLoader
+
+    @FXML // fx:id="intensityLabel"
+    private Label intensityLabel; // Value injected by FXMLLoader
+
+    @FXML // fx:id="intensitySlider"
+    private Slider intensitySlider; // Value injected by FXMLLoader
+
+    @FXML // fx:id="curIntensity"
+    private Label curIntensity; // Value injected by FXMLLoader
+
+    @FXML // fx:id="flagsLabel"
+    private Label flagsLabel; // Value injected by FXMLLoader
+
+    @FXML // fx:id="curFlags"
+    private Label curFlags; // Value injected by FXMLLoader
 
     @Inject
     public NotePropertiesController(
@@ -103,13 +115,8 @@ public class NotePropertiesController implements Localizable {
         wavtoolPath = engine.getWavtoolPath();
         voicebankContainer.setVoicebank(songContainer.get().getVoiceDir());
 
-        // Set text boxes.
-        projectNameTF.setText(songContainer.get().getProjectName());
-        outputFileTF.setText(songContainer.get().getOutputFile().getAbsolutePath());
-        flagsTF.setText(songContainer.get().getFlags());
-        resamplerName.setText(resamplerPath.getName());
-        wavtoolName.setText(wavtoolPath.getName());
-        voicebankName.setText(voicebankContainer.get().getName());
+        // Set current values.
+        curFlags.setText(songContainer.get().getFlags());
 
         // Setup tempo slider.
         tempoSlider.valueProperty().addListener((event) -> {
@@ -122,13 +129,13 @@ public class NotePropertiesController implements Localizable {
 
     @Override
     public void localize(ResourceBundle bundle) {
-        projectNameLabel.setText(bundle.getString("properties.projectName"));
-        outputFileLabel.setText(bundle.getString("properties.outputFile"));
-        flagsLabel.setText(bundle.getString("properties.flags"));
-        resamplerLabel.setText(bundle.getString("properties.resampler"));
-        wavtoolLabel.setText(bundle.getString("properties.wavtool"));
-        voicebankLabel.setText(bundle.getString("properties.voicebank"));
+        consonantVelocityLabel.setText(bundle.getString("properties.projectName"));
+        preutterLabel.setText(bundle.getString("properties.outputFile"));
+        overlapLabel.setText(bundle.getString("properties.flags"));
+        startPointLabel.setText(bundle.getString("properties.resampler"));
         tempoLabel.setText(bundle.getString("properties.tempo"));
+        intensityLabel.setText(bundle.getString("properties.voicebank"));
+        flagsLabel.setText(bundle.getString("properties.tempo"));
     }
 
     @FXML
@@ -142,7 +149,7 @@ public class NotePropertiesController implements Localizable {
         File file = fc.showOpenDialog(null);
         if (file != null) {
             resamplerPath = file;
-            resamplerName.setText(resamplerPath.getName());
+            curFlags.setText(resamplerPath.getName());
         }
     }
 
@@ -157,7 +164,7 @@ public class NotePropertiesController implements Localizable {
         File file = fc.showOpenDialog(null);
         if (file != null) {
             wavtoolPath = file;
-            wavtoolName.setText(wavtoolPath.getName());
+            curFlags.setText(wavtoolPath.getName());
         }
     }
 
@@ -168,26 +175,21 @@ public class NotePropertiesController implements Localizable {
         File file = dc.showDialog(null);
         if (file != null) {
             voicebankContainer.setVoicebank(file);
-            voicebankName.setText(voicebankContainer.get().getName());
+            curFlags.setText(voicebankContainer.get().getName());
         }
     }
 
     @FXML
     void restoreDefaults(ActionEvent event) {
         songContainer.setSong(
-                songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
-                        .setOutputFile(new File(outputFileTF.getText())).setFlags(flagsTF.getText())
-                        .setVoiceDirectory(voicebankContainer.getLocation())
+                songContainer.get().toBuilder().setVoiceDirectory(voicebankContainer.getLocation())
                         .setTempo((int) Math.round(tempoSlider.getValue())).build());
         engine.setResamplerPath(resamplerPath);
         engine.setWavtoolPath(wavtoolPath);
-        Stage currentStage = (Stage) root.getScene().getWindow();
-        currentStage.close();
     }
 
     @FXML
     void closeProperties(ActionEvent event) {
-        Stage currentStage = (Stage) root.getScene().getWindow();
-        currentStage.close();
+        // TODO
     }
 }

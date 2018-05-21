@@ -16,6 +16,8 @@ public class Note {
     private int length; // In ms, corresponds with 125 bpm tempo.
     private String lyric;
     private int noteNum; // Encapsulates both key and note.
+    private double preutter; // Optional, use lyric preutter if not set.
+    private double overlap; // Optional, use note overlap if not set.
     private double velocity;
     private double startPoint;
     private int intensity;
@@ -44,6 +46,8 @@ public class Note {
         this.length = -1; // Must be set in builder.
         this.lyric = ""; // Must be set in builder.
         this.noteNum = -1; // Must be set in builder.
+        this.preutter = -1; // Should be ignored if not explicitly set.
+        this.overlap = -1; // Should be ignored if not explicitly set.
         this.velocity = 100;
         this.startPoint = 0;
         this.intensity = 100;
@@ -118,6 +122,22 @@ public class Note {
 
     public int getNoteNum() {
         return this.noteNum;
+    }
+
+    public void setPreutter(double preutter) {
+        this.preutter = preutter;
+    }
+
+    public double getPreutter() {
+        return this.preutter;
+    }
+
+    public void setOverlap(double overlap) {
+        this.overlap = overlap;
+    }
+
+    public double getOverlap() {
+        return this.overlap;
     }
 
     public void setVelocity(double velocity) {
@@ -355,13 +375,7 @@ public class Note {
     }
 
     public NoteConfigData getConfigData() {
-        return new NoteConfigData(
-                trueLyric,
-                velocity,
-                startPoint,
-                intensity,
-                modulation,
-                noteFlags);
+        return new NoteConfigData(trueLyric, velocity, intensity, noteFlags);
     }
 
     private static int safeParseInt(String fromMe, int fallback) {

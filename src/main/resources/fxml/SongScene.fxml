@@ -49,7 +49,7 @@
       </AnchorPane>
    </top>
          <center>
-            <HBox minWidth="600.0" prefWidth="900.0" prefHeight="350.0">
+            <HBox minWidth="600.0" prefHeight="350.0" prefWidth="900.0">
                <children>
                   <ScrollPane fx:id="scrollPaneLeft" hbarPolicy="ALWAYS" hmax="0.0" minViewportWidth="100.0" vbarPolicy="NEVER" vvalue="0.5">
                      <content>
@@ -57,7 +57,7 @@
                      </content>
                   </ScrollPane>
                   <Separator orientation="VERTICAL" />
-                  <ScrollPane fx:id="scrollPaneCenter" fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" minViewportHeight="350.0" minViewportWidth="600.0" vvalue="0.5" HBox.hgrow="ALWAYS">
+                  <ScrollPane fx:id="scrollPaneCenter" fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" minViewportHeight="315.0" minViewportWidth="600.0" vvalue="0.5" HBox.hgrow="ALWAYS">
                      <content>
                       <AnchorPane fx:id="anchorCenter" />
                      </content>
@@ -69,7 +69,7 @@
             </HBox>
          </center>
    <bottom>
-      <HBox minWidth="600.0" prefWidth="900.0" prefHeight="100.0" spacing="10.0" BorderPane.alignment="CENTER">
+      <HBox minWidth="600.0" prefHeight="100.0" prefWidth="900.0" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
             <AnchorPane maxHeight="100.0" maxWidth="98.0" minWidth="98.0" />
             <ScrollPane fx:id="scrollPaneBottom" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="600.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">

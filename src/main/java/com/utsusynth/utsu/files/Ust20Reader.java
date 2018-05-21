@@ -3,8 +3,8 @@ package com.utsusynth.utsu.files;
 import java.util.regex.Pattern;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.Note;
+import com.utsusynth.utsu.model.song.Song;
 
 /**
  * Reads a song from a Unicode UST 2.0 file.
@@ -72,6 +72,10 @@ public class Ust20Reader {
                 note.setLyric(line.substring("Lyric=".length()));
             } else if (line.startsWith("NoteNum=")) {
                 note.setNoteNum(Integer.parseInt(line.substring("NoteNum=".length())));
+            } else if (line.startsWith("PreUtterance=")) {
+                note.setPreutter(Double.parseDouble(line.substring("PreUtterance=".length())));
+            } else if (line.startsWith("VoiceOverlap=")) {
+                note.setOverlap(Double.parseDouble(line.substring("VoiceOverlap=".length())));
             } else if (line.startsWith("Velocity=")) {
                 note.setVelocity(Double.parseDouble(line.substring("Velocity=".length())));
             } else if (line.startsWith("StartPoint=")) {
