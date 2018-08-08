@@ -6,18 +6,20 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="315.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.NotePropertiesController">
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.NotePropertiesController">
    <bottom>
-      <ButtonBar buttonMinWidth="80.0" prefHeight="50.0" BorderPane.alignment="CENTER">
+      <ButtonBar prefHeight="40.0" BorderPane.alignment="CENTER">
         <buttons>
-            <Button mnemonicParsing="false" onAction="#restoreDefaults" text="Restore Defaults" ButtonBar.buttonData="LEFT" />
-            <Button mnemonicParsing="false" onAction="#closeProperties" text="Close" ButtonBar.buttonData="LEFT" />
+            <Button alignment="CENTER" mnemonicParsing="false" onAction="#restoreDefaults" text="Reset" ButtonBar.buttonData="LEFT" />
+            <Button alignment="CENTER" defaultButton="true" mnemonicParsing="false" onAction="#applyProperties" text="Apply" />
+            <Button alignment="CENTER" mnemonicParsing="false" onAction="#closeProperties" text="Cancel" />
         </buttons>
          <BorderPane.margin>
             <Insets left="5.0" right="5.0" />
@@ -29,8 +31,6 @@
         <columnConstraints>
           <ColumnConstraints hgrow="ALWAYS" minWidth="-Infinity" prefWidth="80.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-            <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="10.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="-Infinity" prefWidth="60.0" />
         </columnConstraints>
         <rowConstraints>
@@ -44,22 +44,22 @@
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="35.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Slider fx:id="startPointSlider" blockIncrement="0.1" majorTickUnit="100.0" max="50.0" min="-50.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="5" />
+            <Slider fx:id="startPointSlider" blockIncrement="0.1" majorTickUnit="100.0" max="50.0" min="-50.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
             <Label fx:id="consonantVelocityLabel" text="Cons. Vel." GridPane.halignment="CENTER" GridPane.rowIndex="2" />
             <Label fx:id="preutterLabel" text="Preutter" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
             <Label fx:id="overlapLabel" text="Overlap" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
             <Label fx:id="startPointLabel" text="Start Point" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
             <Label fx:id="intensityLabel" text="Intensity" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
             <Label fx:id="flagsLabel" text="Flags" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
-            <Slider fx:id="intensitySlider" blockIncrement="1.0" majorTickUnit="100.0" max="480.0" minorTickCount="0" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="6" />
-            <Slider fx:id="overlapSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="4" />
-            <Slider fx:id="preutterSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
-            <Slider fx:id="consonantVelocitySlider" blockIncrement="0.1" max="300.0" min="10.0" minorTickCount="25" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" />
-            <Label fx:id="curConsonantVelocity" text="100.0" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
-            <Label fx:id="curPreutter" text="56.8" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
-            <Label fx:id="curOverlap" text="25.0" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-            <Label fx:id="curStartPoint" text="0.0" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
-            <Label fx:id="curIntensity" text="100" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+            <Slider fx:id="intensitySlider" blockIncrement="1.0" majorTickUnit="100.0" max="480.0" minorTickCount="0" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+            <Slider fx:id="overlapSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <Slider fx:id="preutterSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <Slider fx:id="consonantVelocitySlider" blockIncrement="0.1" max="300.0" min="10.0" minorTickCount="25" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <Label fx:id="curConsonantVelocity" text="100.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+            <Label fx:id="curPreutter" text="56.8" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+            <Label fx:id="curOverlap" text="25.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+            <Label fx:id="curStartPoint" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
+            <Label fx:id="curIntensity" text="100" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
             <Separator GridPane.columnSpan="2147483647" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets left="5.0" right="5.0" />
@@ -73,18 +73,7 @@
                   <Insets />
                </GridPane.margin>
             </Label>
-            <Button mnemonicParsing="false" text="Edit" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
-            <Label text="B0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="7">
-               <GridPane.margin>
-                  <Insets left="5.0" right="5.0" />
-               </GridPane.margin>
-            </Label>
-            <Label fx:id="curFlags" text="Y0H0" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
-            <Label text="+" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="7">
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-            </Label>
+            <TextField fx:id="flagsTF" GridPane.columnIndex="1" GridPane.rowIndex="7" />
          </children>
          <padding>
             <Insets top="5.0" />

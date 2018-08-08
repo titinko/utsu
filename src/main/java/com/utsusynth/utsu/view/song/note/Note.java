@@ -363,9 +363,9 @@ public class Note {
                     newDurationMs,
                     newPitch,
                     newLyric,
+                    Optional.absent(),
                     envelope,
-                    pitchbend,
-                    Optional.absent());
+                    pitchbend);
             track.addSongNote(this, toAdd);
         } catch (NoteAlreadyExistsException e) {
             setValid(false);

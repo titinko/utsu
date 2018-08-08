@@ -36,4 +36,13 @@ public class RegionBounds {
         // Can be merged even if they don't intersect.
         return new RegionBounds(Math.min(minMs, other.minMs), Math.max(maxMs, other.maxMs));
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null || !(other instanceof RegionBounds)) {
+            return false;
+        }
+        RegionBounds otherBounds = (RegionBounds) other;
+        return this.minMs == otherBounds.minMs && this.maxMs == otherBounds.maxMs;
+    }
 }

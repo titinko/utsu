@@ -10,6 +10,7 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.Note;
 import javafx.animation.Interpolator;
 import javafx.animation.TranslateTransition;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Group;
 import javafx.scene.shape.Line;
 import javafx.util.Duration;
@@ -23,6 +24,7 @@ public class PlaybackBarManager {
     private final Scaler scaler;
     private final HashSet<Note> highlighted;
     private final TranslateTransition playback;
+    private final SimpleObjectProperty<RegionBounds> selectedRegion;
 
     private Line startBar;
     private Line endBar;
@@ -33,6 +35,7 @@ public class PlaybackBarManager {
         this.scaler = scaler;
         highlighted = new HashSet<>();
         playback = new TranslateTransition();
+        selectedRegion = new SimpleObjectProperty<>(RegionBounds.INVALID);
         clear();
     }
 
@@ -65,10 +68,9 @@ public class PlaybackBarManager {
 
     void highlightTo(Note highlightToMe, Collection<Note> allNotes) {
         RegionBounds noteBounds = highlightToMe.getValidBounds();
-        RegionBounds addRegion;
         if (highlighted.isEmpty()) {
             // Add region is defined only by the note.
-            addRegion = noteBounds;
+            selectedRegion.set(noteBounds);
             // Add start and stop bars to the track.
             if (!bars.getChildren().contains(startBar)) {
                 bars.getChildren().add(startBar);
@@ -77,17 +79,15 @@ public class PlaybackBarManager {
                 bars.getChildren().add(endBar);
             }
         } else {
-            int startBarX = (int) Math.round(scaler.unscaleX(startBar.getTranslateX()));
-            int endBarX = (int) Math.round(scaler.unscaleX(endBar.getTranslateX()));
-            addRegion = new RegionBounds(startBarX, endBarX).mergeWith(noteBounds);
+            selectedRegion.set(selectedRegion.get().mergeWith(noteBounds));
         }
         // Move startBar and endBar to the right locations.
-        startBar.setTranslateX(scaler.scaleX(addRegion.getMinMs()));
-        endBar.setTranslateX(scaler.scaleX(addRegion.getMaxMs()));
+        startBar.setTranslateX(scaler.scaleX(selectedRegion.get().getMinMs()));
+        endBar.setTranslateX(scaler.scaleX(selectedRegion.get().getMaxMs()));
 
         // Highlight all notes within the add region.
         for (Note note : allNotes) {
-            if (addRegion.intersects(note.getValidBounds())) {
+            if (selectedRegion.get().intersects(note.getValidBounds())) {
                 // These operations are idempotent.
                 highlighted.add(note);
                 note.setHighlighted(true);
@@ -96,11 +96,7 @@ public class PlaybackBarManager {
     }
 
     void refreshHighlights(Note refreshMe) {
-        int startBarX = (int) Math.round(scaler.unscaleX(startBar.getTranslateX()));
-        int endBarX = (int) Math.round(scaler.unscaleX(endBar.getTranslateX()));
-        RegionBounds highlightedRegion = new RegionBounds(startBarX, endBarX);
-
-        if (highlightedRegion.intersects(refreshMe.getValidBounds())) {
+        if (selectedRegion.get().intersects(refreshMe.getValidBounds())) {
             // This operation is idempotent.
             highlighted.add(refreshMe);
             refreshMe.setHighlighted(true);
@@ -127,6 +123,7 @@ public class PlaybackBarManager {
             note.setHighlighted(false);
         }
         highlighted.clear();
+        selectedRegion.set(RegionBounds.INVALID);
         bars.getChildren().removeAll(startBar, endBar);
     }
 
@@ -135,16 +132,6 @@ public class PlaybackBarManager {
     }
 
     RegionBounds getRegionBounds() {
-        int startBarX = (int) Math.round(scaler.unscaleX(startBar.getTranslateX()));
-        int endBarX = (int) Math.round(scaler.unscaleX(endBar.getTranslateX()));
-        if (bars.getChildren().contains(startBar) && bars.getChildren().contains(endBar)) {
-            return new RegionBounds(startBarX, endBarX);
-        } else if (bars.getChildren().contains(startBar)) {
-            return new RegionBounds(startBarX, Integer.MAX_VALUE);
-        } else if (bars.getChildren().contains(endBar)) {
-            return new RegionBounds(0, endBarX);
-        } else {
-            return RegionBounds.WHOLE_SONG;
-        }
+        return selectedRegion.get();
     }
 }

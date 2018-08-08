@@ -1,32 +1,34 @@
 package com.utsusynth.utsu.controller;
 
-import java.io.File;
 import java.util.ResourceBundle;
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.RoundUtils;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
-import com.utsusynth.utsu.engine.Engine;
+import com.utsusynth.utsu.model.song.Note;
+import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 
 /**
  * 'NotePropertiesScene.fxml' Controller Class
  */
 public class NotePropertiesController implements Localizable {
-    private final Engine engine;
     private final Localizer localizer;
     private final VoicebankContainer voicebankContainer;
 
     private SongContainer songContainer;
-    private File resamplerPath;
-    private File wavtoolPath;
+
+    @FXML // fx:id="root"
+    private BorderPane root; // Value injected by FXMLLoader
 
     @FXML // fx:id="titleLabel"
     private Label titleLabel; // Value injected by FXMLLoader
@@ -67,15 +69,6 @@ public class NotePropertiesController implements Localizable {
     @FXML // fx:id="curStartPoint"
     private Label curStartPoint; // Value injected by FXMLLoader
 
-    @FXML // fx:id="tempoLabel"
-    private Label tempoLabel; // Value injected by FXMLLoader
-
-    @FXML // fx:id="tempoSlider"
-    private Slider tempoSlider; // Value injected by FXMLLoader
-
-    @FXML // fx:id="curTempo"
-    private Label curTempo; // Value injected by FXMLLoader
-
     @FXML // fx:id="intensityLabel"
     private Label intensityLabel; // Value injected by FXMLLoader
 
@@ -89,14 +82,10 @@ public class NotePropertiesController implements Localizable {
     private Label flagsLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="curFlags"
-    private Label curFlags; // Value injected by FXMLLoader
+    private TextField flagsTF; // Value injected by FXMLLoader
 
     @Inject
-    public NotePropertiesController(
-            Engine engine,
-            Localizer localizer,
-            VoicebankContainer voicebankContainer) {
-        this.engine = engine;
+    public NotePropertiesController(Localizer localizer, VoicebankContainer voicebankContainer) {
         this.localizer = localizer;
         this.voicebankContainer = voicebankContainer;
     }
@@ -104,27 +93,63 @@ public class NotePropertiesController implements Localizable {
     public void initialize() {
         // Set up localization.
         localizer.localize(this);
+
+        // Setup consonant velocity slider.
+        consonantVelocitySlider.valueProperty().addListener((event) -> {
+            double sliderValue = consonantVelocitySlider.getValue();
+            curConsonantVelocity.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
+        });
+
+        // Setup preutter slider.
+        preutterSlider.valueProperty().addListener((event) -> {
+            double sliderValue = preutterSlider.getValue();
+            curPreutter.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
+        });
+
+        // Setup overlap slider.
+        overlapSlider.valueProperty().addListener((event) -> {
+            double sliderValue = overlapSlider.getValue();
+            curOverlap.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
+        });
+
+        // Setup startPoint slider.
+        startPointSlider.valueProperty().addListener((event) -> {
+            double sliderValue = startPointSlider.getValue();
+            curStartPoint.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
+        });
+
+        // Setup intensity slider.
+        intensitySlider.valueProperty().addListener((event) -> {
+            int sliderValue = RoundUtils.round(intensitySlider.getValue());
+            intensitySlider.setValue(sliderValue);
+            curIntensity.setText(Integer.toString(sliderValue));
+        });
     }
 
-    /* Initializes properties panel with a SongContainer with the song to edit. */
-    void setSongContainer(SongContainer songContainer) {
+    /* Initializes properties panel with a SongEditor with the song to edit. */
+    void setNotes(SongContainer songContainer, RegionBounds selectedRegion) {
         this.songContainer = songContainer;
+        NoteIterator notes = songContainer.get().getNoteIterator(selectedRegion);
+        int startIndex = notes.getCurIndex(); // Index of first note.
+        while (notes.hasNext()) {
+            Note note = notes.next();
+            // Populate values.
+            // consonantVelocitySlider.setValue(note.getConsonantVelocity());
+            preutterSlider.setValue(note.getPreutter());
+            overlapSlider.setValue(note.getOverlap());
+            startPointSlider.setValue(note.getStartPoint());
+            intensitySlider.setValue(note.getIntensity());
+            flagsTF.setText(note.getNoteFlags());
+        }
+        int endIndex = notes.getCurIndex() - 1; // Index of last note.
 
-        // Set values to save.
-        resamplerPath = engine.getResamplerPath();
-        wavtoolPath = engine.getWavtoolPath();
-        voicebankContainer.setVoicebank(songContainer.get().getVoiceDir());
-
-        // Set current values.
-        curFlags.setText(songContainer.get().getFlags());
-
-        // Setup tempo slider.
-        tempoSlider.valueProperty().addListener((event) -> {
-            int sliderValue = (int) Math.round(tempoSlider.getValue());
-            tempoSlider.setValue(sliderValue);
-            curTempo.setText(Integer.toString(sliderValue));
-        });
-        tempoSlider.setValue(songContainer.get().getTempo());
+        // Set title.
+        titleLabel.setText(
+                String.format(
+                        "Notes %d to %d of %d",
+                        startIndex,
+                        endIndex,
+                        songContainer.get().getNumNotes()));
     }
 
     @Override
@@ -133,63 +158,29 @@ public class NotePropertiesController implements Localizable {
         preutterLabel.setText(bundle.getString("properties.outputFile"));
         overlapLabel.setText(bundle.getString("properties.flags"));
         startPointLabel.setText(bundle.getString("properties.resampler"));
-        tempoLabel.setText(bundle.getString("properties.tempo"));
         intensityLabel.setText(bundle.getString("properties.voicebank"));
         flagsLabel.setText(bundle.getString("properties.tempo"));
     }
 
     @FXML
-    void changeResampler(ActionEvent event) {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Select executable file");
-        fc.getExtensionFilters().addAll(
-                new ExtensionFilter("Executables", "*", "*.exe"),
-                new ExtensionFilter("OSX Executables", "*.out", "*.app"),
-                new ExtensionFilter("All Files", "*.*"));
-        File file = fc.showOpenDialog(null);
-        if (file != null) {
-            resamplerPath = file;
-            curFlags.setText(resamplerPath.getName());
-        }
-    }
-
-    @FXML
-    void changeWavtool(ActionEvent event) {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Select executable file");
-        fc.getExtensionFilters().addAll(
-                new ExtensionFilter("Executables", "*", "*.exe"),
-                new ExtensionFilter("OSX Executables", "*.out", "*.app"),
-                new ExtensionFilter("All Files", "*.*"));
-        File file = fc.showOpenDialog(null);
-        if (file != null) {
-            wavtoolPath = file;
-            curFlags.setText(wavtoolPath.getName());
-        }
-    }
-
-    @FXML
-    void changeVoicebank(ActionEvent event) {
-        DirectoryChooser dc = new DirectoryChooser();
-        dc.setTitle("Select voicebank");
-        File file = dc.showDialog(null);
-        if (file != null) {
-            voicebankContainer.setVoicebank(file);
-            curFlags.setText(voicebankContainer.get().getName());
-        }
+    void applyProperties(ActionEvent event) {
+        Stage currentStage = (Stage) root.getScene().getWindow();
+        currentStage.close();
     }
 
     @FXML
     void restoreDefaults(ActionEvent event) {
-        songContainer.setSong(
-                songContainer.get().toBuilder().setVoiceDirectory(voicebankContainer.getLocation())
-                        .setTempo((int) Math.round(tempoSlider.getValue())).build());
-        engine.setResamplerPath(resamplerPath);
-        engine.setWavtoolPath(wavtoolPath);
+        consonantVelocitySlider.setValue(100);
+        preutterSlider.setValue(0);
+        overlapSlider.setValue(0);
+        startPointSlider.setValue(0);
+        intensitySlider.setValue(0);
+        flagsTF.clear();
     }
 
     @FXML
     void closeProperties(ActionEvent event) {
-        // TODO
+        Stage currentStage = (Stage) root.getScene().getWindow();
+        currentStage.close();
     }
 }

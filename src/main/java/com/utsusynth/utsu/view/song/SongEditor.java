@@ -304,8 +304,7 @@ public class SongEditor {
                     NeighborData next = response.getNext().get();
                     int nextDelta = next.getDelta();
                     note.adjustForOverlap(nextDelta);
-                    noteMap.getNote(position + nextDelta)
-                            .setTrueLyric(next.getConfig().getTrueLyric());
+                    noteMap.getNote(position + nextDelta).setTrueLyric(next.getTrueLyric());
                     noteMap.putEnvelope(
                             position + nextDelta,
                             next.getEnvelope(),
@@ -340,8 +339,8 @@ public class SongEditor {
                 }
 
                 // Set the true lyric for this note.
-                if (response.getNote().getConfig().isPresent()) {
-                    note.setTrueLyric(response.getNote().getConfig().get().getTrueLyric());
+                if (response.getNote().getTrueLyric().isPresent()) {
+                    note.setTrueLyric(response.getNote().getTrueLyric().get());
                 }
             }
         }
@@ -367,7 +366,7 @@ public class SongEditor {
             if (response.getNext().isPresent()) {
                 NeighborData next = response.getNext().get();
                 int nextDelta = next.getDelta();
-                noteMap.getNote(position + nextDelta).setTrueLyric(next.getConfig().getTrueLyric());
+                noteMap.getNote(position + nextDelta).setTrueLyric(next.getTrueLyric());
                 noteMap.putEnvelope(
                         position + nextDelta,
                         next.getEnvelope(),

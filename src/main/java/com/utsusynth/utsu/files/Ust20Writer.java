@@ -1,9 +1,9 @@
 package com.utsusynth.utsu.files;
 
 import java.io.PrintStream;
-import java.text.DecimalFormat;
 import java.util.Iterator;
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.RoundUtils;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 
@@ -17,7 +17,7 @@ public class Ust20Writer {
         ps.println("Charset=" + charset);
         ps.println("[#SETTING]");
         ps.println("TimeSignatures=(4/4/0),");
-        ps.println("Tempo=" + roundDecimal(song.getTempo(), "#.##"));
+        ps.println("Tempo=" + RoundUtils.roundDecimal(song.getTempo(), "#.##"));
         ps.println("ProjectName=" + song.getProjectName());
         ps.println("OutFile=" + song.getOutputFile());
         ps.println("VoiceDir=" + song.getVoiceDir());
@@ -34,10 +34,10 @@ public class Ust20Writer {
             ps.println("Length=" + note.getLength());
             ps.println("Lyric=" + note.getLyric());
             ps.println("NoteNum=" + note.getNoteNum());
-            ps.println("PreUtterance=" + roundDecimal(note.getPreutter(), "#.##"));
-            ps.println("VoiceOverlap=" + roundDecimal(note.getOverlap(), "#.##"));
-            ps.println("Velocity=" + roundDecimal(note.getVelocity(), "#.##"));
-            ps.println("StartPoint=" + roundDecimal(note.getStartPoint(), "#.##"));
+            ps.println("PreUtterance=" + RoundUtils.roundDecimal(note.getPreutter(), "#.##"));
+            ps.println("VoiceOverlap=" + RoundUtils.roundDecimal(note.getOverlap(), "#.##"));
+            ps.println("Velocity=" + RoundUtils.roundDecimal(note.getVelocity(), "#.##"));
+            ps.println("StartPoint=" + RoundUtils.roundDecimal(note.getStartPoint(), "#.##"));
             ps.println("Intensity=" + note.getIntensity());
             ps.println("Modulation=" + note.getModulation());
             ps.println("Flags=" + note.getNoteFlags());
@@ -46,22 +46,22 @@ public class Ust20Writer {
             ImmutableList<Double> pbs = note.getPBS();
             ps.print("PBS=");
             for (int i = 0; i < pbs.size() - 1; i++) {
-                ps.print(roundDecimal(pbs.get(i), "#.#") + ",");
+                ps.print(RoundUtils.roundDecimal(pbs.get(i), "#.#") + ",");
             }
-            ps.println(roundDecimal(pbs.get(pbs.size() - 1), "#.#"));
+            ps.println(RoundUtils.roundDecimal(pbs.get(pbs.size() - 1), "#.#"));
             ImmutableList<Double> pbw = note.getPBW();
             ps.print("PBW=");
             for (int i = 0; i < pbw.size() - 1; i++) {
-                ps.print(roundDecimal(pbw.get(i), "#.#") + ",");
+                ps.print(RoundUtils.roundDecimal(pbw.get(i), "#.#") + ",");
             }
-            ps.println(roundDecimal(pbw.get(pbw.size() - 1), "#.#"));
+            ps.println(RoundUtils.roundDecimal(pbw.get(pbw.size() - 1), "#.#"));
             ImmutableList<Double> pby = note.getPBY();
             if (!pby.isEmpty()) {
                 ps.print("PBY=");
                 for (int i = 0; i < pby.size() - 1; i++) {
-                    ps.print(roundDecimal(pby.get(i), "#.#") + ",");
+                    ps.print(RoundUtils.roundDecimal(pby.get(i), "#.#") + ",");
                 }
-                ps.println(roundDecimal(pby.get(pby.size() - 1), "#.#"));
+                ps.println(RoundUtils.roundDecimal(pby.get(pby.size() - 1), "#.#"));
             }
             ImmutableList<String> pbm = note.getPBM();
             if (!pbm.isEmpty()) {
@@ -75,7 +75,7 @@ public class Ust20Writer {
             // Envelope.
             ps.print("Envelope=");
             for (double value : note.getRawFullEnvelope()) {
-                ps.print(roundDecimal(value, "#.#") + ",");
+                ps.print(RoundUtils.roundDecimal(value, "#.#") + ",");
             }
             ps.println("0.0,1.0,100.0,1.0,100.0"); // Not sure what the meaning of these values is.
 
@@ -108,22 +108,5 @@ public class Ust20Writer {
             System.out.println("Negative notes!");
         }
         return null;
-    }
-
-    private String roundDecimal(double number, String roundFormat) {
-        int formatNumPlaces = roundFormat.length() - roundFormat.indexOf(".") - 1;
-        String formatted = new DecimalFormat(roundFormat).format(number);
-        if (formatted.contains(".")) {
-            int numPlaces = formatted.length() - formatted.indexOf(".") - 1;
-            for (int i = numPlaces; i < formatNumPlaces; i++) {
-                formatted = formatted + "0";
-            }
-        } else {
-            formatted = formatted + ".";
-            for (int i = 0; i < formatNumPlaces; i++) {
-                formatted = formatted + "0";
-            }
-        }
-        return formatted;
     }
 }

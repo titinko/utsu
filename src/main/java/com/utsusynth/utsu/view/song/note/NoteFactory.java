@@ -65,8 +65,8 @@ public class NoteFactory {
                 quantizer,
                 scaler);
         lyric.setVisibleLyric(note.getLyric());
-        if (note.getConfig().isPresent()) {
-            lyric.setVisibleAlias(note.getConfig().get().getTrueLyric());
+        if (note.getTrueLyric().isPresent()) {
+            lyric.setVisibleAlias(note.getTrueLyric().get());
         }
 
         return trackNote;

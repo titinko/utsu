@@ -195,6 +195,15 @@ public class NoteList implements Iterable<Note> {
         return nodeMap.get(deltaOfNote);
     }
 
+    /**
+     * Returns the total number of notes in the note list.
+     * 
+     * @return number of notes
+     */
+    int getSize() {
+        return nodeMap.size();
+    }
+
     Builder toBuilder() {
         // Creates a new SongNoteList but reuses existing SongNodes.
         return new Builder(new NoteList()).setHead(this.head);

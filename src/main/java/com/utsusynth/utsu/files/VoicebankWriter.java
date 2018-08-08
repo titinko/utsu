@@ -12,9 +12,9 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
 import java.nio.file.Path;
-import java.text.DecimalFormat;
 import java.util.Iterator;
 import com.google.common.collect.ImmutableSet;
+import com.utsusynth.utsu.common.RoundUtils;
 import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
@@ -83,11 +83,12 @@ public class VoicebankWriter {
                             stream.print(config.getPathToFile().getName() + "=");
                         }
                         stream.print(config.getTrueLyric() + ",");
-                        stream.print(roundDecimal(config.getOffset(), "#.#") + ",");
-                        stream.print(roundDecimal(config.getConsonant(), "#.#") + ",");
-                        stream.print(roundDecimal(config.getCutoff(), "#.#") + ",");
-                        stream.print(roundDecimal(config.getPreutterance(), "#.#") + ",");
-                        stream.print(roundDecimal(config.getOverlap(), "#.#") + "\n");
+                        stream.print(RoundUtils.roundDecimal(config.getOffset(), "#.#") + ",");
+                        stream.print(RoundUtils.roundDecimal(config.getConsonant(), "#.#") + ",");
+                        stream.print(RoundUtils.roundDecimal(config.getCutoff(), "#.#") + ",");
+                        stream.print(
+                                RoundUtils.roundDecimal(config.getPreutterance(), "#.#") + ",");
+                        stream.print(RoundUtils.roundDecimal(config.getOverlap(), "#.#") + "\n");
                     }
                 }
                 ps.flush();
@@ -136,22 +137,5 @@ public class VoicebankWriter {
             errorLogger.logError(e);
         }
         return charset;
-    }
-
-    private String roundDecimal(double number, String roundFormat) {
-        int formatNumPlaces = roundFormat.length() - roundFormat.indexOf(".") - 1;
-        String formatted = new DecimalFormat(roundFormat).format(number);
-        if (formatted.contains(".")) {
-            int numPlaces = formatted.length() - formatted.indexOf(".") - 1;
-            for (int i = numPlaces; i < formatNumPlaces; i++) {
-                formatted = formatted + "0";
-            }
-        } else {
-            formatted = formatted + ".";
-            for (int i = 0; i < formatNumPlaces; i++) {
-                formatted = formatted + "0";
-            }
-        }
-        return formatted;
     }
 }

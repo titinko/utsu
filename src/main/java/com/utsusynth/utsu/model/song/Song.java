@@ -173,9 +173,9 @@ public class Song {
             prevNote = Optional.of(
                     new NeighborData(
                             note.getDelta(),
+                            prevSongNote.getTrueLyric(),
                             prevSongNote.getEnvelope(),
-                            prevSongNote.getPitchbends(),
-                            prevSongNote.getConfigData()));
+                            prevSongNote.getPitchbends()));
         }
         Optional<NeighborData> nextNote = Optional.absent();
         if (insertedNode.getNext().isPresent()) {
@@ -196,9 +196,9 @@ public class Song {
             nextNote = Optional.of(
                     new NeighborData(
                             note.getLength(),
+                            nextSongNote.getTrueLyric(),
                             nextSongNote.getEnvelope(),
-                            nextSongNote.getPitchbends(),
-                            nextSongNote.getConfigData()));
+                            nextSongNote.getPitchbends()));
         }
 
         // Add this note's pitchbends.
@@ -218,9 +218,9 @@ public class Song {
                         note.getDuration(),
                         toAdd.getPitch(),
                         note.getLyric(),
+                        Optional.of(note.getTrueLyric()),
                         Optional.of(note.getEnvelope()),
-                        Optional.of(note.getPitchbends()),
-                        Optional.of(note.getConfigData())),
+                        Optional.of(note.getPitchbends())),
                 prevNote,
                 nextNote);
     }
@@ -245,9 +245,9 @@ public class Song {
             prevNote = Optional.of(
                     new NeighborData(
                             removedNode.getNote().getDelta(),
+                            prevSongNote.getTrueLyric(),
                             prevSongNote.getEnvelope(),
-                            prevSongNote.getPitchbends(),
-                            prevSongNote.getConfigData()));
+                            prevSongNote.getPitchbends()));
         }
 
         Optional<NeighborData> nextNote = Optional.absent();
@@ -272,9 +272,9 @@ public class Song {
             nextNote = Optional.of(
                     new NeighborData(
                             removedNode.getNote().getLength(),
+                            nextSongNote.getTrueLyric(),
                             nextSongNote.getEnvelope(),
-                            nextSongNote.getPitchbends(),
-                            nextSongNote.getConfigData()));
+                            nextSongNote.getPitchbends()));
         }
 
         // Remove this note's pitchbends.
@@ -324,9 +324,9 @@ public class Song {
                             note.getDuration(),
                             PitchUtils.noteNumToPitch(note.getNoteNum()),
                             note.getLyric(),
+                            Optional.of(note.getTrueLyric()),
                             Optional.of(note.getEnvelope()),
-                            Optional.of(note.getPitchbends()),
-                            Optional.of(note.getConfigData())));
+                            Optional.of(note.getPitchbends())));
         }
         return notes;
     }
@@ -365,6 +365,10 @@ public class Song {
 
     public boolean getMode2() {
         return mode2;
+    }
+
+    public int getNumNotes() {
+        return noteList.getSize();
     }
 
     public String getPitchString(int firstPitchStep, int lastPitchStep, int noteNum) {

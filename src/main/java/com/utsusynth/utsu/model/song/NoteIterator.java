@@ -12,12 +12,14 @@ public class NoteIterator implements Iterator<Note> {
 
     private Optional<NoteNode> prevNode;
     private Optional<NoteNode> curNode;
+    int curIndex;
     int curDelta;
 
     NoteIterator(Optional<NoteNode> startNode, RegionBounds bounds) {
         this.bounds = bounds;
         this.prevNode = Optional.absent();
         this.curNode = startNode;
+        this.curIndex = 0;
         this.curDelta = 0;
 
         // Start at first note contained within bounds, if it exists.
@@ -26,6 +28,7 @@ public class NoteIterator implements Iterator<Note> {
             if (bounds.intersects(newDelta, newDelta + curNode.get().getNote().getDuration())) {
                 break;
             } else {
+                curIndex++;
                 curDelta = newDelta;
                 curNode = curNode.get().getNext();
             }
@@ -43,6 +46,7 @@ public class NoteIterator implements Iterator<Note> {
             return null;
         }
         Note note = curNode.get().getNote();
+        curIndex++;
         curDelta += note.getDelta();
         prevNode = curNode;
 
@@ -57,6 +61,10 @@ public class NoteIterator implements Iterator<Note> {
         }
 
         return note;
+    }
+
+    public int getCurIndex() {
+        return curIndex;
     }
 
     public int getCurDelta() {

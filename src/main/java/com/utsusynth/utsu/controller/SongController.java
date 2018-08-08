@@ -19,6 +19,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.AddResponse;
 import com.utsusynth.utsu.common.data.NoteData;
@@ -439,6 +440,30 @@ public class SongController implements EditorController, Localizable {
         }
     }
 
+    /** Allows users to alter properties of individual notes and note regions. */
+    private void openNoteProperties() {
+        // Open note properties modal.
+        InputStream fxml = getClass().getResourceAsStream("/fxml/SongPropertiesScene.fxml");
+        FXMLLoader loader = fxmlLoaderProvider.get();
+        try {
+            Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
+            Stage propertiesWindow = new Stage();
+            propertiesWindow.setTitle("Note Properties");
+            propertiesWindow.initModality(Modality.APPLICATION_MODAL);
+            propertiesWindow.initOwner(currentStage);
+            BorderPane notePropertiesPane = loader.load(fxml);
+            NotePropertiesController controller = (NotePropertiesController) loader.getController();
+            controller.setNotes(song, songEditor.getSelectedTrack());
+            propertiesWindow.setScene(new Scene(notePropertiesPane));
+            propertiesWindow.showAndWait();
+        } catch (IOException e) {
+            // TODO Handle this.
+            errorLogger.logError(e);
+        }
+        onSongChange();
+        refreshView();
+    }
+
     @FXML
     void renderSong(ActionEvent event) {
         double tempo = song.get().getTempo();
@@ -447,8 +472,14 @@ public class SongController implements EditorController, Localizable {
 
         // Disable the render button while rendering.
         renderButton.setDisable(true);
+        // If there is no track selected, play the whole song instead.
+        RegionBounds selectedRegion = songEditor.getSelectedTrack();
+        RegionBounds regionToPlay =
+                selectedRegion.equals(RegionBounds.INVALID) ? RegionBounds.WHOLE_SONG
+                        : selectedRegion;
+
         new Thread(() -> {
-            engine.playSong(song.get(), playbackFn, songEditor.getSelectedTrack());
+            engine.playSong(song.get(), playbackFn, regionToPlay);
             renderButton.setDisable(false);
         }).start();
     }
@@ -466,7 +497,7 @@ public class SongController implements EditorController, Localizable {
 
     @Override
     public void openProperties() {
-        // Open properties modal.
+        // Open song properties modal.
         InputStream fxml = getClass().getResourceAsStream("/fxml/SongPropertiesScene.fxml");
         FXMLLoader loader = fxmlLoaderProvider.get();
         try {

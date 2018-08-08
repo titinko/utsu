@@ -2,7 +2,6 @@ package com.utsusynth.utsu.model.song;
 
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.EnvelopeData;
-import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 
 /**
@@ -372,10 +371,6 @@ public class Note {
 
     public void setTrueLyric(String trueLyric) {
         this.trueLyric = trueLyric;
-    }
-
-    public NoteConfigData getConfigData() {
-        return new NoteConfigData(trueLyric, velocity, intensity, noteFlags);
     }
 
     private static int safeParseInt(String fromMe, int fallback) {
