@@ -121,6 +121,9 @@ public class Note {
     }
 
     public int getNoteNum() {
+    if (this.noteNum < 0) {
+             throw new IllegalStateException("Note num was not set!");
+    }
         return this.noteNum;
     }
 
@@ -393,6 +396,18 @@ public class Note {
         } catch (Exception e) {
             System.out.println("Warning: failed to parse double from " + fromMe);
             return fallback;
+        }
+    }
+
+    /**
+     * Validates that the given note has all required values populated.
+     *
+     * @throw IllegalStateException if the note is invalid.
+     */
+    public void validate() {
+        if (this.noteNum < 0) {
+            throw new IllegalArgumentException(
+                String.format("Invalid Note: Note number was negative or unset: %s", this.noteNum));
         }
     }
 
