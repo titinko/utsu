@@ -38,3 +38,5 @@ Navigate to the same directory as the pom.xml file and type:
 > mvn clean verify
 
 in the command line.  You can look up various other Maven commands to test, deploy, etc.
+
+See also https://github.com/titinko/utsu/wiki/Compiling for platform-specific compilation instructions.

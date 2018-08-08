@@ -558,7 +558,10 @@ public class SongController implements EditorController, Localizable {
                 String songString = songBytes.toString("SJIS");
 
                 // Attempt to run plugin.
-                processRunner.runProcess(plugin.getAbsolutePath(), pluginFile.getAbsolutePath());
+                processRunner.runProcess(
+                    new File(plugin.getAbsolutePath()).getParent(),
+                    plugin.getAbsolutePath(),
+                    pluginFile.getAbsolutePath());
 
                 // Read song from plugin output.
                 String output = FileUtils.readFileToString(pluginFile, "SJIS");

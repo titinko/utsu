@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.engine;
 
+import java.io.File;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,8 +25,15 @@ public class ExternalProcessRunner {
     }
 
     public void runProcess(String... args) {
+        runProcess(null, args);
+    }
+
+    public void runProcess(File workingDir, String... args) {
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.redirectErrorStream(true);
+        if (workingDir != null) {
+            builder.directory(workingDir);
+        }
         try {
             curProcess = builder.start();
             watch(curProcess.getInputStream());
