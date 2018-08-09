@@ -131,6 +131,10 @@ public class PlaybackBarManager {
         return highlighted.size() == 1 && highlighted.contains(note);
     }
 
+    boolean isAnythingHighlighted() {
+        return highlighted.size() > 0;
+    }
+
     RegionBounds getRegionBounds() {
         return selectedRegion.get();
     }

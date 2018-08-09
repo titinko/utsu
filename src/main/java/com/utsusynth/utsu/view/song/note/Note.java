@@ -94,11 +94,15 @@ public class Note {
         });
         CheckMenuItem vibratoEditorMenuItem = new CheckMenuItem("Vibrato Editor");
         vibratoEditorMenuItem.selectedProperty().bindBidirectional(vibratoEditor);
+        MenuItem notePropertiesItem = new MenuItem("Note Properties");
+        notePropertiesItem.setOnAction(action -> track.openNoteProperties(this));
         contextMenu.getItems().addAll(
                 deleteMenuItem,
                 vibratoMenuItem,
                 new SeparatorMenuItem(),
-                vibratoEditorMenuItem);
+                vibratoEditorMenuItem,
+                new SeparatorMenuItem(),
+                notePropertiesItem);
         layout.setOnContextMenuRequested(event -> {
             contextMenu.hide();
             contextMenu.show(layout, event.getScreenX(), event.getScreenY());

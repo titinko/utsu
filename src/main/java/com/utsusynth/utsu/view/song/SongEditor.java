@@ -434,6 +434,16 @@ public class SongEditor {
                 noteMap.getPitchbend(position).setHasVibrato(hasVibrato);
             }
         }
+
+        @Override
+        public void openNoteProperties(Note note) {
+            if (playbackManager.isAnythingHighlighted()) {
+                model.openNoteProperties(playbackManager.getRegionBounds());
+            } else {
+                // Open on current note if nothing is highlighted.
+                model.openNoteProperties(note.getValidBounds());
+            }
+        }
     };
 
     private EnvelopeCallback getEnvelopeCallback(final int position) {

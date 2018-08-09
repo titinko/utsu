@@ -117,8 +117,6 @@ public class NotePropertiesController implements Localizable {
             double sliderValue = consonantVelocitySlider.getValue();
             curConsonantVelocity.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
         });
-        consonantVelocitySlider
-                .setOnMousePressed(event -> consonantVelocitySlider.setDisable(false));
 
         // Setup preutter slider.
         preutterSlider.valueProperty().addListener((event) -> {
@@ -137,8 +135,6 @@ public class NotePropertiesController implements Localizable {
             double sliderValue = startPointSlider.getValue();
             curStartPoint.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
         });
-        consonantVelocitySlider
-                .setOnMousePressed(event -> consonantVelocitySlider.setDisable(false));
 
         // Setup intensity slider.
         intensitySlider.valueProperty().addListener((event) -> {
@@ -146,8 +142,9 @@ public class NotePropertiesController implements Localizable {
             intensitySlider.setValue(sliderValue);
             curIntensity.setText(Integer.toString(sliderValue));
         });
-        consonantVelocitySlider
-                .setOnMousePressed(event -> consonantVelocitySlider.setDisable(false));
+
+        flagsTF.setOnMouseClicked(
+                event -> flagsTF.setStyle("-fx-control-inner-background: white;"));
     }
 
     /* Initializes properties panel with a SongEditor with the song to edit. */
@@ -169,55 +166,65 @@ public class NotePropertiesController implements Localizable {
         }
 
         // Set title.
-        titleLabel.setText(
-                String.format(
-                        "Notes %d to %d of %d",
-                        startIndex,
-                        endIndex,
-                        songContainer.get().getNumNotes()));
+        if (notes.size() == 1) {
+            titleLabel.setText(
+                    String.format(
+                            "Note %d of %d (%s)",
+                            startIndex + 1,
+                            songContainer.get().getNumNotes(),
+                            notes.get(0).getLyric()));
+        } else {
+            titleLabel.setText(
+                    String.format(
+                            "Notes %d to %d of %d",
+                            startIndex + 1,
+                            endIndex + 1,
+                            songContainer.get().getNumNotes()));
+        }
 
         // Set values.
         Note note1 = notes.get(0);
         if (allValuesEqual(note -> note.getVelocity())) {
             consonantVelocitySlider.setValue(note1.getVelocity());
         } else {
-            consonantVelocitySlider.setDisable(true);
+            curConsonantVelocity.setText("n/a");
         }
         if (notes.size() == 1) {
             // Preutter and overlap.
             double preutter = note1.hasPreutter() ? note1.getPreutter() : lyricPreutter(note1);
-            preutterSlider.setValue(preutter);
             preutterSlider.setMin(preutter - 100);
             preutterSlider.setMax(preutter + 100);
-            double overlap = note1.hasOverlap() ? note1.getOverlap() : lyricPreutter(note1);
-            overlapSlider.setValue(overlap);
+            preutterSlider.setValue(preutter);
+            double overlap = note1.hasOverlap() ? note1.getOverlap() : lyricOverlap(note1);
             overlapSlider.setMin(overlap - 100);
             overlapSlider.setMax(overlap + 100);
+            overlapSlider.setValue(overlap);
         } else {
             preutterSlider.setDisable(true);
+            curPreutter.setText("");
             overlapSlider.setDisable(true);
+            curOverlap.setText("");
         }
         if (allValuesEqual(note -> note.getStartPoint())) {
             startPointSlider.setValue(note1.getStartPoint());
         } else {
-            startPointSlider.setDisable(true);
+            curStartPoint.setText("n/a");
         }
         if (allValuesEqual(note -> (double) note.getIntensity())) {
             intensitySlider.setValue(note1.getIntensity());
         } else {
-            intensitySlider.setDisable(true);
+            curIntensity.setText("n/a");
         }
         if (allFlagsEqual()) {
             flagsTF.setText(note1.getNoteFlags());
         } else {
-            flagsTF.setDisable(true);
+            flagsTF.setStyle("-fx-control-inner-background: lightgray;");
         }
     }
 
     private double lyricPreutter(Note note) {
         // Finds default preutterance from a note's lyric config.
-        Optional<LyricConfig> config =
-                voicebankContainer.get().getLyricConfig(notes.get(0).getTrueLyric());
+        Optional<LyricConfig> config = voicebankContainer.get().getLyricConfig(note.getTrueLyric());
         if (config.isPresent()) {
             return config.get().getPreutterance();
         } else {
@@ -227,8 +234,7 @@ public class NotePropertiesController implements Localizable {
 
     private double lyricOverlap(Note note) {
         // Finds default overlap from a note's lyric config.
-        Optional<LyricConfig> config =
-                voicebankContainer.get().getLyricConfig(notes.get(0).getTrueLyric());
+        Optional<LyricConfig> config = voicebankContainer.get().getLyricConfig(note.getTrueLyric());
         if (config.isPresent()) {
             return config.get().getOverlap();
         } else {
@@ -312,7 +318,7 @@ public class NotePropertiesController implements Localizable {
         }
         startPointSlider.setValue(0);
         intensitySlider.setValue(100);
-        flagsTF.clear();
+        flagsTF.setText("B0");
     }
 
     @FXML

@@ -56,8 +56,8 @@
             <Slider fx:id="preutterSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
             <Slider fx:id="consonantVelocitySlider" blockIncrement="0.1" max="300.0" min="10.0" minorTickCount="25" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <Label fx:id="curConsonantVelocity" text="100.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
-            <Label fx:id="curPreutter" text="n/a" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
-            <Label fx:id="curOverlap" text="n/a" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+            <Label fx:id="curPreutter" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+            <Label fx:id="curOverlap" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
             <Label fx:id="curStartPoint" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
             <Label fx:id="curIntensity" text="100" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
             <Separator GridPane.columnSpan="2147483647" GridPane.rowIndex="1">

@@ -179,6 +179,11 @@ public class SongController implements EditorController, Localizable {
             }
 
             @Override
+            public void openNoteProperties(RegionBounds regionBounds) {
+                openNotePropertiesEditor(regionBounds);
+            }
+
+            @Override
             public Mode getCurrentMode() {
                 return currentMode;
             }
@@ -441,9 +446,9 @@ public class SongController implements EditorController, Localizable {
     }
 
     /** Allows users to alter properties of individual notes and note regions. */
-    private void openNoteProperties() {
+    private void openNotePropertiesEditor(RegionBounds regionBounds) {
         // Open note properties modal.
-        InputStream fxml = getClass().getResourceAsStream("/fxml/SongPropertiesScene.fxml");
+        InputStream fxml = getClass().getResourceAsStream("/fxml/NotePropertiesScene.fxml");
         FXMLLoader loader = fxmlLoaderProvider.get();
         try {
             Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
@@ -453,7 +458,7 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initOwner(currentStage);
             BorderPane notePropertiesPane = loader.load(fxml);
             NotePropertiesController controller = (NotePropertiesController) loader.getController();
-            controller.setNotes(song, songEditor.getSelectedTrack());
+            controller.setNotes(song, regionBounds);
             propertiesWindow.setScene(new Scene(notePropertiesPane));
             propertiesWindow.showAndWait();
         } catch (IOException e) {
@@ -559,9 +564,9 @@ public class SongController implements EditorController, Localizable {
 
                 // Attempt to run plugin.
                 processRunner.runProcess(
-                    new File(plugin.getAbsolutePath()).getParent(),
-                    plugin.getAbsolutePath(),
-                    pluginFile.getAbsolutePath());
+                        new File(plugin.getAbsolutePath()).getParent(),
+                        plugin.getAbsolutePath(),
+                        pluginFile.getAbsolutePath());
 
                 // Read song from plugin output.
                 String output = FileUtils.readFileToString(pluginFile, "SJIS");
