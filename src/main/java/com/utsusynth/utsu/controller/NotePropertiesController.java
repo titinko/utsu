@@ -34,6 +34,7 @@ public class NotePropertiesController implements Localizable {
     private final VoicebankContainer voicebankContainer;
 
     private ImmutableList<Note> notes;
+    private Runnable onSongChange;
 
     @FXML // fx:id="root"
     private BorderPane root; // Value injected by FXMLLoader
@@ -148,7 +149,9 @@ public class NotePropertiesController implements Localizable {
     }
 
     /* Initializes properties panel with a SongEditor with the song to edit. */
-    void setNotes(SongContainer songContainer, RegionBounds selectedRegion) {
+    void setData(SongContainer songContainer, RegionBounds selectedRegion, Runnable callback) {
+        this.onSongChange = callback;
+
         ImmutableList.Builder<Note> noteBuilder = ImmutableList.builder();
         NoteIterator iterator = songContainer.get().getNoteIterator(selectedRegion);
         int startIndex = iterator.getCurIndex(); // Index of first note.
@@ -305,6 +308,7 @@ public class NotePropertiesController implements Localizable {
                 note.setNoteFlags(flagsTF.getText());
             }
         }
+        onSongChange.run();
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
@@ -318,7 +322,7 @@ public class NotePropertiesController implements Localizable {
         }
         startPointSlider.setValue(0);
         intensitySlider.setValue(100);
-        flagsTF.setText("B0");
+        flagsTF.setText("");
     }
 
     @FXML

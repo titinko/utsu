@@ -250,7 +250,7 @@ public class Vibrato {
             this.baseY = new SimpleDoubleProperty(noteY);
 
             this.centerY = new SimpleDoubleProperty(
-                    scaler.scaleY(vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT) + noteY);
+                    scaler.scaleY(-vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT) + noteY);
             this.amplitudeY = new SimpleDoubleProperty(
                     scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT));
 

@@ -31,6 +31,7 @@ public class SongPropertiesController implements Localizable {
     private SongContainer songContainer;
     private File resamplerPath;
     private File wavtoolPath;
+    private Runnable onSongChange; // Call when applying properties.
 
     @FXML // fx:id="root"
     private BorderPane root; // Value injected by FXMLLoader
@@ -102,8 +103,9 @@ public class SongPropertiesController implements Localizable {
     }
 
     /* Initializes properties panel with a SongContainer with the song to edit. */
-    void setSongContainer(SongContainer songContainer) {
+    void setData(SongContainer songContainer, Runnable callback) {
         this.songContainer = songContainer;
+        this.onSongChange = callback;
 
         // Set values to save.
         resamplerPath = engine.getResamplerPath();
@@ -190,6 +192,7 @@ public class SongPropertiesController implements Localizable {
                         .setTempo((int) Math.round(tempoSlider.getValue())).build());
         engine.setResamplerPath(resamplerPath);
         engine.setWavtoolPath(wavtoolPath);
+        onSongChange.run();
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }

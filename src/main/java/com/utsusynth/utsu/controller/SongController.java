@@ -458,15 +458,16 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initOwner(currentStage);
             BorderPane notePropertiesPane = loader.load(fxml);
             NotePropertiesController controller = (NotePropertiesController) loader.getController();
-            controller.setNotes(song, regionBounds);
+            controller.setData(song, regionBounds, () -> {
+                onSongChange();
+                refreshView();
+            });
             propertiesWindow.setScene(new Scene(notePropertiesPane));
             propertiesWindow.showAndWait();
         } catch (IOException e) {
             // TODO Handle this.
             errorLogger.logError(e);
         }
-        onSongChange();
-        refreshView();
     }
 
     @FXML
@@ -513,15 +514,16 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);
             SongPropertiesController controller = (SongPropertiesController) loader.getController();
-            controller.setSongContainer(song);
+            controller.setData(song, () -> {
+                onSongChange();
+                refreshView();
+            });
             propertiesWindow.setScene(new Scene(propertiesPane));
             propertiesWindow.showAndWait();
         } catch (IOException e) {
             // TODO Handle this.
             errorLogger.logError(e);
         }
-        onSongChange();
-        refreshView();
     }
 
     @Override

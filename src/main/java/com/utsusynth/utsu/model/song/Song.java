@@ -146,7 +146,6 @@ public class Song {
         note.safeSetLength(toAdd.getDuration());
         note.setLyric(toAdd.getLyric());
         note.setNoteNum(PitchUtils.pitchToNoteNum(toAdd.getPitch()));
-        note.setNoteFlags("B0");
         if (toAdd.getEnvelope().isPresent()) {
             note.setEnvelope(toAdd.getEnvelope().get());
         }
