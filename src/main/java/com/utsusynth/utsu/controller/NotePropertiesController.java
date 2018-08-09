@@ -1,17 +1,23 @@
 package com.utsusynth.utsu.controller;
 
 import java.util.ResourceBundle;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.RoundUtils;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
@@ -22,10 +28,12 @@ import javafx.stage.Stage;
  * 'NotePropertiesScene.fxml' Controller Class
  */
 public class NotePropertiesController implements Localizable {
+    private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
     private final Localizer localizer;
     private final VoicebankContainer voicebankContainer;
 
-    private SongContainer songContainer;
+    private ImmutableList<Note> notes;
 
     @FXML // fx:id="root"
     private BorderPane root; // Value injected by FXMLLoader
@@ -81,13 +89,23 @@ public class NotePropertiesController implements Localizable {
     @FXML // fx:id="flagsLabel"
     private Label flagsLabel; // Value injected by FXMLLoader
 
-    @FXML // fx:id="curFlags"
+    @FXML // fx:id="flagsTF"
     private TextField flagsTF; // Value injected by FXMLLoader
+
+    @FXML // fx:id="resetButton"
+    private Button resetButton; // Value injected by FXMLLoader
+
+    @FXML // fx:id="applyButton"
+    private Button applyButton; // Value injected by FXMLLoader
+
+    @FXML // fx:id="cancelButton"
+    private Button cancelButton; // Value injected by FXMLLoader
 
     @Inject
     public NotePropertiesController(Localizer localizer, VoicebankContainer voicebankContainer) {
         this.localizer = localizer;
         this.voicebankContainer = voicebankContainer;
+        notes = ImmutableList.of();
     }
 
     public void initialize() {
@@ -99,6 +117,8 @@ public class NotePropertiesController implements Localizable {
             double sliderValue = consonantVelocitySlider.getValue();
             curConsonantVelocity.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
         });
+        consonantVelocitySlider
+                .setOnMousePressed(event -> consonantVelocitySlider.setDisable(false));
 
         // Setup preutter slider.
         preutterSlider.valueProperty().addListener((event) -> {
@@ -117,6 +137,8 @@ public class NotePropertiesController implements Localizable {
             double sliderValue = startPointSlider.getValue();
             curStartPoint.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
         });
+        consonantVelocitySlider
+                .setOnMousePressed(event -> consonantVelocitySlider.setDisable(false));
 
         // Setup intensity slider.
         intensitySlider.valueProperty().addListener((event) -> {
@@ -124,24 +146,27 @@ public class NotePropertiesController implements Localizable {
             intensitySlider.setValue(sliderValue);
             curIntensity.setText(Integer.toString(sliderValue));
         });
+        consonantVelocitySlider
+                .setOnMousePressed(event -> consonantVelocitySlider.setDisable(false));
     }
 
     /* Initializes properties panel with a SongEditor with the song to edit. */
     void setNotes(SongContainer songContainer, RegionBounds selectedRegion) {
-        this.songContainer = songContainer;
-        NoteIterator notes = songContainer.get().getNoteIterator(selectedRegion);
-        int startIndex = notes.getCurIndex(); // Index of first note.
-        while (notes.hasNext()) {
-            Note note = notes.next();
-            // Populate values.
-            // consonantVelocitySlider.setValue(note.getConsonantVelocity());
-            preutterSlider.setValue(note.getPreutter());
-            overlapSlider.setValue(note.getOverlap());
-            startPointSlider.setValue(note.getStartPoint());
-            intensitySlider.setValue(note.getIntensity());
-            flagsTF.setText(note.getNoteFlags());
+        ImmutableList.Builder<Note> noteBuilder = ImmutableList.builder();
+        NoteIterator iterator = songContainer.get().getNoteIterator(selectedRegion);
+        int startIndex = iterator.getCurIndex(); // Index of first note.
+        while (iterator.hasNext()) {
+            noteBuilder.add(iterator.next());
         }
-        int endIndex = notes.getCurIndex() - 1; // Index of last note.
+        int endIndex = iterator.getCurIndex() - 1; // Index of last note.
+        this.notes = noteBuilder.build();
+        if (notes.isEmpty()) {
+            // TODO: Handle this better.
+            errorLogger.logError(
+                    new IllegalArgumentException(
+                            "Called note properties editor on an empty region of notes."));
+            return;
+        }
 
         // Set title.
         titleLabel.setText(
@@ -150,20 +175,130 @@ public class NotePropertiesController implements Localizable {
                         startIndex,
                         endIndex,
                         songContainer.get().getNumNotes()));
+
+        // Set values.
+        Note note1 = notes.get(0);
+        if (allValuesEqual(note -> note.getVelocity())) {
+            consonantVelocitySlider.setValue(note1.getVelocity());
+        } else {
+            consonantVelocitySlider.setDisable(true);
+        }
+        if (notes.size() == 1) {
+            // Preutter and overlap.
+            double preutter = note1.hasPreutter() ? note1.getPreutter() : lyricPreutter(note1);
+            preutterSlider.setValue(preutter);
+            preutterSlider.setMin(preutter - 100);
+            preutterSlider.setMax(preutter + 100);
+            double overlap = note1.hasOverlap() ? note1.getOverlap() : lyricPreutter(note1);
+            overlapSlider.setValue(overlap);
+            overlapSlider.setMin(overlap - 100);
+            overlapSlider.setMax(overlap + 100);
+        } else {
+            preutterSlider.setDisable(true);
+            overlapSlider.setDisable(true);
+        }
+        if (allValuesEqual(note -> note.getStartPoint())) {
+            startPointSlider.setValue(note1.getStartPoint());
+        } else {
+            startPointSlider.setDisable(true);
+        }
+        if (allValuesEqual(note -> (double) note.getIntensity())) {
+            intensitySlider.setValue(note1.getIntensity());
+        } else {
+            intensitySlider.setDisable(true);
+        }
+        if (allFlagsEqual()) {
+            flagsTF.setText(note1.getNoteFlags());
+        } else {
+            flagsTF.setDisable(true);
+        }
+    }
+
+    private double lyricPreutter(Note note) {
+        // Finds default preutterance from a note's lyric config.
+        Optional<LyricConfig> config =
+                voicebankContainer.get().getLyricConfig(notes.get(0).getTrueLyric());
+        if (config.isPresent()) {
+            return config.get().getPreutterance();
+        } else {
+            return 0;
+        }
+    }
+
+    private double lyricOverlap(Note note) {
+        // Finds default overlap from a note's lyric config.
+        Optional<LyricConfig> config =
+                voicebankContainer.get().getLyricConfig(notes.get(0).getTrueLyric());
+        if (config.isPresent()) {
+            return config.get().getOverlap();
+        } else {
+            return 0;
+        }
+    }
+
+    private boolean allValuesEqual(Function<Note, Double> fxn) {
+        if (notes.isEmpty()) {
+            return false;
+        }
+        double firstValue = fxn.apply(notes.get(0));
+        for (Note note : notes) {
+            if (!closeEnough(firstValue, fxn.apply(note))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean allFlagsEqual() {
+        if (notes.isEmpty()) {
+            return false;
+        }
+        String firstFlags = notes.get(0).getNoteFlags();
+        for (Note note : notes) {
+            if (!firstFlags.equals(note.getNoteFlags())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
     public void localize(ResourceBundle bundle) {
-        consonantVelocityLabel.setText(bundle.getString("properties.projectName"));
-        preutterLabel.setText(bundle.getString("properties.outputFile"));
-        overlapLabel.setText(bundle.getString("properties.flags"));
-        startPointLabel.setText(bundle.getString("properties.resampler"));
-        intensityLabel.setText(bundle.getString("properties.voicebank"));
-        flagsLabel.setText(bundle.getString("properties.tempo"));
+        consonantVelocityLabel.setText(bundle.getString("properties.consonantVelocity"));
+        preutterLabel.setText(bundle.getString("properties.preutterance"));
+        overlapLabel.setText(bundle.getString("properties.overlap"));
+        startPointLabel.setText(bundle.getString("properties.startPoint"));
+        intensityLabel.setText(bundle.getString("properties.intensity"));
+        flagsLabel.setText(bundle.getString("properties.flags"));
+        resetButton.setText(bundle.getString("general.reset"));
+        applyButton.setText(bundle.getString("general.apply"));
+        cancelButton.setText(bundle.getString("general.cancel"));
     }
 
     @FXML
     void applyProperties(ActionEvent event) {
+        for (Note note : notes) {
+            if (!consonantVelocitySlider.isDisabled()) {
+                note.setVelocity(consonantVelocitySlider.getValue());
+            }
+            if (!preutterSlider.isDisabled() && notes.size() == 1
+                    && !closeEnough(lyricPreutter(note), preutterSlider.getValue())) {
+                note.setPreutter(preutterSlider.getValue());
+            }
+            if (!overlapSlider.isDisabled() && notes.size() == 1
+                    && !closeEnough(lyricOverlap(note), overlapSlider.getValue())) {
+                note.setOverlap(overlapSlider.getValue());
+            }
+            if (!startPointSlider.isDisabled()) {
+                note.setStartPoint(startPointSlider.getValue());
+            }
+            if (!intensitySlider.isDisabled()) {
+                note.setIntensity(RoundUtils.round(intensitySlider.getValue()));
+            }
+            if (!flagsTF.isDisabled()) {
+                note.setNoteFlags(flagsTF.getText());
+            }
+        }
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
@@ -171,10 +306,12 @@ public class NotePropertiesController implements Localizable {
     @FXML
     void restoreDefaults(ActionEvent event) {
         consonantVelocitySlider.setValue(100);
-        preutterSlider.setValue(0);
-        overlapSlider.setValue(0);
+        if (notes.size() == 1) {
+            preutterSlider.setValue(lyricPreutter(notes.get(0)));
+            overlapSlider.setValue(lyricOverlap(notes.get(0)));
+        }
         startPointSlider.setValue(0);
-        intensitySlider.setValue(0);
+        intensitySlider.setValue(100);
         flagsTF.clear();
     }
 
@@ -182,5 +319,10 @@ public class NotePropertiesController implements Localizable {
     void closeProperties(ActionEvent event) {
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
+    }
+
+    private static boolean closeEnough(double value1, double value2) {
+        return RoundUtils.roundDecimal(value1, "#.#")
+                .equals(RoundUtils.roundDecimal(value2, "#.#"));
     }
 }

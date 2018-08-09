@@ -120,10 +120,14 @@ public class Note {
     }
 
     public int getNoteNum() {
-    if (this.noteNum < 0) {
-             throw new IllegalStateException("Note num was not set!");
-    }
+        if (this.noteNum < 0) {
+            throw new IllegalStateException("Note num was not set!");
+        }
         return this.noteNum;
+    }
+
+    public boolean hasPreutter() {
+        return this.preutter >= 0;
     }
 
     public void setPreutter(double preutter) {
@@ -132,6 +136,10 @@ public class Note {
 
     public double getPreutter() {
         return this.preutter;
+    }
+
+    public boolean hasOverlap() {
+        return this.overlap >= 0;
     }
 
     public void setOverlap(double overlap) {
@@ -400,9 +408,29 @@ public class Note {
      * @throw IllegalStateException if the note is invalid.
      */
     public void validate() {
+        if (this.delta < 0) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid Note: Delta was negative or unset: %s", this.delta));
+        }
+        if (this.duration < 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Invalid Note: Duration was negative or unset: %s",
+                            this.duration));
+        }
+        if (this.length < 0) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid Note: Length was negative or unset: %s", this.length));
+        }
+        if (this.lyric.isEmpty()) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid Note: Lyric was empty or unset: %s", this.lyric));
+        }
         if (this.noteNum < 0) {
             throw new IllegalArgumentException(
-                String.format("Invalid Note: Note number was negative or unset: %s", this.noteNum));
+                    String.format(
+                            "Invalid Note: Note number was negative or unset: %s",
+                            this.noteNum));
         }
     }
 

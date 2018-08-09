@@ -10,6 +10,7 @@ import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
@@ -79,6 +80,12 @@ public class SongPropertiesController implements Localizable {
     @FXML // fx:id="curTempo"
     private Label curTempo; // Value injected by FXMLLoader
 
+    @FXML // fx:id="applyButton"
+    private Button applyButton; // Value injected by FXMLLoader
+
+    @FXML // fx:id="cancelButton"
+    private Button cancelButton; // Value injected by FXMLLoader
+
     @Inject
     public SongPropertiesController(
             Engine engine,
@@ -129,6 +136,8 @@ public class SongPropertiesController implements Localizable {
         wavtoolLabel.setText(bundle.getString("properties.wavtool"));
         voicebankLabel.setText(bundle.getString("properties.voicebank"));
         tempoLabel.setText(bundle.getString("properties.tempo"));
+        applyButton.setText(bundle.getString("general.apply"));
+        cancelButton.setText(bundle.getString("general.cancel"));
     }
 
     @FXML
