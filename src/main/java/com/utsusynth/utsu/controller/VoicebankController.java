@@ -267,8 +267,11 @@ public class VoicebankController implements EditorController, Localizable {
 
     @Override
     public void selectAll() {
-        // TODO: Optionally select all text instead.
-        pitchEditor.selectAll();
+        if (descriptionTextArea.isFocused()) {
+            descriptionTextArea.selectAll();
+        } else {
+            pitchEditor.selectAll();
+        }
     }
 
     @FXML
