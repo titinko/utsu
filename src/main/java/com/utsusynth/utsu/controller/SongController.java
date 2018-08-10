@@ -527,6 +527,12 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
+    public void selectAll() {
+        // Selects all notes.
+        songEditor.selectAll();
+    }
+
+    @Override
     public Optional<File> openPlugin() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select executable file");

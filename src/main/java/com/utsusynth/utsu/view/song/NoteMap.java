@@ -111,6 +111,26 @@ public class NoteMap {
         return noteMap.get(position);
     }
 
+    int getFirstNoteMs() {
+        int firstMs = Integer.MAX_VALUE;
+        for (int curMs : noteMap.keySet()) {
+            if (curMs < firstMs) {
+                firstMs = curMs;
+            }
+        }
+        return firstMs;
+    }
+
+    int getLastNoteMs() {
+        int lastMs = 0;
+        for (int curMs : noteMap.keySet()) {
+            if (curMs > lastMs) {
+                lastMs = curMs;
+            }
+        }
+        return lastMs;
+    }
+
     Collection<Note> getAllValidNotes() {
         return noteMap.values();
     }

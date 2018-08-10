@@ -94,6 +94,8 @@ public class UtsuController implements Localizable {
     @FXML
     private Menu editMenu; // Value injected by FXMLLoader
     @FXML
+    private MenuItem selectAllItem; // Value injected by FXMLLoader
+    @FXML
     private Menu viewMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem zoomInItem; // Value injected by FXMLLoader
@@ -127,6 +129,8 @@ public class UtsuController implements Localizable {
         saveAsItem.setText(bundle.getString("menu.file.saveFileAs"));
         saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, CONTROL_DOWN, SHIFT_DOWN));
         editMenu.setText(bundle.getString("menu.edit"));
+        selectAllItem.setText(bundle.getString("menu.edit.selectAll"));
+        selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, CONTROL_DOWN));
         viewMenu.setText(bundle.getString("menu.view"));
         zoomInItem.setText(bundle.getString("menu.view.zoomIn"));
         zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, CONTROL_DOWN));
@@ -286,6 +290,13 @@ public class UtsuController implements Localizable {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
             editors.get(curTab.getId()).saveAs();
             curTab.setText(editors.get(curTab.getId()).getFileName());
+        }
+    }
+
+    @FXML
+    void selectAll(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).selectAll();
         }
     }
 

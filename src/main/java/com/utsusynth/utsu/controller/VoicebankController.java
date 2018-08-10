@@ -265,6 +265,12 @@ public class VoicebankController implements EditorController, Localizable {
         // TODO: Enable Save As for voicebank.
     }
 
+    @Override
+    public void selectAll() {
+        // TODO: Optionally select all text instead.
+        pitchEditor.selectAll();
+    }
+
     @FXML
     public void applySuffix(ActionEvent event) {
         String suffix = suffixTextField.getText() != null ? suffixTextField.getText() : "";

@@ -60,6 +60,10 @@ public class PitchEditor {
         }
     }
 
+    public void selectAll() {
+        table.getSelectionModel().selectAll();
+    }
+
     private class EditableCell<T> extends TableCell<PitchMapData, T> {
         private final TextField textField;
         private final StringConverter<T> converter;
