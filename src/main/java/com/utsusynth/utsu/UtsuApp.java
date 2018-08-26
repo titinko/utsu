@@ -1,5 +1,6 @@
 package com.utsusynth.utsu;
 
+import java.io.File;
 import java.io.InputStream;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -18,6 +19,15 @@ import javafx.stage.Stage;
 public class UtsuApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // Warn users if they're using the wrong working directory.
+        if (!new File("./assets").exists()) {
+            System.out.println("Current working directory: " + System.getProperty("user.dir"));
+            System.out.println("Please cd to JAR file's parent directory before running Utsu.");
+            primaryStage.show();
+            primaryStage.close();
+            return;
+        }
+
         // Set up Guice.
         Injector injector =
                 Guice.createInjector(new UtsuModule(), new ModelModule(), new ViewModule());
