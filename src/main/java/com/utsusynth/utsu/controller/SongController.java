@@ -461,6 +461,7 @@ public class SongController implements EditorController, Localizable {
             controller.setData(song, regionBounds, () -> {
                 onSongChange();
                 refreshView();
+                songEditor.selectRegion(regionBounds);
             });
             propertiesWindow.setScene(new Scene(notePropertiesPane));
             propertiesWindow.showAndWait();

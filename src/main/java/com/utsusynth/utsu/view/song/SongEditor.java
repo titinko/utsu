@@ -148,6 +148,10 @@ public class SongEditor {
         }
     }
 
+    public void selectRegion(RegionBounds region) {
+        playbackManager.highlightRegion(region, noteMap.getAllValidNotes());
+    }
+
     public void selectivelyShowRegion(double centerPercent, double margin) {
         int measureWidthMs = 4 * Quantizer.COL_WIDTH;
         int marginMeasures = ((int) (margin / Math.round(scaler.scaleX(measureWidthMs)))) + 3;

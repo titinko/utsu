@@ -95,6 +95,26 @@ public class PlaybackBarManager {
         }
     }
 
+    /** Highlight an exact region and any notes within that region. */
+    void highlightRegion(RegionBounds region, Collection<Note> allNotes) {
+        clearHighlights();
+        selectedRegion.set(region);
+
+        // Add start and stop bars to the track at the correct location.
+        bars.getChildren().addAll(startBar, endBar);
+        startBar.setTranslateX(scaler.scaleX(selectedRegion.get().getMinMs()));
+        endBar.setTranslateX(scaler.scaleX(selectedRegion.get().getMaxMs()));
+
+        // Highlight all notes within the add region.
+        for (Note note : allNotes) {
+            if (selectedRegion.get().intersects(note.getValidBounds())) {
+                // These operations are idempotent.
+                highlighted.add(note);
+                note.setHighlighted(true);
+            }
+        }
+    }
+
     void refreshHighlights(Note refreshMe) {
         if (selectedRegion.get().intersects(refreshMe.getValidBounds())) {
             // This operation is idempotent.
