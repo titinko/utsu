@@ -450,10 +450,10 @@ public class SongEditor {
 
         @Override
         public void openNoteProperties(Note note) {
-            if (playbackManager.isAnythingHighlighted()) {
+            if (playbackManager.isHighlighted(note)) {
                 model.openNoteProperties(playbackManager.getRegionBounds());
             } else {
-                // Open on current note if nothing is highlighted.
+                // Open on current note if current note is not highlighted.
                 model.openNoteProperties(note.getValidBounds());
             }
         }
