@@ -473,17 +473,18 @@ public class SongController implements EditorController, Localizable {
 
     @FXML
     void renderSong(ActionEvent event) {
-        double tempo = song.get().getTempo();
-        Function<Duration, Void> playbackFn =
-                (duration) -> songEditor.startPlayback(duration, tempo);
-
-        // Disable the render button while rendering.
-        renderButton.setDisable(true);
         // If there is no track selected, play the whole song instead.
         RegionBounds selectedRegion = songEditor.getSelectedTrack();
         RegionBounds regionToPlay =
                 selectedRegion.equals(RegionBounds.INVALID) ? RegionBounds.WHOLE_SONG
                         : selectedRegion;
+
+        double tempo = song.get().getTempo();
+        Function<Duration, Void> playbackFn =
+                (duration) -> songEditor.startPlayback(selectedRegion, duration, tempo);
+
+        // Disable the render button while rendering.
+        renderButton.setDisable(true);
 
         new Thread(() -> {
             engine.playSong(song.get(), playbackFn, regionToPlay);

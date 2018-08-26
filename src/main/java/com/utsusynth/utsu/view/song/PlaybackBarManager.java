@@ -99,6 +99,9 @@ public class PlaybackBarManager {
     void highlightRegion(RegionBounds region, Collection<Note> allNotes) {
         clearHighlights();
         selectedRegion.set(region);
+        if (selectedRegion.get().equals(RegionBounds.INVALID)) {
+            return;
+        }
 
         // Add start and stop bars to the track at the correct location.
         bars.getChildren().addAll(startBar, endBar);

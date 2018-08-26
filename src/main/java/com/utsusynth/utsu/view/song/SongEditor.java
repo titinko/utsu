@@ -130,7 +130,9 @@ public class SongEditor {
     }
 
     /** Start the playback bar animation. It will end on its own. */
-    public Void startPlayback(Duration duration, double tempo) {
+    public Void startPlayback(RegionBounds regionBounds, Duration duration, double tempo) {
+        // Make sure correct region is selected.
+        playbackManager.highlightRegion(regionBounds, noteMap.getAllValidNotes());
         playbackManager.startPlayback(duration, tempo);
         return null;
     }
