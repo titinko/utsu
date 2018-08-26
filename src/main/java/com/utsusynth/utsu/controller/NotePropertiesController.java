@@ -14,7 +14,7 @@ import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
-import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
+import com.utsusynth.utsu.model.voicebank.Voicebank;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -31,9 +31,9 @@ public class NotePropertiesController implements Localizable {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
     private final Localizer localizer;
-    private final VoicebankContainer voicebankContainer;
 
     private ImmutableList<Note> notes;
+    private Voicebank voicebank;
     private Runnable onSongChange;
 
     @FXML // fx:id="root"
@@ -103,9 +103,8 @@ public class NotePropertiesController implements Localizable {
     private Button cancelButton; // Value injected by FXMLLoader
 
     @Inject
-    public NotePropertiesController(Localizer localizer, VoicebankContainer voicebankContainer) {
+    public NotePropertiesController(Localizer localizer) {
         this.localizer = localizer;
-        this.voicebankContainer = voicebankContainer;
         notes = ImmutableList.of();
     }
 
@@ -150,6 +149,7 @@ public class NotePropertiesController implements Localizable {
 
     /* Initializes properties panel with a SongEditor with the song to edit. */
     void setData(SongContainer songContainer, RegionBounds selectedRegion, Runnable callback) {
+        this.voicebank = songContainer.get().getVoicebank();
         this.onSongChange = callback;
 
         ImmutableList.Builder<Note> noteBuilder = ImmutableList.builder();
@@ -229,7 +229,7 @@ public class NotePropertiesController implements Localizable {
 
     private double lyricPreutter(Note note) {
         // Finds default preutterance from a note's lyric config.
-        Optional<LyricConfig> config = voicebankContainer.get().getLyricConfig(note.getTrueLyric());
+        Optional<LyricConfig> config = voicebank.getLyricConfig(note.getTrueLyric());
         if (config.isPresent()) {
             return config.get().getPreutterance();
         } else {
@@ -239,7 +239,7 @@ public class NotePropertiesController implements Localizable {
 
     private double lyricOverlap(Note note) {
         // Finds default overlap from a note's lyric config.
-        Optional<LyricConfig> config = voicebankContainer.get().getLyricConfig(note.getTrueLyric());
+        Optional<LyricConfig> config = voicebank.getLyricConfig(note.getTrueLyric());
         if (config.isPresent()) {
             return config.get().getOverlap();
         } else {
