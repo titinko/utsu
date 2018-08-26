@@ -27,7 +27,7 @@ class Vibrato implements PitchMutation {
         this.endMs = endMs;
         double lengthMs = endMs - startMs;
         this.phaseIn = phaseIn / 100.0 * lengthMs;
-        this.phaseOut = phaseIn / 100.0 * lengthMs;
+        this.phaseOut = phaseOut / 100.0 * lengthMs;
         this.amplitude = amplitude / 10.0; // Convert cents into tenths.
         this.baseFreq = 2 * Math.PI / cycleMs;
         this.phase = 2 * Math.PI * (phasePercent / 100.0);
