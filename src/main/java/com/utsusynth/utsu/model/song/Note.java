@@ -432,6 +432,7 @@ public class Note {
                             "Invalid Note: Note number was negative or unset: %s",
                             this.noteNum));
         }
+        // TODO: Validate vibrato.
     }
 
     @Override

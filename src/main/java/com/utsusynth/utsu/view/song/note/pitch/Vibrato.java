@@ -85,6 +85,10 @@ public class Vibrato {
     }
 
     public Optional<int[]> getVibrato() {
+        // Return absent if vibrato cannot render properly.
+        if (vibrato.length != 10 || vibrato[1] == 0) {
+            return Optional.absent();
+        }
         for (int value : vibrato) {
             if (value != 0) {
                 return Optional.of(vibrato);
@@ -97,7 +101,7 @@ public class Vibrato {
     public void addDefaultVibrato() {
         vibrato = new int[10];
         vibrato[0] = 70; // Vibrato length (% of note)
-        vibrato[1] = 185; // Cycle length (ms, range of 64 to 512)
+        vibrato[1] = 185; // Cycle length (ms, range of 10 to 512)
         vibrato[2] = 40; // Amplitude (cents) (range of 5 to 200)
         vibrato[3] = 20; // Phase in (% of vibrato)
         vibrato[4] = 20; // Phase out (% of vibrato)
@@ -264,7 +268,7 @@ public class Vibrato {
             this.maxSliderX = new SimpleDoubleProperty(
                     Math.min(maxX.get(), startX.get() + scaler.scaleX(Quantizer.COL_WIDTH)));
             this.frqX = new SimpleDoubleProperty(
-                    startX.get() + (maxSliderX.get() - startX.get()) * (vibrato[1] - 64) / 448.0);
+                    startX.get() + (maxSliderX.get() - startX.get()) * (vibrato[1] - 10) / 448.0);
             this.phaseX = new SimpleDoubleProperty(
                     startX.get() + (maxSliderX.get() - startX.get()) * vibrato[5] / 100.0);
             this.frqSlopeX = new SimpleDoubleProperty(
@@ -287,7 +291,7 @@ public class Vibrato {
             });
             frqX.addListener(event -> {
                 double ratio = (frqX.get() - startX.get()) / (maxSliderX.get() - startX.get());
-                adjustVibrato(1, (int) Math.round(ratio * 448 + 64));
+                adjustVibrato(1, (int) Math.round(ratio * 448 + 10));
             });
             phaseX.addListener(event -> {
                 double ratio = (phaseX.get() - startX.get()) / (maxSliderX.get() - startX.get());
@@ -361,7 +365,7 @@ public class Vibrato {
                     fadeInX.set(x + ((maxX.get() - x) * vibrato[3] / 100.0));
                     fadeOutX.set(maxX.get() - ((maxX.get() - x) * vibrato[4] / 100.0));
                     maxSliderX.set(Math.min(maxX.get(), x + scaler.scaleX(Quantizer.COL_WIDTH)));
-                    frqX.set(x + (maxSliderX.get() - x) * (vibrato[1] - 64) / 448.0);
+                    frqX.set(x + (maxSliderX.get() - x) * (vibrato[1] - 10) / 448.0);
                     phaseX.set(x + (maxSliderX.get() - x) * vibrato[5] / 100.0);
                     frqSlopeX.set(x + (maxSliderX.get() - x) * (vibrato[8] + 100) / 200.0);
                 }

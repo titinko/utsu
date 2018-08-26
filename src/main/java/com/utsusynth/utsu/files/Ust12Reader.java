@@ -124,23 +124,23 @@ public class Ust12Reader {
         Note note = new Note();
         for (int i = noteStart; i < lines.length; i++) {
             String line = lines[i].trim();
-            if (line.startsWith("Length=")) {
+            if (line.startsWith("Length=") && !line.equals("Length=")) {
                 note.setDuration(Integer.parseInt(line.substring("Length=".length())));
             } else if (line.startsWith("Lyric=")) {
                 note.setLyric(line.substring("Lyric=".length()));
-            } else if (line.startsWith("NoteNum=")) {
+            } else if (line.startsWith("NoteNum=") && !line.equals("NoteNum=")) {
                 note.setNoteNum(Integer.parseInt(line.substring("NoteNum=".length())));
-            } else if (line.startsWith("PreUtterance=")) {
+            } else if (line.startsWith("PreUtterance=") && !line.equals("PreUtterance=")) {
                 note.setPreutter(Double.parseDouble(line.substring("PreUtterance=".length())));
-            } else if (line.startsWith("VoiceOverlap=")) {
+            } else if (line.startsWith("VoiceOverlap=") && !line.equals("VoiceOverlap=")) {
                 note.setOverlap(Double.parseDouble(line.substring("VoiceOverlap=".length())));
-            } else if (line.startsWith("Velocity=")) {
+            } else if (line.startsWith("Velocity=") && !line.equals("Velocity=")) {
                 note.setVelocity(Double.parseDouble(line.substring("Velocity=".length())));
-            } else if (line.startsWith("StartPoint=")) {
+            } else if (line.startsWith("StartPoint=") && !line.equals("StartPoint=")) {
                 note.setStartPoint(Double.parseDouble(line.substring("StartPoint=".length())));
-            } else if (line.startsWith("Intensity=")) {
+            } else if (line.startsWith("Intensity=") && !line.equals("Intensity=")) {
                 note.setIntensity(Integer.parseInt(line.substring("Intensity=".length())));
-            } else if (line.startsWith("Modulation=")) {
+            } else if (line.startsWith("Modulation=") && !line.equals("Modulation=")) {
                 note.setModulation(Integer.parseInt(line.substring("Modulation=".length())));
             } else if (line.startsWith("Flags=")) {
                 note.setNoteFlags(line.substring("Flags=".length()));
@@ -204,5 +204,4 @@ public class Ust12Reader {
         }
         return -1;
     }
-
 }

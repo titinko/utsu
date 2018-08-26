@@ -51,7 +51,7 @@
             <Label fx:id="startPointLabel" text="Start Point" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
             <Label fx:id="intensityLabel" text="Intensity" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
             <Label fx:id="flagsLabel" text="Flags" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
-            <Slider fx:id="intensitySlider" blockIncrement="1.0" majorTickUnit="100.0" max="480.0" minorTickCount="0" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+            <Slider fx:id="intensitySlider" blockIncrement="1.0" majorTickUnit="100.0" max="480.0" minorTickCount="25" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
             <Slider fx:id="overlapSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
             <Slider fx:id="preutterSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
             <Slider fx:id="consonantVelocitySlider" blockIncrement="0.1" max="300.0" min="10.0" minorTickCount="25" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
