@@ -223,7 +223,7 @@ public class SongController implements EditorController, Localizable {
         modeChoiceBox.setOnAction((action) -> {
             currentMode = modeChoiceBox.getValue();
         });
-        modeChoiceBox.setValue(Mode.ADD);
+        modeChoiceBox.setValue(Mode.EDIT);
         quantizeChoiceBox.setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32"));
         quantizeChoiceBox.setOnAction((action) -> {
             String quantization = quantizeChoiceBox.getValue();
