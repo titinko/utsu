@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
@@ -29,6 +30,7 @@ public class Note {
     private final ContextMenu contextMenu;
     private final NoteCallback track;
     private final Lyric lyric;
+    private final Optional<NoteConfigData> noteConfigData;
     private final Quantizer quantizer;
     private final Scaler scaler;
 
@@ -48,6 +50,7 @@ public class Note {
             StackPane layout,
             NoteCallback callback,
             BooleanProperty vibratoEditor,
+            Optional<NoteConfigData> noteConfigData,
             Quantizer quantizer,
             Scaler scaler) {
         this.note = note;
@@ -56,6 +59,7 @@ public class Note {
         this.track = callback;
         this.subMode = SubMode.CLICKING;
         this.positionInNote = 0;
+        this.noteConfigData = noteConfigData;
         this.quantizer = quantizer;
         this.scaler = scaler;
         this.lyric = lyric;
@@ -369,7 +373,8 @@ public class Note {
                     newLyric,
                     Optional.absent(),
                     envelope,
-                    pitchbend);
+                    pitchbend,
+                    noteConfigData);
             track.addSongNote(this, toAdd);
         } catch (NoteAlreadyExistsException e) {
             setValid(false);

@@ -43,10 +43,11 @@ public class PitchCurve {
         ImmutableList<String> pbm = data.getPBM();
 
         // Parse each portamento from provided values.
-        for (int i = 0; i < data.getPBW().size(); i++) {
+        for (int i = 0; i < pbw.size(); i++) {
             double endMs = startMs + pbw.get(i);
             double pitchEnd = curNoteNum * 10;
-            if (pby.size() >= i + 1) {
+            if (pbw.size() > i + 1 && pby.size() >= i + 1) {
+                // Update pitch if we're not at the last width and a y-value exists.
                 pitchEnd += pby.get(i);
             }
             String pitchShape = "";

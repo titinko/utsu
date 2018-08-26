@@ -27,10 +27,11 @@ public class NoteStandardizer {
 
             // Cap the preutterance at start of prev note or start of track.
             // Note preutter and overlap can override those in the config.
-            double preutter =
-                    note.getPreutter() >= 0 ? note.getPreutter() : config.get().getPreutterance();
+            double preutter = note.getPreutter().isPresent() ? note.getPreutter().get()
+                    : config.get().getPreutterance();
             realPreutter = Math.min(preutter, note.getDelta());
-            realOverlap = note.getOverlap() >= 0 ? note.getOverlap() : config.get().getOverlap();
+            realOverlap = note.getOverlap().isPresent() ? note.getOverlap().get()
+                    : config.get().getOverlap();
 
             // Check correction factor.
             if (prev.isPresent()) {

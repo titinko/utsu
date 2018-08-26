@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.PitchUtils;
@@ -62,6 +63,7 @@ public class NoteFactory {
                 layout,
                 callback,
                 vibratoEditor,
+                note.getConfigData(),
                 quantizer,
                 scaler);
         lyric.setVisibleLyric(note.getLyric());
@@ -107,6 +109,7 @@ public class NoteFactory {
                 layout,
                 callback,
                 vibratoEditor,
+                Optional.absent(),
                 quantizer,
                 scaler);
         lyric.registerLyric();

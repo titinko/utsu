@@ -1,7 +1,6 @@
 package com.utsusynth.utsu.model.song;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.LinkedList;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.PitchUtils;
@@ -152,6 +151,9 @@ public class Song {
         if (toAdd.getPitchbend().isPresent()) {
             note.setPitchbends(toAdd.getPitchbend().get());
         }
+        if (toAdd.getConfigData().isPresent()) {
+            note.setConfigData(toAdd.getConfigData().get());
+        }
 
         int positionMs = toAdd.getPosition();
         NoteNode insertedNode = this.noteList.insertNote(note, positionMs);
@@ -219,7 +221,8 @@ public class Song {
                         note.getLyric(),
                         Optional.of(note.getTrueLyric()),
                         Optional.of(note.getEnvelope()),
-                        Optional.of(note.getPitchbends())),
+                        Optional.of(note.getPitchbends()),
+                        Optional.of(note.getConfigData())),
                 prevNote,
                 nextNote);
     }
@@ -325,7 +328,8 @@ public class Song {
                             note.getLyric(),
                             Optional.of(note.getTrueLyric()),
                             Optional.of(note.getEnvelope()),
-                            Optional.of(note.getPitchbends())));
+                            Optional.of(note.getPitchbends()),
+                            Optional.of(note.getConfigData())));
         }
         return notes;
     }
@@ -372,17 +376,5 @@ public class Song {
 
     public String getPitchString(int firstPitchStep, int lastPitchStep, int noteNum) {
         return pitchbends.renderPitchbends(firstPitchStep, lastPitchStep, noteNum);
-    }
-
-    @Override
-    public String toString() {
-        // Crappy string representation of a Song object.
-        String result = "";
-        Iterator<Note> iterator = noteList.iterator();
-        while (iterator.hasNext()) {
-            result += iterator.next() + "\n";
-        }
-        result += voicebank + "\n";
-        return result + tempo + projectName + outputFile + voicebank.getLocation() + flags + mode2;
     }
 }

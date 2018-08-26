@@ -194,11 +194,13 @@ public class NotePropertiesController implements Localizable {
         }
         if (notes.size() == 1) {
             // Preutter and overlap.
-            double preutter = note1.hasPreutter() ? note1.getPreutter() : lyricPreutter(note1);
+            double preutter = note1.getPreutter().isPresent() ? note1.getPreutter().get()
+                    : lyricPreutter(note1);
             preutterSlider.setMin(preutter - 100);
             preutterSlider.setMax(preutter + 100);
             preutterSlider.setValue(preutter);
-            double overlap = note1.hasOverlap() ? note1.getOverlap() : lyricOverlap(note1);
+            double overlap =
+                    note1.getOverlap().isPresent() ? note1.getOverlap().get() : lyricOverlap(note1);
             overlapSlider.setMin(overlap - 100);
             overlapSlider.setMax(overlap + 100);
             overlapSlider.setValue(overlap);
@@ -290,13 +292,20 @@ public class NotePropertiesController implements Localizable {
             if (!consonantVelocitySlider.isDisabled()) {
                 note.setVelocity(consonantVelocitySlider.getValue());
             }
-            if (!preutterSlider.isDisabled() && notes.size() == 1
-                    && !closeEnough(lyricPreutter(note), preutterSlider.getValue())) {
-                note.setPreutter(preutterSlider.getValue());
+            if (!preutterSlider.isDisabled() && notes.size() == 1) {
+                if (closeEnough(lyricPreutter(note), preutterSlider.getValue())) {
+                    note.clearPreutter();
+                } else {
+                    note.setPreutter(preutterSlider.getValue());
+                }
             }
-            if (!overlapSlider.isDisabled() && notes.size() == 1
-                    && !closeEnough(lyricOverlap(note), overlapSlider.getValue())) {
-                note.setOverlap(overlapSlider.getValue());
+            if (!overlapSlider.isDisabled() && notes.size() == 1) {
+                if (closeEnough(lyricOverlap(note), overlapSlider.getValue())) {
+                    note.clearOverlap();
+                } else {
+                    note.setOverlap(overlapSlider.getValue());
+                }
+
             }
             if (!startPointSlider.isDisabled()) {
                 note.setStartPoint(startPointSlider.getValue());

@@ -1,7 +1,10 @@
 package com.utsusynth.utsu.model.song;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.RoundUtils;
 import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 
 /**
@@ -126,28 +129,34 @@ public class Note {
         return this.noteNum;
     }
 
-    public boolean hasPreutter() {
-        return this.preutter >= 0;
-    }
-
     public void setPreutter(double preutter) {
         this.preutter = preutter;
     }
 
-    public double getPreutter() {
-        return this.preutter;
+    public void clearPreutter() {
+        this.preutter = -1;
     }
 
-    public boolean hasOverlap() {
-        return this.overlap >= 0;
+    public Optional<Double> getPreutter() {
+        if (preutter >= 0) {
+            return Optional.of(preutter);
+        }
+        return Optional.absent();
     }
 
     public void setOverlap(double overlap) {
         this.overlap = overlap;
     }
 
-    public double getOverlap() {
-        return this.overlap;
+    public void clearOverlap() {
+        this.overlap = -1;
+    }
+
+    public Optional<Double> getOverlap() {
+        if (overlap >= 0) {
+            return Optional.of(overlap);
+        }
+        return Optional.absent();
     }
 
     public void setVelocity(double velocity) {
@@ -188,6 +197,29 @@ public class Note {
 
     public String getNoteFlags() {
         return this.noteFlags;
+    }
+
+    public NoteConfigData getConfigData() {
+        return new NoteConfigData(
+                getPreutter(),
+                getOverlap(),
+                this.velocity,
+                this.startPoint,
+                this.intensity,
+                this.noteFlags);
+    }
+
+    public void setConfigData(NoteConfigData configData) {
+        if (configData.getPreutter().isPresent()) {
+            this.preutter = configData.getPreutter().get();
+        }
+        if (configData.getOverlap().isPresent()) {
+            this.overlap = configData.getOverlap().get();
+        }
+        this.velocity = configData.getConsonantVelocity();
+        this.startPoint = configData.getStartPoint();
+        this.intensity = configData.getIntensity();
+        this.noteFlags = configData.getNoteFlags();
     }
 
     public PitchbendData getPitchbends() {
@@ -339,7 +371,7 @@ public class Note {
         for (int i = 0; i < 10; i++) {
             // Leave all unfilled vibrato values as the defaults.
             if (vibratoValues.length > i) {
-                vibrato[i] = safeParseInt(vibratoValues[i], 0);
+                vibrato[i] = RoundUtils.round(safeParseDouble(vibratoValues[i], 0));
             }
         }
     }
@@ -384,15 +416,6 @@ public class Note {
         this.trueLyric = trueLyric;
     }
 
-    private static int safeParseInt(String fromMe, int fallback) {
-        try {
-            return Integer.parseInt(fromMe);
-        } catch (Exception e) {
-            System.out.println("Warning: failed to parse int from " + fromMe);
-            return fallback;
-        }
-    }
-
     private static double safeParseDouble(String fromMe, double fallback) {
         try {
             return Double.parseDouble(fromMe);
@@ -433,12 +456,5 @@ public class Note {
                             this.noteNum));
         }
         // TODO: Validate vibrato.
-    }
-
-    @Override
-    public String toString() {
-        // Crappy string representation of a Note object.
-        return delta + " " + duration + " " + length + " " + lyric + " " + noteNum + " " + velocity
-                + " " + startPoint + " " + intensity + " " + modulation + " " + noteFlags;
     }
 }
