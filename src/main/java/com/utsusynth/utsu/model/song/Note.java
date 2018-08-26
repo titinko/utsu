@@ -363,6 +363,10 @@ public class Note {
         envelopeWidth[0] = newFadeIn;
     }
 
+    public double getFadeOut() {
+        return envelopeWidth[3];
+    }
+
     public void setFadeOut(double newFadeOut) {
         envelopeWidth[3] = newFadeOut;
     }

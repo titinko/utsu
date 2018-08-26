@@ -48,6 +48,9 @@ public class NoteStandardizer {
 
             // Case where there is an adjacent next node.
             if (next.isPresent() && areNotesTouching(note, trueLyric, next.get(), voicebank)) {
+                if (next.get().getFadeIn() > realDuration) {
+                    next.get().setFadeIn(realDuration); // Shrink next note's fade in if necessary.
+                }
                 note.setFadeOut(next.get().getFadeIn());
             } else {
                 note.setFadeOut(Math.min(35, realDuration)); // Default fade out.
@@ -57,7 +60,7 @@ public class NoteStandardizer {
             double[] envWidths = note.getEnvelope().getWidths();
             double envLength = realOverlap + envWidths[1] + envWidths[2] + envWidths[4];
             if (envLength > realDuration - envWidths[3]) {
-                double shrinkFactor = (realDuration - envWidths[3]) / envLength;
+                double shrinkFactor = Math.abs(realDuration - envWidths[3]) / envLength;
                 String[] fullEnvelope = note.getFullEnvelope();
                 realOverlap *= shrinkFactor;
                 fullEnvelope[1] = Double.toString(envWidths[1] * shrinkFactor);
