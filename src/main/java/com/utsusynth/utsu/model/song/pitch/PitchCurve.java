@@ -118,12 +118,10 @@ public class PitchCurve {
             }
         }
 
-        // Remove vibrato from each pitch step it covers.
-        if (data.getVibrato(0) > 0) {
-            double vibratoLengthMs = noteLengthMs * (data.getVibrato(0) * 1.0 / 100);
-            double vibratoStartMs = noteStartMs + noteLengthMs - vibratoLengthMs;
-            double vibratoEndMs = noteStartMs + noteLengthMs;
-            for (int i = nextPitchStep(vibratoStartMs); i < prevPitchStep(vibratoEndMs); i++) {
+        // Remove vibrato from the entire note.
+        if (data.getVibrato(0) > 0 || data.getVibrato(1) > 0) {
+            double noteEndMs = noteStartMs + noteLengthMs;
+            for (int i = nextPitchStep(noteStartMs); i < prevPitchStep(noteEndMs); i++) {
                 if (pitchbends.containsKey(i)) {
                     Pitchbend pitchbend = pitchbends.get(i);
                     pitchbend.removeVibrato();

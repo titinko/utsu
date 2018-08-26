@@ -58,6 +58,7 @@ class Pitchbend implements PitchMutation {
         }
     }
 
+    /** Remove a pitchbend's vibrato. Idempotent. */
     void removeVibrato() {
         this.vibrato = Optional.absent();
     }
