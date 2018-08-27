@@ -270,8 +270,13 @@ public class SongController implements EditorController, Localizable {
     @Override
     public void refreshView() {
         // Set song image.
-        Image image = new Image("file:" + song.get().getVoicebank().getImagePath());
-        voicebankImage.setImage(image);
+        try {
+            Image image = new Image("file:" + song.get().getVoicebank().getImagePath());
+            voicebankImage.setImage(image);
+        } catch (Exception e) {
+            System.out.println("Exception while loading voicebank image.");
+            errorLogger.logWarning(e);
+        }
 
         anchorLeft.getChildren().add(piano.initPiano());
 

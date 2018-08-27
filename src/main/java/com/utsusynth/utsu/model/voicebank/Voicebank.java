@@ -65,24 +65,28 @@ public class Voicebank {
         }
 
         public Builder addLyric(LyricConfig config, boolean hasFrq) {
-            lyricConfigs.addConfig(config);
+            newVoicebank.lyricConfigs.addConfig(config);
             if (hasFrq) {
-                soundFiles.add(config.getPathToFile());
+                newVoicebank.soundFiles.add(config.getPathToFile());
             }
             return this;
         }
 
         public Builder addPitchSuffix(String pitch, String suffix) {
-            pitchMap.put(pitch, suffix);
+            newVoicebank.pitchMap.put(pitch, suffix);
             return this;
         }
 
         public Builder addConversionGroup(String... members) {
-            conversionSet.addGroup(members);
+            newVoicebank.conversionSet.addGroup(members);
             return this;
         }
 
         public Voicebank build() {
+            if (newVoicebank.pathToVoicebank == null) {
+                // TODO: Handle this.
+                System.out.println("Tried to build an empty voicebank!");
+            }
             return newVoicebank;
         }
     }
@@ -98,6 +102,12 @@ public class Voicebank {
         this.conversionSet = conversionSet;
         this.soundFiles = soundFiles;
         this.frqGenerator = frqGenerator;
+
+        // Default values.
+        this.name = "";
+        this.author = "";
+        this.description = "";
+        this.imageName = "";
     }
 
     public Builder toBuilder() {

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.PitchMapData;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.VoicebankWriter;
@@ -41,6 +42,8 @@ import javafx.stage.DirectoryChooser;
  * 'VoicebankScene.fxml' Controller Class
  */
 public class VoicebankController implements EditorController, Localizable {
+    private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
     // User session data goes here.
     private EditorCallback callback;
 
@@ -201,8 +204,13 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public void refreshView() {
         // Set song image.
-        Image image = new Image("file:" + voicebank.get().getImagePath());
-        voicebankImage.setImage(image);
+        try {
+            Image image = new Image("file:" + voicebank.get().getImagePath());
+            voicebankImage.setImage(image);
+        } catch (Exception e) {
+            System.out.println("Exception while loading voicebank image.");
+            errorLogger.logWarning(e);
+        }
 
         // Set name, author, and description.
         nameTextField.setText(voicebank.get().getName());
