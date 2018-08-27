@@ -67,7 +67,7 @@ public class UtsuModule extends AbstractModule {
         }
         File resamplerFile = new File(resamplerPath);
         File wavtoolFile = new File(wavtoolPath);
-        return new Engine(resampler, wavtool, resamplerFile, wavtoolFile);
+        return new Engine(resampler, wavtool, /* threadPoolSize= */ 10, resamplerFile, wavtoolFile);
     }
 
     @Provides

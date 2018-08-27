@@ -30,12 +30,19 @@ public class Engine {
 
     private final Resampler resampler;
     private final Wavtool wavtool;
+    private final int threadPoolSize;
     private File resamplerPath;
     private File wavtoolPath;
 
-    public Engine(Resampler resampler, Wavtool wavtool, File resamplerPath, File wavtoolPath) {
+    public Engine(
+            Resampler resampler,
+            Wavtool wavtool,
+            int threadPoolSize,
+            File resamplerPath,
+            File wavtoolPath) {
         this.resampler = resampler;
         this.wavtool = wavtool;
+        this.threadPoolSize = threadPoolSize;
         this.resamplerPath = resamplerPath;
         this.wavtoolPath = wavtoolPath;
     }
@@ -89,7 +96,7 @@ public class Engine {
         }));
 
         // Set up a thread pool for asynchronous rendering.
-        ExecutorService executor = Executors.newFixedThreadPool(20); // TODO: Inject this.
+        ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
         ArrayList<Future<Runnable>> futures = new ArrayList<>();
 
         NoteIterator notes = song.getNoteIterator(bounds);
