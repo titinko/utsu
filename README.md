@@ -2,7 +2,7 @@
 
 Compatible (in theory) with all voicebanks, files, and engines created with or for the UTAU software--however, the two programs have no code in common and both user features and backend processing can and will be different.
 
-Supported languages: English, Español, 日本語, 中文
+Supported languages: English, Español, 日本語, 中文, Italiano
 
 ## Installation instructions
 
@@ -15,7 +15,7 @@ The Windows installer can be found on the [releases page](https://github.com/tit
 ### The reliable way--a JAR file
 
 For Mac, Windows, Linux:
-First, you'll need to make sure you computer runs Java.  You can download the latest Java engine [here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+First, you'll need to make sure your computer runs Java.  You can download the latest Java engine [here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
 ![Here's what the download page should look like.](images/java_screenshot.png)
 You'll need Java 8, not Java 7 or Java 9, and you'll want a JRE, not a JDK.  
