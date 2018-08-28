@@ -30,7 +30,6 @@ public class Localizer {
     public void setLocale(NativeLocale locale) {
         this.locale = locale;
         this.bundle = ResourceBundle.getBundle("messages.messages", locale.getLocale());
-        System.out.println(locale.getLocale() + " " + bundle.getLocale());
         for (Localizable target : targets) {
             target.localize(this.bundle);
         }

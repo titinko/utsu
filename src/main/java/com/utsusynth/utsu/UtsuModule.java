@@ -12,6 +12,7 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.controller.IconManager;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.engine.FrqGenerator;
@@ -33,6 +34,16 @@ public class UtsuModule extends AbstractModule {
             return injector.getInstance(p);
         });
         return loader;
+    }
+
+    @Provides
+    @Singleton
+    private IconManager provideIconManager() {
+        return new IconManager(
+                new File("assets/icons/Rewind.png"),
+                new File("assets/icons/Play.png"),
+                new File("assets/icons/Pause.png"),
+                new File("assets/icons/Stop.png"));
     }
 
     @Provides

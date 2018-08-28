@@ -88,6 +88,7 @@ public class SongController implements EditorController, Localizable {
     private final Ust20Reader ust20Reader;
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
+    private final IconManager iconManager;
     private final ExternalProcessRunner processRunner;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
@@ -115,6 +116,18 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="voicebankImage"
     private ImageView voicebankImage; // Value injected by FXMLLoader
 
+    @FXML // fx:id="rewindIcon"
+    private ImageView rewindIcon; // Value injected by FXMLLoader
+
+    @FXML // fx:id="playIcon"
+    private ImageView playIcon; // Value injected by FXMLLoader
+
+    @FXML // fx:id="pauseIcon"
+    private ImageView pauseIcon; // Value injected by FXMLLoader
+
+    @FXML // fx:id="stopIcon"
+    private ImageView stopIcon; // Value injected by FXMLLoader
+
     @FXML // fx:id="modeChoiceBox"
     private ChoiceBox<Mode> modeChoiceBox; // Value injected by FXMLLoader
 
@@ -137,6 +150,7 @@ public class SongController implements EditorController, Localizable {
             Ust20Reader ust20Reader,
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
+            IconManager iconManager,
             ExternalProcessRunner processRunner,
             Provider<FXMLLoader> fxmlLoaders) {
         this.song = songContainer;
@@ -150,6 +164,7 @@ public class SongController implements EditorController, Localizable {
         this.ust20Reader = ust20Reader;
         this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
+        this.iconManager = iconManager;
         this.processRunner = processRunner;
         this.fxmlLoaderProvider = fxmlLoaders;
     }
@@ -239,6 +254,11 @@ public class SongController implements EditorController, Localizable {
         });
         quantizeChoiceBox.setValue("1/16");
 
+        rewindIcon.setImage(iconManager.getRewindImage());
+        playIcon.setImage(iconManager.getPlayImage());
+        pauseIcon.setImage(iconManager.getPauseImage());
+        stopIcon.setImage(iconManager.getStopImage());
+
         languageChoiceBox.setItems(FXCollections.observableArrayList(localizer.getAllLocales()));
         languageChoiceBox
                 .setOnAction((action) -> localizer.setLocale(languageChoiceBox.getValue()));
@@ -255,15 +275,12 @@ public class SongController implements EditorController, Localizable {
     @FXML
     private Label quantizationLabel; // Value injected by FXMLLoader
     @FXML
-    private Button renderButton; // Value injected by FXMLLoader
-    @FXML
     private Button exportWavButton; // Value injected by FXMLLoader
 
     @Override
     public void localize(ResourceBundle bundle) {
         modeLabel.setText(bundle.getString("song.mode"));
         quantizationLabel.setText(bundle.getString("song.quantization"));
-        renderButton.setText(bundle.getString("song.render"));
         exportWavButton.setText(bundle.getString("song.exportWav"));
     }
 
@@ -477,7 +494,7 @@ public class SongController implements EditorController, Localizable {
     }
 
     @FXML
-    void renderSong(ActionEvent event) {
+    void playSelection() {
         // If there is no track selected, play the whole song instead.
         RegionBounds selectedRegion = songEditor.getSelectedTrack();
         RegionBounds regionToPlay =
@@ -488,12 +505,12 @@ public class SongController implements EditorController, Localizable {
         Function<Duration, Void> playbackFn =
                 (duration) -> songEditor.startPlayback(selectedRegion, duration, tempo);
 
-        // Disable the render button while rendering.
-        renderButton.setDisable(true);
+        // Disable the play button while rendering.
+        playIcon.setDisable(true);
 
         new Thread(() -> {
             engine.playSong(song.get(), playbackFn, regionToPlay);
-            renderButton.setDisable(false);
+            playIcon.setDisable(false);
         }).start();
     }
 
