@@ -280,7 +280,7 @@ public class Note {
 
     public void setEnvelope(String[] envelopeValues) {
         // Parse ust envelope values.
-        if (envelopeValues.length > 0) {
+        if (envelopeValues.length > 5) {
             envelopeWidth[0] = safeParseDouble(envelopeValues[0], envelopeWidth[0]); // p1
             envelopeWidth[1] = safeParseDouble(envelopeValues[1], envelopeWidth[1]); // p2
             envelopeWidth[2] = safeParseDouble(envelopeValues[2], envelopeWidth[2]); // p3
@@ -291,11 +291,13 @@ public class Note {
         if (envelopeValues.length > 6) {
             envelopeHeight[3] = safeParseDouble(envelopeValues[6], envelopeHeight[3]); // v4
         }
-        if (envelopeValues.length > 7) {
-            envelopeOverlap = safeParseDouble(envelopeValues[7], envelopeOverlap); // useless
+        if (envelopeValues.length > 8) {
+            if (!envelopeValues[7].equals("%")) {
+                envelopeOverlap = safeParseDouble(envelopeValues[7], envelopeOverlap); // useless
+            }
             envelopeWidth[3] = safeParseDouble(envelopeValues[8], envelopeWidth[3]); // p4
         }
-        if (envelopeValues.length > 9) {
+        if (envelopeValues.length > 10) {
             envelopeWidth[4] = safeParseDouble(envelopeValues[9], envelopeWidth[4]); // p5
             envelopeHeight[4] = safeParseDouble(envelopeValues[10], envelopeHeight[4]); // v5
         }
