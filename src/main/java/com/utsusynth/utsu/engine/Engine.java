@@ -231,6 +231,9 @@ public class Engine {
                 return Optional.absent();
             }
         }
+        // Shut down thread pool.
+        executor.shutdown();
+
         return Optional.of(finalSong);
     }
 

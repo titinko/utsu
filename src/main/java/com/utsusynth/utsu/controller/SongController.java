@@ -31,6 +31,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.controller.IconManager.IconState;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.Ust12Reader;
@@ -254,10 +255,10 @@ public class SongController implements EditorController, Localizable {
         });
         quantizeChoiceBox.setValue("1/16");
 
-        rewindIcon.setImage(iconManager.getRewindImage());
-        playIcon.setImage(iconManager.getPlayImage());
-        pauseIcon.setImage(iconManager.getPauseImage());
-        stopIcon.setImage(iconManager.getStopImage());
+        rewindIcon.setImage(iconManager.getRewindImage(IconState.NORMAL));
+        playIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+        pauseIcon.setImage(iconManager.getPauseImage(IconState.NORMAL));
+        stopIcon.setImage(iconManager.getStopImage(IconState.NORMAL));
 
         languageChoiceBox.setItems(FXCollections.observableArrayList(localizer.getAllLocales()));
         languageChoiceBox

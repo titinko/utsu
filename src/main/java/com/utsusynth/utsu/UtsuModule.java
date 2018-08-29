@@ -41,9 +41,14 @@ public class UtsuModule extends AbstractModule {
     private IconManager provideIconManager() {
         return new IconManager(
                 new File("assets/icons/Rewind.png"),
+                new File("assets/icons/RewindPressed.png"),
                 new File("assets/icons/Play.png"),
+                new File("assets/icons/PlayPressed.png"),
+                new File("assets/icons/PlayDisabled.png"),
                 new File("assets/icons/Pause.png"),
-                new File("assets/icons/Stop.png"));
+                new File("assets/icons/PausePressed.png"),
+                new File("assets/icons/Stop.png"),
+                new File("assets/icons/StopPressed.png"));
     }
 
     @Provides
