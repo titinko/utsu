@@ -274,6 +274,26 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
+    public void rewindPlayback() {
+        // Voicebanks do not support rewind right now.
+    }
+
+    @Override
+    public void startPlayback() {
+        System.out.println("Play!");
+    }
+
+    @Override
+    public void pausePlayback() {
+        // Voicebanks do not support pausing playback right now.
+    }
+
+    @Override
+    public void stopPlayback() {
+        // Voicebanks do no support stopping playback right now.
+    }
+
+    @Override
     public void selectAll() {
         if (descriptionTextArea.isFocused()) {
             descriptionTextArea.selectAll();

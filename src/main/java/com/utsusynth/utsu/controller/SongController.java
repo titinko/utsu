@@ -511,7 +511,14 @@ public class SongController implements EditorController, Localizable {
     }
 
     @FXML
-    void playSelection() {
+    @Override
+    public void rewindPlayback() {
+        System.out.println("Rewind!");
+    }
+
+    @FXML
+    @Override
+    public void startPlayback() {
         // If there is no track selected, play the whole song instead.
         RegionBounds selectedRegion = songEditor.getSelectedTrack();
         RegionBounds regionToPlay =
@@ -531,6 +538,18 @@ public class SongController implements EditorController, Localizable {
             playIcon.setDisable(false);
             playIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
         }).start();
+    }
+
+    @FXML
+    @Override
+    public void pausePlayback() {
+        System.out.println("Pause!");
+    }
+
+    @FXML
+    @Override
+    public void stopPlayback() {
+        System.out.println("Stop!");
     }
 
     @FXML

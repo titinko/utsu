@@ -106,6 +106,16 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem propertiesItem; // Value injected by FXMLLoader
     @FXML
+    private Menu playMenu; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem playItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem rewindItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem pauseItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem stopItem; // Value injected by FXMLLoader
+    @FXML
     private Menu pluginsMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem openPluginItem; // Value injected by FXMLLoader
@@ -138,6 +148,15 @@ public class UtsuController implements Localizable {
         zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, CONTROL_DOWN));
         projectMenu.setText(bundle.getString("menu.project"));
         propertiesItem.setText(bundle.getString("menu.project.properties"));
+        playMenu.setText(bundle.getString("menu.play"));
+        playItem.setText(bundle.getString("menu.play"));
+        playItem.setAccelerator(new KeyCodeCombination(KeyCode.SPACE));
+        rewindItem.setText(bundle.getString("menu.play.rewind"));
+        rewindItem.setAccelerator(new KeyCodeCombination(KeyCode.V));
+        pauseItem.setText(bundle.getString("menu.play.pause"));
+        pauseItem.setAccelerator(new KeyCodeCombination(KeyCode.B));
+        stopItem.setText(bundle.getString("menu.play.stop"));
+        stopItem.setAccelerator(new KeyCodeCombination(KeyCode.N));
         pluginsMenu.setText(bundle.getString("menu.plugins"));
         openPluginItem.setText(bundle.getString("menu.plugins.openPlugin"));
         recentPluginsMenu.setText(bundle.getString("menu.plugins.recentPlugins"));
@@ -327,6 +346,34 @@ public class UtsuController implements Localizable {
         }
         for (Tab tab : tabs.getTabs()) {
             editors.get(tab.getId()).refreshView();
+        }
+    }
+
+    @FXML
+    void startPlayback(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).startPlayback();
+        }
+    }
+
+    @FXML
+    void pausePlayback(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).pausePlayback();
+        }
+    }
+
+    @FXML
+    void stopPlayback(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).stopPlayback();
+        }
+    }
+
+    @FXML
+    void rewindPlayback(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).rewindPlayback();
         }
     }
 

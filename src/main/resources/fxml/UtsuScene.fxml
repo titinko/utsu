@@ -43,6 +43,14 @@
                 <MenuItem fx:id="propertiesItem" mnemonicParsing="false" onAction="#openProperties" text="Properties" />
               </items>
             </Menu>
+            <Menu fx:id="playMenu" mnemonicParsing="false" text="Play">
+              <items>
+                <MenuItem fx:id="playItem" mnemonicParsing="false" onAction="#startPlayback" text="Play" />
+                  <MenuItem fx:id="rewindItem" mnemonicParsing="false" onAction="#rewindPlayback" text="Rewind" />
+                  <MenuItem fx:id="pauseItem" mnemonicParsing="false" onAction="#pausePlayback" text="Pause" />
+                  <MenuItem fx:id="stopItem" mnemonicParsing="false" onAction="#stopPlayback" text="Stop" />
+              </items>
+            </Menu>
             <Menu fx:id="pluginsMenu" mnemonicParsing="false" text="Plugins" visible="false">
               <items>
                 <MenuItem fx:id="openPluginItem" mnemonicParsing="false" onAction="#openPlugin" text="Open Plugin..." />

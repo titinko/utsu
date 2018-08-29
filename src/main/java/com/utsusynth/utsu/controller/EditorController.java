@@ -25,6 +25,14 @@ interface EditorController {
 
     void selectAll();
 
+    void rewindPlayback();
+
+    void startPlayback();
+
+    void pausePlayback();
+
+    void stopPlayback();
+
     void openProperties();
 
     /** Opens a legacy UTAU plugin. Returns the file of the plugin opened, if any. */
