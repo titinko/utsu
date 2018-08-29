@@ -30,6 +30,9 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -250,6 +253,17 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
+    public boolean onKeyPressed(KeyEvent keyEvent) {
+        if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
+            // playItem.fire();
+            return true;
+        } else {
+            // No need to override default key behavior.
+            return false;
+        }
+    }
+
+    @Override
     public void open() {
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle("Select Voicebank Directory");
@@ -271,26 +285,6 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public void saveAs() {
         // TODO: Enable Save As for voicebank.
-    }
-
-    @Override
-    public void rewindPlayback() {
-        // Voicebanks do not support rewind right now.
-    }
-
-    @Override
-    public void startPlayback() {
-        System.out.println("Play!");
-    }
-
-    @Override
-    public void pausePlayback() {
-        // Voicebanks do not support pausing playback right now.
-    }
-
-    @Override
-    public void stopPlayback() {
-        // Voicebanks do no support stopping playback right now.
     }
 
     @Override

@@ -5,6 +5,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.BorderPane?>
 
 <BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.UtsuController">
@@ -41,14 +42,6 @@
             <Menu fx:id="projectMenu" mnemonicParsing="false" text="Project">
               <items>
                 <MenuItem fx:id="propertiesItem" mnemonicParsing="false" onAction="#openProperties" text="Properties" />
-              </items>
-            </Menu>
-            <Menu fx:id="playMenu" mnemonicParsing="false" text="Play">
-              <items>
-                <MenuItem fx:id="playItem" mnemonicParsing="false" onAction="#startPlayback" text="Play" />
-                  <MenuItem fx:id="rewindItem" mnemonicParsing="false" onAction="#rewindPlayback" text="Rewind" />
-                  <MenuItem fx:id="pauseItem" mnemonicParsing="false" onAction="#pausePlayback" text="Pause" />
-                  <MenuItem fx:id="stopItem" mnemonicParsing="false" onAction="#stopPlayback" text="Stop" />
               </items>
             </Menu>
             <Menu fx:id="pluginsMenu" mnemonicParsing="false" text="Plugins" visible="false">

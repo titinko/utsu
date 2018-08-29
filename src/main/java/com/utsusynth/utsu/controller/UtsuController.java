@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.controller;
 
-import static javafx.scene.input.KeyCombination.CONTROL_DOWN;
 import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
+import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +27,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 /**
@@ -106,16 +107,6 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem propertiesItem; // Value injected by FXMLLoader
     @FXML
-    private Menu playMenu; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem playItem; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem rewindItem; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem pauseItem; // Value injected by FXMLLoader
-    @FXML
-    private MenuItem stopItem; // Value injected by FXMLLoader
-    @FXML
     private Menu pluginsMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem openPluginItem; // Value injected by FXMLLoader
@@ -135,38 +126,43 @@ public class UtsuController implements Localizable {
         openSongItem.setText(bundle.getString("menu.file.openSong"));
         openVoicebankItem.setText(bundle.getString("menu.file.openVoicebank"));
         saveItem.setText(bundle.getString("general.save"));
-        saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, CONTROL_DOWN));
+        saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN));
         saveAsItem.setText(bundle.getString("menu.file.saveFileAs"));
-        saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, CONTROL_DOWN, SHIFT_DOWN));
+        saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN, SHIFT_DOWN));
         editMenu.setText(bundle.getString("menu.edit"));
         selectAllItem.setText(bundle.getString("menu.edit.selectAll"));
-        selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, CONTROL_DOWN));
+        selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN));
         viewMenu.setText(bundle.getString("menu.view"));
         zoomInItem.setText(bundle.getString("menu.view.zoomIn"));
-        zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, CONTROL_DOWN));
+        zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
         zoomOutItem.setText(bundle.getString("menu.view.zoomOut"));
-        zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, CONTROL_DOWN));
+        zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN));
         projectMenu.setText(bundle.getString("menu.project"));
         propertiesItem.setText(bundle.getString("menu.project.properties"));
-        playMenu.setText(bundle.getString("menu.play"));
-        playItem.setText(bundle.getString("menu.play"));
-        playItem.setAccelerator(new KeyCodeCombination(KeyCode.SPACE));
-        rewindItem.setText(bundle.getString("menu.play.rewind"));
-        rewindItem.setAccelerator(new KeyCodeCombination(KeyCode.V));
-        pauseItem.setText(bundle.getString("menu.play.pause"));
-        pauseItem.setAccelerator(new KeyCodeCombination(KeyCode.B));
-        stopItem.setText(bundle.getString("menu.play.stop"));
-        stopItem.setAccelerator(new KeyCodeCombination(KeyCode.N));
         pluginsMenu.setText(bundle.getString("menu.plugins"));
         openPluginItem.setText(bundle.getString("menu.plugins.openPlugin"));
         recentPluginsMenu.setText(bundle.getString("menu.plugins.recentPlugins"));
         helpMenu.setText(bundle.getString("menu.help"));
-        helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, CONTROL_DOWN, SHIFT_DOWN));
+        helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, SHORTCUT_DOWN, SHIFT_DOWN));
         aboutItem.setText(bundle.getString("menu.help.about"));
 
         // Force the menu to refresh.
         fileMenu.setVisible(false);
         fileMenu.setVisible(true);
+    }
+
+    /**
+     * Called whenever a key is pressed, excluding text input. Can override default key press
+     * behaviors. Accelerators should be used instead when overrides are not needed.
+     * 
+     * @return true if an override behavior for this key was found, false otherwise
+     */
+    public boolean onKeyPressed(KeyEvent keyEvent) {
+        if (!tabs.getTabs().isEmpty()) {
+            Tab curTab = tabs.getSelectionModel().getSelectedItem();
+            return editors.get(curTab.getId()).onKeyPressed(keyEvent);
+        }
+        return false;
     }
 
     /**
@@ -346,34 +342,6 @@ public class UtsuController implements Localizable {
         }
         for (Tab tab : tabs.getTabs()) {
             editors.get(tab.getId()).refreshView();
-        }
-    }
-
-    @FXML
-    void startPlayback(ActionEvent event) {
-        if (!tabs.getTabs().isEmpty()) {
-            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).startPlayback();
-        }
-    }
-
-    @FXML
-    void pausePlayback(ActionEvent event) {
-        if (!tabs.getTabs().isEmpty()) {
-            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).pausePlayback();
-        }
-    }
-
-    @FXML
-    void stopPlayback(ActionEvent event) {
-        if (!tabs.getTabs().isEmpty()) {
-            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).stopPlayback();
-        }
-    }
-
-    @FXML
-    void rewindPlayback(ActionEvent event) {
-        if (!tabs.getTabs().isEmpty()) {
-            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).rewindPlayback();
         }
     }
 

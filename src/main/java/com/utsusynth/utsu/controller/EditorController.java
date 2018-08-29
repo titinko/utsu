@@ -2,6 +2,7 @@ package com.utsusynth.utsu.controller;
 
 import java.io.File;
 import com.google.common.base.Optional;
+import javafx.scene.input.KeyEvent;
 
 /** Used to signify a controller of some sort of file editor. */
 interface EditorController {
@@ -17,6 +18,14 @@ interface EditorController {
 
     boolean hasPermanentLocation();
 
+    /**
+     * Called whenever a key is pressed, excluding text input. Can override default key press
+     * behaviors. Accelerators should be used instead when overrides are not needed.
+     * 
+     * @return true if an override behavior for this key was found, false otherwise
+     */
+    boolean onKeyPressed(KeyEvent keyEvent);
+
     void open();
 
     void save();
@@ -24,14 +33,6 @@ interface EditorController {
     void saveAs();
 
     void selectAll();
-
-    void rewindPlayback();
-
-    void startPlayback();
-
-    void pausePlayback();
-
-    void stopPlayback();
 
     void openProperties();
 

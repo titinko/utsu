@@ -55,6 +55,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
@@ -347,6 +350,17 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
+    public boolean onKeyPressed(KeyEvent keyEvent) {
+        if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
+            startPlayback();
+            return true;
+        } else {
+            // No need to override default key behavior.
+            return false;
+        }
+    }
+
+    @Override
     public void open() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
@@ -511,14 +525,12 @@ public class SongController implements EditorController, Localizable {
     }
 
     @FXML
-    @Override
-    public void rewindPlayback() {
+    void rewindPlayback() {
         System.out.println("Rewind!");
     }
 
     @FXML
-    @Override
-    public void startPlayback() {
+    void startPlayback() {
         // If there is no track selected, play the whole song instead.
         RegionBounds selectedRegion = songEditor.getSelectedTrack();
         RegionBounds regionToPlay =
@@ -541,14 +553,12 @@ public class SongController implements EditorController, Localizable {
     }
 
     @FXML
-    @Override
-    public void pausePlayback() {
+    void pausePlayback() {
         System.out.println("Pause!");
     }
 
     @FXML
-    @Override
-    public void stopPlayback() {
+    void stopPlayback() {
         System.out.println("Stop!");
     }
 
