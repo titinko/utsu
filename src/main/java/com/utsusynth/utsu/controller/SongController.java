@@ -256,9 +256,25 @@ public class SongController implements EditorController, Localizable {
         quantizeChoiceBox.setValue("1/16");
 
         rewindIcon.setImage(iconManager.getRewindImage(IconState.NORMAL));
+        rewindIcon.setOnMousePressed(
+                event -> rewindIcon.setImage(iconManager.getRewindImage(IconState.PRESSED)));
+        rewindIcon.setOnMouseReleased(
+                event -> rewindIcon.setImage(iconManager.getRewindImage(IconState.NORMAL)));
         playIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+        playIcon.setOnMousePressed(
+                event -> playIcon.setImage(iconManager.getPlayImage(IconState.PRESSED)));
+        playIcon.setOnMouseReleased(
+                event -> playIcon.setImage(iconManager.getPlayImage(IconState.NORMAL)));
         pauseIcon.setImage(iconManager.getPauseImage(IconState.NORMAL));
+        pauseIcon.setOnMousePressed(
+                event -> pauseIcon.setImage(iconManager.getPauseImage(IconState.PRESSED)));
+        pauseIcon.setOnMouseReleased(
+                event -> pauseIcon.setImage(iconManager.getPauseImage(IconState.NORMAL)));
         stopIcon.setImage(iconManager.getStopImage(IconState.NORMAL));
+        stopIcon.setOnMousePressed(
+                event -> stopIcon.setImage(iconManager.getStopImage(IconState.PRESSED)));
+        stopIcon.setOnMouseReleased(
+                event -> stopIcon.setImage(iconManager.getStopImage(IconState.NORMAL)));
 
         languageChoiceBox.setItems(FXCollections.observableArrayList(localizer.getAllLocales()));
         languageChoiceBox
@@ -508,10 +524,12 @@ public class SongController implements EditorController, Localizable {
 
         // Disable the play button while rendering.
         playIcon.setDisable(true);
+        playIcon.setImage(iconManager.getPlayImage(IconState.DISABLED));
 
         new Thread(() -> {
             engine.playSong(song.get(), playbackFn, regionToPlay);
             playIcon.setDisable(false);
+            playIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
         }).start();
     }
 
