@@ -255,7 +255,7 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public boolean onKeyPressed(KeyEvent keyEvent) {
         if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
-            // playItem.fire();
+            configEditor.playSound(); // Does nothing if config editor not loaded.
             return true;
         } else {
             // No need to override default key behavior.

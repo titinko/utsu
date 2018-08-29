@@ -354,6 +354,21 @@ public class SongController implements EditorController, Localizable {
         if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
             startPlayback();
             return true;
+        } else if (new KeyCodeCombination(KeyCode.V).match(keyEvent)) {
+            rewindPlayback();
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.B).match(keyEvent)) {
+            pausePlayback();
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.N).match(keyEvent)) {
+            stopPlayback();
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.Q).match(keyEvent)) {
+            modeChoiceBox.setValue(Mode.ADD);
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.W).match(keyEvent)) {
+            modeChoiceBox.setValue(Mode.EDIT);
+            return true;
         } else {
             // No need to override default key behavior.
             return false;
@@ -531,6 +546,11 @@ public class SongController implements EditorController, Localizable {
 
     @FXML
     void startPlayback() {
+        // Do nothing if play icon is currently disabled.
+        if (playIcon.isDisabled()) {
+            return;
+        }
+
         // If there is no track selected, play the whole song instead.
         RegionBounds selectedRegion = songEditor.getSelectedTrack();
         RegionBounds regionToPlay =

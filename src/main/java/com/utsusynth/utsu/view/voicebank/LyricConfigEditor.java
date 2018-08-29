@@ -190,7 +190,7 @@ public class LyricConfigEditor {
         return controlBars;
     }
 
-    private void playSound() {
+    public void playSound() {
         if (!configData.isPresent()) {
             return;
         }
