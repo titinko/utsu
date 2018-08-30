@@ -44,7 +44,6 @@ public class UtsuModule extends AbstractModule {
                 new File("assets/icons/RewindPressed.png"),
                 new File("assets/icons/Play.png"),
                 new File("assets/icons/PlayPressed.png"),
-                new File("assets/icons/PlayDisabled.png"),
                 new File("assets/icons/Pause.png"),
                 new File("assets/icons/PausePressed.png"),
                 new File("assets/icons/Stop.png"),

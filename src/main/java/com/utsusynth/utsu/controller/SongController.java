@@ -31,7 +31,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
-import com.utsusynth.utsu.controller.IconManager.IconState;
+import com.utsusynth.utsu.controller.IconManager.IconType;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.Engine.PlaybackStatus;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
@@ -43,6 +43,7 @@ import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.view.song.Piano;
 import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
+import javafx.animation.PauseTransition;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
@@ -256,24 +257,31 @@ public class SongController implements EditorController, Localizable {
         });
         quantizeChoiceBox.setValue("1/16");
 
-        rewindIcon.setImage(iconManager.getRewindImage(IconState.NORMAL));
+        rewindIcon.setImage(iconManager.getImage(IconType.REWIND_NORMAL));
         rewindIcon.setOnMousePressed(
-                event -> rewindIcon.setImage(iconManager.getRewindImage(IconState.PRESSED)));
+                event -> rewindIcon.setImage(iconManager.getImage(IconType.REWIND_PRESSED)));
         rewindIcon.setOnMouseReleased(
-                event -> rewindIcon.setImage(iconManager.getRewindImage(IconState.NORMAL)));
-        playPauseIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+                event -> rewindIcon.setImage(iconManager.getImage(IconType.REWIND_NORMAL)));
+        playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
         playPauseIcon.setOnMousePressed(event -> {
             if (engine.getStatus() == PlaybackStatus.PLAYING) {
-                playPauseIcon.setImage(iconManager.getPauseImage(IconState.PRESSED));
+                playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_PRESSED));
             } else {
-                playPauseIcon.setImage(iconManager.getPlayImage(IconState.PRESSED));
+                playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_PRESSED));
             }
         });
-        stopIcon.setImage(iconManager.getStopImage(IconState.NORMAL));
+        playPauseIcon.setOnMouseReleased(event -> {
+            if (engine.getStatus() == PlaybackStatus.PLAYING) {
+                playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
+            } else {
+                playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
+            }
+        });
+        stopIcon.setImage(iconManager.getImage(IconType.STOP_NORMAL));
         stopIcon.setOnMousePressed(
-                event -> stopIcon.setImage(iconManager.getStopImage(IconState.PRESSED)));
+                event -> stopIcon.setImage(iconManager.getImage(IconType.STOP_PRESSED)));
         stopIcon.setOnMouseReleased(
-                event -> stopIcon.setImage(iconManager.getStopImage(IconState.NORMAL)));
+                event -> stopIcon.setImage(iconManager.getImage(IconType.STOP_NORMAL)));
 
         languageChoiceBox.setItems(FXCollections.observableArrayList(localizer.getAllLocales()));
         languageChoiceBox
@@ -348,13 +356,17 @@ public class SongController implements EditorController, Localizable {
     @Override
     public boolean onKeyPressed(KeyEvent keyEvent) {
         if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
+            // In the pause case, flicker will be overridden before it can happen.
+            flickerImage(playPauseIcon, iconManager.getImage(IconType.PLAY_PRESSED));
             playOrPause();
             return true;
         } else if (new KeyCodeCombination(KeyCode.V).match(keyEvent)) {
-            rewindPlayback();
+            flickerImage(rewindIcon, iconManager.getImage(IconType.REWIND_PRESSED));
+            rewindPlayback(); // Rewind button's event handler.
             return true;
         } else if (new KeyCodeCombination(KeyCode.B).match(keyEvent)) {
-            stopPlayback();
+            flickerImage(stopIcon, iconManager.getImage(IconType.STOP_PRESSED));
+            stopPlayback(); // Stop button's event handler.
             return true;
         } else if (new KeyCodeCombination(KeyCode.Q).match(keyEvent)) {
             modeChoiceBox.setValue(Mode.ADD);
@@ -366,6 +378,20 @@ public class SongController implements EditorController, Localizable {
             // No need to override default key behavior.
             return false;
         }
+    }
+
+    /** Quickly sets an icon to a different image, then changes it back. */
+    private void flickerImage(ImageView icon, Image flickerImage) {
+        Image defaultImage = icon.getImage();
+        icon.setImage(flickerImage);
+        PauseTransition briefPause = new PauseTransition(Duration.millis(120));
+        briefPause.setOnFinished(event -> {
+            // Do nothing if an external source has already changed the image.
+            if (icon.getImage().equals(flickerImage)) {
+                icon.setImage(defaultImage);
+            }
+        });
+        briefPause.play();
     }
 
     @Override
@@ -571,18 +597,15 @@ public class SongController implements EditorController, Localizable {
         Function<Duration, Void> startPlaybackFn =
                 (duration) -> songEditor.startPlayback(selectedRegion, duration, tempo);
         Runnable endPlaybackFn = () -> {
-            playPauseIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+            playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
         };
 
         // Disable the play button while rendering.
         playPauseIcon.setDisable(true);
-        playPauseIcon.setImage(iconManager.getPlayImage(IconState.DISABLED));
 
         new Thread(() -> {
             if (engine.startPlayback(song.get(), regionToPlay, startPlaybackFn, endPlaybackFn)) {
-                playPauseIcon.setImage(iconManager.getPauseImage(IconState.NORMAL));
-            } else {
-                playPauseIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+                playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
             }
             playPauseIcon.setDisable(false);
         }).start();
@@ -591,13 +614,13 @@ public class SongController implements EditorController, Localizable {
     private void pausePlayback() {
         engine.pausePlayback();
         songEditor.pausePlayback();
-        playPauseIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+        playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
     }
 
     private void resumePlayback() {
         engine.resumePlayback();
         songEditor.resumePlayback();
-        playPauseIcon.setImage(iconManager.getPauseImage(IconState.NORMAL));
+        playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
     }
 
     @FXML
