@@ -110,7 +110,6 @@ public class VoicebankReader {
 
         // Parse pitch map in arbitrary order, if present.
         for (String pitchMapName : ImmutableSet.of("prefixmap", "prefix.map")) {
-            // For some reason, "prefix.map" is a list of pitch suffixes.
             parsePitchMap(pathToVoicebank.toPath().resolve(pitchMapName).toFile(), builder);
         }
 
@@ -174,7 +173,7 @@ public class VoicebankReader {
     }
 
     private String readConfigFile(File file) {
-        if (!file.canRead()) {
+        if (!file.canRead() || !file.isFile()) {
             // This is often okay.
             return "";
         }

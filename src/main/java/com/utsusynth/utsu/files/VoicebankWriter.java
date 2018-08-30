@@ -100,9 +100,11 @@ public class VoicebankWriter {
         }
 
         // Save pitch map.
-        // TODO: Don't try to save Unicode characters to prefix.map.
         for (String prefixmapName : ImmutableSet.of("prefixmap", "prefix.map")) {
             File pitchFile = saveDir.toPath().resolve(prefixmapName).toFile();
+            if (pitchFile.canWrite() || pitchFile.isDirectory()) {
+                continue; // Don't try to overwrite a directory.
+            }
             String charset = prefixmapName.equals("prefix.map") ? "SJIS" : "UTF-8";
             try (PrintStream ps = new PrintStream(pitchFile, charset)) {
                 if (charset.equals("UTF-8")) {
@@ -112,6 +114,11 @@ public class VoicebankWriter {
                 while (iterator.hasNext()) {
                     PitchMapData data = iterator.next();
                     if (data == null) {
+                        continue;
+                    }
+                    // Don't try to save Unicode characters to prefix.map.
+                    String pitchCharset = getCharset(data.getPitch() + data.getSuffix());
+                    if (charset.equals("SJIS") && !pitchCharset.equals("SJIS")) {
                         continue;
                     }
                     ps.print(data.getPitch() + "\t\t" + data.getSuffix() + "\n");
