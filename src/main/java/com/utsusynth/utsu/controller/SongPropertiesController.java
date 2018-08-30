@@ -24,11 +24,11 @@ import javafx.stage.Stage;
  * 'SongPropertiesScene.fxml' Controller Class
  */
 public class SongPropertiesController implements Localizable {
-    private final Engine engine;
     private final Localizer localizer;
     private final VoicebankContainer voicebankContainer;
 
     private SongContainer songContainer;
+    private Engine engine;
     private File resamplerPath;
     private File wavtoolPath;
     private Runnable onSongChange; // Call when applying properties.
@@ -88,11 +88,7 @@ public class SongPropertiesController implements Localizable {
     private Button cancelButton; // Value injected by FXMLLoader
 
     @Inject
-    public SongPropertiesController(
-            Engine engine,
-            Localizer localizer,
-            VoicebankContainer voicebankContainer) {
-        this.engine = engine;
+    public SongPropertiesController(Localizer localizer, VoicebankContainer voicebankContainer) {
         this.localizer = localizer;
         this.voicebankContainer = voicebankContainer;
     }
@@ -103,8 +99,9 @@ public class SongPropertiesController implements Localizable {
     }
 
     /* Initializes properties panel with a SongContainer with the song to edit. */
-    void setData(SongContainer songContainer, Runnable callback) {
+    void setData(SongContainer songContainer, Engine engine, Runnable callback) {
         this.songContainer = songContainer;
+        this.engine = engine;
         this.onSongChange = callback;
 
         // Set values to save.

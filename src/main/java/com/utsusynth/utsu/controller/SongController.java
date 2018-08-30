@@ -606,7 +606,7 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);
             SongPropertiesController controller = (SongPropertiesController) loader.getController();
-            controller.setData(song, () -> {
+            controller.setData(song, engine, () -> {
                 onSongChange();
                 refreshView();
             });

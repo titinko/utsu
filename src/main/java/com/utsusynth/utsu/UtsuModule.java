@@ -67,7 +67,6 @@ public class UtsuModule extends AbstractModule {
     }
 
     @Provides
-    @Singleton
     private Engine provideEngine(Resampler resampler, Wavtool wavtool) {
         String os = System.getProperty("os.name").toLowerCase();
         String resamplerPath;
