@@ -8,6 +8,7 @@ import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.Note;
+import javafx.animation.Animation.Status;
 import javafx.animation.Interpolator;
 import javafx.animation.TranslateTransition;
 import javafx.beans.property.SimpleObjectProperty;
@@ -59,11 +60,28 @@ public class PlaybackBarManager {
             double numBeats = tempo * duration.toMinutes();
             playback.setByX(numBeats * scaler.scaleX(Quantizer.COL_WIDTH));
             playback.setInterpolator(Interpolator.LINEAR);
-            playback.setOnFinished(action -> {
-                bars.getChildren().remove(playBar);
+            playback.statusProperty().addListener((obs, oldStatus, newStatus) -> {
+                if (newStatus == Status.STOPPED) {
+                    bars.getChildren().remove(playBar);
+                }
             });
             playback.play();
         }
+    }
+
+    void pausePlayback() {
+        playback.pause(); // Does nothing if animation not playing.
+    }
+
+    void resumePlayback() {
+        if (playback.getStatus() == Status.PAUSED) {
+            playback.play(); // Does nothing if animation not paused.
+        }
+    }
+
+    // Removes the playback bar.
+    void stopPlayback() {
+        playback.stop();
     }
 
     void highlightTo(Note highlightToMe, Collection<Note> allNotes) {

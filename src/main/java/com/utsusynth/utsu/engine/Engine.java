@@ -26,13 +26,18 @@ import javafx.util.Duration;
 
 public class Engine {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
-    private static MediaPlayer mediaPlayer; // Used for audio playback.
+
+    public enum PlaybackStatus {
+        PLAYING, PAUSED, STOPPED,
+    }
 
     private final Resampler resampler;
     private final Wavtool wavtool;
     private final int threadPoolSize;
     private File resamplerPath;
     private File wavtoolPath;
+
+    private MediaPlayer mediaPlayer; // Used for audio playback;
 
     public Engine(
             Resampler resampler,
@@ -70,16 +75,59 @@ public class Engine {
         }
     }
 
-    public void playSong(Song song, Function<Duration, Void> callback, RegionBounds bounds) {
+    /**
+     * Starts playback for a region of a song.
+     * 
+     * @return Whether or not there is any sound to play.
+     */
+    public boolean startPlayback(
+            Song song,
+            RegionBounds bounds,
+            Function<Duration, Void> startCallback,
+            Runnable endCallback) {
+        stopPlayback(); // Clear existing playback, if present.
         Optional<File> finalSong = render(song, bounds);
         if (finalSong.isPresent()) {
             Media media = new Media(finalSong.get().toURI().toString());
             mediaPlayer = new MediaPlayer(media);
-            mediaPlayer.setOnReady(() -> {
-                callback.apply(media.getDuration());
-            });
+            mediaPlayer.setOnReady(() -> startCallback.apply(media.getDuration()));
+            mediaPlayer.setOnEndOfMedia(() -> mediaPlayer.stop());
+            mediaPlayer.setOnStopped(() -> endCallback.run());
             mediaPlayer.play();
         }
+        return finalSong.isPresent();
+    }
+
+    public void pausePlayback() {
+        if (mediaPlayer != null) {
+            mediaPlayer.pause();
+        }
+    }
+
+    public void resumePlayback() {
+        if (mediaPlayer != null) {
+            mediaPlayer.play();
+        }
+    }
+
+    public void stopPlayback() {
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+        }
+    }
+
+    public PlaybackStatus getStatus() {
+        if (mediaPlayer != null) {
+            switch (mediaPlayer.getStatus()) {
+                case PLAYING:
+                    return PlaybackStatus.PLAYING;
+                case PAUSED:
+                    return PlaybackStatus.PAUSED;
+                default:
+                    return PlaybackStatus.STOPPED;
+            }
+        }
+        return PlaybackStatus.STOPPED;
     }
 
     private Optional<File> render(Song song, RegionBounds bounds) {

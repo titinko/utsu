@@ -42,8 +42,7 @@
                         <HBox spacing="10.0">
                            <children>
                               <ImageView fx:id="rewindIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#rewindPlayback" pickOnBounds="true" preserveRatio="true"></ImageView>
-                              <ImageView fx:id="playIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#startPlayback" pickOnBounds="true" preserveRatio="true"></ImageView>
-                              <ImageView fx:id="pauseIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#pausePlayback" pickOnBounds="true" preserveRatio="true"></ImageView>
+                              <ImageView fx:id="playPauseIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#playOrPause" pickOnBounds="true" preserveRatio="true"></ImageView>
                               <ImageView fx:id="stopIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#stopPlayback" pickOnBounds="true" preserveRatio="true"></ImageView>
                            </children>
                         </HBox>

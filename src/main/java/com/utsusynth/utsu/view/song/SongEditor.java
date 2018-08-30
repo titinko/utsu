@@ -137,6 +137,21 @@ public class SongEditor {
         return null;
     }
 
+    /** Attempts to pause. Does nothing if there is no ongoing playback. */
+    public void pausePlayback() {
+        playbackManager.pausePlayback();
+    }
+
+    /** Attempts to resume. Does nothing if there is no ongoing paused playback. */
+    public void resumePlayback() {
+        playbackManager.resumePlayback();
+    }
+
+    /** Manually stop any ongoing playback bar animation. Idempotent. */
+    public void stopPlayback() {
+        playbackManager.stopPlayback();
+    }
+
     public RegionBounds getSelectedTrack() {
         return playbackManager.getRegionBounds();
     }

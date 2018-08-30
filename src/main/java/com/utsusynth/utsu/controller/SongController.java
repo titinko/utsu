@@ -33,6 +33,7 @@ import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.controller.IconManager.IconState;
 import com.utsusynth.utsu.engine.Engine;
+import com.utsusynth.utsu.engine.Engine.PlaybackStatus;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.Ust12Reader;
 import com.utsusynth.utsu.files.Ust12Writer;
@@ -123,11 +124,8 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="rewindIcon"
     private ImageView rewindIcon; // Value injected by FXMLLoader
 
-    @FXML // fx:id="playIcon"
-    private ImageView playIcon; // Value injected by FXMLLoader
-
-    @FXML // fx:id="pauseIcon"
-    private ImageView pauseIcon; // Value injected by FXMLLoader
+    @FXML // fx:id="playPauseIcon"
+    private ImageView playPauseIcon; // Value injected by FXMLLoader
 
     @FXML // fx:id="stopIcon"
     private ImageView stopIcon; // Value injected by FXMLLoader
@@ -263,16 +261,14 @@ public class SongController implements EditorController, Localizable {
                 event -> rewindIcon.setImage(iconManager.getRewindImage(IconState.PRESSED)));
         rewindIcon.setOnMouseReleased(
                 event -> rewindIcon.setImage(iconManager.getRewindImage(IconState.NORMAL)));
-        playIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
-        playIcon.setOnMousePressed(
-                event -> playIcon.setImage(iconManager.getPlayImage(IconState.PRESSED)));
-        playIcon.setOnMouseReleased(
-                event -> playIcon.setImage(iconManager.getPlayImage(IconState.NORMAL)));
-        pauseIcon.setImage(iconManager.getPauseImage(IconState.NORMAL));
-        pauseIcon.setOnMousePressed(
-                event -> pauseIcon.setImage(iconManager.getPauseImage(IconState.PRESSED)));
-        pauseIcon.setOnMouseReleased(
-                event -> pauseIcon.setImage(iconManager.getPauseImage(IconState.NORMAL)));
+        playPauseIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+        playPauseIcon.setOnMousePressed(event -> {
+            if (engine.getStatus() == PlaybackStatus.PLAYING) {
+                playPauseIcon.setImage(iconManager.getPauseImage(IconState.PRESSED));
+            } else {
+                playPauseIcon.setImage(iconManager.getPlayImage(IconState.PRESSED));
+            }
+        });
         stopIcon.setImage(iconManager.getStopImage(IconState.NORMAL));
         stopIcon.setOnMousePressed(
                 event -> stopIcon.setImage(iconManager.getStopImage(IconState.PRESSED)));
@@ -352,15 +348,12 @@ public class SongController implements EditorController, Localizable {
     @Override
     public boolean onKeyPressed(KeyEvent keyEvent) {
         if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
-            startPlayback();
+            playOrPause();
             return true;
         } else if (new KeyCodeCombination(KeyCode.V).match(keyEvent)) {
             rewindPlayback();
             return true;
         } else if (new KeyCodeCombination(KeyCode.B).match(keyEvent)) {
-            pausePlayback();
-            return true;
-        } else if (new KeyCodeCombination(KeyCode.N).match(keyEvent)) {
             stopPlayback();
             return true;
         } else if (new KeyCodeCombination(KeyCode.Q).match(keyEvent)) {
@@ -541,16 +534,33 @@ public class SongController implements EditorController, Localizable {
 
     @FXML
     void rewindPlayback() {
-        System.out.println("Rewind!");
+        engine.stopPlayback();
+        songEditor.stopPlayback();
+        // TODO: Scroll to start of song and un-highlight all.
     }
 
     @FXML
-    void startPlayback() {
+    void playOrPause() {
         // Do nothing if play icon is currently disabled.
-        if (playIcon.isDisabled()) {
+        if (playPauseIcon.isDisabled()) {
             return;
         }
 
+        // Get current playback status to decide what to do.
+        switch (engine.getStatus()) {
+            case PLAYING:
+                pausePlayback();
+                break;
+            case PAUSED:
+                resumePlayback();
+                break;
+            case STOPPED:
+                startPlayback();
+                break;
+        }
+    }
+
+    private void startPlayback() {
         // If there is no track selected, play the whole song instead.
         RegionBounds selectedRegion = songEditor.getSelectedTrack();
         RegionBounds regionToPlay =
@@ -558,28 +568,42 @@ public class SongController implements EditorController, Localizable {
                         : selectedRegion;
 
         double tempo = song.get().getTempo();
-        Function<Duration, Void> playbackFn =
+        Function<Duration, Void> startPlaybackFn =
                 (duration) -> songEditor.startPlayback(selectedRegion, duration, tempo);
+        Runnable endPlaybackFn = () -> {
+            playPauseIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+        };
 
         // Disable the play button while rendering.
-        playIcon.setDisable(true);
-        playIcon.setImage(iconManager.getPlayImage(IconState.DISABLED));
+        playPauseIcon.setDisable(true);
+        playPauseIcon.setImage(iconManager.getPlayImage(IconState.DISABLED));
 
         new Thread(() -> {
-            engine.playSong(song.get(), playbackFn, regionToPlay);
-            playIcon.setDisable(false);
-            playIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+            if (engine.startPlayback(song.get(), regionToPlay, startPlaybackFn, endPlaybackFn)) {
+                playPauseIcon.setImage(iconManager.getPauseImage(IconState.NORMAL));
+            } else {
+                playPauseIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+            }
+            playPauseIcon.setDisable(false);
         }).start();
     }
 
-    @FXML
-    void pausePlayback() {
-        System.out.println("Pause!");
+    private void pausePlayback() {
+        engine.pausePlayback();
+        songEditor.pausePlayback();
+        playPauseIcon.setImage(iconManager.getPlayImage(IconState.NORMAL));
+    }
+
+    private void resumePlayback() {
+        engine.resumePlayback();
+        songEditor.resumePlayback();
+        playPauseIcon.setImage(iconManager.getPauseImage(IconState.NORMAL));
     }
 
     @FXML
     void stopPlayback() {
-        System.out.println("Stop!");
+        engine.stopPlayback();
+        songEditor.stopPlayback();
     }
 
     @FXML
