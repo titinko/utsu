@@ -66,17 +66,23 @@ public class VoicebankReader {
         builder.setPathToVoicebank(pathToVoicebank);
         System.out.println("Parsed voicebank as " + pathToVoicebank);
 
-        // Parse character data.
+        // Parse character data in English or Japanese.
         String characterData =
                 readConfigFile(pathToVoicebank.toPath().resolve("character.txt").toFile());
         for (String rawLine : characterData.split("\n")) {
             String line = rawLine.trim();
             if (line.startsWith("name=")) {
                 builder.setName(line.substring("name=".length()));
+            } else if (line.startsWith("名前：")) {
+                builder.setName(line.substring("名前：".length()));
             } else if (line.startsWith("author=")) {
                 builder.setAuthor(line.substring("author=".length()));
+            } else if (line.startsWith("CV：")) {
+                builder.setAuthor(line.substring("CV：".length()));
             } else if (line.startsWith("image=")) {
                 builder.setImageName(line.substring("image=".length()));
+            } else if (line.startsWith("画像：")) {
+                builder.setImageName(line.substring("画像：".length()));
             }
         }
 

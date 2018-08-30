@@ -27,8 +27,10 @@ public class LyricConfig implements Comparable<LyricConfig> {
         this(
                 pathToVoicebank,
                 trueLyric,
-                pathToFile.getAbsolutePath()
-                        .substring(pathToVoicebank.getAbsolutePath().length() + 1),
+                pathToFile.toPath().toAbsolutePath().subpath(
+                        // Get part of pathToFile not in pathToVoicebank.
+                        pathToVoicebank.toPath().toAbsolutePath().getNameCount(),
+                        pathToFile.toPath().toAbsolutePath().getNameCount()).toString(),
                 Double.parseDouble(configValues[0]),
                 Double.parseDouble(configValues[1]),
                 Double.parseDouble(configValues[2]),
