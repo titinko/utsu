@@ -565,7 +565,9 @@ public class SongController implements EditorController, Localizable {
     void rewindPlayback() {
         engine.stopPlayback();
         songEditor.stopPlayback();
-        // TODO: Scroll to start of song and un-highlight all.
+        songEditor.selectRegion(RegionBounds.INVALID);
+        scrollPaneCenter.setHvalue(0); // Scroll to start of song.
+        // TODO: Stop scrollbar's existing acceleration.
     }
 
     @FXML
