@@ -82,6 +82,9 @@ public class UtsuController implements Localizable {
         // Set up localization.
         localizer.localize(this);
 
+        // Create keyboard shortcuts.
+        createMenuKeyboardShortcuts();
+
         // Set up status bar.
         statusBar.initialize(statusLabel.textProperty());
     }
@@ -136,29 +139,33 @@ public class UtsuController implements Localizable {
         openSongItem.setText(bundle.getString("menu.file.openSong"));
         openVoicebankItem.setText(bundle.getString("menu.file.openVoicebank"));
         saveItem.setText(bundle.getString("general.save"));
-        saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN));
         saveAsItem.setText(bundle.getString("menu.file.saveFileAs"));
-        saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN, SHIFT_DOWN));
         editMenu.setText(bundle.getString("menu.edit"));
         selectAllItem.setText(bundle.getString("menu.edit.selectAll"));
-        selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN));
         viewMenu.setText(bundle.getString("menu.view"));
         zoomInItem.setText(bundle.getString("menu.view.zoomIn"));
-        zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
         zoomOutItem.setText(bundle.getString("menu.view.zoomOut"));
-        zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN));
         projectMenu.setText(bundle.getString("menu.project"));
         propertiesItem.setText(bundle.getString("menu.project.properties"));
         pluginsMenu.setText(bundle.getString("menu.plugins"));
         openPluginItem.setText(bundle.getString("menu.plugins.openPlugin"));
         recentPluginsMenu.setText(bundle.getString("menu.plugins.recentPlugins"));
         helpMenu.setText(bundle.getString("menu.help"));
-        helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, SHORTCUT_DOWN, SHIFT_DOWN));
         aboutItem.setText(bundle.getString("menu.help.about"));
 
         // Force the menu to refresh.
         fileMenu.setVisible(false);
         fileMenu.setVisible(true);
+    }
+
+    private void createMenuKeyboardShortcuts() {
+        saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN));
+        saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN, SHIFT_DOWN));
+        selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN));
+        zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
+        zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN));
+        propertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.P, SHORTCUT_DOWN));
+        helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, SHORTCUT_DOWN, SHIFT_DOWN));
     }
 
     /**
