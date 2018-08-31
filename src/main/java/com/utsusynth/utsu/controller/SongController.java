@@ -20,6 +20,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.AddResponse;
 import com.utsusynth.utsu.common.data.NoteData;
@@ -44,6 +45,7 @@ import com.utsusynth.utsu.view.song.Piano;
 import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
@@ -90,6 +92,7 @@ public class SongController implements EditorController, Localizable {
     private final Localizer localizer;
     private final Quantizer quantizer;
     private final UndoService undoService;
+    private final StatusBar statusBar;
     private final Ust12Reader ust12Reader;
     private final Ust20Reader ust20Reader;
     private final Ust12Writer ust12Writer;
@@ -149,6 +152,7 @@ public class SongController implements EditorController, Localizable {
             Localizer localizer,
             Quantizer quantizer,
             UndoService undoService,
+            StatusBar statusBar,
             Ust12Reader ust12Reader,
             Ust20Reader ust20Reader,
             Ust12Writer ust12Writer,
@@ -163,6 +167,7 @@ public class SongController implements EditorController, Localizable {
         this.localizer = localizer;
         this.quantizer = quantizer;
         this.undoService = undoService;
+        this.statusBar = statusBar;
         this.ust12Reader = ust12Reader;
         this.ust20Reader = ust20Reader;
         this.ust12Writer = ust12Writer;
@@ -406,8 +411,7 @@ public class SongController implements EditorController, Localizable {
             try {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
-                // TODO: Show alert to user.
-                System.out.println("Error: Cannot open the same file in two tabs.");
+                statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
                 return;
             }
             try {
@@ -494,8 +498,7 @@ public class SongController implements EditorController, Localizable {
             try {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
-                // TODO: Show alert to user.
-                System.out.println("Error: Cannot open the same file in two tabs.");
+                statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
                 return;
             }
             ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
@@ -595,7 +598,7 @@ public class SongController implements EditorController, Localizable {
 
         double tempo = song.get().getTempo();
         Function<Duration, Void> startPlaybackFn =
-                (duration) -> songEditor.startPlayback(selectedRegion, duration, tempo);
+                duration -> songEditor.startPlayback(selectedRegion, duration, tempo);
         Runnable endPlaybackFn = () -> {
             playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
         };
@@ -603,9 +606,13 @@ public class SongController implements EditorController, Localizable {
         // Disable the play button while rendering.
         playPauseIcon.setDisable(true);
 
+        statusBar.setStatus("Rendering...");
         new Thread(() -> {
             if (engine.startPlayback(song.get(), regionToPlay, startPlaybackFn, endPlaybackFn)) {
                 playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
+                Platform.runLater(() -> statusBar.setStatus("Render complete."));
+            } else {
+                Platform.runLater(() -> statusBar.setStatus("Render produced no output."));
             }
             playPauseIcon.setDisable(false);
         }).start();
@@ -636,7 +643,12 @@ public class SongController implements EditorController, Localizable {
         fc.getExtensionFilters().addAll(new ExtensionFilter(".wav files", "*.wav"));
         File file = fc.showSaveDialog(null);
         if (file != null) {
-            engine.renderWav(song.get(), file);
+            statusBar.setStatus("Exporting...");
+            if (engine.renderWav(song.get(), file)) {
+                statusBar.setStatus("Exported to file: " + file.getName());
+            } else {
+                statusBar.setStatus("Export produced no output.");
+            }
         }
     }
 

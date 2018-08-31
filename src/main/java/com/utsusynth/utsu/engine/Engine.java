@@ -68,11 +68,17 @@ public class Engine {
         this.wavtoolPath = wavtoolPath;
     }
 
-    public void renderWav(Song song, File finalDestination) {
+    /**
+     * Exports of region of a song to a WAV file.
+     * 
+     * @return Whether or not there is any sound to export.
+     */
+    public boolean renderWav(Song song, File finalDestination) {
         Optional<File> finalSong = render(song, RegionBounds.WHOLE_SONG);
         if (finalSong.isPresent()) {
             finalSong.get().renameTo(finalDestination);
         }
+        return finalSong.isPresent();
     }
 
     /**
