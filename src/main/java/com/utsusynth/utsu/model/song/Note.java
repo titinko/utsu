@@ -2,10 +2,10 @@ package com.utsusynth.utsu.model.song;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.utsusynth.utsu.common.RoundUtils;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 
 /**
  * Represents one note in a song. This is primarily a data storage class, so it can be instantiated

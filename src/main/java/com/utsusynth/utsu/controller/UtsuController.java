@@ -12,6 +12,7 @@ import java.util.ResourceBundle;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.dialog.SaveWarningDialog;
 import com.utsusynth.utsu.common.dialog.SaveWarningDialog.Decision;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
@@ -21,6 +22,7 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
@@ -46,20 +48,25 @@ public class UtsuController implements Localizable {
     // Helper classes go here.
     private final Localizer localizer;
     private final Scaler scaler;
+    private final StatusBar statusBar;
     private final Provider<SaveWarningDialog> saveWarningProvider;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
     @FXML
     private TabPane tabs;
+    @FXML
+    private Label statusLabel;
 
     @Inject
     public UtsuController(
             Localizer localizer,
             Scaler scaler,
+            StatusBar statusBar,
             Provider<SaveWarningDialog> saveWarningProvider,
             Provider<FXMLLoader> fxmlLoaders) {
         this.localizer = localizer;
         this.scaler = scaler;
+        this.statusBar = statusBar;
         this.saveWarningProvider = saveWarningProvider;
         this.fxmlLoaderProvider = fxmlLoaders;
 
@@ -74,6 +81,9 @@ public class UtsuController implements Localizable {
 
         // Set up localization.
         localizer.localize(this);
+
+        // Set up status bar.
+        statusBar.initialize(statusLabel.textProperty());
     }
 
     @FXML

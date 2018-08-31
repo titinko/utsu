@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import com.google.common.collect.ImmutableList;
-import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 
 public class PitchMap {
     private final ImmutableList<String> pitches;

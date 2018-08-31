@@ -4,7 +4,7 @@ import java.io.PrintStream;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.RegionBounds;
-import com.utsusynth.utsu.common.RoundUtils;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.Song;

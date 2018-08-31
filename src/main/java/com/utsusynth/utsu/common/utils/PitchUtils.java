@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.common;
+package com.utsusynth.utsu.common.utils;
 
 import com.google.common.collect.ImmutableList;
 

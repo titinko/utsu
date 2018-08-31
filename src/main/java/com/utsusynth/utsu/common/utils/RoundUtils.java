@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.common;
+package com.utsusynth.utsu.common.utils;
 
 import java.text.DecimalFormat;
 

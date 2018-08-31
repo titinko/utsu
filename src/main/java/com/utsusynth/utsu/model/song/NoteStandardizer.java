@@ -1,8 +1,8 @@
 package com.utsusynth.utsu.model.song;
 
 import com.google.common.base.Optional;
-import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 

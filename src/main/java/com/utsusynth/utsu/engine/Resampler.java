@@ -2,7 +2,7 @@ package com.utsusynth.utsu.engine;
 
 import java.io.File;
 import com.google.inject.Inject;
-import com.utsusynth.utsu.common.PitchUtils;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;

@@ -1,3 +1,8 @@
+.status-bar {
+	-fx-background-color: lightgray, whitesmoke;
+    -fx-background-insets: 0, 1 0 0 1;
+}
+
 .start-bar, .playback-bar, .end-bar {
 	-fx-stroke-width: 2;
 }

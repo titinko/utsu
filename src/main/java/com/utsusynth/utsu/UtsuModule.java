@@ -7,6 +7,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
@@ -24,6 +25,7 @@ public class UtsuModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(StatusBar.class).asEagerSingleton();
         bind(UndoService.class).asEagerSingleton();
     }
 
