@@ -29,23 +29,23 @@ interface EditorController {
     /**
      * Opens a file/directory in this tab.
      * 
-     * @return Whether the open was successful.
+     * @return What to name the tab, or nothing if open was canceled.
      */
-    boolean open();
+    Optional<String> open();
 
     /**
      * Saves a tab to a pre-existing file/directory.
      * 
-     * @return Whether the save was successful.
+     * @return What to name to tab, only set if file name has changed.
      */
-    boolean save();
+    Optional<String> save();
 
     /**
      * Saves a tab to a user-specified file/directory.
      * 
-     * @return Whether the save was successful.
+     * @return What to name the tab, only set if file name has changed.
      */
-    boolean saveAs();
+    Optional<String> saveAs();
 
     void selectAll();
 

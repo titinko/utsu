@@ -276,6 +276,17 @@ public class UtsuController implements Localizable {
 
                 @Override
                 public void enableSave(boolean enabled) {
+                    if (enabled) {
+                        // Adds a handy * to indicate unsaved changes.
+                        if (!tab.getText().startsWith("*")) {
+                            tab.setText("*" + tab.getText());
+                        }
+                    } else {
+                        // Remove the * if present.
+                        if (tab.getText().startsWith("*")) {
+                            tab.setText(tab.getText().substring(1));
+                        }
+                    }
                     saveItem.setDisable(!enabled);
                 }
             });
@@ -296,16 +307,18 @@ public class UtsuController implements Localizable {
     @FXML
     void openSong(ActionEvent event) {
         Tab newTab = createEditor(EditorType.SONG);
-        if (editors.get(newTab.getId()).open()) {
-            newTab.setText(editors.get(newTab.getId()).getFileName());
+        Optional<String> songName = editors.get(newTab.getId()).open();
+        if (songName.isPresent()) {
+            newTab.setText(songName.get());
         }
     }
 
     @FXML
     void openVoicebank(ActionEvent event) {
         Tab newTab = createEditor(EditorType.VOICEBANK);
-        if (editors.get(newTab.getId()).open()) {
-            newTab.setText(editors.get(newTab.getId()).getFileName());
+        Optional<String> voicebankName = editors.get(newTab.getId()).open();
+        if (voicebankName.isPresent()) {
+            newTab.setText(voicebankName.get());
         }
     }
 
@@ -313,8 +326,9 @@ public class UtsuController implements Localizable {
     void saveFile(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            if (editors.get(curTab.getId()).save()) {
-                curTab.setText(editors.get(curTab.getId()).getFileName());
+            Optional<String> filename = editors.get(curTab.getId()).save();
+            if (filename.isPresent()) {
+                curTab.setText(filename.get());
             }
         }
     }
@@ -323,8 +337,9 @@ public class UtsuController implements Localizable {
     void saveFileAs(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            if (editors.get(curTab.getId()).saveAs()) {
-                curTab.setText(editors.get(curTab.getId()).getFileName());
+            Optional<String> filename = editors.get(curTab.getId()).saveAs();
+            if (filename.isPresent()) {
+                curTab.setText(filename.get());
             }
         }
     }

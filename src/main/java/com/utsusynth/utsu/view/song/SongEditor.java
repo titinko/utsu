@@ -132,16 +132,13 @@ public class SongEditor {
     }
 
     /** Start the playback bar animation. It will end on its own. */
-    public Void startPlayback(RegionBounds highlighted, RegionBounds rendered, Duration duration) {
-        // Make sure correct region is selected.
-        playbackManager.highlightRegion(highlighted, noteMap.getAllValidNotes());
-
+    public Void startPlayback(RegionBounds rendered, Duration duration) {
         // Find exact region included in playback.
         Entry<Integer, Note> firstNote = noteMap.getFirstNote(rendered);
         Entry<Integer, Note> lastNote = noteMap.getLastNote(rendered);
         if (firstNote != null && lastNote != null) {
             int firstNoteStart = noteMap.getEnvelope(firstNote.getKey()).getStartMs();
-            int renderStart = Math.min(firstNoteStart, Math.max(highlighted.getMinMs(), 0));
+            int renderStart = Math.min(firstNoteStart, Math.max(rendered.getMinMs(), 0));
             int renderEnd = lastNote.getKey() + lastNote.getValue().getDurationMs();
             playbackManager.startPlayback(duration, new RegionBounds(renderStart, renderEnd));
         }

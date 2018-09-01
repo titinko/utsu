@@ -401,7 +401,7 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
-    public boolean open() {
+    public Optional<String> open() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         fc.getExtensionFilters().addAll(
@@ -414,72 +414,80 @@ public class SongController implements EditorController, Localizable {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
                 statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
-                return false;
+                return Optional.absent();
             }
-            try {
-                String saveFormat; // Format to save this song in the future.
-                String charset = "UTF-8";
-                CharsetDecoder utf8Decoder = Charset.forName("UTF-8").newDecoder()
-                        .onMalformedInput(CodingErrorAction.REPORT)
-                        .onUnmappableCharacter(CodingErrorAction.REPORT);
+            new Thread(() -> {
                 try {
-                    utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
-                } catch (MalformedInputException | UnmappableCharacterException e) {
-                    charset = "SJIS";
+                    String saveFormat; // Format to save this song in the future.
+                    String charset = "UTF-8";
+                    CharsetDecoder utf8Decoder = Charset.forName("UTF-8").newDecoder()
+                            .onMalformedInput(CodingErrorAction.REPORT)
+                            .onUnmappableCharacter(CodingErrorAction.REPORT);
+                    try {
+                        utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
+                    } catch (MalformedInputException | UnmappableCharacterException e) {
+                        charset = "SJIS";
+                    }
+                    String content = FileUtils.readFileToString(file, charset);
+                    if (content.contains("UST Version1.2")) {
+                        song.setSong(ust12Reader.loadSong(content));
+                        saveFormat = "UST 1.2 (Shift JIS)";
+                    } else if (content.contains("UST Version2.0")) {
+                        song.setSong(ust20Reader.loadSong(content));
+                        saveFormat =
+                                "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
+                    } else {
+                        // If no version found, assume UST 1.2 for now.
+                        song.setSong(ust12Reader.loadSong(content));
+                        saveFormat = "UST 1.2 (Shift JIS)";
+                    }
+                    undoService.clearActions();
+                    song.setSaveFormat(saveFormat);
+                    Platform.runLater(() -> {
+                        refreshView();
+                        callback.enableSave(false);
+                        statusBar.setStatus("Opened " + file.getName());
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(
+                            () -> statusBar.setStatus("Error: Unable to open " + file.getName()));
+                    errorLogger.logError(e);
                 }
-                String content = FileUtils.readFileToString(file, charset);
-                if (content.contains("UST Version1.2")) {
-                    song.setSong(ust12Reader.loadSong(content));
-                    saveFormat = "UST 1.2 (Shift JIS)";
-                } else if (content.contains("UST Version2.0")) {
-                    song.setSong(ust20Reader.loadSong(content));
-                    saveFormat = "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
-                } else {
-                    // If no version found, assume UST 1.2 for now.
-                    song.setSong(ust12Reader.loadSong(content));
-                    saveFormat = "UST 1.2 (Shift JIS)";
-                }
-                undoService.clearActions();
-                callback.enableSave(false);
-                song.setSaveFormat(saveFormat);
-                refreshView();
-            } catch (Exception e) {
-                statusBar.setStatus("Error: Unable to open " + file.getName());
-                errorLogger.logError(e);
-                return false;
-            }
-            statusBar.setStatus("Opened " + file.getName());
-            return true;
+            }).start();
+            return Optional.of(file.getName());
         }
-        return false;
+        return Optional.absent();
     }
 
     @Override
-    public boolean save() {
-        callback.enableSave(false);
+    public Optional<String> save() {
         if (song.hasPermanentLocation()) {
             String saveFormat = song.getSaveFormat();
-            String charset = "UTF-8";
-            if (saveFormat.contains("Shift JIS")) {
-                charset = "SJIS";
-            }
+            String charset = saveFormat.contains("Shift JIS") ? "SJIS" : "UTF-8";
             File saveLocation = song.getLocation();
             statusBar.setStatus("Saving...");
-            try (PrintStream ps = new PrintStream(saveLocation, charset)) {
-                if (saveFormat.contains("UST 1.2")) {
-                    ust12Writer.writeSong(song.get(), ps);
-                } else {
-                    ust20Writer.writeSong(song.get(), ps, charset);
+            new Thread(() -> {
+                try (PrintStream ps = new PrintStream(saveLocation, charset)) {
+                    if (saveFormat.contains("UST 1.2")) {
+                        ust12Writer.writeSong(song.get(), ps);
+                    } else {
+                        ust20Writer.writeSong(song.get(), ps, charset);
+                    }
+                    ps.flush();
+                    ps.close();
+                    // Report results to UI.
+                    Platform.runLater(() -> {
+                        callback.enableSave(false);
+                        statusBar.setStatus("Saved changes to " + saveLocation.getName());
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(
+                            () -> statusBar
+                                    .setStatus("Error: Unable to save " + saveLocation.getName()));
+                    errorLogger.logError(e);
                 }
-                ps.flush();
-                ps.close();
-            } catch (Exception e) {
-                statusBar.setStatus("Error: Unable to save " + saveLocation.getName());
-                errorLogger.logError(e);
-                return false;
-            }
-            statusBar.setStatus("Saved changes to " + saveLocation.getName());
-            return true;
+            }).start();
+            return Optional.absent();
         } else {
             // Default to "Save As" if no permanent location found.
             return saveAs();
@@ -487,8 +495,7 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
-    public boolean saveAs() {
-        callback.enableSave(false);
+    public Optional<String> saveAs() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
@@ -510,31 +517,36 @@ public class SongController implements EditorController, Localizable {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
                 statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
-                return false;
+                return Optional.absent();
             }
             ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
-            String charset = "UTF-8";
-            if (chosenFormat.getDescription().contains("Shift JIS")) {
-                charset = "SJIS";
-            }
-            try (PrintStream ps = new PrintStream(file, charset)) {
-                if (chosenFormat.getDescription().contains("UST 1.2")) {
-                    ust12Writer.writeSong(song.get(), ps);
-                } else {
-                    ust20Writer.writeSong(song.get(), ps, charset);
+            String charset = chosenFormat.getDescription().contains("Shift JIS") ? "SJIS" : "UTF-8";
+            new Thread(() -> {
+                try (PrintStream ps = new PrintStream(file, charset)) {
+                    if (chosenFormat.getDescription().contains("UST 1.2")) {
+                        ust12Writer.writeSong(song.get(), ps);
+                    } else {
+                        ust20Writer.writeSong(song.get(), ps, charset);
+                    }
+                    ps.flush();
+                    ps.close();
+                    // Report results to UI.
+                    song.setSaveFormat(chosenFormat.getDescription());
+                    Platform.runLater(() -> {
+                        callback.enableSave(false);
+                        statusBar.setStatus("Saved as " + file.getName());
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(
+                            () -> statusBar
+                                    .setStatus("Error: Unable to save as " + file.getName()));
+                    errorLogger.logError(e);
                 }
-                ps.flush();
-                ps.close();
-            } catch (Exception e) {
-                statusBar.setStatus("Error: Unable to save as " + file.getName());
-                errorLogger.logError(e);
-                return false;
-            }
-            song.setSaveFormat(chosenFormat.getDescription());
-            statusBar.setStatus("Saved as " + file.getName());
-            return true;
+            }).start();
+            // File name may have changed, so just return new file name.
+            return Optional.of(file.getName());
         }
-        return false;
+        return Optional.absent();
     }
 
     /** Called whenever a Song is changed. */
@@ -542,11 +554,11 @@ public class SongController implements EditorController, Localizable {
         if (callback == null) {
             return;
         }
-        callback.markChanged();
         if (song.hasPermanentLocation()) {
             callback.enableSave(true);
         } else {
             callback.enableSave(false);
+            callback.markChanged(); // Don't enable save, but enable asterisk.
         }
     }
 
@@ -610,13 +622,12 @@ public class SongController implements EditorController, Localizable {
 
     private void startPlayback() {
         // If there is no track selected, play the whole song instead.
-        RegionBounds selectedRegion = songEditor.getSelectedTrack();
         RegionBounds regionToPlay =
-                selectedRegion.equals(RegionBounds.INVALID) ? RegionBounds.WHOLE_SONG
-                        : selectedRegion;
+                songEditor.getSelectedTrack().equals(RegionBounds.INVALID) ? RegionBounds.WHOLE_SONG
+                        : songEditor.getSelectedTrack();
 
         Function<Duration, Void> startPlaybackFn =
-                duration -> songEditor.startPlayback(selectedRegion, regionToPlay, duration);
+                duration -> songEditor.startPlayback(regionToPlay, duration);
         Runnable endPlaybackFn = () -> {
             playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
         };
@@ -662,11 +673,14 @@ public class SongController implements EditorController, Localizable {
         File file = fc.showSaveDialog(null);
         if (file != null) {
             statusBar.setStatus("Exporting...");
-            if (engine.renderWav(song.get(), file)) {
-                statusBar.setStatus("Exported to file: " + file.getName());
-            } else {
-                statusBar.setStatus("Export produced no output.");
-            }
+            new Thread(() -> {
+                if (engine.renderWav(song.get(), file)) {
+                    Platform.runLater(
+                            () -> statusBar.setStatus("Exported to file: " + file.getName()));
+                } else {
+                    Platform.runLater(() -> statusBar.setStatus("Export produced no output."));
+                }
+            }).start();
         }
     }
 

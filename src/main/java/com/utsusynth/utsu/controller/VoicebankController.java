@@ -271,45 +271,57 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
-    public boolean open() {
+    public Optional<String> open() {
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle("Select Voicebank Directory");
         File file = dc.showDialog(null);
         if (file != null) {
-            try {
-                statusBar.setStatus("Loading " + file.getName() + "...");
-                voicebank.setVoicebank(file);
-                undoService.clearActions();
-                refreshView();
-                callback.enableSave(false);
-                statusBar.setStatus("Loaded voicebank: " + file.getName());
-                return true;
-            } catch (Exception e) {
-                statusBar.setStatus("Error: Unable to load voicebank: " + file.getName());
-                return false;
-            }
+            statusBar.setStatus("Loading " + file.getName() + "...");
+            new Thread(() -> {
+                try {
+                    voicebank.setVoicebank(file);
+                    undoService.clearActions();
+                    voicebank.get(); // Loads voicebank from file if necessary.
+                    Platform.runLater(() -> {
+                        // UI thread.
+                        refreshView();
+                        callback.enableSave(false);
+                        statusBar.setStatus("Loaded voicebank: " + file.getName());
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(
+                            () -> statusBar.setStatus(
+                                    "Error: Unable to load voicebank: " + file.getName()));
+                }
+            }).start();
+            return Optional.of(file.getName());
         }
-        return false;
+        return Optional.absent();
     }
 
     @Override
-    public boolean save() {
-        callback.enableSave(false);
+    public Optional<String> save() {
         statusBar.setStatus("Saving...");
-        try {
-            voicebankWriter.writeVoicebankToDirectory(voicebank.get(), voicebank.getLocation());
-        } catch (Exception e) {
-            statusBar.setStatus("Error: Unable to save changes to voicebank.");
-            return false;
-        }
-        statusBar.setStatus("Saved changes to voicebank: " + voicebank.getLocation().getName());
-        return true;
+        new Thread(() -> {
+            try {
+                voicebankWriter.writeVoicebankToDirectory(voicebank.get(), voicebank.getLocation());
+                Platform.runLater(() -> {
+                    statusBar.setStatus(
+                            "Saved changes to voicebank: " + voicebank.getLocation().getName());
+                    callback.enableSave(false);
+                });
+            } catch (Exception e) {
+                Platform.runLater(
+                        () -> statusBar.setStatus("Error: Unable to save changes to voicebank."));
+            }
+        }).start();
+        return Optional.absent();
     }
 
     @Override
-    public boolean saveAs() {
+    public Optional<String> saveAs() {
         // TODO: Enable Save As for voicebanks.
-        return false;
+        return Optional.absent();
     }
 
     @Override
@@ -334,7 +346,6 @@ public class VoicebankController implements EditorController, Localizable {
         if (callback == null) {
             return;
         }
-        callback.markChanged();
         callback.enableSave(true);
         // TODO: Refresh lyrics/envelopes after this.
     }
