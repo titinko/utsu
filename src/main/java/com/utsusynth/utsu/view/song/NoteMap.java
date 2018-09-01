@@ -4,7 +4,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
@@ -25,7 +27,7 @@ public class NoteMap {
     private final PitchbendFactory pitchbendFactory;
 
     // Maps absolute position (in ms) to track note's data.
-    private Map<Integer, Note> noteMap;
+    private TreeMap<Integer, Note> noteMap;
     private Map<Integer, Envelope> envelopeMap;
     private Map<Integer, Pitchbend> pitchbendMap;
     private Set<Note> allNotes; // Includes invalid notes.
@@ -55,7 +57,7 @@ public class NoteMap {
     }
 
     void clear() {
-        noteMap = new HashMap<>();
+        noteMap = new TreeMap<>();
         envelopeMap = new HashMap<>();
         pitchbendMap = new HashMap<>();
         allNotes = new HashSet<>();
@@ -111,24 +113,12 @@ public class NoteMap {
         return noteMap.get(position);
     }
 
-    int getFirstNoteMs() {
-        int firstMs = Integer.MAX_VALUE;
-        for (int curMs : noteMap.keySet()) {
-            if (curMs < firstMs) {
-                firstMs = curMs;
-            }
-        }
-        return firstMs;
+    Entry<Integer, Note> getFirstNote(RegionBounds region) {
+        return noteMap.ceilingEntry(region.getMinMs());
     }
 
-    int getLastNoteMs() {
-        int lastMs = 0;
-        for (int curMs : noteMap.keySet()) {
-            if (curMs > lastMs) {
-                lastMs = curMs;
-            }
-        }
-        return lastMs;
+    Entry<Integer, Note> getLastNote(RegionBounds region) {
+        return noteMap.floorEntry(region.getMaxMs());
     }
 
     Collection<Note> getAllValidNotes() {

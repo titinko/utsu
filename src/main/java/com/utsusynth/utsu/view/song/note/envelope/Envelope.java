@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.song.note.envelope;
 
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
@@ -73,6 +74,10 @@ public class Envelope {
 
     public Group getElement() {
         return group;
+    }
+
+    public int getStartMs() {
+        return RoundUtils.round(scaler.unscaleX(start.getX()));
     }
 
     public EnvelopeData getData() {

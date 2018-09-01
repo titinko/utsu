@@ -45,20 +45,19 @@ public class PlaybackBarManager {
     }
 
     // Sends the playback bar across the part of the song that plays.
-    void startPlayback(Duration duration, double tempo) {
+    void startPlayback(Duration duration, RegionBounds playRegion) {
         if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             // Create a playback bar.
-            double barX = bars.getChildren().contains(startBar) ? startBar.getTranslateX() : 0;
+            double barX = scaler.scaleX(playRegion.getMinMs());
             Line playBar = new Line(barX, 0, barX, scaler.scaleY(totalHeight));
             playBar.getStyleClass().addAll("playback-bar");
             bars.getChildren().add(playBar);
 
             // Move the playback bar as the song plays.
             playback.stop();
-            playback.setDuration(duration);
             playback.setNode(playBar);
-            double numBeats = tempo * duration.toMinutes();
-            playback.setByX(numBeats * scaler.scaleX(Quantizer.COL_WIDTH));
+            playback.setDuration(duration);
+            playback.setToX(scaler.scaleX(playRegion.getMaxMs() - playRegion.getMinMs()));
             playback.setInterpolator(Interpolator.LINEAR);
             playback.statusProperty().addListener((obs, oldStatus, newStatus) -> {
                 if (newStatus == Status.STOPPED) {

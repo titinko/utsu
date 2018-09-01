@@ -565,8 +565,10 @@ public class SongController implements EditorController, Localizable {
             NotePropertiesController controller = (NotePropertiesController) loader.getController();
             controller.setData(song, regionBounds, () -> {
                 onSongChange();
+                // TODO: Refresh only the notes that were affected.
+                // TODO: Make preutter/overlap changes show up in this refresh.
                 refreshView();
-                songEditor.selectRegion(regionBounds);
+                songEditor.selectNotes(regionBounds);
             });
             propertiesWindow.setScene(new Scene(notePropertiesPane));
             propertiesWindow.showAndWait();
@@ -580,7 +582,7 @@ public class SongController implements EditorController, Localizable {
     void rewindPlayback() {
         engine.stopPlayback();
         songEditor.stopPlayback();
-        songEditor.selectRegion(RegionBounds.INVALID);
+        songEditor.selectNotes(RegionBounds.INVALID);
         scrollPaneCenter.setHvalue(0); // Scroll to start of song.
         // TODO: Stop scrollbar's existing acceleration.
     }
@@ -613,9 +615,8 @@ public class SongController implements EditorController, Localizable {
                 selectedRegion.equals(RegionBounds.INVALID) ? RegionBounds.WHOLE_SONG
                         : selectedRegion;
 
-        double tempo = song.get().getTempo();
         Function<Duration, Void> startPlaybackFn =
-                duration -> songEditor.startPlayback(selectedRegion, duration, tempo);
+                duration -> songEditor.startPlayback(selectedRegion, regionToPlay, duration);
         Runnable endPlaybackFn = () -> {
             playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
         };
@@ -697,7 +698,7 @@ public class SongController implements EditorController, Localizable {
     @Override
     public void selectAll() {
         // Selects all notes.
-        songEditor.selectAll();
+        songEditor.selectNotes(RegionBounds.WHOLE_SONG);
     }
 
     @Override

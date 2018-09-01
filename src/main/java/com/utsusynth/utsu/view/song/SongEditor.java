@@ -1,7 +1,9 @@
 package com.utsusynth.utsu.view.song;
 
 import java.util.List;
+import java.util.Map.Entry;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.AddResponse;
@@ -130,10 +132,19 @@ public class SongEditor {
     }
 
     /** Start the playback bar animation. It will end on its own. */
-    public Void startPlayback(RegionBounds regionBounds, Duration duration, double tempo) {
+    public Void startPlayback(RegionBounds highlighted, RegionBounds rendered, Duration duration) {
         // Make sure correct region is selected.
-        playbackManager.highlightRegion(regionBounds, noteMap.getAllValidNotes());
-        playbackManager.startPlayback(duration, tempo);
+        playbackManager.highlightRegion(highlighted, noteMap.getAllValidNotes());
+
+        // Find exact region included in playback.
+        Entry<Integer, Note> firstNote = noteMap.getFirstNote(rendered);
+        Entry<Integer, Note> lastNote = noteMap.getLastNote(rendered);
+        if (firstNote != null && lastNote != null) {
+            int firstNoteStart = noteMap.getEnvelope(firstNote.getKey()).getStartMs();
+            int renderStart = Math.min(firstNoteStart, Math.max(highlighted.getMinMs(), 0));
+            int renderEnd = lastNote.getKey() + lastNote.getValue().getDurationMs();
+            playbackManager.startPlayback(duration, new RegionBounds(renderStart, renderEnd));
+        }
         return null;
     }
 
@@ -156,17 +167,16 @@ public class SongEditor {
         return playbackManager.getRegionBounds();
     }
 
-    public void selectAll() {
-        int firstMs = noteMap.getFirstNoteMs();
-        int lastMs = noteMap.getLastNoteMs();
-        if (noteMap.hasNote(firstMs) && noteMap.hasNote(lastMs)) {
-            playbackManager.highlightTo(noteMap.getNote(firstMs), noteMap.getAllValidNotes());
-            playbackManager.highlightTo(noteMap.getNote(lastMs), noteMap.getAllValidNotes());
+    public void selectNotes(RegionBounds region) {
+        Entry<Integer, Note> firstNote = noteMap.getFirstNote(region);
+        Entry<Integer, Note> lastNote = noteMap.getLastNote(region);
+        if (firstNote != null && lastNote != null) {
+            playbackManager.highlightTo(firstNote.getValue(), noteMap.getAllValidNotes());
+            playbackManager.highlightTo(lastNote.getValue(), noteMap.getAllValidNotes());
+        } else {
+            // If no note highlighted, remove all highlights.
+            playbackManager.highlightRegion(RegionBounds.INVALID, ImmutableList.of());
         }
-    }
-
-    public void selectRegion(RegionBounds region) {
-        playbackManager.highlightRegion(region, noteMap.getAllValidNotes());
     }
 
     public void selectivelyShowRegion(double centerPercent, double margin) {
