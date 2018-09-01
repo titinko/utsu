@@ -379,6 +379,9 @@ public class SongController implements EditorController, Localizable {
         } else if (new KeyCodeCombination(KeyCode.W).match(keyEvent)) {
             modeChoiceBox.setValue(Mode.EDIT);
             return true;
+        } else if (new KeyCodeCombination(KeyCode.E).match(keyEvent)) {
+            modeChoiceBox.setValue(Mode.DELETE);
+            return true;
         } else {
             // No need to override default key behavior.
             return false;
@@ -400,7 +403,7 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
-    public void open() {
+    public boolean open() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         fc.getExtensionFilters().addAll(
@@ -412,7 +415,7 @@ public class SongController implements EditorController, Localizable {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
                 statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
-                return;
+                return false;
             }
             try {
                 String saveFormat; // Format to save this song in the future.
@@ -445,11 +448,13 @@ public class SongController implements EditorController, Localizable {
                 // TODO Handle this better.
                 errorLogger.logError(e);
             }
+            return true;
         }
+        return false;
     }
 
     @Override
-    public void save() {
+    public boolean save() {
         callback.enableSave(false);
         if (song.hasPermanentLocation()) {
             String saveFormat = song.getSaveFormat();
@@ -472,12 +477,13 @@ public class SongController implements EditorController, Localizable {
             }
         } else {
             // Default to "Save As" if no permanent location found.
-            saveAs();
+            return saveAs();
         }
+        return true;
     }
 
     @Override
-    public void saveAs() {
+    public boolean saveAs() {
         callback.enableSave(false);
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
@@ -499,7 +505,7 @@ public class SongController implements EditorController, Localizable {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
                 statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
-                return;
+                return false;
             }
             ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
             String charset = "UTF-8";
@@ -519,7 +525,9 @@ public class SongController implements EditorController, Localizable {
                 errorLogger.logError(e);
             }
             song.setSaveFormat(chosenFormat.getDescription());
+            return true;
         }
+        return false;
     }
 
     /** Called whenever a Song is changed. */

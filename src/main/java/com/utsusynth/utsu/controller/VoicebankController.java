@@ -264,7 +264,7 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
-    public void open() {
+    public boolean open() {
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle("Select Voicebank Directory");
         File file = dc.showDialog(null);
@@ -273,18 +273,22 @@ public class VoicebankController implements EditorController, Localizable {
             undoService.clearActions();
             refreshView();
             callback.enableSave(false);
+            return true;
         }
+        return false;
     }
 
     @Override
-    public void save() {
+    public boolean save() {
         callback.enableSave(false);
         voicebankWriter.writeVoicebankToDirectory(voicebank.get(), voicebank.getLocation());
+        return true;
     }
 
     @Override
-    public void saveAs() {
-        // TODO: Enable Save As for voicebank.
+    public boolean saveAs() {
+        // TODO: Enable Save As for voicebanks.
+        return false;
     }
 
     @Override

@@ -26,11 +26,26 @@ interface EditorController {
      */
     boolean onKeyPressed(KeyEvent keyEvent);
 
-    void open();
+    /**
+     * Opens a file/directory in this tab.
+     * 
+     * @return Whether the open was successful.
+     */
+    boolean open();
 
-    void save();
+    /**
+     * Saves a tab to a pre-existing file/directory.
+     * 
+     * @return Whether the save was successful.
+     */
+    boolean save();
 
-    void saveAs();
+    /**
+     * Saves a tab to a user-specified file/directory.
+     * 
+     * @return Whether the save was successful.
+     */
+    boolean saveAs();
 
     void selectAll();
 

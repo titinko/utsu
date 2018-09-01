@@ -296,23 +296,26 @@ public class UtsuController implements Localizable {
     @FXML
     void openSong(ActionEvent event) {
         Tab newTab = createEditor(EditorType.SONG);
-        editors.get(newTab.getId()).open();
-        newTab.setText(editors.get(newTab.getId()).getFileName());
+        if (editors.get(newTab.getId()).open()) {
+            newTab.setText(editors.get(newTab.getId()).getFileName());
+        }
     }
 
     @FXML
     void openVoicebank(ActionEvent event) {
         Tab newTab = createEditor(EditorType.VOICEBANK);
-        editors.get(newTab.getId()).open();
-        newTab.setText(editors.get(newTab.getId()).getFileName());
+        if (editors.get(newTab.getId()).open()) {
+            newTab.setText(editors.get(newTab.getId()).getFileName());
+        }
     }
 
     @FXML
     void saveFile(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            editors.get(curTab.getId()).save();
-            curTab.setText(editors.get(curTab.getId()).getFileName());
+            if (editors.get(curTab.getId()).save()) {
+                curTab.setText(editors.get(curTab.getId()).getFileName());
+            }
         }
     }
 
@@ -320,8 +323,9 @@ public class UtsuController implements Localizable {
     void saveFileAs(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            editors.get(curTab.getId()).saveAs();
-            curTab.setText(editors.get(curTab.getId()).getFileName());
+            if (editors.get(curTab.getId()).saveAs()) {
+                curTab.setText(editors.get(curTab.getId()).getFileName());
+            }
         }
     }
 
