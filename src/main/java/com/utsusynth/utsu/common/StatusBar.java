@@ -10,6 +10,7 @@ public class StatusBar {
 
     public void initialize(StringProperty statusText, DoubleProperty progress) {
         this.statusText = statusText;
+        this.curProgress = progress;
     }
 
     public void setStatus(String status) {

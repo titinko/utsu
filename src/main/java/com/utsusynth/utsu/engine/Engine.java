@@ -12,6 +12,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
 import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.utils.PitchUtils;
@@ -20,6 +21,7 @@ import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
+import javafx.application.Platform;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
@@ -33,6 +35,7 @@ public class Engine {
 
     private final Resampler resampler;
     private final Wavtool wavtool;
+    private final StatusBar statusBar;
     private final int threadPoolSize;
     private File resamplerPath;
     private File wavtoolPath;
@@ -42,11 +45,13 @@ public class Engine {
     public Engine(
             Resampler resampler,
             Wavtool wavtool,
+            StatusBar statusBar,
             int threadPoolSize,
             File resamplerPath,
             File wavtoolPath) {
         this.resampler = resampler;
         this.wavtool = wavtool;
+        this.statusBar = statusBar;
         this.threadPoolSize = threadPoolSize;
         this.resamplerPath = resamplerPath;
         this.wavtoolPath = wavtoolPath;
@@ -277,16 +282,18 @@ public class Engine {
         }
 
         // When resampler finishes, run wavtool on notes in sequential order.
-        for (Future<Runnable> future : futures) {
+        for (int i = 0; i < futures.size(); i++) {
             try {
-                future.get().run();
+                double curProgress = i * 1.0 / futures.size();
+                Platform.runLater(() -> statusBar.setProgress(curProgress));
+                futures.get(i).get().run();
             } catch (InterruptedException | ExecutionException e) {
                 errorLogger.logError(e);
                 return Optional.absent();
             }
         }
-        // Shut down thread pool.
-        executor.shutdown();
+        Platform.runLater(() -> statusBar.setProgress(1.0)); // Mark task as complete.
+        executor.shutdown(); // Shut down thread pool.
 
         return Optional.of(finalSong);
     }
