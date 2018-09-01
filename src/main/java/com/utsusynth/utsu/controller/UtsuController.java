@@ -25,6 +25,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
@@ -56,6 +57,8 @@ public class UtsuController implements Localizable {
     private TabPane tabs;
     @FXML
     private Label statusLabel;
+    @FXML
+    private ProgressBar loadingBar;
 
     @Inject
     public UtsuController(
@@ -86,7 +89,14 @@ public class UtsuController implements Localizable {
         createMenuKeyboardShortcuts();
 
         // Set up status bar.
-        statusBar.initialize(statusLabel.textProperty());
+        statusBar.initialize(statusLabel.textProperty(), loadingBar.progressProperty());
+        loadingBar.progressProperty().addListener(event -> {
+            if (loadingBar.getProgress() <= 0 || loadingBar.getProgress() >= 1) {
+                loadingBar.setVisible(false);
+            } else {
+                loadingBar.setVisible(true);
+            }
+        });
     }
 
     @FXML
