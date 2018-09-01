@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.ResourceBundle;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.PitchMapData;
@@ -18,6 +19,7 @@ import com.utsusynth.utsu.view.voicebank.PitchCallback;
 import com.utsusynth.utsu.view.voicebank.PitchEditor;
 import com.utsusynth.utsu.view.voicebank.VoicebankCallback;
 import com.utsusynth.utsu.view.voicebank.VoicebankEditor;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -57,6 +59,7 @@ public class VoicebankController implements EditorController, Localizable {
     private final LyricConfigEditor configEditor;
     private final Localizer localizer;
     private final UndoService undoService;
+    private final StatusBar statusBar;
     private final VoicebankWriter voicebankWriter;
 
     @FXML // fx:id="pitchPane"
@@ -91,6 +94,7 @@ public class VoicebankController implements EditorController, Localizable {
             LyricConfigEditor configEditor,
             Localizer localizer,
             UndoService undoService,
+            StatusBar statusBar,
             VoicebankWriter voicebankWriter) {
         this.voicebank = voicebankContainer;
         this.voiceEditor = voiceEditor;
@@ -98,6 +102,7 @@ public class VoicebankController implements EditorController, Localizable {
         this.configEditor = configEditor;
         this.localizer = localizer;
         this.undoService = undoService;
+        this.statusBar = statusBar;
         this.voicebankWriter = voicebankWriter;
     }
 
@@ -158,8 +163,10 @@ public class VoicebankController implements EditorController, Localizable {
 
             @Override
             public void generateFrqFiles(Iterator<LyricConfigData> lyricIterator) {
+                statusBar.setStatus("Generating .frq files...");
                 new Thread(() -> {
                     voicebank.get().generateFrqs(lyricIterator);
+                    Platform.runLater(() -> statusBar.setStatus("Finished generating .frq files."));
                     // Change cannot be saved or undone, so don't call onVoicebankChange.
                 }).start();
             }
@@ -269,11 +276,18 @@ public class VoicebankController implements EditorController, Localizable {
         dc.setTitle("Select Voicebank Directory");
         File file = dc.showDialog(null);
         if (file != null) {
-            voicebank.setVoicebank(file);
-            undoService.clearActions();
-            refreshView();
-            callback.enableSave(false);
-            return true;
+            try {
+                statusBar.setStatus("Loading " + file.getName() + "...");
+                voicebank.setVoicebank(file);
+                undoService.clearActions();
+                refreshView();
+                callback.enableSave(false);
+                statusBar.setStatus("Loaded voicebank: " + file.getName());
+                return true;
+            } catch (Exception e) {
+                statusBar.setStatus("Error: Unable to load voicebank: " + file.getName());
+                return false;
+            }
         }
         return false;
     }
@@ -281,7 +295,14 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public boolean save() {
         callback.enableSave(false);
-        voicebankWriter.writeVoicebankToDirectory(voicebank.get(), voicebank.getLocation());
+        statusBar.setStatus("Saving...");
+        try {
+            voicebankWriter.writeVoicebankToDirectory(voicebank.get(), voicebank.getLocation());
+        } catch (Exception e) {
+            statusBar.setStatus("Error: Unable to save changes to voicebank.");
+            return false;
+        }
+        statusBar.setStatus("Saved changes to voicebank: " + voicebank.getLocation().getName());
         return true;
     }
 

@@ -2,11 +2,9 @@ package com.utsusynth.utsu.controller;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
@@ -411,6 +409,7 @@ public class SongController implements EditorController, Localizable {
                 new ExtensionFilter("All files", "*.*"));
         File file = fc.showOpenDialog(null);
         if (file != null) {
+            statusBar.setStatus("Opening " + file.getName() + "...");
             try {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
@@ -444,10 +443,12 @@ public class SongController implements EditorController, Localizable {
                 callback.enableSave(false);
                 song.setSaveFormat(saveFormat);
                 refreshView();
-            } catch (IOException e) {
-                // TODO Handle this better.
+            } catch (Exception e) {
+                statusBar.setStatus("Error: Unable to open " + file.getName());
                 errorLogger.logError(e);
+                return false;
             }
+            statusBar.setStatus("Opened " + file.getName());
             return true;
         }
         return false;
@@ -463,6 +464,7 @@ public class SongController implements EditorController, Localizable {
                 charset = "SJIS";
             }
             File saveLocation = song.getLocation();
+            statusBar.setStatus("Saving...");
             try (PrintStream ps = new PrintStream(saveLocation, charset)) {
                 if (saveFormat.contains("UST 1.2")) {
                     ust12Writer.writeSong(song.get(), ps);
@@ -471,15 +473,17 @@ public class SongController implements EditorController, Localizable {
                 }
                 ps.flush();
                 ps.close();
-            } catch (FileNotFoundException | UnsupportedEncodingException e) {
-                // TODO: Handle this.
+            } catch (Exception e) {
+                statusBar.setStatus("Error: Unable to save " + saveLocation.getName());
                 errorLogger.logError(e);
+                return false;
             }
+            statusBar.setStatus("Saved changes to " + saveLocation.getName());
+            return true;
         } else {
             // Default to "Save As" if no permanent location found.
             return saveAs();
         }
-        return true;
     }
 
     @Override
@@ -501,6 +505,7 @@ public class SongController implements EditorController, Localizable {
         }
         File file = fc.showSaveDialog(null);
         if (file != null) {
+            statusBar.setStatus("Saving...");
             try {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
@@ -520,11 +525,13 @@ public class SongController implements EditorController, Localizable {
                 }
                 ps.flush();
                 ps.close();
-            } catch (FileNotFoundException | UnsupportedEncodingException e) {
-                // TODO: Handle this better.
+            } catch (Exception e) {
+                statusBar.setStatus("Error: Unable to save as " + file.getName());
                 errorLogger.logError(e);
+                return false;
             }
             song.setSaveFormat(chosenFormat.getDescription());
+            statusBar.setStatus("Saved as " + file.getName());
             return true;
         }
         return false;
@@ -564,7 +571,7 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.setScene(new Scene(notePropertiesPane));
             propertiesWindow.showAndWait();
         } catch (IOException e) {
-            // TODO Handle this.
+            statusBar.setStatus("Error: Unable to open note properties editor.");
             errorLogger.logError(e);
         }
     }
@@ -682,7 +689,7 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.setScene(new Scene(propertiesPane));
             propertiesWindow.showAndWait();
         } catch (IOException e) {
-            // TODO Handle this.
+            statusBar.setStatus("Error: Unable to open note properties editor.");
             errorLogger.logError(e);
         }
     }
