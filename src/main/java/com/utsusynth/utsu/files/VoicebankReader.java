@@ -137,6 +137,10 @@ public class VoicebankReader {
             if (matcher.find()) {
                 String fileName = matcher.group(1); // Assuming this is a .wav file
                 String lyricName = matcher.group(2);
+                if (lyricName.isEmpty()) {
+                    // If no alias provided, use the file name as an adhoc alias.
+                    lyricName = fileName.substring(0, fileName.length() - 4);
+                }
                 String[] configValues = line.substring(matcher.end()).split(",");
                 if (configValues.length != 5 || fileName == null || lyricName == null) {
                     System.out.println("Received unexpected results while parsing oto.ini");

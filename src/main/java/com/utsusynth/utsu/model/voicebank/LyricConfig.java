@@ -10,7 +10,7 @@ import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
  */
 public class LyricConfig implements Comparable<LyricConfig> {
     private final File pathToFile; // example: /Library/Iona.utau/C3/de.wav
-    private final String fileName; // example: C3/de.wqv
+    private final String fileName; // example: C3/de.wav
     private final String trueLyric; // example: de
     private double offset; // Time in wav file before note starts, in ms.
     private double consonant; // Time in wav file before consonant ends, in ms.
