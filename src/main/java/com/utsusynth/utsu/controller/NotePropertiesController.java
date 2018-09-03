@@ -87,6 +87,15 @@ public class NotePropertiesController implements Localizable {
     @FXML // fx:id="curIntensity"
     private Label curIntensity; // Value injected by FXMLLoader
 
+    @FXML // fx:id="modulationLabel"
+    private Label modulationLabel; // Value injected by FXMLLoader
+
+    @FXML // fx:id="modulationSlider"
+    private Slider modulationSlider; // Value injected by FXMLLoader
+
+    @FXML // fx:id ="curModulation"
+    private Label curModulation; // Value injected by FXMLLoader
+
     @FXML // fx:id="flagsLabel"
     private Label flagsLabel; // Value injected by FXMLLoader
 
@@ -141,6 +150,13 @@ public class NotePropertiesController implements Localizable {
             int sliderValue = RoundUtils.round(intensitySlider.getValue());
             intensitySlider.setValue(sliderValue);
             curIntensity.setText(Integer.toString(sliderValue));
+        });
+
+        // Setup modulation slider.
+        modulationSlider.valueProperty().addListener((event) -> {
+            int sliderValue = RoundUtils.round(modulationSlider.getValue());
+            modulationSlider.setValue(sliderValue);
+            curModulation.setText(Integer.toString(sliderValue));
         });
 
         flagsTF.setOnMouseClicked(
@@ -220,6 +236,11 @@ public class NotePropertiesController implements Localizable {
         } else {
             curIntensity.setText("n/a");
         }
+        if (allValuesEqual(note -> (double) note.getModulation())) {
+            modulationSlider.setValue(note1.getModulation());
+        } else {
+            curModulation.setText("n/a");
+        }
         if (allFlagsEqual()) {
             flagsTF.setText(note1.getNoteFlags());
         } else {
@@ -280,6 +301,7 @@ public class NotePropertiesController implements Localizable {
         overlapLabel.setText(bundle.getString("properties.overlap"));
         startPointLabel.setText(bundle.getString("properties.startPoint"));
         intensityLabel.setText(bundle.getString("properties.intensity"));
+        modulationLabel.setText(bundle.getString("properties.modulation"));
         flagsLabel.setText(bundle.getString("properties.flags"));
         resetButton.setText(bundle.getString("general.reset"));
         applyButton.setText(bundle.getString("general.apply"));
@@ -313,6 +335,9 @@ public class NotePropertiesController implements Localizable {
             if (!intensitySlider.isDisabled()) {
                 note.setIntensity(RoundUtils.round(intensitySlider.getValue()));
             }
+            if (!modulationSlider.isDisabled()) {
+                note.setModulation(RoundUtils.round(modulationSlider.getValue()));
+            }
             if (!flagsTF.isDisabled()) {
                 note.setNoteFlags(flagsTF.getText());
             }
@@ -331,6 +356,7 @@ public class NotePropertiesController implements Localizable {
         }
         startPointSlider.setValue(0);
         intensitySlider.setValue(100);
+        modulationSlider.setValue(0);
         flagsTF.setText("");
     }
 

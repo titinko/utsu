@@ -8,6 +8,7 @@ public class NoteConfigData {
     private final double consonantVelocity;
     private final double startPoint;
     private final int intensity;
+    private final int modulation;
     private final String noteFlags;
 
     public NoteConfigData(
@@ -16,12 +17,14 @@ public class NoteConfigData {
             double consonantVelocity,
             double startPoint,
             int intensity,
+            int modulation,
             String noteFlags) {
         this.preutter = preutter;
         this.overlap = overlap;
         this.consonantVelocity = consonantVelocity;
         this.startPoint = startPoint;
         this.intensity = intensity;
+        this.modulation = modulation;
         this.noteFlags = noteFlags;
     }
 
@@ -43,6 +46,10 @@ public class NoteConfigData {
 
     public int getIntensity() {
         return intensity;
+    }
+
+    public int getModulation() {
+        return modulation;
     }
 
     public String getNoteFlags() {

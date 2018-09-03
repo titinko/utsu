@@ -41,6 +41,7 @@
           <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="35.0" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="35.0" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="35.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="35.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
@@ -50,7 +51,7 @@
             <Label fx:id="overlapLabel" text="Overlap" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
             <Label fx:id="startPointLabel" text="Start Point" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
             <Label fx:id="intensityLabel" text="Intensity" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
-            <Label fx:id="flagsLabel" text="Flags" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
+            <Label fx:id="flagsLabel" text="Flags" GridPane.halignment="CENTER" GridPane.rowIndex="8" />
             <Slider fx:id="intensitySlider" blockIncrement="1.0" majorTickUnit="100.0" max="480.0" minorTickCount="25" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
             <Slider fx:id="overlapSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
             <Slider fx:id="preutterSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
@@ -73,7 +74,10 @@
                   <Insets />
                </GridPane.margin>
             </Label>
-            <TextField fx:id="flagsTF" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+            <TextField fx:id="flagsTF" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+            <Label fx:id="modulationLabel" text="Modulation" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
+            <Slider fx:id="modulationSlider" blockIncrement="1.0" majorTickUnit="100.0" max="200.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+            <Label fx:id="curModulation" layoutX="276.0" layoutY="209.0" text="0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
          </children>
          <padding>
             <Insets top="5.0" />

@@ -206,6 +206,7 @@ public class Note {
                 this.velocity,
                 this.startPoint,
                 this.intensity,
+                this.modulation,
                 this.noteFlags);
     }
 
@@ -219,6 +220,7 @@ public class Note {
         this.velocity = configData.getConsonantVelocity();
         this.startPoint = configData.getStartPoint();
         this.intensity = configData.getIntensity();
+        this.modulation = configData.getModulation();
         this.noteFlags = configData.getNoteFlags();
     }
 
