@@ -381,6 +381,11 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
+    public void exportToWav() {
+        // Voicebanks cannot be exported to WAV files.
+    }
+
+    @Override
     public void openProperties() {
         // TODO: Implement properties for voicebank, for example whether oto should be foldered.
     }

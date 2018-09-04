@@ -116,6 +116,8 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem saveAsItem; // Value injected by FXMLLoader
     @FXML
+    private MenuItem exportToWavItem; // Value injected by FXMLLoader;
+    @FXML
     private Menu editMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem selectAllItem; // Value injected by FXMLLoader
@@ -150,6 +152,7 @@ public class UtsuController implements Localizable {
         openVoicebankItem.setText(bundle.getString("menu.file.openVoicebank"));
         saveItem.setText(bundle.getString("general.save"));
         saveAsItem.setText(bundle.getString("menu.file.saveFileAs"));
+        exportToWavItem.setText(bundle.getString("menu.file.exportWav"));
         editMenu.setText(bundle.getString("menu.edit"));
         selectAllItem.setText(bundle.getString("menu.edit.selectAll"));
         viewMenu.setText(bundle.getString("menu.view"));
@@ -171,6 +174,7 @@ public class UtsuController implements Localizable {
     private void createMenuKeyboardShortcuts() {
         saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN));
         saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN, SHIFT_DOWN));
+        exportToWavItem.setAccelerator(new KeyCodeCombination(KeyCode.W, SHORTCUT_DOWN));
         selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN));
         zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
         zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN));
@@ -255,10 +259,12 @@ public class UtsuController implements Localizable {
                     saveItem.setDisable(!fileChanged || !editor.hasPermanentLocation());
                     if (type == EditorType.SONG) {
                         saveAsItem.setDisable(false);
+                        exportToWavItem.setDisable(false);
                         propertiesItem.setDisable(false);
                         recentPluginsMenu.setDisable(recentPluginsMenu.getItems().isEmpty());
                     } else if (type == EditorType.VOICEBANK) {
                         saveAsItem.setDisable(true);
+                        exportToWavItem.setDisable(true);
                         propertiesItem.setDisable(true);
                         recentPluginsMenu.setDisable(true);
                     }
@@ -351,6 +357,13 @@ public class UtsuController implements Localizable {
             if (filename.isPresent()) {
                 curTab.setText(filename.get());
             }
+        }
+    }
+
+    @FXML
+    void exportToWav(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).exportToWav();
         }
     }
 

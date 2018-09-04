@@ -28,6 +28,8 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="saveItem" disable="true" mnemonicParsing="false" onAction="#saveFile" text="Save" />
                   <MenuItem fx:id="saveAsItem" mnemonicParsing="false" onAction="#saveFileAs" text="Save As..." />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="exportToWavItem" mnemonicParsing="false" onAction="#exportToWav" text="Export WAV File..." />
             </items>
           </Menu>
           <Menu fx:id="editMenu" mnemonicParsing="false" text="Edit">

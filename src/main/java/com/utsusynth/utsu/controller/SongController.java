@@ -47,11 +47,9 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -301,14 +299,11 @@ public class SongController implements EditorController, Localizable {
     private Label modeLabel; // Value injected by FXMLLoader
     @FXML
     private Label quantizationLabel; // Value injected by FXMLLoader
-    @FXML
-    private Button exportWavButton; // Value injected by FXMLLoader
 
     @Override
     public void localize(ResourceBundle bundle) {
         modeLabel.setText(bundle.getString("song.mode"));
         quantizationLabel.setText(bundle.getString("song.quantization"));
-        exportWavButton.setText(bundle.getString("song.exportWav"));
     }
 
     @Override
@@ -665,8 +660,8 @@ public class SongController implements EditorController, Localizable {
         songEditor.stopPlayback();
     }
 
-    @FXML
-    void exportSongAsWav(ActionEvent event) {
+    @Override
+    public void exportToWav() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select WAV File");
         fc.getExtensionFilters().addAll(new ExtensionFilter(".wav files", "*.wav"));

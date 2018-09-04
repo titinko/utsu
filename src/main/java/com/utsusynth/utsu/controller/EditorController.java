@@ -47,6 +47,8 @@ interface EditorController {
      */
     Optional<String> saveAs();
 
+    void exportToWav();
+
     void selectAll();
 
     void openProperties();
