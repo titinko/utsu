@@ -25,10 +25,4 @@ public interface SongCallback {
 
     /** Gets the current mode: ADD, EDIT, or DELETE. */
     Mode getCurrentMode();
-
-    /**
-     * When measures are added/removed and the track width changes, call this method to make sure
-     * that the user is scrolled to the same spot as before.
-     */
-    void adjustScrollbar(double oldWidth, double newWidth);
 }

@@ -44,8 +44,6 @@ import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -176,8 +174,6 @@ public class SongController implements EditorController, Localizable {
     // Provide setup for other frontend song management.
     // This is called automatically when fxml loads.
     public void initialize() {
-        DoubleProperty scrollbarTracker = new SimpleDoubleProperty();
-        scrollbarTracker.bind(scrollPaneCenter.hvalueProperty());
         songEditor.initialize(new SongCallback() {
             @Override
             public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
@@ -206,21 +202,13 @@ public class SongController implements EditorController, Localizable {
             public Mode getCurrentMode() {
                 return currentMode;
             }
-
-            @Override
-            public void adjustScrollbar(double oldWidth, double newWidth) {
-                // Note down what scrollbar position will be next time anchorCenter's width changes.
-                double scrollPosition =
-                        scrollPaneCenter.getHvalue() * (oldWidth - scrollPaneCenter.getWidth());
-                scrollbarTracker.unbind();
-                scrollbarTracker.set(scrollPosition / (newWidth - scrollPaneCenter.getWidth()));
-            }
         });
-        anchorCenter.widthProperty().addListener(event -> {
-            // Sync up the scrollbar's position with where the editor thinks it should be.
-            if (!scrollbarTracker.isBound()) {
-                scrollPaneCenter.setHvalue(scrollbarTracker.get());
-                scrollbarTracker.bind(scrollPaneCenter.hvalueProperty());
+        anchorCenter.widthProperty().addListener((obs, oldWidthNum, newWidthNum) -> {
+            // Scrollbar should still be at its old location.
+            double oldWidth = oldWidthNum.doubleValue() - scrollPaneCenter.getWidth();
+            double newWidth = newWidthNum.doubleValue() - scrollPaneCenter.getWidth();
+            if (oldWidth > 0 && newWidth > 0) {
+                scrollPaneCenter.setHvalue(scrollPaneCenter.getHvalue() * newWidth / oldWidth);
             }
         });
         scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneCenter.vvalueProperty());

@@ -205,7 +205,6 @@ public class SongEditor {
     private void setNumMeasures(int newNumMeasures) {
         // Adjust the scrollbar to be in the same place when size of the grid changes.
         double measureWidth = 4 * Math.round(scaler.scaleX(Quantizer.COL_WIDTH));
-        model.adjustScrollbar(measureWidth * numMeasures, measureWidth * newNumMeasures);
 
         if (newNumMeasures < 0) {
             return;
