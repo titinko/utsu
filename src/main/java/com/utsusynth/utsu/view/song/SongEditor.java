@@ -2,13 +2,11 @@ package com.utsusynth.utsu.view.song;
 
 import java.util.List;
 import java.util.Map.Entry;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
-import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.MutateResponse;
-import com.utsusynth.utsu.common.data.NeighborData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
@@ -321,51 +319,47 @@ public class SongEditor {
                 MutateResponse response = model.addNote(toAdd);
                 noteMap.putNote(position, note);
 
-                String curPitch = response.getNote().getPitch();
+                String curPitch = toAdd.getPitch();
                 String prevPitch = curPitch;
                 if (response.getPrev().isPresent()) {
-                    NeighborData prev = response.getPrev().get();
-                    int prevDelta = prev.getDelta();
-                    Note prevTrackNote = noteMap.getNote(position - prevDelta);
-                    prevTrackNote.adjustForOverlap(prevDelta);
+                    NoteUpdateData prev = response.getPrev().get();
+                    Note prevTrackNote = noteMap.getNote(prev.getPosition());
+                    prevTrackNote.adjustForOverlap(position - prev.getPosition());
                     prevPitch = PitchUtils.rowNumToPitch(prevTrackNote.getRow());
                     noteMap.putEnvelope(
-                            position - prevDelta,
+                            prev.getPosition(),
                             prev.getEnvelope(),
-                            getEnvelopeCallback(position - prevDelta));
+                            getEnvelopeCallback(prev.getPosition()));
                 }
                 if (response.getNext().isPresent()) {
-                    NeighborData next = response.getNext().get();
-                    int nextDelta = next.getDelta();
-                    note.adjustForOverlap(nextDelta);
-                    noteMap.getNote(position + nextDelta).setTrueLyric(next.getTrueLyric());
+                    NoteUpdateData next = response.getNext().get();
+                    note.adjustForOverlap(next.getPosition() - position);
+                    noteMap.getNote(next.getPosition()).setTrueLyric(next.getTrueLyric());
                     noteMap.putEnvelope(
-                            position + nextDelta,
+                            next.getPosition(),
                             next.getEnvelope(),
-                            getEnvelopeCallback(position + nextDelta));
+                            getEnvelopeCallback(next.getPosition()));
                     noteMap.putPitchbend(
-                            position + nextDelta,
+                            next.getPosition(),
                             curPitch,
                             next.getPitchbend(),
-                            getPitchbendCallback(position + nextDelta),
+                            getPitchbendCallback(next.getPosition()),
                             vibratoEditor);
                 }
                 // Refresh whether note is highlighted, must be after adjusting for overlap.
                 playbackManager.refreshHighlights(note);
 
                 // Add envelope, must be after adjusting note for overlap.
-                Optional<EnvelopeData> newEnvelope = response.getNote().getEnvelope();
-                if (newEnvelope.isPresent()) {
-                    noteMap.putEnvelope(position, newEnvelope.get(), getEnvelopeCallback(position));
-                }
-                if (response.getNote().getPitchbend().isPresent()) {
-                    noteMap.putPitchbend(
-                            position,
-                            prevPitch,
-                            response.getNote().getPitchbend().get(),
-                            getPitchbendCallback(position),
-                            vibratoEditor);
-                }
+                noteMap.putEnvelope(
+                        position,
+                        response.getNote().getEnvelope(),
+                        getEnvelopeCallback(position));
+                noteMap.putPitchbend(
+                        position,
+                        prevPitch,
+                        response.getNote().getPitchbend(),
+                        getPitchbendCallback(position),
+                        vibratoEditor);
 
                 // Add measures if necessary.
                 if (!response.getNext().isPresent()) {
@@ -373,50 +367,46 @@ public class SongEditor {
                 }
 
                 // Set the true lyric for this note.
-                if (response.getNote().getTrueLyric().isPresent()) {
-                    note.setTrueLyric(response.getNote().getTrueLyric().get());
-                }
+                note.setTrueLyric(response.getNote().getTrueLyric());
             }
         }
 
         @Override
-        public NoteData removeSongNote(int position) {
+        public NoteUpdateData removeSongNote(int position) {
             noteMap.removeFullNote(position);
             MutateResponse response = model.removeNote(position);
             if (response.getPrev().isPresent()) {
-                NeighborData prev = response.getPrev().get();
-                int prevDelta = prev.getDelta();
-                Note prevTrackNote = noteMap.getNote(position - prevDelta);
+                NoteUpdateData prev = response.getPrev().get();
+                Note prevTrackNote = noteMap.getNote(prev.getPosition());
                 if (response.getNext().isPresent()) {
-                    prevTrackNote.adjustForOverlap(prevDelta + response.getNext().get().getDelta());
+                    prevTrackNote.adjustForOverlap(
+                            response.getNext().get().getPosition() - prev.getPosition());
                 } else {
                     prevTrackNote.adjustForOverlap(Integer.MAX_VALUE);
                 }
                 noteMap.putEnvelope(
-                        position - prevDelta,
+                        prev.getPosition(),
                         prev.getEnvelope(),
-                        getEnvelopeCallback(position - prevDelta));
+                        getEnvelopeCallback(position - prev.getPosition()));
             }
             if (response.getNext().isPresent()) {
-                NeighborData next = response.getNext().get();
-                int nextDelta = next.getDelta();
-                noteMap.getNote(position + nextDelta).setTrueLyric(next.getTrueLyric());
+                NoteUpdateData next = response.getNext().get();
+                noteMap.getNote(next.getPosition()).setTrueLyric(next.getTrueLyric());
                 noteMap.putEnvelope(
-                        position + nextDelta,
+                        next.getPosition(),
                         next.getEnvelope(),
-                        getEnvelopeCallback(position + nextDelta));
+                        getEnvelopeCallback(next.getPosition()));
                 String prevPitch =
-                        PitchUtils.rowNumToPitch(noteMap.getNote(position + nextDelta).getRow());
+                        PitchUtils.rowNumToPitch(noteMap.getNote(next.getPosition()).getRow());
                 if (response.getPrev().isPresent()) {
                     prevPitch = PitchUtils.rowNumToPitch(
-                            noteMap.getNote(position - response.getPrev().get().getDelta())
-                                    .getRow());
+                            noteMap.getNote(response.getPrev().get().getPosition()).getRow());
                 }
                 noteMap.putPitchbend(
-                        position + nextDelta,
+                        next.getPosition(),
                         prevPitch,
                         next.getPitchbend(),
-                        getPitchbendCallback(position + nextDelta),
+                        getPitchbendCallback(next.getPosition()),
                         vibratoEditor);
             }
 

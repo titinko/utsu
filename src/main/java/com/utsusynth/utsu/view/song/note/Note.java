@@ -2,7 +2,11 @@ package com.utsusynth.utsu.view.song.note;
 
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
+import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -37,7 +41,7 @@ public class Note {
 
     private SubMode subMode;
     private int positionInNote;
-    private NoteData backupData; // Cache of backend song data for re-adding backend note.
+    private NoteUpdateData backupData; // Cache of backend song data for re-adding backend note.
 
     Note(
             Rectangle note,
@@ -347,6 +351,14 @@ public class Note {
         if (note.getStyleClass().contains("valid")) {
             backupData = track.removeSongNote(oldPositionMs);
         }
+        Optional<EnvelopeData> envelopeData = Optional.absent();
+        Optional<PitchbendData> pitchbendData = Optional.absent();
+        Optional<NoteConfigData> configData = Optional.absent();
+        if (backupData != null) {
+            envelopeData = Optional.of(backupData.getEnvelope());
+            pitchbendData = Optional.of(backupData.getPitchbend());
+            configData = Optional.of(backupData.getConfigData());
+        }
         try {
             setValid(true);
             String newPitch = PitchUtils.rowNumToPitch(newRow);
@@ -356,9 +368,9 @@ public class Note {
                     newPitch,
                     newLyric,
                     Optional.absent(),
-                    backupData != null ? backupData.getEnvelope() : Optional.absent(),
-                    backupData != null ? backupData.getPitchbend() : Optional.absent(),
-                    backupData != null ? backupData.getConfigData() : Optional.absent());
+                    envelopeData,
+                    pitchbendData,
+                    configData);
             track.addSongNote(this, toAdd);
         } catch (NoteAlreadyExistsException e) {
             setValid(false);

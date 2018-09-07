@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.controller.SongController.Mode;
@@ -17,7 +18,7 @@ public interface NoteCallback {
     void addSongNote(Note note, NoteData toAdd) throws NoteAlreadyExistsException;
 
     /** Remove note from the backend song. Returns data of the note that was removed. */
-    NoteData removeSongNote(int position);
+    NoteUpdateData removeSongNote(int position);
 
     void removeTrackNote(Note trackNote);
 

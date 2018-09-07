@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
-import com.utsusynth.utsu.common.data.NeighborData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
@@ -167,17 +167,18 @@ public class Song {
         }
 
         // Find neighbors to newly added note.
-        Optional<NeighborData> prevNote = Optional.absent();
+        Optional<NoteUpdateData> prevNote = Optional.absent();
         if (insertedNode.getPrev().isPresent()) {
             Note prevSongNote = insertedNode.getPrev().get().getNote();
             prevNote = Optional.of(
-                    new NeighborData(
-                            note.getDelta(),
+                    new NoteUpdateData(
+                            positionMs - note.getDelta(),
                             prevSongNote.getTrueLyric(),
                             prevSongNote.getEnvelope(),
-                            prevSongNote.getPitchbends()));
+                            prevSongNote.getPitchbends(),
+                            prevSongNote.getConfigData()));
         }
-        Optional<NeighborData> nextNote = Optional.absent();
+        Optional<NoteUpdateData> nextNote = Optional.absent();
         if (insertedNode.getNext().isPresent()) {
             // Modify the next note's portamento.
             Note nextSongNote = insertedNode.getNext().get().getNote();
@@ -194,11 +195,12 @@ public class Song {
                     nextSongNote.getNoteNum());
 
             nextNote = Optional.of(
-                    new NeighborData(
-                            note.getLength(),
+                    new NoteUpdateData(
+                            nextStart,
                             nextSongNote.getTrueLyric(),
                             nextSongNote.getEnvelope(),
-                            nextSongNote.getPitchbends()));
+                            nextSongNote.getPitchbends(),
+                            nextSongNote.getConfigData()));
         }
 
         // Add this note's pitchbends.
@@ -213,15 +215,12 @@ public class Song {
                 note.getNoteNum());
 
         return new MutateResponse(
-                new NoteData(
+                new NoteUpdateData(
                         positionMs,
-                        note.getDuration(),
-                        toAdd.getPitch(),
-                        note.getLyric(),
-                        Optional.of(note.getTrueLyric()),
-                        Optional.of(note.getEnvelope()),
-                        Optional.of(note.getPitchbends()),
-                        Optional.of(note.getConfigData())),
+                        note.getTrueLyric(),
+                        note.getEnvelope(),
+                        note.getPitchbends(),
+                        note.getConfigData()),
                 prevNote,
                 nextNote);
     }
@@ -229,6 +228,7 @@ public class Song {
     /** Removes the note at the specified position from the song object. */
     public MutateResponse removeNote(int positionMs) {
         NoteNode removedNode = this.noteList.removeNote(positionMs);
+        Note removedNote = removedNode.getNote();
 
         // Do standardization separately as it must happen in back -> front order.
         if (removedNode.getNext().isPresent()) {
@@ -240,22 +240,23 @@ public class Song {
             removedNode.getPrev().get().standardize(standardizer, voicebank.get());
         }
 
-        Optional<NeighborData> prevNote = Optional.absent();
+        Optional<NoteUpdateData> prevNote = Optional.absent();
         if (removedNode.getPrev().isPresent()) {
             Note prevSongNote = removedNode.getPrev().get().getNote();
             prevNote = Optional.of(
-                    new NeighborData(
-                            removedNode.getNote().getDelta(),
+                    new NoteUpdateData(
+                            positionMs - removedNote.getDelta(),
                             prevSongNote.getTrueLyric(),
                             prevSongNote.getEnvelope(),
-                            prevSongNote.getPitchbends()));
+                            prevSongNote.getPitchbends(),
+                            prevSongNote.getConfigData()));
         }
 
-        Optional<NeighborData> nextNote = Optional.absent();
+        Optional<NoteUpdateData> nextNote = Optional.absent();
         if (removedNode.getNext().isPresent()) {
             // Modify the next note's portamento.
             Note nextSongNote = removedNode.getNext().get().getNote();
-            int nextStart = positionMs + removedNode.getNote().getLength();
+            int nextStart = positionMs + removedNote.getLength();
             int prevNoteNum = removedNode.getPrev().isPresent()
                     ? removedNode.getPrev().get().getNote().getNoteNum()
                     : nextSongNote.getNoteNum();
@@ -271,29 +272,26 @@ public class Song {
                     nextSongNote.getNoteNum());
 
             nextNote = Optional.of(
-                    new NeighborData(
-                            removedNode.getNote().getLength(),
+                    new NoteUpdateData(
+                            nextStart,
                             nextSongNote.getTrueLyric(),
                             nextSongNote.getEnvelope(),
-                            nextSongNote.getPitchbends()));
+                            nextSongNote.getPitchbends(),
+                            nextSongNote.getConfigData()));
         }
 
         // Remove this note's pitchbends.
-        Note removedNote = removedNode.getNote();
         this.pitchbends
                 .removePitchbends(positionMs, removedNote.getLength(), removedNote.getPitchbends());
 
         return new MutateResponse(
                 // Returns note data of note that was removed.
-                new NoteData(
+                new NoteUpdateData(
                         positionMs,
-                        removedNote.getDuration(),
-                        PitchUtils.noteNumToPitch(removedNote.getNoteNum()),
-                        removedNote.getLyric(),
-                        Optional.of(removedNote.getTrueLyric()),
-                        Optional.of(removedNote.getEnvelope()),
-                        Optional.of(removedNote.getPitchbends()),
-                        Optional.of(removedNote.getConfigData())),
+                        removedNote.getTrueLyric(),
+                        removedNote.getEnvelope(),
+                        removedNote.getPitchbends(),
+                        removedNote.getConfigData()),
                 prevNote,
                 nextNote);
     }
