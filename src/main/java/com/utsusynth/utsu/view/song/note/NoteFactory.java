@@ -1,13 +1,11 @@
 package com.utsusynth.utsu.view.song.note;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
-import com.utsusynth.utsu.view.song.note.pitch.portamento.CurveFactory;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
@@ -19,11 +17,7 @@ public class NoteFactory {
     private final Provider<Lyric> lyricProvider;
 
     @Inject
-    public NoteFactory(
-            Scaler scaler,
-            Quantizer quantizer,
-            Provider<Lyric> lyricProvider,
-            CurveFactory curveFactory) {
+    public NoteFactory(Scaler scaler, Quantizer quantizer, Provider<Lyric> lyricProvider) {
         this.scaler = scaler;
         this.quantizer = quantizer;
         this.lyricProvider = lyricProvider;
@@ -63,7 +57,6 @@ public class NoteFactory {
                 layout,
                 callback,
                 vibratoEditor,
-                note.getConfigData(),
                 quantizer,
                 scaler);
         lyric.setVisibleLyric(note.getLyric());
@@ -109,7 +102,6 @@ public class NoteFactory {
                 layout,
                 callback,
                 vibratoEditor,
-                Optional.absent(),
                 quantizer,
                 scaler);
         lyric.registerLyric();

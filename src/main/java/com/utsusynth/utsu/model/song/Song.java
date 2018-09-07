@@ -4,11 +4,10 @@ import java.io.File;
 import java.util.LinkedList;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
-import com.utsusynth.utsu.common.data.AddResponse;
+import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NeighborData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.PitchbendData;
-import com.utsusynth.utsu.common.data.RemoveResponse;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.model.song.pitch.PitchCurve;
@@ -137,7 +136,7 @@ public class Song {
      * 
      * @throws NoteAlreadyExistsException
      */
-    public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
+    public MutateResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
         Note note = new Note();
         // New note's delta/length may be overridden while inserting into note list.
         note.setDelta(toAdd.getPosition());
@@ -213,7 +212,7 @@ public class Song {
                 prevNoteNum,
                 note.getNoteNum());
 
-        return new AddResponse(
+        return new MutateResponse(
                 new NoteData(
                         positionMs,
                         note.getDuration(),
@@ -228,7 +227,7 @@ public class Song {
     }
 
     /** Removes the note at the specified position from the song object. */
-    public RemoveResponse removeNote(int positionMs) {
+    public MutateResponse removeNote(int positionMs) {
         NoteNode removedNode = this.noteList.removeNote(positionMs);
 
         // Do standardization separately as it must happen in back -> front order.
@@ -280,12 +279,23 @@ public class Song {
         }
 
         // Remove this note's pitchbends.
-        this.pitchbends.removePitchbends(
-                positionMs,
-                removedNode.getNote().getLength(),
-                removedNode.getNote().getPitchbends());
+        Note removedNote = removedNode.getNote();
+        this.pitchbends
+                .removePitchbends(positionMs, removedNote.getLength(), removedNote.getPitchbends());
 
-        return new RemoveResponse(prevNote, nextNote);
+        return new MutateResponse(
+                // Returns note data of note that was removed.
+                new NoteData(
+                        positionMs,
+                        removedNote.getDuration(),
+                        PitchUtils.noteNumToPitch(removedNote.getNoteNum()),
+                        removedNote.getLyric(),
+                        Optional.of(removedNote.getTrueLyric()),
+                        Optional.of(removedNote.getEnvelope()),
+                        Optional.of(removedNote.getPitchbends()),
+                        Optional.of(removedNote.getConfigData())),
+                prevNote,
+                nextNote);
     }
 
     /** Modifies a note in-place without changing its lyric, position, or duration. */

@@ -2,10 +2,7 @@ package com.utsusynth.utsu.view.song.note;
 
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
-import com.utsusynth.utsu.common.data.EnvelopeData;
-import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -30,7 +27,6 @@ public class Note {
     private final ContextMenu contextMenu;
     private final NoteCallback track;
     private final Lyric lyric;
-    private final Optional<NoteConfigData> noteConfigData;
     private final Quantizer quantizer;
     private final Scaler scaler;
 
@@ -41,6 +37,7 @@ public class Note {
 
     private SubMode subMode;
     private int positionInNote;
+    private NoteData backupData; // Cache of backend song data for re-adding backend note.
 
     Note(
             Rectangle note,
@@ -50,7 +47,6 @@ public class Note {
             StackPane layout,
             NoteCallback callback,
             BooleanProperty vibratoEditor,
-            Optional<NoteConfigData> noteConfigData,
             Quantizer quantizer,
             Scaler scaler) {
         this.note = note;
@@ -59,7 +55,6 @@ public class Note {
         this.track = callback;
         this.subMode = SubMode.CLICKING;
         this.positionInNote = 0;
-        this.noteConfigData = noteConfigData;
         this.quantizer = quantizer;
         this.scaler = scaler;
         this.lyric = lyric;
@@ -308,7 +303,7 @@ public class Note {
         contextMenu.hide();
         lyric.closeTextFieldIfNeeded();
         if (note.getStyleClass().contains("valid")) {
-            track.removeSongNote(getAbsPositionMs());
+            backupData = track.removeSongNote(getAbsPositionMs());
         }
         track.removeTrackNote(this);
     }
@@ -349,20 +344,9 @@ public class Note {
             int newRow,
             int newDurationMs,
             String newLyric) {
-        // System.out.println("***");
-        Optional<EnvelopeData> envelope = Optional.absent();
-        Optional<PitchbendData> pitchbend = Optional.absent();
         if (note.getStyleClass().contains("valid")) {
-            // System.out.println(String.format(
-            // "Moving from valid %d, %s", oldQuant, lyric.getLyric()));
-            envelope = track.getEnvelope(oldPositionMs);
-            pitchbend = track.getPitchbend(oldPositionMs);
-            track.removeSongNote(oldPositionMs);
-        } else {
-            // System.out.println(String.format(
-            // "Moving from invalid %d, %s", oldQuant, lyric.getLyric()));
+            backupData = track.removeSongNote(oldPositionMs);
         }
-        // System.out.println(String.format("Moving to %d, %d, %s", newRow, newQuant, newLyric));
         try {
             setValid(true);
             String newPitch = PitchUtils.rowNumToPitch(newRow);
@@ -372,9 +356,9 @@ public class Note {
                     newPitch,
                     newLyric,
                     Optional.absent(),
-                    envelope,
-                    pitchbend,
-                    noteConfigData);
+                    backupData != null ? backupData.getEnvelope() : Optional.absent(),
+                    backupData != null ? backupData.getPitchbend() : Optional.absent(),
+                    backupData != null ? backupData.getConfigData() : Optional.absent());
             track.addSongNote(this, toAdd);
         } catch (NoteAlreadyExistsException e) {
             setValid(false);

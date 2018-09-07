@@ -6,12 +6,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
-import com.utsusynth.utsu.common.data.AddResponse;
 import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NeighborData;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.PitchbendData;
-import com.utsusynth.utsu.common.data.RemoveResponse;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -320,7 +318,7 @@ public class SongEditor {
             if (noteMap.hasNote(position)) {
                 throw new NoteAlreadyExistsException();
             } else {
-                AddResponse response = model.addNote(toAdd);
+                MutateResponse response = model.addNote(toAdd);
                 noteMap.putNote(position, note);
 
                 String curPitch = response.getNote().getPitch();
@@ -382,9 +380,9 @@ public class SongEditor {
         }
 
         @Override
-        public void removeSongNote(int position) {
+        public NoteData removeSongNote(int position) {
             noteMap.removeFullNote(position);
-            RemoveResponse response = model.removeNote(position);
+            MutateResponse response = model.removeNote(position);
             if (response.getPrev().isPresent()) {
                 NeighborData prev = response.getPrev().get();
                 int prevDelta = prev.getDelta();
@@ -426,6 +424,7 @@ public class SongEditor {
             if (noteMap.isEmpty()) {
                 setNumMeasures(4);
             }
+            return response.getNote();
         }
 
         @Override
@@ -438,22 +437,6 @@ public class SongEditor {
         @Override
         public Mode getCurrentMode() {
             return model.getCurrentMode();
-        }
-
-        @Override
-        public Optional<EnvelopeData> getEnvelope(int position) {
-            if (noteMap.hasEnvelope(position)) {
-                return Optional.of(noteMap.getEnvelope(position).getData());
-            }
-            return Optional.absent();
-        }
-
-        @Override
-        public Optional<PitchbendData> getPitchbend(int position) {
-            if (noteMap.hasPitchbend(position)) {
-                return Optional.of(noteMap.getPitchbend(position).getData(position));
-            }
-            return Optional.absent();
         }
 
         @Override

@@ -1,9 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
-import com.google.common.base.Optional;
-import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.controller.SongController.Mode;
 
@@ -19,13 +16,10 @@ public interface NoteCallback {
 
     void addSongNote(Note note, NoteData toAdd) throws NoteAlreadyExistsException;
 
-    void removeSongNote(int position);
+    /** Remove note from the backend song. Returns data of the note that was removed. */
+    NoteData removeSongNote(int position);
 
     void removeTrackNote(Note trackNote);
-
-    Optional<EnvelopeData> getEnvelope(int position);
-
-    Optional<PitchbendData> getPitchbend(int position);
 
     boolean hasVibrato(int position);
 

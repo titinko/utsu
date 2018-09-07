@@ -1,9 +1,8 @@
 package com.utsusynth.utsu.view.song;
 
 import com.utsusynth.utsu.common.RegionBounds;
-import com.utsusynth.utsu.common.data.AddResponse;
+import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.RemoveResponse;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.controller.SongController.Mode;
 
@@ -12,10 +11,10 @@ import com.utsusynth.utsu.controller.SongController.Mode;
  */
 public interface SongCallback {
     /** Add a note to the song. */
-    AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException;
+    MutateResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException;
 
     /** Remove a note from the song. */
-    RemoveResponse removeNote(int position);
+    MutateResponse removeNote(int position);
 
     /** Modify a note without changing its position or duration. */
     void modifyNote(NoteData toModify);

@@ -20,9 +20,8 @@ import com.google.inject.Provider;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.UndoService;
-import com.utsusynth.utsu.common.data.AddResponse;
+import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.RemoveResponse;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
@@ -176,13 +175,13 @@ public class SongController implements EditorController, Localizable {
     public void initialize() {
         songEditor.initialize(new SongCallback() {
             @Override
-            public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
+            public MutateResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
                 onSongChange();
                 return song.get().addNote(toAdd);
             }
 
             @Override
-            public RemoveResponse removeNote(int position) {
+            public MutateResponse removeNote(int position) {
                 onSongChange();
                 return song.get().removeNote(position);
             }
