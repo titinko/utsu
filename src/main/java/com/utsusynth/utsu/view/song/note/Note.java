@@ -3,15 +3,14 @@ package com.utsusynth.utsu.view.song.note;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
-import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
-import com.utsusynth.utsu.controller.SongController.Mode;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
@@ -111,13 +110,14 @@ public class Note {
             contextMenu.show(layout, event.getScreenX(), event.getScreenY());
         });
 
-        layout.setOnMouseClicked(event -> {
+        layout.setOnDragDetected(event -> {
+            // TODO: Start state of movement, for later undo.
+        });
+        layout.setOnMouseReleased(event -> {
             if (event.getButton() != MouseButton.PRIMARY) {
                 return;
             }
-            if (track.getCurrentMode() == Mode.DELETE) {
-                deleteNote();
-            } else if (subMode == SubMode.CLICKING) {
+            if (subMode == SubMode.CLICKING) {
                 contextMenu.hide();
                 if (event.isShiftDown()) {
                     this.track.highlightInclusive(this);

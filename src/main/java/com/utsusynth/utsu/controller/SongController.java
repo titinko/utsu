@@ -70,7 +70,7 @@ public class SongController implements EditorController, Localizable {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
     public enum Mode {
-        ADD, EDIT, DELETE,
+        ADD, EDIT,
     }
 
     // User session data goes here.
@@ -225,7 +225,7 @@ public class SongController implements EditorController, Localizable {
             }
         });
 
-        modeChoiceBox.setItems(FXCollections.observableArrayList(Mode.ADD, Mode.EDIT, Mode.DELETE));
+        modeChoiceBox.setItems(FXCollections.observableArrayList(Mode.ADD, Mode.EDIT));
         modeChoiceBox.setOnAction((action) -> {
             currentMode = modeChoiceBox.getValue();
         });
@@ -358,9 +358,6 @@ public class SongController implements EditorController, Localizable {
             return true;
         } else if (new KeyCodeCombination(KeyCode.W).match(keyEvent)) {
             modeChoiceBox.setValue(Mode.EDIT);
-            return true;
-        } else if (new KeyCodeCombination(KeyCode.E).match(keyEvent)) {
-            modeChoiceBox.setValue(Mode.DELETE);
             return true;
         } else {
             // No need to override default key behavior.

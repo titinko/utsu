@@ -6,8 +6,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
-import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -387,7 +387,7 @@ public class SongEditor {
                 noteMap.putEnvelope(
                         prev.getPosition(),
                         prev.getEnvelope(),
-                        getEnvelopeCallback(position - prev.getPosition()));
+                        getEnvelopeCallback(prev.getPosition()));
             }
             if (response.getNext().isPresent()) {
                 NoteUpdateData next = response.getNext().get();
