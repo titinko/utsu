@@ -101,8 +101,6 @@ public class NoteMap {
                 }
             }
         }
-
-        // Removes all elements not in visibleRegion.
     }
 
     boolean hasNote(int position) {
@@ -123,6 +121,11 @@ public class NoteMap {
 
     Collection<Note> getAllValidNotes() {
         return noteMap.values();
+    }
+
+    Collection<Note> getAllNotes() {
+        // Gets all notes, including invalid ones.
+        return allNotes;
     }
 
     void putNote(int position, Note note) throws NoteAlreadyExistsException {

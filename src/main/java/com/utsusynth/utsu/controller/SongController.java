@@ -181,9 +181,9 @@ public class SongController implements EditorController, Localizable {
             }
 
             @Override
-            public MutateResponse removeNote(int position) {
+            public MutateResponse removeNotes(int firstPosition, int lastPosition) {
                 onSongChange();
-                return song.get().removeNote(position);
+                return song.get().removeNote(firstPosition, lastPosition);
             }
 
             @Override

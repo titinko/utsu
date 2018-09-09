@@ -170,18 +170,19 @@ public class NoteList implements Iterable<Note> {
      * @return The node that was removed.
      */
     NoteNode removeNote(int deltaToRemove) {
-        NoteNode removed;
+        NoteNode toRemove;
         if (!head.isPresent()) {
             // TODO: Throw an error here.
             return null;
         } else if (head.get().getNote().getDelta() == deltaToRemove) {
-            removed = this.head.get();
+            toRemove = this.head.get();
             this.head = this.head.get().removeFirstNote();
         } else {
-            removed = head.get().removeNote(deltaToRemove, 0);
+            toRemove = nodeMap.get(deltaToRemove);
+            toRemove.removeNote();
         }
         nodeMap.remove(deltaToRemove);
-        return removed;
+        return toRemove;
     }
 
     /**

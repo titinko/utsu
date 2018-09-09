@@ -275,6 +275,10 @@ public class Note {
         }
     }
 
+    public boolean isValid() {
+        return note.getStyleClass().contains("valid");
+    }
+
     public void setValid(boolean isValid) {
         note.getStyleClass().set(1, isValid ? "valid" : "invalid");
         if (!isValid) {
@@ -306,10 +310,12 @@ public class Note {
     private void deleteNote() {
         contextMenu.hide();
         lyric.closeTextFieldIfNeeded();
-        if (note.getStyleClass().contains("valid")) {
-            backupData = track.removeSongNote(getAbsPositionMs());
-        }
-        track.removeTrackNote(this);
+        track.deleteSongNote(this);
+        track.deleteTrackNote(this);
+    }
+
+    public void setBackupData(NoteUpdateData backupData) {
+        this.backupData = backupData;
     }
 
     private void resizeNote(int newDuration) {

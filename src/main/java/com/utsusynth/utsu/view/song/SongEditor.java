@@ -350,14 +350,15 @@ public class SongEditor {
                 playbackManager.refreshHighlights(note);
 
                 // Add envelope, must be after adjusting note for overlap.
+                NoteUpdateData responseNote = response.getNotes().iterator().next();
                 noteMap.putEnvelope(
                         position,
-                        response.getNote().getEnvelope(),
+                        responseNote.getEnvelope(),
                         getEnvelopeCallback(position));
                 noteMap.putPitchbend(
                         position,
                         prevPitch,
-                        response.getNote().getPitchbend(),
+                        responseNote.getPitchbend(),
                         getPitchbendCallback(position),
                         vibratoEditor);
 
@@ -367,14 +368,14 @@ public class SongEditor {
                 }
 
                 // Set the true lyric for this note.
-                note.setTrueLyric(response.getNote().getTrueLyric());
+                note.setTrueLyric(responseNote.getTrueLyric());
             }
         }
 
         @Override
         public NoteUpdateData removeSongNote(int position) {
             noteMap.removeFullNote(position);
-            MutateResponse response = model.removeNote(position);
+            MutateResponse response = model.removeNotes(position, position);
             if (response.getPrev().isPresent()) {
                 NoteUpdateData prev = response.getPrev().get();
                 Note prevTrackNote = noteMap.getNote(prev.getPosition());
@@ -414,7 +415,10 @@ public class SongEditor {
             if (noteMap.isEmpty()) {
                 setNumMeasures(4);
             }
-            return response.getNote();
+            for (NoteUpdateData updateData : response.getNotes()) {
+                return updateData;
+            }
+            return null;
         }
 
         @Override
@@ -422,6 +426,94 @@ public class SongEditor {
             playbackManager.clearHighlights();
             noteMap.removeNoteElement(trackNote);
             // TODO: If last note, remove measures until you have 4 measures + previous note.
+        }
+
+        @Override
+        public void deleteSongNote(Note note) {
+            int firstPosition = Integer.MAX_VALUE;
+            int lastPosition = Integer.MIN_VALUE;
+            if (playbackManager.isHighlighted(note)) {
+                // Get positions of first and last notes.
+                for (Note curNote : playbackManager.getHighlightedNotes()) {
+                    if (!curNote.isValid()) {
+                        continue;
+                    }
+                    int curMs = curNote.getAbsPositionMs();
+                    if (curMs < firstPosition) {
+                        firstPosition = curMs;
+                    }
+                    if (curMs > lastPosition) {
+                        lastPosition = curMs;
+                    }
+                }
+            } else if (note.isValid()) {
+                firstPosition = note.getAbsPositionMs();
+                lastPosition = firstPosition;
+            }
+            // If no valid song notes to remove, do nothing.
+            if (firstPosition == Integer.MAX_VALUE && lastPosition == Integer.MIN_VALUE) {
+                return;
+            }
+            // Remove backend notes.
+            MutateResponse response = model.removeNotes(firstPosition, lastPosition);
+            // Link up prev note.
+            if (response.getPrev().isPresent()) {
+                NoteUpdateData prev = response.getPrev().get();
+                Note prevTrackNote = noteMap.getNote(prev.getPosition());
+                if (response.getNext().isPresent()) {
+                    prevTrackNote.adjustForOverlap(
+                            response.getNext().get().getPosition() - prev.getPosition());
+                } else {
+                    prevTrackNote.adjustForOverlap(Integer.MAX_VALUE);
+                }
+                noteMap.putEnvelope(
+                        prev.getPosition(),
+                        prev.getEnvelope(),
+                        getEnvelopeCallback(prev.getPosition()));
+            }
+            // Link up next note.
+            if (response.getNext().isPresent()) {
+                NoteUpdateData next = response.getNext().get();
+                noteMap.getNote(next.getPosition()).setTrueLyric(next.getTrueLyric());
+                noteMap.putEnvelope(
+                        next.getPosition(),
+                        next.getEnvelope(),
+                        getEnvelopeCallback(next.getPosition()));
+                String prevPitch =
+                        PitchUtils.rowNumToPitch(noteMap.getNote(next.getPosition()).getRow());
+                if (response.getPrev().isPresent()) {
+                    prevPitch = PitchUtils.rowNumToPitch(
+                            noteMap.getNote(response.getPrev().get().getPosition()).getRow());
+                }
+                noteMap.putPitchbend(
+                        next.getPosition(),
+                        prevPitch,
+                        next.getPitchbend(),
+                        getPitchbendCallback(next.getPosition()),
+                        vibratoEditor);
+            }
+            // Set backup values for all notes that were deleted, then remove them from map.
+            for (NoteUpdateData updateData : response.getNotes()) {
+                // Should never happen but let's check just in case.
+                if (noteMap.hasNote(updateData.getPosition())) {
+                    noteMap.getNote(updateData.getPosition()).setBackupData(updateData);
+                    noteMap.removeFullNote(updateData.getPosition());
+                } else {
+                    System.out.println("Error: Note present in backend but not in frontend!");
+                }
+            }
+        }
+
+        @Override
+        public void deleteTrackNote(Note note) {
+            if (playbackManager.isHighlighted(note)) {
+                for (Note curNote : playbackManager.getHighlightedNotes()) {
+                    noteMap.removeNoteElement(curNote);
+                }
+                playbackManager.clearHighlights();
+            } else {
+                noteMap.removeNoteElement(note);
+            }
         }
 
         @Override

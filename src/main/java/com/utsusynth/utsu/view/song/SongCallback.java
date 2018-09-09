@@ -13,8 +13,8 @@ public interface SongCallback {
     /** Add a note to the song. */
     MutateResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException;
 
-    /** Remove a note from the song. */
-    MutateResponse removeNote(int position);
+    /** Remove one or more notes from the song. */
+    MutateResponse removeNotes(int firstPosition, int lastPosition);
 
     /** Modify a note without changing its position or duration. */
     void modifyNote(NoteData toModify);

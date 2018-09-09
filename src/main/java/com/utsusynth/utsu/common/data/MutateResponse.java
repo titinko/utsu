@@ -3,21 +3,21 @@ package com.utsusynth.utsu.common.data;
 import com.google.common.base.Optional;
 
 public class MutateResponse {
-    private final NoteUpdateData note;
+    private final Iterable<NoteUpdateData> notes;
     private final Optional<NoteUpdateData> prev;
     private final Optional<NoteUpdateData> next;
 
     public MutateResponse(
-            NoteUpdateData note,
+            Iterable<NoteUpdateData> notes,
             Optional<NoteUpdateData> prev,
             Optional<NoteUpdateData> next) {
-        this.note = note;
+        this.notes = notes;
         this.prev = prev;
         this.next = next;
     }
 
-    public NoteUpdateData getNote() {
-        return this.note;
+    public Iterable<NoteUpdateData> getNotes() {
+        return this.notes;
     }
 
     public Optional<NoteUpdateData> getPrev() {
