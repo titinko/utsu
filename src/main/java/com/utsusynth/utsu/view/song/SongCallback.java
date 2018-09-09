@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song;
 
+import java.util.Collection;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
@@ -14,7 +15,7 @@ public interface SongCallback {
     MutateResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException;
 
     /** Remove one or more notes from the song. */
-    MutateResponse removeNotes(int firstPosition, int lastPosition);
+    MutateResponse removeNotes(Collection<Integer> positions);
 
     /** Modify a note without changing its position or duration. */
     void modifyNote(NoteData toModify);

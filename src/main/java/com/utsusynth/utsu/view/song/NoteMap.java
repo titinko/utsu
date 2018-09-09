@@ -123,11 +123,6 @@ public class NoteMap {
         return noteMap.values();
     }
 
-    Collection<Note> getAllNotes() {
-        // Gets all notes, including invalid ones.
-        return allNotes;
-    }
-
     void putNote(int position, Note note) throws NoteAlreadyExistsException {
         if (noteMap.containsKey(position)) {
             throw new NoteAlreadyExistsException();

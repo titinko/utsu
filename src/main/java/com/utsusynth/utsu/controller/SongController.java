@@ -11,6 +11,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
+import java.util.Collection;
 import java.util.ResourceBundle;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
@@ -181,9 +182,9 @@ public class SongController implements EditorController, Localizable {
             }
 
             @Override
-            public MutateResponse removeNotes(int firstPosition, int lastPosition) {
+            public MutateResponse removeNotes(Collection<Integer> positions) {
                 onSongChange();
-                return song.get().removeNote(firstPosition, lastPosition);
+                return song.get().removeNotes(positions);
             }
 
             @Override

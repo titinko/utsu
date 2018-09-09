@@ -2,7 +2,10 @@ package com.utsusynth.utsu.view.song;
 
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
@@ -375,7 +378,7 @@ public class SongEditor {
         @Override
         public NoteUpdateData removeSongNote(int position) {
             noteMap.removeFullNote(position);
-            MutateResponse response = model.removeNotes(position, position);
+            MutateResponse response = model.removeNotes(ImmutableSet.of(position));
             if (response.getPrev().isPresent()) {
                 NoteUpdateData prev = response.getPrev().get();
                 Note prevTrackNote = noteMap.getNote(prev.getPosition());
@@ -430,32 +433,16 @@ public class SongEditor {
 
         @Override
         public void deleteSongNote(Note note) {
-            int firstPosition = Integer.MAX_VALUE;
-            int lastPosition = Integer.MIN_VALUE;
+            Set<Integer> positionsToRemove;
             if (playbackManager.isHighlighted(note)) {
-                // Get positions of first and last notes.
-                for (Note curNote : playbackManager.getHighlightedNotes()) {
-                    if (!curNote.isValid()) {
-                        continue;
-                    }
-                    int curMs = curNote.getAbsPositionMs();
-                    if (curMs < firstPosition) {
-                        firstPosition = curMs;
-                    }
-                    if (curMs > lastPosition) {
-                        lastPosition = curMs;
-                    }
-                }
+                positionsToRemove = playbackManager.getHighlightedNotes().stream()
+                        .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
             } else if (note.isValid()) {
-                firstPosition = note.getAbsPositionMs();
-                lastPosition = firstPosition;
+                positionsToRemove = ImmutableSet.of(note.getAbsPositionMs());
+            } else {
+                return; // If no valid song notes to remove, do nothing.
             }
-            // If no valid song notes to remove, do nothing.
-            if (firstPosition == Integer.MAX_VALUE && lastPosition == Integer.MIN_VALUE) {
-                return;
-            }
-            // Remove backend notes.
-            MutateResponse response = model.removeNotes(firstPosition, lastPosition);
+            MutateResponse response = model.removeNotes(positionsToRemove);
             // Link up prev note.
             if (response.getPrev().isPresent()) {
                 NoteUpdateData prev = response.getPrev().get();
