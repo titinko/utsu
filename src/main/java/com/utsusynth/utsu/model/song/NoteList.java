@@ -164,6 +164,16 @@ public class NoteList implements Iterable<Note> {
     }
 
     /**
+     * Adds a note to the note list, starting search at a specific node.
+     */
+    NoteNode insertNote(Note noteToInsert, int deltaToInsert, NoteNode startNode, int startDelta)
+            throws NoteAlreadyExistsException {
+        NoteNode inserted = startNode.insertNote(noteToInsert, deltaToInsert, startDelta);
+        nodeMap.put(deltaToInsert, inserted);
+        return inserted;
+    }
+
+    /**
      * Removes a note from the note list.
      * 
      * @param deltaToRemove

@@ -1,9 +1,11 @@
 package com.utsusynth.utsu.view.song;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -316,63 +318,76 @@ public class SongEditor {
         @Override
         public void addSongNote(Note note, NoteData toAdd) throws NoteAlreadyExistsException {
             int position = toAdd.getPosition();
-            if (noteMap.hasNote(position)) {
-                throw new NoteAlreadyExistsException();
-            } else {
-                MutateResponse response = model.addNote(toAdd);
-                noteMap.putNote(position, note);
+            noteMap.putNote(position, note);
+            model.addNotes(ImmutableList.of(toAdd));
 
-                String curPitch = toAdd.getPitch();
-                String prevPitch = curPitch;
-                if (response.getPrev().isPresent()) {
-                    NoteUpdateData prev = response.getPrev().get();
-                    Note prevTrackNote = noteMap.getNote(prev.getPosition());
-                    prevTrackNote.adjustForOverlap(position - prev.getPosition());
-                    prevPitch = PitchUtils.rowNumToPitch(prevTrackNote.getRow());
-                    noteMap.putEnvelope(
-                            prev.getPosition(),
-                            prev.getEnvelope(),
-                            getEnvelopeCallback(prev.getPosition()));
+            List<NoteUpdateData> updatedNotes = model.standardizeNotes(position, position);
+            Optional<NoteUpdateData> maybePrev = Optional.absent();
+            Optional<NoteUpdateData> maybeNext = Optional.absent();
+            Optional<NoteUpdateData> addedNote = Optional.absent();
+            for (NoteUpdateData updateData : updatedNotes) {
+                if (updateData.getPosition() < position) {
+                    maybePrev = Optional.of(updateData);
+                } else if (updateData.getPosition() > position) {
+                    maybeNext = Optional.of(updateData);
+                } else {
+                    addedNote = Optional.of(updateData);
                 }
-                if (response.getNext().isPresent()) {
-                    NoteUpdateData next = response.getNext().get();
-                    note.adjustForOverlap(next.getPosition() - position);
-                    noteMap.getNote(next.getPosition()).setTrueLyric(next.getTrueLyric());
-                    noteMap.putEnvelope(
-                            next.getPosition(),
-                            next.getEnvelope(),
-                            getEnvelopeCallback(next.getPosition()));
-                    noteMap.putPitchbend(
-                            next.getPosition(),
-                            curPitch,
-                            next.getPitchbend(),
-                            getPitchbendCallback(next.getPosition()),
-                            vibratoEditor);
-                }
-                // Refresh whether note is highlighted, must be after adjusting for overlap.
-                playbackManager.refreshHighlights(note);
-
-                // Add envelope, must be after adjusting note for overlap.
-                NoteUpdateData responseNote = response.getNotes().iterator().next();
-                noteMap.putEnvelope(
-                        position,
-                        responseNote.getEnvelope(),
-                        getEnvelopeCallback(position));
-                noteMap.putPitchbend(
-                        position,
-                        prevPitch,
-                        responseNote.getPitchbend(),
-                        getPitchbendCallback(position),
-                        vibratoEditor);
-
-                // Add measures if necessary.
-                if (!response.getNext().isPresent()) {
-                    setNumMeasures((position / Quantizer.COL_WIDTH / 4) + 4);
-                }
-
-                // Set the true lyric for this note.
-                note.setTrueLyric(responseNote.getTrueLyric());
             }
+
+            String curPitch = toAdd.getPitch();
+            String prevPitch = curPitch;
+            if (maybePrev.isPresent()) {
+                NoteUpdateData prev = maybePrev.get();
+                Note prevTrackNote = noteMap.getNote(prev.getPosition());
+                prevTrackNote.adjustForOverlap(position - prev.getPosition());
+                prevPitch = PitchUtils.rowNumToPitch(prevTrackNote.getRow());
+                noteMap.putEnvelope(
+                        prev.getPosition(),
+                        prev.getEnvelope(),
+                        getEnvelopeCallback(prev.getPosition()));
+            }
+            if (maybeNext.isPresent()) {
+                NoteUpdateData next = maybeNext.get();
+                note.adjustForOverlap(next.getPosition() - position);
+                noteMap.getNote(next.getPosition()).setTrueLyric(next.getTrueLyric());
+                noteMap.putEnvelope(
+                        next.getPosition(),
+                        next.getEnvelope(),
+                        getEnvelopeCallback(next.getPosition()));
+                noteMap.putPitchbend(
+                        next.getPosition(),
+                        curPitch,
+                        next.getPitchbend(),
+                        getPitchbendCallback(next.getPosition()),
+                        vibratoEditor);
+            }
+
+            // Add envelope, must be after adjusting note for overlap.
+            if (!addedNote.isPresent()) {
+                // TODO: Handle this.
+                System.out.println("Tried to add note, but no backend note added.");
+                return;
+            }
+            NoteUpdateData responseNote = addedNote.get();
+            noteMap.putEnvelope(
+                    position,
+                    responseNote.getEnvelope(),
+                    getEnvelopeCallback(position));
+            noteMap.putPitchbend(
+                    position,
+                    prevPitch,
+                    responseNote.getPitchbend(),
+                    getPitchbendCallback(position),
+                    vibratoEditor);
+
+            // Add measures if necessary.
+            if (!maybeNext.isPresent()) {
+                setNumMeasures((position / Quantizer.COL_WIDTH / 4) + 4);
+            }
+
+            // Set the true lyric for this note.
+            note.setTrueLyric(responseNote.getTrueLyric());
         }
 
         @Override
@@ -425,10 +440,67 @@ public class SongEditor {
         }
 
         @Override
-        public void removeTrackNote(Note trackNote) {
-            playbackManager.clearHighlights();
-            noteMap.removeNoteElement(trackNote);
-            // TODO: If last note, remove measures until you have 4 measures + previous note.
+        public void moveNote(Note note, int positionDelta, int rowDelta) {
+            deleteSongNote(note);
+
+            List<Note> notes;
+            if (playbackManager.isHighlighted(note)) {
+                notes = playbackManager.getHighlightedNotes().stream().sorted(
+                        (note1, note2) -> Integer
+                                .compare(note1.getAbsPositionMs(), note2.getAbsPositionMs()))
+                        .collect(Collectors.toList());
+            } else {
+                notes = ImmutableList.of(note);
+            }
+            LinkedList<NoteData> toAdd = new LinkedList<>();
+            for (Note curNote : notes) {
+                curNote.moveNoteElement(positionDelta, rowDelta);
+                curNote.setValid(true);
+                try {
+                    noteMap.putNote(curNote.getAbsPositionMs(), curNote);
+                } catch (NoteAlreadyExistsException e) {
+                    curNote.setValid(false);
+                    continue;
+                }
+                toAdd.add(curNote.getNoteData());
+            }
+            // Add backend notes if necessary.
+            if (toAdd.isEmpty()) {
+                return;
+            }
+            model.addNotes(toAdd);
+            LinkedList<NoteUpdateData> updatedNotes = model.standardizeNotes(
+                    toAdd.getFirst().getPosition(),
+                    toAdd.getLast().getPosition());
+            String prevPitch = "";
+            for (int i = 0; i < updatedNotes.size(); i++) {
+                NoteUpdateData updateData = updatedNotes.get(i);
+                Note toUpdate = noteMap.getNote(updateData.getPosition());
+                toUpdate.setTrueLyric(updateData.getTrueLyric());
+                noteMap.putEnvelope(
+                        updateData.getPosition(),
+                        updateData.getEnvelope(),
+                        getEnvelopeCallback(updateData.getPosition()));
+                noteMap.putPitchbend(
+                        updateData.getPosition(),
+                        prevPitch.isEmpty() ? PitchUtils.rowNumToPitch(toUpdate.getRow())
+                                : prevPitch,
+                        updateData.getPitchbend(),
+                        getPitchbendCallback(updateData.getPosition()),
+                        vibratoEditor);
+
+                if (i < updatedNotes.size() - 1) {
+                    toUpdate.adjustForOverlap(
+                            updatedNotes.get(i + 1).getPosition() - updateData.getPosition());
+                }
+                prevPitch = PitchUtils.rowNumToPitch(toUpdate.getRow());
+            }
+
+            // If new last note has been added, update track size.
+            if (!updatedNotes.isEmpty()
+                    && updatedNotes.getLast().getPosition() == toAdd.getLast().getPosition()) {
+                setNumMeasures((toAdd.getLast().getPosition() / Quantizer.COL_WIDTH / 4) + 4);
+            }
         }
 
         @Override
@@ -436,6 +508,7 @@ public class SongEditor {
             Set<Integer> positionsToRemove;
             if (playbackManager.isHighlighted(note)) {
                 positionsToRemove = playbackManager.getHighlightedNotes().stream()
+                        .filter(curNote -> curNote.isValid())
                         .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
             } else if (note.isValid()) {
                 positionsToRemove = ImmutableSet.of(note.getAbsPositionMs());
@@ -501,6 +574,7 @@ public class SongEditor {
             } else {
                 noteMap.removeNoteElement(note);
             }
+            // TODO: If last note, remove measures until you have 4 measures + previous note.
         }
 
         @Override

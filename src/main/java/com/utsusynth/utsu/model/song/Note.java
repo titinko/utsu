@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 
@@ -197,6 +198,15 @@ public class Note {
 
     public String getNoteFlags() {
         return this.noteFlags;
+    }
+
+    public NoteUpdateData getUpdateData(int curPosition) {
+        return new NoteUpdateData(
+                curPosition,
+                this.trueLyric,
+                getEnvelope(),
+                getPitchbends(),
+                getConfigData());
     }
 
     public NoteConfigData getConfigData() {

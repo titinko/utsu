@@ -12,6 +12,8 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.ResourceBundle;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
@@ -23,9 +25,9 @@ import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
-import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
@@ -176,9 +178,9 @@ public class SongController implements EditorController, Localizable {
     public void initialize() {
         songEditor.initialize(new SongCallback() {
             @Override
-            public MutateResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
+            public void addNotes(List<NoteData> toAdd) {
                 onSongChange();
-                return song.get().addNote(toAdd);
+                song.get().addNotes(toAdd);
             }
 
             @Override
@@ -191,6 +193,12 @@ public class SongController implements EditorController, Localizable {
             public void modifyNote(NoteData toModify) {
                 onSongChange();
                 song.get().modifyNote(toModify);
+            }
+
+            @Override
+            public LinkedList<NoteUpdateData> standardizeNotes(int firstPos, int lastPos) {
+                // Only called in response to other changes, so this does not trigger onSongChange.
+                return song.get().standardizeNotes(firstPos, lastPos);
             }
 
             @Override

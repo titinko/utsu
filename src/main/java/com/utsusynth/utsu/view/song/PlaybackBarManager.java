@@ -136,17 +136,6 @@ public class PlaybackBarManager {
         }
     }
 
-    void refreshHighlights(Note refreshMe) {
-        if (selectedRegion.get().intersects(refreshMe.getValidBounds())) {
-            // This operation is idempotent.
-            highlighted.add(refreshMe);
-            refreshMe.setHighlighted(true);
-        } else if (highlighted.contains(refreshMe)) {
-            highlighted.remove(refreshMe);
-            refreshMe.setHighlighted(false);
-        }
-    }
-
     void clear() {
         playback.stop(); // Stop any ongoing playback.
         bars = new Group();

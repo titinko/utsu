@@ -11,6 +11,7 @@ import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
@@ -72,7 +73,6 @@ public class Note {
                 thisNote.updateNote(
                         thisNote.getAbsPositionMs(),
                         thisNote.getAbsPositionMs(),
-                        thisNote.getDurationMs(),
                         thisNote.getRow(),
                         thisNote.getDurationMs(),
                         newLyric);
@@ -111,7 +111,7 @@ public class Note {
         });
 
         layout.setOnDragDetected(event -> {
-            // TODO: Start state of movement, for later undo.
+            // TODO: Record start state of movement, for later undo.
         });
         layout.setOnMouseReleased(event -> {
             if (event.getButton() != MouseButton.PRIMARY) {
@@ -207,7 +207,10 @@ public class Note {
 
                 // Actual movement.
                 if (oldRow != newRow || oldQuant != newQuant) {
-                    moveNote(oldQuant, newQuant, curQuant, newRow);
+                    int oldPosition = oldQuant * (Quantizer.COL_WIDTH / curQuant);
+                    int newPosition = newQuant * (Quantizer.COL_WIDTH / curQuant);
+                    this.track.moveNote(this, newPosition - oldPosition, newRow - oldRow);
+                    // moveNote(oldQuant, newQuant, curQuant, newRow);
                 }
                 subMode = SubMode.DRAGGING;
             }
@@ -237,11 +240,11 @@ public class Note {
     }
 
     public int getAbsPositionMs() {
-        return (int) Math.round(scaler.unscaleX(layout.getTranslateX()));
+        return RoundUtils.round(scaler.unscaleX(layout.getTranslateX()));
     }
 
     public int getDurationMs() {
-        return (int) Math.round(scaler.unscaleX(note.getWidth() + 1));
+        return RoundUtils.round(scaler.unscaleX(note.getWidth() + 1));
     }
 
     public String getLyric() {
@@ -307,6 +310,38 @@ public class Note {
         this.lyric.setVisibleAlias(trueLyric);
     }
 
+    /** Only moves the visual note. */
+    public void moveNoteElement(int positionMsDelta, int rowDelta) {
+        int newPositionMs = getAbsPositionMs() + positionMsDelta;
+        layout.setTranslateX(scaler.scaleX(newPositionMs));
+        int newRow = getRow() + rowDelta;
+        layout.setTranslateY(scaler.scaleY(newRow * Quantizer.ROW_HEIGHT));
+    }
+
+    public void setBackupData(NoteUpdateData backupData) {
+        this.backupData = backupData;
+    }
+
+    public NoteData getNoteData() {
+        Optional<EnvelopeData> envelopeData = Optional.absent();
+        Optional<PitchbendData> pitchbendData = Optional.absent();
+        Optional<NoteConfigData> configData = Optional.absent();
+        if (backupData != null) {
+            envelopeData = Optional.of(backupData.getEnvelope());
+            pitchbendData = Optional.of(backupData.getPitchbend());
+            configData = Optional.of(backupData.getConfigData());
+        }
+        return new NoteData(
+                getAbsPositionMs(),
+                getDurationMs(),
+                PitchUtils.rowNumToPitch(getRow()),
+                lyric.getLyric(),
+                Optional.absent(),
+                envelopeData,
+                pitchbendData,
+                configData);
+    }
+
     private void deleteNote() {
         contextMenu.hide();
         lyric.closeTextFieldIfNeeded();
@@ -314,30 +349,10 @@ public class Note {
         track.deleteTrackNote(this);
     }
 
-    public void setBackupData(NoteUpdateData backupData) {
-        this.backupData = backupData;
-    }
-
     private void resizeNote(int newDuration) {
         note.setWidth(scaler.scaleX(newDuration) - 1);
         adjustDragEdge(newDuration);
-        updateNote(
-                getAbsPositionMs(),
-                getAbsPositionMs(),
-                getDurationMs(),
-                getRow(),
-                newDuration,
-                lyric.getLyric());
-    }
-
-    private void moveNote(int oldQuant, int newQuant, int quantization, int newRow) {
-        int oldPosition = oldQuant * (Quantizer.COL_WIDTH / quantization);
-        int newPosition = newQuant * (Quantizer.COL_WIDTH / quantization);
-        layout.setTranslateX(scaler.scaleX(newPosition));
-        layout.setTranslateY(scaler.scaleY(newRow * Quantizer.ROW_HEIGHT));
-        int curDuration = getDurationMs();
-        adjustDragEdge(curDuration);
-        updateNote(oldPosition, newPosition, curDuration, newRow, curDuration, lyric.getLyric());
+        updateNote(getAbsPositionMs(), getAbsPositionMs(), getRow(), newDuration, lyric.getLyric());
     }
 
     private void adjustDragEdge(double newDuration) {
@@ -350,7 +365,6 @@ public class Note {
     private void updateNote(
             int oldPositionMs,
             int newPositionMs,
-            int oldDurationMs,
             int newRow,
             int newDurationMs,
             String newLyric) {
@@ -380,7 +394,6 @@ public class Note {
             track.addSongNote(this, toAdd);
         } catch (NoteAlreadyExistsException e) {
             setValid(false);
-            // System.out.println("WARNING: New note is invalid!");
         }
     }
 

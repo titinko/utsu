@@ -19,12 +19,13 @@ public interface NoteCallback {
 
     NoteUpdateData removeSongNote(int position);
 
-    void removeTrackNote(Note trackNote);
+    /** Catches all highlighted notes, if applicable. */
+    void moveNote(Note note, int positionDelta, int rowDelta);
 
-    /** Catches all highlighted notes, if present. */
+    /** Catches all highlighted notes, if applicable. */
     void deleteSongNote(Note note);
 
-    /** Catches all highlighted notes, if present. */
+    /** Catches all highlighted notes, if applicable. */
     void deleteTrackNote(Note trackNote);
 
     boolean hasVibrato(int position);
