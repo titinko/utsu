@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -178,12 +177,27 @@ public class SongEditor {
     }
 
     public void deleteSelected() {
-        // Deletes all currently selected notes.
+        Set<Integer> positionsToRemove =
+                playbackManager.getHighlightedNotes().stream().filter(curNote -> curNote.isValid())
+                        .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
+        RegionBounds toStandardize = removeNotes(positionsToRemove);
+        if (!toStandardize.equals(RegionBounds.INVALID)) {
+            refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
+        }
+
+        for (Note curNote : playbackManager.getHighlightedNotes()) {
+            noteMap.removeNoteElement(curNote);
+        }
+        playbackManager.clearHighlights();
+        // TODO: If last note, remove measures until you have 4 measures + previous note.
     }
 
-    private void removeNotes(Set<Integer> positionsToRemove) {
+    /**
+     * Removes notes from the backend song, returns RegionBounds of notes that need refreshing.
+     */
+    private RegionBounds removeNotes(Set<Integer> positionsToRemove) {
         if (positionsToRemove.isEmpty()) {
-            return; // If no valid song notes to remove, do nothing.
+            return RegionBounds.INVALID; // If no valid song notes to remove, do nothing.
         }
         MutateResponse response = model.removeNotes(positionsToRemove);
         // Set backup values for all notes that were deleted, then remove them from map.
@@ -196,10 +210,44 @@ public class SongEditor {
                 System.out.println("Error: Note present in backend but not in frontend!");
             }
         }
+
+        if (response.getPrev().isPresent() && response.getNext().isPresent()) {
+            return new RegionBounds(
+                    response.getPrev().get().getPosition(),
+                    response.getNext().get().getPosition());
+        }
+        return RegionBounds.INVALID;
     }
 
     public void refreshSelected() {
         // Refreshes all notes in currently selected region.
+    }
+
+    private void refreshNotes(int firstPosition, int lastPosition) {
+        LinkedList<NoteUpdateData> updatedNotes =
+                model.standardizeNotes(firstPosition, lastPosition);
+        String prevPitch = "";
+        for (int i = 0; i < updatedNotes.size(); i++) {
+            NoteUpdateData updateData = updatedNotes.get(i);
+            Note toUpdate = noteMap.getNote(updateData.getPosition());
+            toUpdate.setTrueLyric(updateData.getTrueLyric());
+            noteMap.putEnvelope(
+                    updateData.getPosition(),
+                    updateData.getEnvelope(),
+                    getEnvelopeCallback(updateData.getPosition()));
+            noteMap.putPitchbend(
+                    updateData.getPosition(),
+                    prevPitch.isEmpty() ? PitchUtils.rowNumToPitch(toUpdate.getRow()) : prevPitch,
+                    updateData.getPitchbend(),
+                    getPitchbendCallback(updateData.getPosition()),
+                    vibratoEditor);
+
+            if (i < updatedNotes.size() - 1) {
+                toUpdate.adjustForOverlap(
+                        updatedNotes.get(i + 1).getPosition() - updateData.getPosition());
+            }
+            prevPitch = PitchUtils.rowNumToPitch(toUpdate.getRow());
+        }
     }
 
     public void selectivelyShowRegion(double centerPercent, double margin) {
@@ -341,132 +389,35 @@ public class SongEditor {
         }
 
         @Override
-        public void addSongNote(Note note, NoteData toAdd) throws NoteAlreadyExistsException {
-            int position = toAdd.getPosition();
-            noteMap.putNote(position, note);
-            model.addNotes(ImmutableList.of(toAdd));
-
-            List<NoteUpdateData> updatedNotes = model.standardizeNotes(position, position);
-            Optional<NoteUpdateData> maybePrev = Optional.absent();
-            Optional<NoteUpdateData> maybeNext = Optional.absent();
-            Optional<NoteUpdateData> addedNote = Optional.absent();
-            for (NoteUpdateData updateData : updatedNotes) {
-                if (updateData.getPosition() < position) {
-                    maybePrev = Optional.of(updateData);
-                } else if (updateData.getPosition() > position) {
-                    maybeNext = Optional.of(updateData);
-                } else {
-                    addedNote = Optional.of(updateData);
-                }
+        public void updateNote(Note note) {
+            int positionMs = note.getAbsPositionMs();
+            if (note.isValid()) {
+                // Removes note if necessary.
+                removeNotes(ImmutableSet.of(positionMs));
             }
-
-            String curPitch = toAdd.getPitch();
-            String prevPitch = curPitch;
-            if (maybePrev.isPresent()) {
-                NoteUpdateData prev = maybePrev.get();
-                Note prevTrackNote = noteMap.getNote(prev.getPosition());
-                prevTrackNote.adjustForOverlap(position - prev.getPosition());
-                prevPitch = PitchUtils.rowNumToPitch(prevTrackNote.getRow());
-                noteMap.putEnvelope(
-                        prev.getPosition(),
-                        prev.getEnvelope(),
-                        getEnvelopeCallback(prev.getPosition()));
+            try {
+                // Replaces note if possible.
+                noteMap.putNote(positionMs, note);
+                note.setValid(true);
+                model.addNotes(ImmutableList.of(note.getNoteData()));
+            } catch (NoteAlreadyExistsException e) {
+                note.setValid(false);
             }
-            if (maybeNext.isPresent()) {
-                NoteUpdateData next = maybeNext.get();
-                note.adjustForOverlap(next.getPosition() - position);
-                noteMap.getNote(next.getPosition()).setTrueLyric(next.getTrueLyric());
-                noteMap.putEnvelope(
-                        next.getPosition(),
-                        next.getEnvelope(),
-                        getEnvelopeCallback(next.getPosition()));
-                noteMap.putPitchbend(
-                        next.getPosition(),
-                        curPitch,
-                        next.getPitchbend(),
-                        getPitchbendCallback(next.getPosition()),
-                        vibratoEditor);
-            }
-
-            // Add envelope, must be after adjusting note for overlap.
-            if (!addedNote.isPresent()) {
-                // TODO: Handle this.
-                System.out.println("Tried to add note, but no backend note added.");
-                return;
-            }
-            NoteUpdateData responseNote = addedNote.get();
-            noteMap.putEnvelope(
-                    position,
-                    responseNote.getEnvelope(),
-                    getEnvelopeCallback(position));
-            noteMap.putPitchbend(
-                    position,
-                    prevPitch,
-                    responseNote.getPitchbend(),
-                    getPitchbendCallback(position),
-                    vibratoEditor);
-
-            // Add measures if necessary.
-            if (!maybeNext.isPresent()) {
-                setNumMeasures((position / Quantizer.COL_WIDTH / 4) + 4);
-            }
-
-            // Set the true lyric for this note.
-            note.setTrueLyric(responseNote.getTrueLyric());
-        }
-
-        @Override
-        public NoteUpdateData removeSongNote(int position) {
-            noteMap.removeFullNote(position);
-            MutateResponse response = model.removeNotes(ImmutableSet.of(position));
-            if (response.getPrev().isPresent()) {
-                NoteUpdateData prev = response.getPrev().get();
-                Note prevTrackNote = noteMap.getNote(prev.getPosition());
-                if (response.getNext().isPresent()) {
-                    prevTrackNote.adjustForOverlap(
-                            response.getNext().get().getPosition() - prev.getPosition());
-                } else {
-                    prevTrackNote.adjustForOverlap(Integer.MAX_VALUE);
-                }
-                noteMap.putEnvelope(
-                        prev.getPosition(),
-                        prev.getEnvelope(),
-                        getEnvelopeCallback(prev.getPosition()));
-            }
-            if (response.getNext().isPresent()) {
-                NoteUpdateData next = response.getNext().get();
-                noteMap.getNote(next.getPosition()).setTrueLyric(next.getTrueLyric());
-                noteMap.putEnvelope(
-                        next.getPosition(),
-                        next.getEnvelope(),
-                        getEnvelopeCallback(next.getPosition()));
-                String prevPitch =
-                        PitchUtils.rowNumToPitch(noteMap.getNote(next.getPosition()).getRow());
-                if (response.getPrev().isPresent()) {
-                    prevPitch = PitchUtils.rowNumToPitch(
-                            noteMap.getNote(response.getPrev().get().getPosition()).getRow());
-                }
-                noteMap.putPitchbend(
-                        next.getPosition(),
-                        prevPitch,
-                        next.getPitchbend(),
-                        getPitchbendCallback(next.getPosition()),
-                        vibratoEditor);
-            }
-
-            // Remove all measures if necessary.
-            if (noteMap.isEmpty()) {
-                setNumMeasures(4);
-            }
-            for (NoteUpdateData updateData : response.getNotes()) {
-                return updateData;
-            }
-            return null;
+            // Refreshes notes regardless of whether a new one was placed.
+            refreshNotes(positionMs, positionMs);
         }
 
         @Override
         public void moveNote(Note note, int positionDelta, int rowDelta) {
-            deleteSongNote(note);
+            Set<Integer> positionsToRemove = ImmutableSet.of();
+            if (playbackManager.isHighlighted(note)) {
+                positionsToRemove = playbackManager.getHighlightedNotes().stream()
+                        .filter(curNote -> curNote.isValid())
+                        .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
+            } else if (note.isValid()) {
+                positionsToRemove = ImmutableSet.of(note.getAbsPositionMs());
+            }
+            RegionBounds toStandardize = removeNotes(positionsToRemove);
 
             List<Note> notes;
             if (playbackManager.isHighlighted(note)) {
@@ -494,42 +445,24 @@ public class SongEditor {
                 return;
             }
             model.addNotes(toAdd);
-            LinkedList<NoteUpdateData> updatedNotes = model.standardizeNotes(
-                    toAdd.getFirst().getPosition(),
-                    toAdd.getLast().getPosition());
-            String prevPitch = "";
-            for (int i = 0; i < updatedNotes.size(); i++) {
-                NoteUpdateData updateData = updatedNotes.get(i);
-                Note toUpdate = noteMap.getNote(updateData.getPosition());
-                toUpdate.setTrueLyric(updateData.getTrueLyric());
-                noteMap.putEnvelope(
-                        updateData.getPosition(),
-                        updateData.getEnvelope(),
-                        getEnvelopeCallback(updateData.getPosition()));
-                noteMap.putPitchbend(
-                        updateData.getPosition(),
-                        prevPitch.isEmpty() ? PitchUtils.rowNumToPitch(toUpdate.getRow())
-                                : prevPitch,
-                        updateData.getPitchbend(),
-                        getPitchbendCallback(updateData.getPosition()),
-                        vibratoEditor);
 
-                if (i < updatedNotes.size() - 1) {
-                    toUpdate.adjustForOverlap(
-                            updatedNotes.get(i + 1).getPosition() - updateData.getPosition());
-                }
-                prevPitch = PitchUtils.rowNumToPitch(toUpdate.getRow());
+            RegionBounds addRegion =
+                    new RegionBounds(toAdd.getFirst().getPosition(), toAdd.getLast().getPosition());
+            if (toStandardize.equals(RegionBounds.INVALID)) {
+                toStandardize = addRegion;
+            } else {
+                toStandardize = toStandardize.mergeWith(addRegion);
             }
+            refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
 
             // If new last note has been added, update track size.
-            if (!updatedNotes.isEmpty()
-                    && updatedNotes.getLast().getPosition() == toAdd.getLast().getPosition()) {
-                setNumMeasures((toAdd.getLast().getPosition() / Quantizer.COL_WIDTH / 4) + 4);
+            if (toStandardize.getMaxMs() == addRegion.getMaxMs()) {
+                setNumMeasures((addRegion.getMaxMs() / Quantizer.COL_WIDTH / 4) + 4);
             }
         }
 
         @Override
-        public void deleteSongNote(Note note) {
+        public void deleteNote(Note note) {
             Set<Integer> positionsToRemove = ImmutableSet.of();
             if (playbackManager.isHighlighted(note)) {
                 positionsToRemove = playbackManager.getHighlightedNotes().stream()
@@ -538,60 +471,11 @@ public class SongEditor {
             } else if (note.isValid()) {
                 positionsToRemove = ImmutableSet.of(note.getAbsPositionMs());
             }
-            if (positionsToRemove.isEmpty()) {
-                return; // If no valid song notes to remove, do nothing.
+            RegionBounds toStandardize = removeNotes(positionsToRemove);
+            if (!toStandardize.equals(RegionBounds.INVALID)) {
+                refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
             }
-            MutateResponse response = model.removeNotes(positionsToRemove);
-            // Link up prev note.
-            if (response.getPrev().isPresent()) {
-                NoteUpdateData prev = response.getPrev().get();
-                Note prevTrackNote = noteMap.getNote(prev.getPosition());
-                if (response.getNext().isPresent()) {
-                    prevTrackNote.adjustForOverlap(
-                            response.getNext().get().getPosition() - prev.getPosition());
-                } else {
-                    prevTrackNote.adjustForOverlap(Integer.MAX_VALUE);
-                }
-                noteMap.putEnvelope(
-                        prev.getPosition(),
-                        prev.getEnvelope(),
-                        getEnvelopeCallback(prev.getPosition()));
-            }
-            // Link up next note.
-            if (response.getNext().isPresent()) {
-                NoteUpdateData next = response.getNext().get();
-                noteMap.getNote(next.getPosition()).setTrueLyric(next.getTrueLyric());
-                noteMap.putEnvelope(
-                        next.getPosition(),
-                        next.getEnvelope(),
-                        getEnvelopeCallback(next.getPosition()));
-                String prevPitch =
-                        PitchUtils.rowNumToPitch(noteMap.getNote(next.getPosition()).getRow());
-                if (response.getPrev().isPresent()) {
-                    prevPitch = PitchUtils.rowNumToPitch(
-                            noteMap.getNote(response.getPrev().get().getPosition()).getRow());
-                }
-                noteMap.putPitchbend(
-                        next.getPosition(),
-                        prevPitch,
-                        next.getPitchbend(),
-                        getPitchbendCallback(next.getPosition()),
-                        vibratoEditor);
-            }
-            // Set backup values for all notes that were deleted, then remove them from map.
-            for (NoteUpdateData updateData : response.getNotes()) {
-                // Should never happen but let's check just in case.
-                if (noteMap.hasNote(updateData.getPosition())) {
-                    noteMap.getNote(updateData.getPosition()).setBackupData(updateData);
-                    noteMap.removeFullNote(updateData.getPosition());
-                } else {
-                    System.out.println("Error: Note present in backend but not in frontend!");
-                }
-            }
-        }
 
-        @Override
-        public void deleteTrackNote(Note note) {
             if (playbackManager.isHighlighted(note)) {
                 for (Note curNote : playbackManager.getHighlightedNotes()) {
                     noteMap.removeNoteElement(curNote);

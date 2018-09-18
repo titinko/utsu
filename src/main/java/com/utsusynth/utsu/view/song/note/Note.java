@@ -7,7 +7,6 @@ import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.PitchbendData;
-import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
@@ -70,12 +69,7 @@ public class Note {
         lyric.initialize(new LyricCallback() {
             @Override
             public void setSongLyric(String newLyric) {
-                thisNote.updateNote(
-                        thisNote.getAbsPositionMs(),
-                        thisNote.getAbsPositionMs(),
-                        thisNote.getRow(),
-                        thisNote.getDurationMs(),
-                        newLyric);
+                thisNote.track.updateNote(thisNote);
             }
 
             @Override
@@ -345,14 +339,13 @@ public class Note {
     private void deleteNote() {
         contextMenu.hide();
         lyric.closeTextFieldIfNeeded();
-        track.deleteSongNote(this);
-        track.deleteTrackNote(this);
+        track.deleteNote(this);
     }
 
     private void resizeNote(int newDuration) {
         note.setWidth(scaler.scaleX(newDuration) - 1);
         adjustDragEdge(newDuration);
-        updateNote(getAbsPositionMs(), getAbsPositionMs(), getRow(), newDuration, lyric.getLyric());
+        track.updateNote(this);
     }
 
     private void adjustDragEdge(double newDuration) {
@@ -360,41 +353,6 @@ public class Note {
         StackPane
                 .setMargin(dragEdge, new Insets(0, 0, 0, scaledDuration - dragEdge.getWidth() - 1));
         StackPane.setMargin(overlap, new Insets(0, 0, 0, scaledDuration - overlap.getWidth() - 1));
-    }
-
-    private void updateNote(
-            int oldPositionMs,
-            int newPositionMs,
-            int newRow,
-            int newDurationMs,
-            String newLyric) {
-        if (note.getStyleClass().contains("valid")) {
-            backupData = track.removeSongNote(oldPositionMs);
-        }
-        Optional<EnvelopeData> envelopeData = Optional.absent();
-        Optional<PitchbendData> pitchbendData = Optional.absent();
-        Optional<NoteConfigData> configData = Optional.absent();
-        if (backupData != null) {
-            envelopeData = Optional.of(backupData.getEnvelope());
-            pitchbendData = Optional.of(backupData.getPitchbend());
-            configData = Optional.of(backupData.getConfigData());
-        }
-        try {
-            setValid(true);
-            String newPitch = PitchUtils.rowNumToPitch(newRow);
-            NoteData toAdd = new NoteData(
-                    newPositionMs,
-                    newDurationMs,
-                    newPitch,
-                    newLyric,
-                    Optional.absent(),
-                    envelopeData,
-                    pitchbendData,
-                    configData);
-            track.addSongNote(this, toAdd);
-        } catch (NoteAlreadyExistsException e) {
-            setValid(false);
-        }
     }
 
     private int getQuantizedStart() {

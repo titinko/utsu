@@ -1,8 +1,5 @@
 package com.utsusynth.utsu.view.song.note;
 
-import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.NoteUpdateData;
-import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.controller.SongController.Mode;
 
 /**
@@ -15,18 +12,14 @@ public interface NoteCallback {
 
     boolean isExclusivelyHighlighted(Note note);
 
-    void addSongNote(Note note, NoteData toAdd) throws NoteAlreadyExistsException;
-
-    NoteUpdateData removeSongNote(int position);
+    /** Only catches current note. */
+    void updateNote(Note note);
 
     /** Catches all highlighted notes, if applicable. */
     void moveNote(Note note, int positionDelta, int rowDelta);
 
     /** Catches all highlighted notes, if applicable. */
-    void deleteSongNote(Note note);
-
-    /** Catches all highlighted notes, if applicable. */
-    void deleteTrackNote(Note trackNote);
+    void deleteNote(Note note);
 
     boolean hasVibrato(int position);
 

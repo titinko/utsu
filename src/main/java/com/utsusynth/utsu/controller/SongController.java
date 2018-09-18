@@ -11,10 +11,10 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -184,7 +184,7 @@ public class SongController implements EditorController, Localizable {
             }
 
             @Override
-            public MutateResponse removeNotes(Collection<Integer> positions) {
+            public MutateResponse removeNotes(Set<Integer> positions) {
                 onSongChange();
                 return song.get().removeNotes(positions);
             }

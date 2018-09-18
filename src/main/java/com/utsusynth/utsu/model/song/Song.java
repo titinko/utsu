@@ -1,10 +1,10 @@
 package com.utsusynth.utsu.model.song;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
@@ -180,74 +180,53 @@ public class Song {
     }
 
     /** Removes all notes at the specified positions from the song object. */
-    public MutateResponse removeNotes(Collection<Integer> positions) {
+    public MutateResponse removeNotes(Set<Integer> positions) {
         if (positions.isEmpty()) {
             System.out.println("Error: Remove notes called on empty collection!");
             return null;
         }
-        // Start with an arbitrary note.
-        int firstPosition = positions.iterator().next();
-        NoteNode firstRemovedNode = this.noteList.getNote(firstPosition);
-        int lastPosition = firstPosition;
-        NoteNode lastRemovedNode = firstRemovedNode;
 
-        // Remove all notes, including the first one.
         HashSet<NoteUpdateData> removedNotes = new HashSet<>(); // Return value.
+        int firstNeighbor = Integer.MAX_VALUE;
+        int lastNeighbor = Integer.MIN_VALUE;
+
         NoteNode curNode;
         for (int position : positions) {
-            if (position < firstPosition) {
-                firstPosition = position;
-                firstRemovedNode = this.noteList.getNote(firstPosition);
-            }
-            if (position > lastPosition) {
-                lastPosition = position;
-                lastRemovedNode = this.noteList.getNote(lastPosition);
-            }
             curNode = this.noteList.removeNote(position);
             this.pitchbends.removePitchbends(
                     position,
                     curNode.getNote().getDuration(),
                     curNode.getNote().getPitchbends());
             removedNotes.add(curNode.getNote().getUpdateData(position));
-        }
 
-        // Do standardization separately as it must happen in back -> front order.
-        if (lastRemovedNode.getNext().isPresent()) {
-            // Adjust envelope, preutterance, and length of next note.
-            lastRemovedNode.getNext().get().standardize(standardizer, voicebank.get());
-        }
-        if (firstRemovedNode.getPrev().isPresent()) {
-            // Adjust envelope, preutterance, and length of previous note.
-            firstRemovedNode.getPrev().get().standardize(standardizer, voicebank.get());
+            if (curNode.getPrev().isPresent()) {
+                int prevPosition = position - curNode.getNote().getDelta();
+                if (prevPosition < firstNeighbor && !positions.contains(prevPosition)) {
+                    firstNeighbor = prevPosition;
+                }
+                if (prevPosition > lastNeighbor && !positions.contains(prevPosition)) {
+                    lastNeighbor = prevPosition;
+                }
+            }
+            if (curNode.getNext().isPresent()) {
+                int nextPosition = position + curNode.getNote().getLength();
+                if (nextPosition < firstNeighbor && !positions.contains(nextPosition)) {
+                    firstNeighbor = nextPosition;
+                }
+                if (nextPosition > lastNeighbor && !positions.contains(nextPosition)) {
+                    lastNeighbor = nextPosition;
+                }
+            }
         }
 
         Optional<NoteUpdateData> prevNote = Optional.absent();
-        if (firstRemovedNode.getPrev().isPresent()) {
-            Note prevSongNote = firstRemovedNode.getPrev().get().getNote();
-            prevNote = Optional.of(
-                    prevSongNote
-                            .getUpdateData(firstPosition - firstRemovedNode.getNote().getDelta()));
-        }
-
         Optional<NoteUpdateData> nextNote = Optional.absent();
-        if (lastRemovedNode.getNext().isPresent()) {
-            // Modify the next note's portamento.
-            Note nextSongNote = lastRemovedNode.getNext().get().getNote();
-            int nextPosition = lastPosition + lastRemovedNode.getNote().getLength();
-            int prevNoteNum = firstRemovedNode.getPrev().isPresent()
-                    ? firstRemovedNode.getPrev().get().getNote().getNoteNum()
-                    : nextSongNote.getNoteNum();
-            pitchbends.removePitchbends(
-                    nextPosition,
-                    nextSongNote.getDuration(),
-                    nextSongNote.getPitchbends());
-            pitchbends.addPitchbends(
-                    nextPosition,
-                    nextSongNote.getDuration(),
-                    nextSongNote.getPitchbends(),
-                    prevNoteNum,
-                    nextSongNote.getNoteNum());
-            nextNote = Optional.of(nextSongNote.getUpdateData(nextPosition));
+        // If no neighbors were detected, skip this step.
+        if (lastNeighbor >= firstNeighbor) {
+            Note firstNote = noteList.getNote(firstNeighbor).getNote();
+            prevNote = Optional.of(firstNote.getUpdateData(firstNeighbor));
+            Note lastNote = noteList.getNote(lastNeighbor).getNote();
+            nextNote = Optional.of(lastNote.getUpdateData(lastNeighbor));
         }
 
         return new MutateResponse(removedNotes, prevNote, nextNote);
