@@ -177,6 +177,31 @@ public class SongEditor {
         }
     }
 
+    public void deleteSelected() {
+        // Deletes all currently selected notes.
+    }
+
+    private void removeNotes(Set<Integer> positionsToRemove) {
+        if (positionsToRemove.isEmpty()) {
+            return; // If no valid song notes to remove, do nothing.
+        }
+        MutateResponse response = model.removeNotes(positionsToRemove);
+        // Set backup values for all notes that were deleted, then remove them from map.
+        for (NoteUpdateData updateData : response.getNotes()) {
+            // Should never happen but let's check just in case.
+            if (noteMap.hasNote(updateData.getPosition())) {
+                noteMap.getNote(updateData.getPosition()).setBackupData(updateData);
+                noteMap.removeFullNote(updateData.getPosition());
+            } else {
+                System.out.println("Error: Note present in backend but not in frontend!");
+            }
+        }
+    }
+
+    public void refreshSelected() {
+        // Refreshes all notes in currently selected region.
+    }
+
     public void selectivelyShowRegion(double centerPercent, double margin) {
         int measureWidthMs = 4 * Quantizer.COL_WIDTH;
         int marginMeasures = ((int) (margin / Math.round(scaler.scaleX(measureWidthMs)))) + 3;
@@ -505,14 +530,15 @@ public class SongEditor {
 
         @Override
         public void deleteSongNote(Note note) {
-            Set<Integer> positionsToRemove;
+            Set<Integer> positionsToRemove = ImmutableSet.of();
             if (playbackManager.isHighlighted(note)) {
                 positionsToRemove = playbackManager.getHighlightedNotes().stream()
                         .filter(curNote -> curNote.isValid())
                         .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
             } else if (note.isValid()) {
                 positionsToRemove = ImmutableSet.of(note.getAbsPositionMs());
-            } else {
+            }
+            if (positionsToRemove.isEmpty()) {
                 return; // If no valid song notes to remove, do nothing.
             }
             MutateResponse response = model.removeNotes(positionsToRemove);
