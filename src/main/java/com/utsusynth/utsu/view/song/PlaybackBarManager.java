@@ -136,6 +136,29 @@ public class PlaybackBarManager {
         }
     }
 
+    /** Highlights all notes and places playback bars at their edges. */
+    void highlightAll(Collection<Note> allNotes) {
+        clearHighlights();
+        if (allNotes.isEmpty()) {
+            return;
+        }
+
+        for (Note note : allNotes) {
+            if (selectedRegion.get().equals(RegionBounds.INVALID)) {
+                selectedRegion.set(note.getValidBounds());
+            } else {
+                selectedRegion.set(selectedRegion.get().mergeWith(note.getValidBounds()));
+            }
+            highlighted.add(note);
+            note.setHighlighted(true);
+        }
+
+        // Add start and stop bars to the track at the correct location.
+        bars.getChildren().addAll(startBar, endBar);
+        startBar.setTranslateX(scaler.scaleX(selectedRegion.get().getMinMs()));
+        endBar.setTranslateX(scaler.scaleX(selectedRegion.get().getMaxMs()));
+    }
+
     /** Aligns playback bar to actual highlighted notes. */
     void realign() {
         if (highlighted.isEmpty()) {

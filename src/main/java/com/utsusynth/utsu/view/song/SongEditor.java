@@ -3,7 +3,6 @@ package com.utsusynth.utsu.view.song;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
@@ -134,13 +133,12 @@ public class SongEditor {
 
     /** Start the playback bar animation. It will end on its own. */
     public Void startPlayback(RegionBounds rendered, Duration duration) {
-        // Find exact region included in playback.
-        Entry<Integer, Note> firstNote = noteMap.getFirstNote(rendered);
-        Entry<Integer, Note> lastNote = noteMap.getLastNote(rendered);
-        if (firstNote != null && lastNote != null) {
-            int firstNoteStart = noteMap.getEnvelope(firstNote.getKey()).getStartMs();
+        int firstPosition = noteMap.getFirstPosition(rendered);
+        int lastPosition = noteMap.getLastPosition(rendered);
+        if (rendered.contains(firstPosition) && rendered.contains(lastPosition)) {
+            int firstNoteStart = noteMap.getEnvelope(firstPosition).getStartMs();
             int renderStart = Math.min(firstNoteStart, Math.max(rendered.getMinMs(), 0));
-            int renderEnd = lastNote.getKey() + lastNote.getValue().getDurationMs();
+            int renderEnd = lastPosition + noteMap.getNote(lastPosition).getDurationMs();
             playbackManager.startPlayback(duration, new RegionBounds(renderStart, renderEnd));
         }
         return null;
@@ -165,16 +163,12 @@ public class SongEditor {
         return playbackManager.getRegionBounds();
     }
 
-    public void selectNotes(RegionBounds region) {
-        Entry<Integer, Note> firstNote = noteMap.getFirstNote(region);
-        Entry<Integer, Note> lastNote = noteMap.getLastNote(region);
-        if (firstNote != null && lastNote != null) {
-            playbackManager.highlightTo(firstNote.getValue(), noteMap.getAllValidNotes());
-            playbackManager.highlightTo(lastNote.getValue(), noteMap.getAllValidNotes());
-        } else {
-            // If no note highlighted, remove all highlights.
-            playbackManager.clearHighlights();
-        }
+    public void selectRegion(RegionBounds region) {
+        playbackManager.highlightRegion(region, noteMap.getAllValidNotes());
+    }
+
+    public void selectAll() {
+        playbackManager.highlightAll(noteMap.getAllValidNotes());
     }
 
     public void deleteSelected() {

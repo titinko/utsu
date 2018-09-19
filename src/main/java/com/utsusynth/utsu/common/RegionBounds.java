@@ -32,6 +32,10 @@ public class RegionBounds {
         return intersects(new RegionBounds(otherMinMs, otherMaxMs));
     }
 
+    public boolean contains(int otherMs) {
+        return minMs <= otherMs && maxMs >= otherMs;
+    }
+
     public RegionBounds mergeWith(RegionBounds other) {
         // Can be merged even if they don't intersect.
         return new RegionBounds(Math.min(minMs, other.minMs), Math.max(maxMs, other.maxMs));

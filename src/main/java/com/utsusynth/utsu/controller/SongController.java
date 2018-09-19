@@ -563,7 +563,7 @@ public class SongController implements EditorController, Localizable {
             NotePropertiesController controller = (NotePropertiesController) loader.getController();
             controller.setData(song, regionBounds, () -> {
                 onSongChange();
-                songEditor.selectNotes(regionBounds);
+                songEditor.selectRegion(regionBounds);
                 songEditor.refreshSelected();
             });
             propertiesWindow.setScene(new Scene(notePropertiesPane));
@@ -578,7 +578,7 @@ public class SongController implements EditorController, Localizable {
     void rewindPlayback() {
         engine.stopPlayback();
         songEditor.stopPlayback();
-        songEditor.selectNotes(RegionBounds.INVALID);
+        songEditor.selectRegion(RegionBounds.INVALID);
         scrollPaneCenter.setHvalue(0); // Scroll to start of song.
         // TODO: Stop scrollbar's existing acceleration.
     }
@@ -696,7 +696,7 @@ public class SongController implements EditorController, Localizable {
     @Override
     public void selectAll() {
         // Selects all notes.
-        songEditor.selectNotes(RegionBounds.WHOLE_SONG);
+        songEditor.selectAll();
     }
 
     @Override
