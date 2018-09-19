@@ -2,7 +2,7 @@ package com.utsusynth.utsu.view.song;
 
 import java.util.Collection;
 import java.util.TreeSet;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.quantize.Quantizer;
@@ -177,8 +177,8 @@ public class PlaybackBarManager {
         return highlighted.contains(note);
     }
 
-    ImmutableSet<Note> getHighlightedNotes() {
-        return ImmutableSet.copyOf(highlighted);
+    ImmutableList<Note> getHighlightedNotes() {
+        return ImmutableList.copyOf(highlighted);
     }
 
     RegionBounds getRegionBounds() {

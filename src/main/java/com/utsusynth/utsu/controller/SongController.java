@@ -563,10 +563,8 @@ public class SongController implements EditorController, Localizable {
             NotePropertiesController controller = (NotePropertiesController) loader.getController();
             controller.setData(song, regionBounds, () -> {
                 onSongChange();
-                // TODO: Refresh only the notes that were affected.
-                // TODO: Make preutter/overlap changes show up in this refresh.
-                refreshView();
                 songEditor.selectNotes(regionBounds);
+                songEditor.refreshSelected();
             });
             propertiesWindow.setScene(new Scene(notePropertiesPane));
             propertiesWindow.showAndWait();

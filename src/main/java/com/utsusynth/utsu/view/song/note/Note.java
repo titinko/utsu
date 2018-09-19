@@ -120,7 +120,7 @@ public class Note implements Comparable<Note> {
                 } else {
                     this.track.highlightExclusive(this);
                 }
-            } else if (subMode == SubMode.DRAGGING) {
+            } else if (subMode == SubMode.DRAGGING || subMode == SubMode.RESIZING) {
                 if (note.getStyleClass().contains("highlighted")) {
                     this.track.realignHighlights();
                 }

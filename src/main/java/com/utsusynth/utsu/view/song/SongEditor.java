@@ -173,7 +173,7 @@ public class SongEditor {
             playbackManager.highlightTo(lastNote.getValue(), noteMap.getAllValidNotes());
         } else {
             // If no note highlighted, remove all highlights.
-            playbackManager.highlightRegion(RegionBounds.INVALID, ImmutableList.of());
+            playbackManager.clearHighlights();
         }
     }
 
@@ -221,7 +221,13 @@ public class SongEditor {
     }
 
     public void refreshSelected() {
-        // Refreshes all notes in currently selected region.
+        List<Note> highlightedNotes = playbackManager.getHighlightedNotes();
+        if (highlightedNotes.isEmpty()) {
+            return;
+        }
+        refreshNotes(
+                highlightedNotes.get(0).getAbsPositionMs(),
+                highlightedNotes.get(highlightedNotes.size() - 1).getAbsPositionMs());
     }
 
     private void refreshNotes(int firstPosition, int lastPosition) {
@@ -254,7 +260,6 @@ public class SongEditor {
                     curData.getPitchbend(),
                     getPitchbendCallback(curData.getPosition()),
                     vibratoEditor);
-
             if (prevNote != null) {
                 prevNote.adjustForOverlap(curData.getPosition() - prevNote.getAbsPositionMs());
             }
@@ -457,15 +462,9 @@ public class SongEditor {
             }
             RegionBounds toStandardize = removeNotes(positionsToRemove);
 
-            List<Note> notes;
-            if (playbackManager.isHighlighted(note)) {
-                notes = playbackManager.getHighlightedNotes().stream().sorted(
-                        (note1, note2) -> Integer
-                                .compare(note1.getAbsPositionMs(), note2.getAbsPositionMs()))
-                        .collect(Collectors.toList());
-            } else {
-                notes = ImmutableList.of(note);
-            }
+            List<Note> notes =
+                    playbackManager.isHighlighted(note) ? playbackManager.getHighlightedNotes()
+                            : ImmutableList.of(note);
             LinkedList<NoteData> toAdd = new LinkedList<>();
             for (Note curNote : notes) {
                 curNote.moveNoteElement(positionDelta, rowDelta);
