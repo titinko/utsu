@@ -22,7 +22,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
-public class Note {
+public class Note implements Comparable<Note> {
     private final StackPane layout;
     private final Rectangle note;
     private final Rectangle dragEdge;
@@ -119,6 +119,10 @@ public class Note {
                     this.lyric.openTextField();
                 } else {
                     this.track.highlightExclusive(this);
+                }
+            } else if (subMode == SubMode.DRAGGING) {
+                if (note.getStyleClass().contains("highlighted")) {
+                    this.track.realignHighlights();
                 }
             }
             subMode = SubMode.CLICKING;
@@ -361,5 +365,10 @@ public class Note {
 
     private int getQuantizedStart(int quantization) {
         return getAbsPositionMs() / (Quantizer.COL_WIDTH / quantization);
+    }
+
+    @Override
+    public int compareTo(Note other) {
+        return Integer.compare(getAbsPositionMs(), other.getAbsPositionMs());
     }
 }

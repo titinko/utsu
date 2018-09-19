@@ -10,6 +10,8 @@ public interface NoteCallback {
 
     void highlightInclusive(Note note);
 
+    void realignHighlights();
+
     boolean isExclusivelyHighlighted(Note note);
 
     /** Only catches current note. */

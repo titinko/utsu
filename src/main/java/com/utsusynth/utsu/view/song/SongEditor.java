@@ -417,6 +417,11 @@ public class SongEditor {
         }
 
         @Override
+        public void realignHighlights() {
+            playbackManager.realign();
+        }
+
+        @Override
         public boolean isExclusivelyHighlighted(Note note) {
             return playbackManager.isExclusivelyHighlighted(note);
         }

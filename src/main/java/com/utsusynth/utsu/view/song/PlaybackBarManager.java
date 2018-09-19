@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.view.song;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.TreeSet;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
@@ -24,7 +24,7 @@ public class PlaybackBarManager {
     private static final int totalHeight = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
 
     private final Scaler scaler;
-    private final HashSet<Note> highlighted;
+    private final TreeSet<Note> highlighted;
     private final TranslateTransition playback;
     private final SimpleObjectProperty<RegionBounds> selectedRegion;
 
@@ -35,7 +35,7 @@ public class PlaybackBarManager {
     @Inject
     public PlaybackBarManager(Scaler scaler) {
         this.scaler = scaler;
-        highlighted = new HashSet<>();
+        highlighted = new TreeSet<>();
         playback = new TranslateTransition();
         selectedRegion = new SimpleObjectProperty<>(RegionBounds.INVALID);
         clear();
@@ -133,6 +133,18 @@ public class PlaybackBarManager {
                 highlighted.add(note);
                 note.setHighlighted(true);
             }
+        }
+    }
+
+    /** Aligns playback bar to actual highlighted notes. */
+    void realign() {
+        if (highlighted.isEmpty()) {
+            clearHighlights();
+        } else {
+            selectedRegion
+                    .set(highlighted.first().getBounds().mergeWith(highlighted.last().getBounds()));
+            startBar.setTranslateX(scaler.scaleX(selectedRegion.get().getMinMs()));
+            endBar.setTranslateX(scaler.scaleX(selectedRegion.get().getMaxMs()));
         }
     }
 
