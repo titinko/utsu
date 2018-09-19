@@ -11,7 +11,6 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -25,7 +24,6 @@ import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
@@ -196,7 +194,7 @@ public class SongController implements EditorController, Localizable {
             }
 
             @Override
-            public LinkedList<NoteUpdateData> standardizeNotes(int firstPos, int lastPos) {
+            public MutateResponse standardizeNotes(int firstPos, int lastPos) {
                 // Only called in response to other changes, so this does not trigger onSongChange.
                 return song.get().standardizeNotes(firstPos, lastPos);
             }

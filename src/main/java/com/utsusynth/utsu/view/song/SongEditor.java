@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -224,29 +225,61 @@ public class SongEditor {
     }
 
     private void refreshNotes(int firstPosition, int lastPosition) {
-        LinkedList<NoteUpdateData> updatedNotes =
-                model.standardizeNotes(firstPosition, lastPosition);
+        MutateResponse standardizeResponse = model.standardizeNotes(firstPosition, lastPosition);
         String prevPitch = "";
-        for (int i = 0; i < updatedNotes.size(); i++) {
-            NoteUpdateData updateData = updatedNotes.get(i);
-            Note toUpdate = noteMap.getNote(updateData.getPosition());
-            toUpdate.setTrueLyric(updateData.getTrueLyric());
+        Note prevNote = null;
+        if (standardizeResponse.getPrev().isPresent()) {
+            NoteUpdateData prevData = standardizeResponse.getPrev().get();
+            prevNote = noteMap.getNote(prevData.getPosition());
+            prevPitch = PitchUtils.rowNumToPitch(prevNote.getRow());
             noteMap.putEnvelope(
-                    updateData.getPosition(),
-                    updateData.getEnvelope(),
-                    getEnvelopeCallback(updateData.getPosition()));
+                    prevData.getPosition(),
+                    prevData.getEnvelope(),
+                    getEnvelopeCallback(prevData.getPosition()));
+        }
+        Iterator<NoteUpdateData> dataIterator = standardizeResponse.getNotes().iterator();
+        NoteUpdateData curData = null;
+        Note curNote = null;
+        while (dataIterator.hasNext()) {
+            curData = dataIterator.next();
+            curNote = noteMap.getNote(curData.getPosition());
+            curNote.setTrueLyric(curData.getTrueLyric());
+            noteMap.putEnvelope(
+                    curData.getPosition(),
+                    curData.getEnvelope(),
+                    getEnvelopeCallback(curData.getPosition()));
             noteMap.putPitchbend(
-                    updateData.getPosition(),
-                    prevPitch.isEmpty() ? PitchUtils.rowNumToPitch(toUpdate.getRow()) : prevPitch,
-                    updateData.getPitchbend(),
-                    getPitchbendCallback(updateData.getPosition()),
+                    curData.getPosition(),
+                    prevPitch.isEmpty() ? PitchUtils.rowNumToPitch(curNote.getRow()) : prevPitch,
+                    curData.getPitchbend(),
+                    getPitchbendCallback(curData.getPosition()),
                     vibratoEditor);
 
-            if (i < updatedNotes.size() - 1) {
-                toUpdate.adjustForOverlap(
-                        updatedNotes.get(i + 1).getPosition() - updateData.getPosition());
+            if (prevNote != null) {
+                prevNote.adjustForOverlap(curData.getPosition() - prevNote.getAbsPositionMs());
             }
-            prevPitch = PitchUtils.rowNumToPitch(toUpdate.getRow());
+            prevNote = curNote;
+            prevPitch = PitchUtils.rowNumToPitch(curNote.getRow());
+        }
+        if (standardizeResponse.getNext().isPresent()) {
+            NoteUpdateData nextData = standardizeResponse.getNext().get();
+            Note nextNote = noteMap.getNote(nextData.getPosition());
+            nextNote.setTrueLyric(nextData.getTrueLyric());
+            noteMap.putEnvelope(
+                    nextData.getPosition(),
+                    nextData.getEnvelope(),
+                    getEnvelopeCallback(nextData.getPosition()));
+            noteMap.putPitchbend(
+                    nextData.getPosition(),
+                    prevPitch.isEmpty() ? PitchUtils.rowNumToPitch(nextNote.getRow()) : prevPitch,
+                    nextData.getPitchbend(),
+                    getPitchbendCallback(nextData.getPosition()),
+                    vibratoEditor);
+            if (curNote != null) {
+                curNote.adjustForOverlap(nextData.getPosition() - curData.getPosition());
+            }
+        } else if (curNote != null) {
+            curNote.adjustForOverlap(Integer.MAX_VALUE);
         }
     }
 
@@ -440,8 +473,11 @@ public class SongEditor {
                 }
                 toAdd.add(curNote.getNoteData());
             }
-            // Add backend notes if necessary.
+            // Standardize and return early if nothing needs to be added.
             if (toAdd.isEmpty()) {
+                if (!toStandardize.equals(RegionBounds.INVALID)) {
+                    refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
+                }
                 return;
             }
             model.addNotes(toAdd);

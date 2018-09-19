@@ -1,12 +1,10 @@
 package com.utsusynth.utsu.view.song;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.controller.SongController.Mode;
 
 /**
@@ -23,7 +21,7 @@ public interface SongCallback {
     void modifyNote(NoteData toModify);
 
     /** Standardizes a section of notes and returns any frontend updates. */
-    LinkedList<NoteUpdateData> standardizeNotes(int firstPosition, int lastPosition);
+    MutateResponse standardizeNotes(int firstPosition, int lastPosition);
 
     /** Open the note properties editor on the given RegionBounds. */
     void openNoteProperties(RegionBounds regionBounds);

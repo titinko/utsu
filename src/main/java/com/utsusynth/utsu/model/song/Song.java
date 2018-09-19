@@ -257,28 +257,35 @@ public class Song {
         }
     }
 
-    public LinkedList<NoteUpdateData> standardizeNotes(int firstPosition, int lastPosition) {
+    public MutateResponse standardizeNotes(int firstPosition, int lastPosition) {
         LinkedList<NoteUpdateData> updatedNotes = new LinkedList<>();
-        NoteNode lastNode = this.noteList.getNote(lastPosition);
-        if (lastNode == null) {
+        Optional<NoteUpdateData> prevNeighbor = Optional.absent();
+        Optional<NoteUpdateData> nextNeighbor = Optional.absent();
+
+        NoteNode startNode = this.noteList.getNote(lastPosition);
+        if (startNode == null) {
             // TODO: Handle this better.
             System.out.println("Could not find last note when standardizing notes!");
-            return updatedNotes;
+            return new MutateResponse(updatedNotes, Optional.absent(), Optional.absent());
         }
 
         // Include the next neighbor of the last note, if present.
-        int curPosition = lastPosition;
-        if (lastNode.getNext().isPresent()) {
-            curPosition += lastNode.getNote().getLength();
-            lastNode = lastNode.getNext().get();
+        int startPosition = lastPosition;
+        if (startNode.getNext().isPresent()) {
+            startPosition += startNode.getNote().getLength();
+            startNode = startNode.getNext().get();
+            nextNeighbor = Optional.of(startNode.getNote().getUpdateData(startPosition));
         }
 
-        Optional<NoteNode> curNode = Optional.of(lastNode);
+        int curPosition = startPosition;
+        Optional<NoteNode> curNode = Optional.of(startNode);
         while (curNode.isPresent()) {
             Note note = curNode.get().getNote();
             // Standardize.
             curNode.get().standardize(standardizer, voicebank.get());
-            updatedNotes.addFirst(note.getUpdateData(curPosition));
+            if (!nextNeighbor.isPresent() || curPosition < startPosition) {
+                updatedNotes.addFirst(note.getUpdateData(curPosition));
+            }
             // Pitch curve corrections.
             int prevNoteNum = curNode.get().getPrev().isPresent()
                     ? curNode.get().getPrev().get().getNote().getNoteNum()
@@ -301,9 +308,9 @@ public class Song {
         // Include the prev neighbor of the first note, if present. No need to change pitch.
         if (curNode.isPresent()) {
             curNode.get().standardize(standardizer, voicebank.get());
-            updatedNotes.addFirst(curNode.get().getNote().getUpdateData(curPosition));
+            prevNeighbor = Optional.of(curNode.get().getNote().getUpdateData(curPosition));
         }
-        return updatedNotes;
+        return new MutateResponse(updatedNotes, prevNeighbor, nextNeighbor);
     }
 
     public LinkedList<NoteData> getNotes() {
