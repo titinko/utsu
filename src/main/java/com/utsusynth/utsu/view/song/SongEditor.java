@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -279,6 +280,38 @@ public class SongEditor {
             }
         } else if (curNote != null) {
             curNote.adjustForOverlap(Integer.MAX_VALUE);
+        }
+    }
+
+    public Optional<Integer> getFocusNote() {
+        List<Note> highlightedNotes = playbackManager.getHighlightedNotes();
+        if (!highlightedNotes.isEmpty()) {
+            return Optional.of(highlightedNotes.get(0).getAbsPositionMs());
+        }
+        return Optional.absent();
+    }
+
+    public void focusOnNote(int position) {
+        if (!noteMap.hasNote(position)) {
+            return;
+        }
+        // If old focus has lyric open, new focus should have it open too.
+        boolean shouldOpenLyricInput = false;
+        List<Note> highlightedNotes = playbackManager.getHighlightedNotes();
+        if (!highlightedNotes.isEmpty()) {
+            shouldOpenLyricInput = highlightedNotes.get(0).isLyricInputOpen();
+        }
+        Note newFocus = noteMap.getNote(position);
+        playbackManager.clearHighlights();
+        playbackManager.highlightTo(newFocus, noteMap.getAllValidNotes());
+        if (shouldOpenLyricInput) {
+            newFocus.openLyricInput();
+        }
+    }
+
+    public void openLyricInput(int position) {
+        if (noteMap.hasNote(position)) {
+            noteMap.getNote(position).openLyricInput();
         }
     }
 

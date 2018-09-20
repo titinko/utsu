@@ -334,6 +334,14 @@ public class Song {
         return notes;
     }
 
+    public Optional<Integer> getNextNote(int currentPos) {
+        NoteNode curNode = noteList.getNote(currentPos);
+        if (curNode != null && curNode.getNext().isPresent()) {
+            return Optional.of(currentPos + curNode.getNote().getLength());
+        }
+        return Optional.absent();
+    }
+
     public String getProjectName() {
         return projectName;
     }

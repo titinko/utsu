@@ -71,11 +71,6 @@ public class Lyric {
         this.trackNote.adjustColumnSpan();
     }
 
-    void openTextElement() {
-        this.activeNode.getChildren().clear();
-        this.activeNode.getChildren().add(this.text);
-    }
-
     void openTextField() {
         this.activeNode.getChildren().clear();
         this.activeNode.getChildren().add(this.textField);
@@ -83,8 +78,12 @@ public class Lyric {
         this.textField.selectAll();
     }
 
+    boolean isTextFieldOpen() {
+        return this.activeNode.getChildren().contains(this.textField);
+    }
+
     void closeTextFieldIfNeeded() {
-        if (this.activeNode.getChildren().contains(this.textField)) {
+        if (isTextFieldOpen()) {
             this.activeNode.getChildren().clear();
             this.activeNode.getChildren().add(this.text);
             String newLyric = textField.getText();

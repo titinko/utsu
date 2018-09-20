@@ -288,6 +288,16 @@ public class Note implements Comparable<Note> {
         }
     }
 
+    public boolean isLyricInputOpen() {
+        return lyric.isTextFieldOpen();
+    }
+
+    public void openLyricInput() {
+        if (!lyric.isTextFieldOpen()) {
+            lyric.openTextField(); // Don't open it text field already open.
+        }
+    }
+
     public void adjustForOverlap(int distanceToNextNote) {
         double oldOverlap = overlap.getWidth();
         double noteWidth = scaler.unscaleX(this.note.getWidth());

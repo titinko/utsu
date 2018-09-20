@@ -366,6 +366,12 @@ public class SongController implements EditorController, Localizable {
         } else if (new KeyCodeCombination(KeyCode.W).match(keyEvent)) {
             modeChoiceBox.setValue(Mode.EDIT);
             return true;
+        } else if (new KeyCodeCombination(KeyCode.ENTER).match(keyEvent)) {
+            Optional<Integer> focusNote = songEditor.getFocusNote();
+            if (focusNote.isPresent()) {
+                songEditor.openLyricInput(focusNote.get());
+            }
+            return true;
         } else {
             // No need to override default key behavior.
             return false;

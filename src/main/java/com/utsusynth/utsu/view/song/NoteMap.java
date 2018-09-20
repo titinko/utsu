@@ -224,8 +224,4 @@ public class NoteMap {
     Pitchbend getPitchbend(int position) {
         return pitchbendMap.get(position);
     }
-
-    boolean isEmpty() {
-        return noteMap.isEmpty() && envelopeMap.isEmpty() && pitchbendMap.isEmpty();
-    }
 }
