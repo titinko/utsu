@@ -10,7 +10,7 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.BorderPane?>
 
-<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.UtsuController">
+<BorderPane xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.UtsuController">
    <top>
       <MenuBar useSystemMenuBar="true" BorderPane.alignment="CENTER">
         <menus>
@@ -34,7 +34,15 @@
           </Menu>
           <Menu fx:id="editMenu" mnemonicParsing="false" text="Edit">
             <items>
-              <MenuItem fx:id="selectAllItem" mnemonicParsing="false" onAction="#selectAll" text="TODO" />
+                  <MenuItem fx:id="undoItem" mnemonicParsing="false" onAction="#undo" text="Undo" />
+                  <MenuItem fx:id="redoItem" mnemonicParsing="false" onAction="#redo" text="Redo" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="cutItem" mnemonicParsing="false" onAction="#cut" text="Cut" />
+                  <MenuItem fx:id="copyItem" mnemonicParsing="false" onAction="#copy" text="Copy" />
+                  <MenuItem fx:id="pasteItem" mnemonicParsing="false" onAction="#paste" text="Paste" />
+                  <MenuItem fx:id="deleteItem" mnemonicParsing="false" onAction="#delete" text="Delete" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+              <MenuItem fx:id="selectAllItem" mnemonicParsing="false" onAction="#selectAll" text="Select All" />
             </items>
           </Menu>
             <Menu fx:id="viewMenu" mnemonicParsing="false" text="View">

@@ -120,6 +120,18 @@ public class UtsuController implements Localizable {
     @FXML
     private Menu editMenu; // Value injected by FXMLLoader
     @FXML
+    private MenuItem undoItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem redoItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem cutItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem copyItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem pasteItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem deleteItem; // Value injected by FXMLLoader
+    @FXML
     private MenuItem selectAllItem; // Value injected by FXMLLoader
     @FXML
     private Menu viewMenu; // Value injected by FXMLLoader
@@ -154,6 +166,12 @@ public class UtsuController implements Localizable {
         saveAsItem.setText(bundle.getString("menu.file.saveFileAs"));
         exportToWavItem.setText(bundle.getString("menu.file.exportWav"));
         editMenu.setText(bundle.getString("menu.edit"));
+        undoItem.setText(bundle.getString("menu.edit.undo"));
+        redoItem.setText(bundle.getString("menu.edit.redo"));
+        cutItem.setText(bundle.getString("menu.edit.cut"));
+        copyItem.setText(bundle.getString("menu.edit.copy"));
+        pasteItem.setText(bundle.getString("menu.edit.paste"));
+        deleteItem.setText(bundle.getString("menu.edit.delete"));
         selectAllItem.setText(bundle.getString("menu.edit.selectAll"));
         viewMenu.setText(bundle.getString("menu.view"));
         zoomInItem.setText(bundle.getString("menu.view.zoomIn"));
@@ -175,6 +193,12 @@ public class UtsuController implements Localizable {
         saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN));
         saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN, SHIFT_DOWN));
         exportToWavItem.setAccelerator(new KeyCodeCombination(KeyCode.W, SHORTCUT_DOWN));
+        undoItem.setAccelerator(new KeyCodeCombination(KeyCode.Z, SHORTCUT_DOWN));
+        redoItem.setAccelerator(new KeyCodeCombination(KeyCode.Z, SHORTCUT_DOWN, SHIFT_DOWN));
+        cutItem.setAccelerator(new KeyCodeCombination(KeyCode.X, SHORTCUT_DOWN));
+        copyItem.setAccelerator(new KeyCodeCombination(KeyCode.C, SHORTCUT_DOWN));
+        pasteItem.setAccelerator(new KeyCodeCombination(KeyCode.V, SHORTCUT_DOWN));
+        deleteItem.setAccelerator(new KeyCodeCombination(KeyCode.D, SHORTCUT_DOWN));
         selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN));
         zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
         zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN));
@@ -365,6 +389,36 @@ public class UtsuController implements Localizable {
         if (!tabs.getTabs().isEmpty()) {
             editors.get(tabs.getSelectionModel().getSelectedItem().getId()).exportToWav();
         }
+    }
+
+    @FXML
+    void undo(ActionEvent event) {
+        // TODO
+    }
+
+    @FXML
+    void redo(ActionEvent event) {
+        // TODO
+    }
+
+    @FXML
+    void cut(ActionEvent event) {
+        // TODO
+    }
+
+    @FXML
+    void copy(ActionEvent event) {
+        // TODO
+    }
+
+    @FXML
+    void paste(ActionEvent event) {
+        // TODO
+    }
+
+    @FXML
+    void delete(ActionEvent event) {
+        // TODO
     }
 
     @FXML
