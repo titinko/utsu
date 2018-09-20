@@ -372,6 +372,17 @@ public class SongController implements EditorController, Localizable {
                 songEditor.openLyricInput(focusNote.get());
             }
             return true;
+        } else if (new KeyCodeCombination(KeyCode.TAB).match(keyEvent)) {
+            Optional<Integer> focusNote = songEditor.getFocusNote();
+            if (focusNote.isPresent()) {
+                Optional<Integer> newFocus = song.get().getNextNote(focusNote.get());
+                if (newFocus.isPresent()) {
+                    songEditor.focusOnNote(newFocus.get());
+                }
+            } else if (song.get().getNoteIterator().hasNext()) {
+                songEditor.focusOnNote(song.get().getNoteIterator().next().getDelta());
+            }
+            return true;
         } else {
             // No need to override default key behavior.
             return false;

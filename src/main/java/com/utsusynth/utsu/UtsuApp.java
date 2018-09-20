@@ -11,6 +11,8 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.TextInputControl;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
@@ -50,7 +52,8 @@ public class UtsuApp extends Application {
 
         // Set up an event that runs every time a non-text-input key is pressed.
         primaryStage.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
-            if (!(keyEvent.getTarget() instanceof TextInputControl)) {
+            if (!(keyEvent.getTarget() instanceof TextInputControl)
+                    || new KeyCodeCombination(KeyCode.TAB).match(keyEvent)) {
                 if (controller.onKeyPressed(keyEvent)) {
                     keyEvent.consume();
                 }
