@@ -325,6 +325,26 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
+    public void cut() {
+        // Voicebanks do not support cut/copy/paste right now.
+    }
+
+    @Override
+    public void copy() {
+        // Voicebanks do not support cut/copy/paste right now.
+    }
+
+    @Override
+    public void paste() {
+        // Voicebanks do not support cut/copy/paste right now.
+    }
+
+    @Override
+    public void delete() {
+        // Voicebanks do not support delete shortcut right now.
+    }
+
+    @Override
     public void selectAll() {
         if (descriptionTextArea.isFocused()) {
             descriptionTextArea.selectAll();

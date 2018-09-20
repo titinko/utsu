@@ -366,6 +366,9 @@ public class SongController implements EditorController, Localizable {
         } else if (new KeyCodeCombination(KeyCode.W).match(keyEvent)) {
             modeChoiceBox.setValue(Mode.EDIT);
             return true;
+        } else if (new KeyCodeCombination(KeyCode.BACK_SPACE).match(keyEvent)) {
+            songEditor.deleteSelected();
+            return true;
         } else if (new KeyCodeCombination(KeyCode.ENTER).match(keyEvent)) {
             Optional<Integer> focusNote = songEditor.getFocusNote();
             if (focusNote.isPresent()) {
@@ -708,6 +711,27 @@ public class SongController implements EditorController, Localizable {
             statusBar.setStatus("Error: Unable to open note properties editor.");
             errorLogger.logError(e);
         }
+    }
+
+    @Override
+    public void cut() {
+        // TODO
+    }
+
+    @Override
+    public void copy() {
+        // TODO
+    }
+
+    @Override
+    public void paste() {
+        // TODO
+    }
+
+    @Override
+    public void delete() {
+        // Deletes selected notes.
+        songEditor.deleteSelected();
     }
 
     @Override

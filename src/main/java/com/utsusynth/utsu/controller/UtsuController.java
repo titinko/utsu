@@ -284,11 +284,19 @@ public class UtsuController implements Localizable {
                     if (type == EditorType.SONG) {
                         saveAsItem.setDisable(false);
                         exportToWavItem.setDisable(false);
+                        cutItem.setDisable(false);
+                        copyItem.setDisable(false);
+                        pasteItem.setDisable(false);
+                        deleteItem.setDisable(false);
                         propertiesItem.setDisable(false);
                         recentPluginsMenu.setDisable(recentPluginsMenu.getItems().isEmpty());
                     } else if (type == EditorType.VOICEBANK) {
                         saveAsItem.setDisable(true);
                         exportToWavItem.setDisable(true);
+                        cutItem.setDisable(true);
+                        copyItem.setDisable(true);
+                        pasteItem.setDisable(true);
+                        deleteItem.setDisable(true);
                         propertiesItem.setDisable(true);
                         recentPluginsMenu.setDisable(true);
                     }
@@ -403,22 +411,30 @@ public class UtsuController implements Localizable {
 
     @FXML
     void cut(ActionEvent event) {
-        // TODO
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).cut();
+        }
     }
 
     @FXML
     void copy(ActionEvent event) {
-        // TODO
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).copy();
+        }
     }
 
     @FXML
     void paste(ActionEvent event) {
-        // TODO
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).paste();
+        }
     }
 
     @FXML
     void delete(ActionEvent event) {
-        // TODO
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).delete();
+        }
     }
 
     @FXML

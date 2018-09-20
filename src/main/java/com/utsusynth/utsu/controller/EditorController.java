@@ -49,6 +49,14 @@ interface EditorController {
 
     void exportToWav();
 
+    void cut();
+
+    void copy();
+
+    void paste();
+
+    void delete();
+
     void selectAll();
 
     void openProperties();
