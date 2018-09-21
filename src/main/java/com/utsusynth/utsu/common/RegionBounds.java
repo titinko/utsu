@@ -36,7 +36,18 @@ public class RegionBounds {
         return minMs <= otherMs && maxMs >= otherMs;
     }
 
+    /**
+     * Merges two regions into one. If one region is invalid, returns the other region.
+     * 
+     * @param other the region to merge with.
+     * @return the combination of the two regions.
+     */
     public RegionBounds mergeWith(RegionBounds other) {
+        if (this.equals(INVALID)) {
+            return other;
+        } else if (other.equals(INVALID)) {
+            return this;
+        }
         // Can be merged even if they don't intersect.
         return new RegionBounds(Math.min(minMs, other.minMs), Math.max(maxMs, other.maxMs));
     }

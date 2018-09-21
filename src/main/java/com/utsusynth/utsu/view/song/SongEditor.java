@@ -163,8 +163,12 @@ public class SongEditor {
         playbackManager.stopPlayback();
     }
 
+    public RegionBounds getPlayableTrack() {
+        return playbackManager.getPlayableRegion();
+    }
+
     public RegionBounds getSelectedTrack() {
-        return playbackManager.getRegionBounds();
+        return playbackManager.getSelectedRegion();
     }
 
     public void selectRegion(RegionBounds region) {
@@ -239,7 +243,7 @@ public class SongEditor {
             return RegionBounds.INVALID; // If no valid song notes to remove, do nothing.
         }
         MutateResponse response = model.removeNotes(positionsToRemove);
-        // Set backup values for all notes that were deleted, then remove them from map.
+        // Removd all deleted notes from note map.
         for (NoteUpdateData updateData : response.getNotes()) {
             // Should never happen but let's check just in case.
             if (noteMap.hasNote(updateData.getPosition())) {
@@ -253,6 +257,12 @@ public class SongEditor {
             return new RegionBounds(
                     response.getPrev().get().getPosition(),
                     response.getNext().get().getPosition());
+        } else if (response.getPrev().isPresent()) {
+            int prevPosition = response.getPrev().get().getPosition();
+            return new RegionBounds(prevPosition, prevPosition);
+        } else if (response.getNext().isPresent()) {
+            int nextPosition = response.getNext().get().getPosition();
+            return new RegionBounds(nextPosition, nextPosition);
         }
         return RegionBounds.INVALID;
     }
@@ -348,7 +358,8 @@ public class SongEditor {
         }
         Note newFocus = noteMap.getNote(position);
         playbackManager.clearHighlights();
-        playbackManager.highlightTo(newFocus, noteMap.getAllValidNotes());
+        playbackManager.highlightNote(newFocus);
+        playbackManager.realign();
         if (shouldOpenLyricInput) {
             newFocus.openLyricInput();
         }
@@ -485,12 +496,15 @@ public class SongEditor {
         @Override
         public void highlightExclusive(Note note) {
             playbackManager.clearHighlights();
-            playbackManager.highlightTo(note, noteMap.getAllValidNotes());
+            playbackManager.highlightNote(note);
+            playbackManager.realign();
         }
 
         @Override
         public void highlightInclusive(Note note) {
-            playbackManager.highlightTo(note, noteMap.getAllValidNotes());
+            RegionBounds merged =
+                    note.getValidBounds().mergeWith(playbackManager.getSelectedRegion());
+            playbackManager.highlightRegion(merged, noteMap.getAllValidNotes());
         }
 
         @Override
@@ -566,11 +580,7 @@ public class SongEditor {
 
             RegionBounds addRegion =
                     new RegionBounds(toAdd.getFirst().getPosition(), toAdd.getLast().getPosition());
-            if (toStandardize.equals(RegionBounds.INVALID)) {
-                toStandardize = addRegion;
-            } else {
-                toStandardize = toStandardize.mergeWith(addRegion);
-            }
+            toStandardize = toStandardize.mergeWith(addRegion);
             refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
 
             // If new last note has been added, update track size.
@@ -628,7 +638,7 @@ public class SongEditor {
         @Override
         public void openNoteProperties(Note note) {
             if (playbackManager.isHighlighted(note)) {
-                model.openNoteProperties(playbackManager.getRegionBounds());
+                model.openNoteProperties(playbackManager.getSelectedRegion());
             } else {
                 // Open on current note if current note is not highlighted.
                 model.openNoteProperties(note.getValidBounds());

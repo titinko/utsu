@@ -627,9 +627,7 @@ public class SongController implements EditorController, Localizable {
 
     private void startPlayback() {
         // If there is no track selected, play the whole song instead.
-        RegionBounds regionToPlay =
-                songEditor.getSelectedTrack().equals(RegionBounds.INVALID) ? RegionBounds.WHOLE_SONG
-                        : songEditor.getSelectedTrack();
+        RegionBounds regionToPlay = songEditor.getPlayableTrack();
 
         Function<Duration, Void> startPlaybackFn =
                 duration -> songEditor.startPlayback(regionToPlay, duration);
