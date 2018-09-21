@@ -8,6 +8,7 @@ import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.view.song.note.Note;
 import javafx.animation.Animation.Status;
 import javafx.animation.Interpolator;
@@ -198,6 +199,13 @@ public class PlaybackBarManager {
 
     boolean isHighlighted(Note note) {
         return highlighted.contains(note);
+    }
+
+    int getCursorPosition() {
+        if (bars.getChildren().contains(startBar)) {
+            return Math.max(0, RoundUtils.round(scaler.unscaleX(startBar.getTranslateX())));
+        }
+        return 0;
     }
 
     ImmutableList<Note> getHighlightedNotes() {

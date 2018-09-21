@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.song.note;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
@@ -64,6 +65,17 @@ public class NoteFactory {
             lyric.setVisibleAlias(note.getTrueLyric().get());
         }
 
+        // Set backup data if applicable.
+        if (note.getEnvelope().isPresent() && note.getPitchbend().isPresent()
+                && note.getConfigData().isPresent()) {
+            trackNote.setBackupData(
+                    new NoteUpdateData(
+                            note.getPosition(),
+                            note.getLyric(),
+                            note.getEnvelope().get(),
+                            note.getPitchbend().get(),
+                            note.getConfigData().get()));
+        }
         return trackNote;
     }
 

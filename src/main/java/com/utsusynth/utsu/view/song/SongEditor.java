@@ -182,7 +182,37 @@ public class SongEditor {
     }
 
     public void pasteSelected() {
-        // blah
+        List<NoteData> toPaste = clipboard.getNotes();
+        if (toPaste.isEmpty()) {
+            return;
+        }
+        int curPosition = playbackManager.getCursorPosition();
+        int positionDelta = curPosition - toPaste.get(0).getPosition();
+        LinkedList<NoteData> toAdd = new LinkedList<>();
+        for (NoteData noteData : toPaste) {
+            Note newNote = noteFactory.createNote(noteData, noteCallback, vibratoEditor);
+            newNote.moveNoteElement(positionDelta, 0);
+            curPosition = newNote.getAbsPositionMs();
+            noteMap.addNoteElement(newNote);
+            try {
+                noteMap.putNote(curPosition, newNote);
+            } catch (NoteAlreadyExistsException e) {
+                newNote.setValid(false);
+                continue;
+            }
+            toAdd.add(newNote.getNoteData());
+        }
+        // Increase number of measures if necessary.
+        int minNumMeasures = (curPosition / Quantizer.COL_WIDTH / 4) + 4;
+        if (minNumMeasures > numMeasures) {
+            setNumMeasures(minNumMeasures);
+        }
+
+        if (toAdd.isEmpty()) {
+            return;
+        }
+        model.addNotes(toAdd);
+        refreshNotes(toAdd.getFirst().getPosition(), toAdd.getLast().getPosition());
     }
 
     public void deleteSelected() {

@@ -716,28 +716,27 @@ public class SongController implements EditorController, Localizable {
 
     @Override
     public void cut() {
-        // TODO
+        songEditor.copySelected();
+        songEditor.deleteSelected();
     }
 
     @Override
     public void copy() {
-        // TODO
+        songEditor.copySelected();
     }
 
     @Override
     public void paste() {
-        // TODO
+        songEditor.pasteSelected();
     }
 
     @Override
     public void delete() {
-        // Deletes selected notes.
         songEditor.deleteSelected();
     }
 
     @Override
     public void selectAll() {
-        // Selects all notes.
         songEditor.selectAll();
     }
 

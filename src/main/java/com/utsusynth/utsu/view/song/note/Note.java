@@ -379,6 +379,10 @@ public class Note implements Comparable<Note> {
 
     @Override
     public int compareTo(Note other) {
-        return Integer.compare(getAbsPositionMs(), other.getAbsPositionMs());
+        int result = Integer.compare(getAbsPositionMs(), other.getAbsPositionMs());
+        if (result == 0 && this != other) {
+            return -1; // Only return 0 if object references are actually the same.
+        }
+        return result;
     }
 }
