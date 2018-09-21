@@ -24,6 +24,7 @@ import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
@@ -188,9 +189,9 @@ public class SongController implements EditorController, Localizable {
             }
 
             @Override
-            public void modifyNote(NoteData toModify) {
+            public NoteUpdateData modifyNote(NoteData toModify) {
                 onSongChange();
-                song.get().modifyNote(toModify);
+                return song.get().modifyNote(toModify);
             }
 
             @Override

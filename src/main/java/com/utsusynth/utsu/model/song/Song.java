@@ -233,7 +233,7 @@ public class Song {
     }
 
     /** Modifies a note in-place without changing its lyric, position, or duration. */
-    public void modifyNote(NoteData toModify) {
+    public NoteUpdateData modifyNote(NoteData toModify) {
         int positionMs = toModify.getPosition();
         NoteNode node = this.noteList.getNote(positionMs);
         Note note = node.getNote();
@@ -255,6 +255,7 @@ public class Song {
                     prevNoteNum,
                     note.getNoteNum());
         }
+        return note.getUpdateData(positionMs);
     }
 
     public MutateResponse standardizeNotes(int firstPosition, int lastPosition) {

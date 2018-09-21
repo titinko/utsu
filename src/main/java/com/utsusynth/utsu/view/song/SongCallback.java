@@ -5,6 +5,7 @@ import java.util.Set;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.controller.SongController.Mode;
 
 /**
@@ -18,7 +19,7 @@ public interface SongCallback {
     MutateResponse removeNotes(Set<Integer> positions);
 
     /** Modify a note without changing its position or duration. */
-    void modifyNote(NoteData toModify);
+    NoteUpdateData modifyNote(NoteData toModify);
 
     /** Standardizes a section of notes and returns any frontend updates. */
     MutateResponse standardizeNotes(int firstPosition, int lastPosition);

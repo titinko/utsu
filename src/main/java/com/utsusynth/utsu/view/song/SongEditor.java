@@ -35,6 +35,7 @@ import javafx.util.Duration;
 
 public class SongEditor {
     private final PlaybackBarManager playbackManager;
+    private final SongClipboard clipboard;
     private final NoteFactory noteFactory;
     private final NoteMap noteMap;
     private final Scaler scaler;
@@ -50,10 +51,12 @@ public class SongEditor {
     @Inject
     public SongEditor(
             PlaybackBarManager playbackManager,
+            SongClipboard clipboard,
             NoteFactory trackNoteFactory,
             NoteMap noteMap,
             Scaler scaler) {
         this.playbackManager = playbackManager;
+        this.clipboard = clipboard;
         this.noteFactory = trackNoteFactory;
         this.noteMap = noteMap;
         this.scaler = scaler;
@@ -172,6 +175,16 @@ public class SongEditor {
         playbackManager.highlightAll(noteMap.getAllValidNotes());
     }
 
+    public void copySelected() {
+        List<NoteData> notesToCopy = playbackManager.getHighlightedNotes().stream()
+                .map(curNote -> curNote.getNoteData()).collect(Collectors.toList());
+        clipboard.setNotes(notesToCopy);
+    }
+
+    public void pasteSelected() {
+        // blah
+    }
+
     public void deleteSelected() {
         Set<Integer> positionsToRemove =
                 playbackManager.getHighlightedNotes().stream().filter(curNote -> curNote.isValid())
@@ -200,7 +213,6 @@ public class SongEditor {
         for (NoteUpdateData updateData : response.getNotes()) {
             // Should never happen but let's check just in case.
             if (noteMap.hasNote(updateData.getPosition())) {
-                noteMap.getNote(updateData.getPosition()).setBackupData(updateData);
                 noteMap.removeFullNote(updateData.getPosition());
             } else {
                 System.out.println("Error: Note present in backend but not in frontend!");
@@ -232,6 +244,7 @@ public class SongEditor {
         if (standardizeResponse.getPrev().isPresent()) {
             NoteUpdateData prevData = standardizeResponse.getPrev().get();
             prevNote = noteMap.getNote(prevData.getPosition());
+            prevNote.setBackupData(prevData);
             prevPitch = PitchUtils.rowNumToPitch(prevNote.getRow());
             noteMap.putEnvelope(
                     prevData.getPosition(),
@@ -244,6 +257,7 @@ public class SongEditor {
         while (dataIterator.hasNext()) {
             curData = dataIterator.next();
             curNote = noteMap.getNote(curData.getPosition());
+            curNote.setBackupData(curData);
             curNote.setTrueLyric(curData.getTrueLyric());
             noteMap.putEnvelope(
                     curData.getPosition(),
@@ -264,6 +278,7 @@ public class SongEditor {
         if (standardizeResponse.getNext().isPresent()) {
             NoteUpdateData nextData = standardizeResponse.getNext().get();
             Note nextNote = noteMap.getNote(nextData.getPosition());
+            nextNote.setBackupData(nextData);
             nextNote.setTrueLyric(nextData.getTrueLyric());
             noteMap.putEnvelope(
                     nextData.getPosition(),
@@ -475,6 +490,12 @@ public class SongEditor {
             }
             // Refreshes notes regardless of whether a new one was placed.
             refreshNotes(positionMs, positionMs);
+
+            // Increase number of measures if necessary.
+            int minNumMeasures = (positionMs / Quantizer.COL_WIDTH / 4) + 4;
+            if (minNumMeasures > numMeasures) {
+                setNumMeasures(minNumMeasures);
+            }
         }
 
         @Override
@@ -596,7 +617,7 @@ public class SongEditor {
                         PitchUtils.rowNumToPitch(toModify.getRow()),
                         toModify.getLyric(),
                         noteMap.getEnvelope(position).getData());
-                model.modifyNote(mutation);
+                toModify.setBackupData(model.modifyNote(mutation));
             }
         };
     }
@@ -612,7 +633,7 @@ public class SongEditor {
                         PitchUtils.rowNumToPitch(toModify.getRow()),
                         toModify.getLyric(),
                         noteMap.getPitchbend(position).getData(position));
-                model.modifyNote(mutation);
+                toModify.setBackupData(model.modifyNote(mutation));
             }
         };
     }
