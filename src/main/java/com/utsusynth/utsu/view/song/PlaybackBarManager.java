@@ -165,6 +165,12 @@ public class PlaybackBarManager {
         bars.getChildren().removeAll(startBar, endBar);
     }
 
+    void setCursor(int positionMs) {
+        clearHighlights();
+        bars.getChildren().add(startBar);
+        startBar.setTranslateX(scaler.scaleX(positionMs));
+    }
+
     int getCursorPosition() {
         if (bars.getChildren().contains(startBar)) {
             return Math.max(0, RoundUtils.round(scaler.unscaleX(startBar.getTranslateX())));

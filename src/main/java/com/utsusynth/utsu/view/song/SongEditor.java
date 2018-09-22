@@ -17,6 +17,7 @@ import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.SongController.Mode;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
@@ -38,6 +39,7 @@ public class SongEditor {
     private final SongClipboard clipboard;
     private final NoteFactory noteFactory;
     private final NoteMap noteMap;
+    private final Quantizer quantizer;
     private final Scaler scaler;
 
     // Whether the vibrato editor is active for this song editor.
@@ -54,11 +56,13 @@ public class SongEditor {
             SongClipboard clipboard,
             NoteFactory trackNoteFactory,
             NoteMap noteMap,
+            Quantizer quantizer,
             Scaler scaler) {
         this.playbackManager = playbackManager;
         this.clipboard = clipboard;
         this.noteFactory = trackNoteFactory;
         this.noteMap = noteMap;
+        this.quantizer = quantizer;
         this.scaler = scaler;
 
         vibratoEditor = new SimpleBooleanProperty(false);
@@ -467,6 +471,15 @@ public class SongEditor {
                 rowNum++;
             }
         }
+        newMeasure.setOnMouseClicked(event -> {
+            if (event.getButton() == MouseButton.PRIMARY) {
+                return;
+            }
+            int curQuantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
+            double curMs = scaler.unscaleX(newMeasure.getLayoutX() + event.getX());
+            int quantizedMs = RoundUtils.round(curMs / curQuantSize) * curQuantSize;
+            playbackManager.setCursor(quantizedMs);
+        });
         measures.getChildren().add(newMeasure);
 
         // Add new columns to dynamics.
