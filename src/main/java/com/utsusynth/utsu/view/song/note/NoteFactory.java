@@ -81,11 +81,12 @@ public class NoteFactory {
 
     public Note createDefaultNote(
             int row,
-            int column,
+            int positionMs,
+            int durationMs,
             NoteCallback callback,
             BooleanProperty vibratoEditor) {
         Rectangle note = new Rectangle();
-        note.setWidth(scaler.scaleX(Quantizer.COL_WIDTH) - 1);
+        note.setWidth(scaler.scaleX(durationMs) - 1);
         note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
         note.getStyleClass().addAll("track-note", "invalid", "not-highlighted");
 
@@ -103,7 +104,7 @@ public class NoteFactory {
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
         layout.setTranslateY(scaler.scaleY(row * Quantizer.ROW_HEIGHT));
-        layout.setTranslateX(scaler.scaleX(column * Quantizer.COL_WIDTH));
+        layout.setTranslateX(scaler.scaleX(positionMs));
 
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(

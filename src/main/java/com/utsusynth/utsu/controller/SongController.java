@@ -76,7 +76,6 @@ public class SongController implements EditorController, Localizable {
     }
 
     // User session data goes here.
-    private Mode currentMode;
     private EditorCallback callback;
 
     // Helper classes go here.
@@ -204,11 +203,6 @@ public class SongController implements EditorController, Localizable {
             public void openNoteProperties(RegionBounds regionBounds) {
                 openNotePropertiesEditor(regionBounds);
             }
-
-            @Override
-            public Mode getCurrentMode() {
-                return currentMode;
-            }
         });
         anchorCenter.widthProperty().addListener((obs, oldWidthNum, newWidthNum) -> {
             // Scrollbar should still be at its old location.
@@ -234,9 +228,6 @@ public class SongController implements EditorController, Localizable {
         });
 
         modeChoiceBox.setItems(FXCollections.observableArrayList(Mode.ADD, Mode.EDIT));
-        modeChoiceBox.setOnAction((action) -> {
-            currentMode = modeChoiceBox.getValue();
-        });
         modeChoiceBox.setValue(Mode.EDIT);
         quantizeChoiceBox.setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32"));
         quantizeChoiceBox.setOnAction((action) -> {

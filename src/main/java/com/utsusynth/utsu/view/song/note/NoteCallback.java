@@ -1,7 +1,5 @@
 package com.utsusynth.utsu.view.song.note;
 
-import com.utsusynth.utsu.controller.SongController.Mode;
-
 /**
  * A way of communicating TrackNote information back to its parent Track.
  */
@@ -28,6 +26,4 @@ public interface NoteCallback {
     void setHasVibrato(int position, boolean hasVibrato);
 
     void openNoteProperties(Note note);
-
-    Mode getCurrentMode();
 }

@@ -104,9 +104,6 @@ public class Note implements Comparable<Note> {
             contextMenu.show(layout, event.getScreenX(), event.getScreenY());
         });
 
-        layout.setOnDragDetected(event -> {
-            // TODO: Record start state of movement, for later undo.
-        });
         layout.setOnMouseReleased(event -> {
             if (event.getButton() != MouseButton.PRIMARY) {
                 return;

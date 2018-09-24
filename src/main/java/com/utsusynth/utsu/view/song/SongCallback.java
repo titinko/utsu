@@ -6,7 +6,6 @@ import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
-import com.utsusynth.utsu.controller.SongController.Mode;
 
 /**
  * The view can use this interface to communicate with the model by way of the controller.
@@ -26,7 +25,4 @@ public interface SongCallback {
 
     /** Open the note properties editor on the given RegionBounds. */
     void openNoteProperties(RegionBounds regionBounds);
-
-    /** Gets the current mode: ADD, EDIT, or DELETE. */
-    Mode getCurrentMode();
 }

@@ -18,7 +18,6 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
-import com.utsusynth.utsu.controller.SongController.Mode;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
@@ -49,6 +48,15 @@ public class SongEditor {
     private HBox dynamics;
     private int numMeasures;
     private SongCallback model;
+
+    // Temporary cache values.
+    private enum SubMode {
+        NOT_DRAGGING, DRAG_CREATE, DRAG_SELECT,
+    }
+
+    private SubMode subMode;
+    private double curX;
+    private double curY;
 
     @Inject
     public SongEditor(
@@ -446,39 +454,60 @@ public class SongEditor {
                     } else if (colNum == 3) {
                         newCell.getStyleClass().add("measure-end");
                     }
-
-                    final int currentRowNum = rowNum;
-                    final int currentColNum = colNum + (numMeasures * 4);
-                    newCell.setOnMouseClicked((event) -> {
-                        // Clear highlights regardless of current button or current mode.
-                        playbackManager.clearHighlights();
-                        if (event.getButton() != MouseButton.PRIMARY) {
-                            return;
-                        }
-                        Mode currentMode = model.getCurrentMode();
-                        if (currentMode == Mode.ADD) {
-                            // Create note.
-                            Note newNote = noteFactory.createDefaultNote(
-                                    currentRowNum,
-                                    currentColNum,
-                                    noteCallback,
-                                    vibratoEditor);
-                            noteMap.addNoteElement(newNote);
-                        }
-                    });
                     newMeasure.add(newCell, colNum, rowNum);
                 }
                 rowNum++;
             }
         }
-        newMeasure.setOnMouseClicked(event -> {
-            if (event.getButton() == MouseButton.PRIMARY) {
-                return;
+        newMeasure.setOnMouseReleased(event -> {
+            int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
+            int startMs = RoundUtils.round(scaler.unscaleX(curX) / quantSize) * quantSize;
+            if (subMode == SubMode.DRAG_CREATE) {
+                int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
+                double endX = newMeasure.getLayoutX() + event.getX();
+                int endMs = RoundUtils.round(scaler.unscaleX(endX) / quantSize) * quantSize;
+                // TODO: Remove blue rectangle.
+                // Create new note if size would be nonzero.
+                if (endMs > startMs) {
+                    Note newNote = noteFactory.createDefaultNote(
+                            startRow,
+                            startMs,
+                            endMs - startMs,
+                            noteCallback,
+                            vibratoEditor);
+                    noteMap.addNoteElement(newNote);
+                } else {
+                    playbackManager.clearHighlights();
+                }
+            } else if (subMode == SubMode.DRAG_SELECT) {
+                // TODO: Remove any drag box.
+                playbackManager.realign();
+            } else if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
+                if (event.getButton() == MouseButton.SECONDARY) {
+                    System.out.println("Open context menu.");
+                }
+                // Set cursor.
+                playbackManager.setCursor(startMs);
+            } else {
+                // In all other cases, just clear highlights.
+                playbackManager.clearHighlights();
             }
-            int curQuantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
-            double curMs = scaler.unscaleX(newMeasure.getLayoutX() + event.getX());
-            int quantizedMs = RoundUtils.round(curMs / curQuantSize) * curQuantSize;
-            playbackManager.setCursor(quantizedMs);
+        });
+        newMeasure.setOnMouseDragged(event -> {
+            if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
+                subMode = SubMode.DRAG_SELECT;
+                // Draw drag box.
+                // Remove notes from drag box.
+                // Add new notes to drag box.
+            } else {
+                subMode = SubMode.DRAG_CREATE;
+                // Draw blue rectangle.
+            }
+        });
+        newMeasure.setOnMousePressed(event -> {
+            subMode = SubMode.NOT_DRAGGING;
+            curX = newMeasure.getLayoutX() + event.getX();
+            curY = event.getY();
         });
         measures.getChildren().add(newMeasure);
 
@@ -626,11 +655,6 @@ public class SongEditor {
                 noteMap.removeNoteElement(note);
             }
             // TODO: If last note, remove measures until you have 4 measures + previous note.
-        }
-
-        @Override
-        public Mode getCurrentMode() {
-            return model.getCurrentMode();
         }
 
         @Override
