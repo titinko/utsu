@@ -496,12 +496,26 @@ public class SongEditor {
         newMeasure.setOnMouseDragged(event -> {
             if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
                 subMode = SubMode.DRAG_SELECT;
-                // Draw drag box.
-                // Remove notes from drag box.
-                // Add new notes to drag box.
+                // TODO: Draw drag box.
+                // Update highlighted notes.
+                int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
+                int endRow = (int) scaler.unscaleY(event.getY()) / Quantizer.ROW_HEIGHT;
+                int startMs = RoundUtils.round(scaler.unscaleX(curX));
+                int endMs =
+                        RoundUtils.round(scaler.unscaleX(newMeasure.getLayoutX() + event.getX()));
+                RegionBounds horizontalBounds = new RegionBounds(startMs, endMs);
+                playbackManager.clearHighlights();
+                for (Note note : noteMap.getAllValidNotes()) {
+                    int noteRow = note.getRow();
+                    if (note.getValidBounds().intersects(horizontalBounds)
+                            && Math.abs(endRow - noteRow) + Math.abs(noteRow - startRow) == Math
+                                    .abs(endRow - startRow)) {
+                        playbackManager.highlightNote(note);
+                    }
+                }
             } else {
                 subMode = SubMode.DRAG_CREATE;
-                // Draw blue rectangle.
+                // TODO: Draw blue rectangle.
             }
         });
         newMeasure.setOnMousePressed(event -> {

@@ -60,7 +60,7 @@ public class Scaler {
     public void changeVerticalScale(double oldScale, double newScale) {
         if (oldScale != verticalScale) {
             // TODO: Handle this better.
-            System.out.println("ERROR: Data race when changing horizontal scale!");
+            System.out.println("ERROR: Data race when changing vertical scale!");
         }
         verticalScale = newScale;
     }
