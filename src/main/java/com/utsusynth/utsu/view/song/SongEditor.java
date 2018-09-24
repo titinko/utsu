@@ -483,8 +483,6 @@ public class SongEditor {
                             noteCallback,
                             vibratoEditor);
                     noteMap.addNoteElement(newNote);
-                } else {
-                    playbackManager.clearHighlights();
                 }
             } else if (subMode == SubMode.DRAG_SELECT
                     && !playbackManager.getHighlightedNotes().isEmpty()) {
@@ -495,9 +493,6 @@ public class SongEditor {
                 }
                 // Set cursor.
                 playbackManager.setCursor(startMs);
-            } else {
-                // In all other cases, just clear highlights.
-                playbackManager.clearHighlights();
             }
         });
         newMeasure.setOnMouseDragged(event -> {

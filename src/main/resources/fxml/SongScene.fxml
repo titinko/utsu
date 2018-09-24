@@ -9,55 +9,36 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongController">
    <top>
-      <AnchorPane prefHeight="100.0" BorderPane.alignment="CENTER">
+      <AnchorPane BorderPane.alignment="CENTER">
          <children>
-            <HBox layoutX="118.0" prefHeight="100.0" spacing="20.0">
+            <HBox layoutX="118.0" spacing="20.0">
                <children>
-                  <VBox prefHeight="200.0" prefWidth="90.0" spacing="25.0">
-                     <children>
-                        <Label fx:id="modeLabel" text="Mode" />
-                        <Label fx:id="quantizationLabel" text="Quantization" />
-                     </children>
+                  <Label fx:id="quantizationLabel" alignment="CENTER" text="Quantization">
                      <HBox.margin>
-                        <Insets left="10.0" />
-                     </HBox.margin>
-                     <padding>
-                        <Insets top="10.0" />
-                     </padding>
-                  </VBox>
-                  <VBox prefHeight="200.0" prefWidth="100.0" spacing="20.0">
+                        <Insets top="5.0" />
+                     </HBox.margin></Label>
+                  <ChoiceBox fx:id="quantizeChoiceBox" prefWidth="150.0" />
+                  <HBox spacing="10.0">
                      <children>
-                        <ChoiceBox fx:id="modeChoiceBox" prefWidth="150.0" />
-                        <ChoiceBox fx:id="quantizeChoiceBox" prefWidth="150.0" />
+                        <ImageView fx:id="rewindIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#rewindPlayback" pickOnBounds="true" preserveRatio="true" />
+                        <ImageView fx:id="playPauseIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#playOrPause" pickOnBounds="true" preserveRatio="true" />
+                        <ImageView fx:id="stopIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#stopPlayback" pickOnBounds="true" preserveRatio="true" />
                      </children>
-                  </VBox>
-                  <VBox prefHeight="200.0" spacing="20.0">
-                     <children>
-                        <HBox spacing="10.0">
-                           <children>
-                              <ImageView fx:id="rewindIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#rewindPlayback" pickOnBounds="true" preserveRatio="true" />
-                              <ImageView fx:id="playPauseIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#playOrPause" pickOnBounds="true" preserveRatio="true" />
-                              <ImageView fx:id="stopIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#stopPlayback" pickOnBounds="true" preserveRatio="true" />
-                           </children>
-                        </HBox>
-                        <HBox prefHeight="100.0" spacing="20.0">
-                           <children>
-                              <ChoiceBox fx:id="languageChoiceBox" prefWidth="150.0" />
-                           </children>
-                        </HBox>
-                     </children>
-                  </VBox>
+                  </HBox>
+                  <ChoiceBox fx:id="languageChoiceBox" prefWidth="150.0" />
                </children>
                <padding>
-                  <Insets top="15.0" />
+                  <Insets left="10.0" top="30.0" />
                </padding>
             </HBox>
-            <ImageView fx:id="voicebankImage" fitHeight="90.0" fitWidth="90.0" layoutX="14.0" layoutY="13.0" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="voicebankImage" fitHeight="70.0" fitWidth="70.0" layoutX="25.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true" />
          </children>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
       </AnchorPane>
    </top>
          <center>

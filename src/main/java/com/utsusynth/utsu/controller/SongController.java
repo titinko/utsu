@@ -71,10 +71,6 @@ import javafx.util.Duration;
 public class SongController implements EditorController, Localizable {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
-    public enum Mode {
-        ADD, EDIT,
-    }
-
     // User session data goes here.
     private EditorCallback callback;
 
@@ -127,9 +123,6 @@ public class SongController implements EditorController, Localizable {
 
     @FXML // fx:id="stopIcon"
     private ImageView stopIcon; // Value injected by FXMLLoader
-
-    @FXML // fx:id="modeChoiceBox"
-    private ChoiceBox<Mode> modeChoiceBox; // Value injected by FXMLLoader
 
     @FXML // fx:id="quantizeChoiceBox"
     private ChoiceBox<String> quantizeChoiceBox; // Value injected by FXMLLoader
@@ -227,8 +220,6 @@ public class SongController implements EditorController, Localizable {
             }
         });
 
-        modeChoiceBox.setItems(FXCollections.observableArrayList(Mode.ADD, Mode.EDIT));
-        modeChoiceBox.setValue(Mode.EDIT);
         quantizeChoiceBox.setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32"));
         quantizeChoiceBox.setOnAction((action) -> {
             String quantization = quantizeChoiceBox.getValue();
@@ -282,13 +273,10 @@ public class SongController implements EditorController, Localizable {
     }
 
     @FXML
-    private Label modeLabel; // Value injected by FXMLLoader
-    @FXML
     private Label quantizationLabel; // Value injected by FXMLLoader
 
     @Override
     public void localize(ResourceBundle bundle) {
-        modeLabel.setText(bundle.getString("song.mode"));
         quantizationLabel.setText(bundle.getString("song.quantization"));
     }
 
@@ -352,12 +340,6 @@ public class SongController implements EditorController, Localizable {
         } else if (new KeyCodeCombination(KeyCode.B).match(keyEvent)) {
             flickerImage(stopIcon, iconManager.getImage(IconType.STOP_PRESSED));
             stopPlayback(); // Stop button's event handler.
-            return true;
-        } else if (new KeyCodeCombination(KeyCode.Q).match(keyEvent)) {
-            modeChoiceBox.setValue(Mode.ADD);
-            return true;
-        } else if (new KeyCodeCombination(KeyCode.W).match(keyEvent)) {
-            modeChoiceBox.setValue(Mode.EDIT);
             return true;
         } else if (new KeyCodeCombination(KeyCode.BACK_SPACE).match(keyEvent)) {
             songEditor.deleteSelected();
