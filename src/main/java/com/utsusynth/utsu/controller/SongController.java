@@ -311,6 +311,7 @@ public class SongController implements EditorController, Localizable {
         anchorCenter.getChildren().add(songEditor.getNotesElement());
         anchorCenter.getChildren().add(songEditor.getPitchbendsElement());
         anchorCenter.getChildren().add(songEditor.getPlaybackElement());
+        anchorCenter.getChildren().add(songEditor.getSelectionElement());
         anchorBottom.getChildren().clear();
         anchorBottom.getChildren().add(songEditor.getDynamicsElement());
         anchorBottom.getChildren().add(songEditor.getEnvelopesElement());

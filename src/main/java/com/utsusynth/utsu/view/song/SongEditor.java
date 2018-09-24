@@ -31,6 +31,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 public class SongEditor {
@@ -46,6 +47,7 @@ public class SongEditor {
 
     private HBox measures;
     private HBox dynamics;
+    private Rectangle selection;
     private int numMeasures;
     private SongCallback model;
 
@@ -145,6 +147,10 @@ public class SongEditor {
 
     public Group getPlaybackElement() {
         return playbackManager.getElement();
+    }
+
+    public Rectangle getSelectionElement() {
+        return selection;
     }
 
     /** Start the playback bar animation. It will end on its own. */
@@ -404,6 +410,7 @@ public class SongEditor {
         noteMap.clear();
         measures = new HBox();
         dynamics = new HBox();
+        selection = new Rectangle();
 
         numMeasures = 0;
         setNumMeasures(4);
@@ -460,13 +467,13 @@ public class SongEditor {
             }
         }
         newMeasure.setOnMouseReleased(event -> {
+            selection.setVisible(false); // Remove selection box if present.
             int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
             int startMs = RoundUtils.round(scaler.unscaleX(curX) / quantSize) * quantSize;
             if (subMode == SubMode.DRAG_CREATE) {
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
                 double endX = newMeasure.getLayoutX() + event.getX();
                 int endMs = RoundUtils.round(scaler.unscaleX(endX) / quantSize) * quantSize;
-                // TODO: Remove blue rectangle.
                 // Create new note if size would be nonzero.
                 if (endMs > startMs) {
                     Note newNote = noteFactory.createDefaultNote(
@@ -479,8 +486,8 @@ public class SongEditor {
                 } else {
                     playbackManager.clearHighlights();
                 }
-            } else if (subMode == SubMode.DRAG_SELECT) {
-                // TODO: Remove any drag box.
+            } else if (subMode == SubMode.DRAG_SELECT
+                    && !playbackManager.getHighlightedNotes().isEmpty()) {
                 playbackManager.realign();
             } else if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
                 if (event.getButton() == MouseButton.SECONDARY) {
@@ -494,15 +501,22 @@ public class SongEditor {
             }
         });
         newMeasure.setOnMouseDragged(event -> {
-            if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
+            if (subMode == SubMode.DRAG_SELECT || event.isShiftDown()
+                    || event.getButton() != MouseButton.PRIMARY) {
                 subMode = SubMode.DRAG_SELECT;
-                // TODO: Draw drag box.
+                // Draw selection rectangle.
+                double endX = newMeasure.getLayoutX() + event.getX();
+                selection.setVisible(true);
+                selection.getStyleClass().setAll("select-box");
+                selection.setX(Math.min(curX, endX));
+                selection.setY(Math.min(curY, event.getY()));
+                selection.setWidth(Math.abs(endX - curX));
+                selection.setHeight(Math.abs(event.getY() - curY));
                 // Update highlighted notes.
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
                 int endRow = (int) scaler.unscaleY(event.getY()) / Quantizer.ROW_HEIGHT;
                 int startMs = RoundUtils.round(scaler.unscaleX(curX));
-                int endMs =
-                        RoundUtils.round(scaler.unscaleX(newMeasure.getLayoutX() + event.getX()));
+                int endMs = RoundUtils.round(scaler.unscaleX(endX));
                 RegionBounds horizontalBounds = new RegionBounds(startMs, endMs);
                 playbackManager.clearHighlights();
                 for (Note note : noteMap.getAllValidNotes()) {
@@ -515,7 +529,18 @@ public class SongEditor {
                 }
             } else {
                 subMode = SubMode.DRAG_CREATE;
-                // TODO: Draw blue rectangle.
+                // Draw selection rectangle.
+                selection.setVisible(true);
+                selection.getStyleClass().setAll("add-note-box");
+                int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
+                int startMs = RoundUtils.round(scaler.unscaleX(curX) / quantSize) * quantSize;
+                int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
+                double endX = newMeasure.getLayoutX() + event.getX();
+                int endMs = RoundUtils.round(scaler.unscaleX(endX) / quantSize) * quantSize;
+                selection.setX(scaler.scaleX(startMs));
+                selection.setY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT));
+                selection.setWidth(scaler.scaleX(endMs - startMs));
+                selection.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT));
             }
         });
         newMeasure.setOnMousePressed(event -> {

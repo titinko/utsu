@@ -15,6 +15,18 @@
 	-fx-stroke: cornflowerblue;
 }
 
+.add-note-box {
+	-fx-fill: transparent;
+	-fx-stroke: cornflowerblue;
+	-fx-stroke-width: 3;
+}
+
+.select-box {
+	-fx-fill: transparent;
+	-fx-stroke: crimson;
+	-fx-stroke-width: 2;
+}
+
 .track-cell.white-key {
     -fx-background-color: lightgray, white;
     -fx-background-insets: 0, 0 1 1 0;
