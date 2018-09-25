@@ -564,7 +564,8 @@ public class SongEditor {
                 int endRow = (int) scaler.unscaleY(event.getY()) / Quantizer.ROW_HEIGHT;
                 int startMs = RoundUtils.round(scaler.unscalePos(curX));
                 int endMs = RoundUtils.round(scaler.unscalePos(endX));
-                RegionBounds horizontalBounds = new RegionBounds(startMs, endMs);
+                RegionBounds horizontalBounds = endMs >= startMs ? new RegionBounds(startMs, endMs)
+                        : new RegionBounds(endMs, startMs);
                 playbackManager.clearHighlights();
                 for (Note note : noteMap.getAllValidNotes()) {
                     int noteRow = note.getRow();

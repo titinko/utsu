@@ -311,7 +311,7 @@ public class NotePropertiesController implements Localizable {
     @FXML
     void applyProperties(ActionEvent event) {
         for (Note note : notes) {
-            if (!consonantVelocitySlider.isDisabled()) {
+            if (!consonantVelocityLabel.getText().equals("n/a")) {
                 note.setVelocity(consonantVelocitySlider.getValue());
             }
             if (!preutterSlider.isDisabled() && notes.size() == 1) {
@@ -329,16 +329,16 @@ public class NotePropertiesController implements Localizable {
                 }
 
             }
-            if (!startPointSlider.isDisabled()) {
+            if (!startPointLabel.getText().equals("n/a")) {
                 note.setStartPoint(startPointSlider.getValue());
             }
-            if (!intensitySlider.isDisabled()) {
+            if (!intensityLabel.getText().equals("n/a")) {
                 note.setIntensity(RoundUtils.round(intensitySlider.getValue()));
             }
-            if (!modulationSlider.isDisabled()) {
+            if (!modulationLabel.getText().equals("n/a")) {
                 note.setModulation(RoundUtils.round(modulationSlider.getValue()));
             }
-            if (!flagsTF.isDisabled()) {
+            if (!flagsTF.getStyle().equals("-fx-control-inner-background: lightgray;")) {
                 note.setNoteFlags(flagsTF.getText());
             }
         }
