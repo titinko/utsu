@@ -25,6 +25,14 @@ public class Scaler {
         return horizontalScale * scaleMe;
     }
 
+    public double scalePos(int scaleMe) {
+        return horizontalScale * (Quantizer.COL_WIDTH * 4 + scaleMe);
+    }
+
+    public double scalePos(double scaleMe) {
+        return horizontalScale * (Quantizer.COL_WIDTH * 4 + scaleMe);
+    }
+
     public double scaleY(int scaleMe) {
         return verticalScale * scaleMe;
     }
@@ -35,6 +43,10 @@ public class Scaler {
 
     public double unscaleX(double unscaleMe) {
         return unscaleMe / horizontalScale;
+    }
+
+    public double unscalePos(double unscaleMe) {
+        return (unscaleMe / horizontalScale) - (Quantizer.COL_WIDTH * 4);
     }
 
     public double unscaleY(double unscaleMe) {

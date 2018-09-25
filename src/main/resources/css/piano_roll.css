@@ -37,6 +37,11 @@
 	-fx-background-insets: 0, 0 1 1 0;
 }
 
+.track-cell.gray-key {
+	-fx-background-color: lightgray, darkgray;
+	-fx-background-insets: 0, 0 1 1 0;
+}
+
 .track-cell.white-key.measure-start {
 	-fx-background-color: lightskyblue, lightgray, white;
 	-fx-background-insets: 0, 0 0 0 1, 0 1 1 1;
@@ -54,6 +59,16 @@
 
 .track-cell.black-key.measure-end {
 	-fx-background-color: lightskyblue, lightgray, whitesmoke;
+	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
+}
+
+.track-cell.gray-key.measure-start {
+	-fx-background-color: lightskyblue, lightgray, darkgray;
+	-fx-background-insets: 0, 0 0 0 1, 0 1 1 1;
+}
+
+.track-cell.gray-key.measure-end {
+	-fx-background-color: lightskyblue, lightgray, darkgray;
 	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
 }
 

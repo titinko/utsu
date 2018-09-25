@@ -157,9 +157,9 @@ public class SongEditor {
     public Void startPlayback(RegionBounds rendered, Duration duration) {
         int firstPosition = noteMap.getFirstPosition(rendered);
         int lastPosition = noteMap.getLastPosition(rendered);
-        if (rendered.contains(firstPosition) && rendered.contains(lastPosition)) {
+        if (noteMap.hasNote(firstPosition) && noteMap.hasNote(lastPosition)) {
             int firstNoteStart = noteMap.getEnvelope(firstPosition).getStartMs();
-            int renderStart = Math.min(firstNoteStart, Math.max(rendered.getMinMs(), 0));
+            int renderStart = Math.min(firstNoteStart, rendered.getMinMs());
             int renderEnd = lastPosition + noteMap.getNote(lastPosition).getDurationMs();
             playbackManager.startPlayback(duration, new RegionBounds(renderStart, renderEnd));
         }
@@ -392,7 +392,7 @@ public class SongEditor {
     public void selectivelyShowRegion(double centerPercent, double margin) {
         int measureWidthMs = 4 * Quantizer.COL_WIDTH;
         int marginMeasures = ((int) (margin / Math.round(scaler.scaleX(measureWidthMs)))) + 3;
-        int centerMeasure = (int) Math.round((numMeasures - 1) * centerPercent);
+        int centerMeasure = RoundUtils.round((numMeasures) * centerPercent) - 1; // Pre-roll.
         int clampedStartMeasure =
                 Math.min(Math.max(centerMeasure - marginMeasures, 0), numMeasures - 1);
         int clampedEndMeasure =
@@ -413,13 +413,57 @@ public class SongEditor {
         selection = new Rectangle();
 
         numMeasures = 0;
+        addInvalidMeasure();
         setNumMeasures(4);
     }
 
-    private void setNumMeasures(int newNumMeasures) {
-        // Adjust the scrollbar to be in the same place when size of the grid changes.
-        double measureWidth = 4 * Math.round(scaler.scaleX(Quantizer.COL_WIDTH));
+    private void addInvalidMeasure() {
+        GridPane newMeasure = new GridPane();
+        int rowNum = 0;
+        for (int octave = 7; octave > 0; octave--) {
+            for (int pitch = 0; pitch < PitchUtils.REVERSE_PITCHES.size(); pitch++) {
+                // Add row to track.
+                for (int colNum = 0; colNum < 4; colNum++) {
+                    Pane newCell = new Pane();
+                    newCell.setPrefSize(
+                            Math.round(scaler.scaleX(Quantizer.COL_WIDTH)),
+                            Math.round(scaler.scaleY(Quantizer.ROW_HEIGHT)));
+                    newCell.getStyleClass().addAll("track-cell", "gray-key");
+                    if (colNum == 0) {
+                        newCell.getStyleClass().add("measure-start");
+                    } else if (colNum == 3) {
+                        newCell.getStyleClass().add("measure-end");
+                    }
+                    newMeasure.add(newCell, colNum, rowNum);
+                }
+                rowNum++;
+            }
+        }
+        measures.getChildren().add(newMeasure);
 
+        // Add new columns to dynamics.
+        // TODO: Commonize this.
+        GridPane newDynamics = new GridPane();
+        for (int colNum = 0; colNum < 4; colNum++) {
+            AnchorPane topCell = new AnchorPane();
+            topCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
+            topCell.getStyleClass().add("dynamics-top-cell");
+            if (colNum == 0) {
+                topCell.getStyleClass().add("measure-start");
+            }
+            newDynamics.add(topCell, colNum, 0);
+            AnchorPane bottomCell = new AnchorPane();
+            bottomCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
+            bottomCell.getStyleClass().add("dynamics-bottom-cell");
+            if (colNum == 0) {
+                bottomCell.getStyleClass().add("measure-start");
+            }
+            newDynamics.add(bottomCell, colNum, 1);
+        }
+        dynamics.getChildren().add(newDynamics);
+    }
+
+    private void setNumMeasures(int newNumMeasures) {
         if (newNumMeasures < 0) {
             return;
         } else if (newNumMeasures > numMeasures) {
@@ -430,7 +474,8 @@ public class SongEditor {
             // Nothing needs to be done.
             return;
         } else {
-            int maxWidth = (int) measureWidth * newNumMeasures;
+            int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH));
+            int maxWidth = measureWidth * newNumMeasures;
             // Remove measures.
             measures.getChildren().removeIf((child) -> {
                 return (int) Math.round(child.getLayoutX()) >= maxWidth;
@@ -469,11 +514,11 @@ public class SongEditor {
         newMeasure.setOnMouseReleased(event -> {
             selection.setVisible(false); // Remove selection box if present.
             int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
-            int startMs = RoundUtils.round(scaler.unscaleX(curX) / quantSize) * quantSize;
+            int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
             if (subMode == SubMode.DRAG_CREATE) {
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
                 double endX = newMeasure.getLayoutX() + event.getX();
-                int endMs = RoundUtils.round(scaler.unscaleX(endX) / quantSize) * quantSize;
+                int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
                 // Create new note if size would be nonzero.
                 if (endMs > startMs) {
                     Note newNote = noteFactory.createDefaultNote(
@@ -510,8 +555,8 @@ public class SongEditor {
                 // Update highlighted notes.
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
                 int endRow = (int) scaler.unscaleY(event.getY()) / Quantizer.ROW_HEIGHT;
-                int startMs = RoundUtils.round(scaler.unscaleX(curX));
-                int endMs = RoundUtils.round(scaler.unscaleX(endX));
+                int startMs = RoundUtils.round(scaler.unscalePos(curX));
+                int endMs = RoundUtils.round(scaler.unscalePos(endX));
                 RegionBounds horizontalBounds = new RegionBounds(startMs, endMs);
                 playbackManager.clearHighlights();
                 for (Note note : noteMap.getAllValidNotes()) {
@@ -528,11 +573,11 @@ public class SongEditor {
                 selection.setVisible(true);
                 selection.getStyleClass().setAll("add-note-box");
                 int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
-                int startMs = RoundUtils.round(scaler.unscaleX(curX) / quantSize) * quantSize;
+                int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
                 double endX = newMeasure.getLayoutX() + event.getX();
-                int endMs = RoundUtils.round(scaler.unscaleX(endX) / quantSize) * quantSize;
-                selection.setX(scaler.scaleX(startMs));
+                int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
+                selection.setX(scaler.scalePos(startMs));
                 selection.setY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT));
                 selection.setWidth(scaler.scaleX(endMs - startMs));
                 selection.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT));
@@ -717,33 +762,33 @@ public class SongEditor {
         }
     };
 
-    private EnvelopeCallback getEnvelopeCallback(final int position) {
+    private EnvelopeCallback getEnvelopeCallback(final int positionMs) {
         return new EnvelopeCallback() {
             @Override
             public void modifySongEnvelope() {
-                Note toModify = noteMap.getNote(position);
+                Note toModify = noteMap.getNote(positionMs);
                 NoteData mutation = new NoteData(
                         toModify.getAbsPositionMs(),
                         toModify.getDurationMs(),
                         PitchUtils.rowNumToPitch(toModify.getRow()),
                         toModify.getLyric(),
-                        noteMap.getEnvelope(position).getData());
+                        noteMap.getEnvelope(positionMs).getData());
                 toModify.setBackupData(model.modifyNote(mutation));
             }
         };
     }
 
-    private PitchbendCallback getPitchbendCallback(final int position) {
+    private PitchbendCallback getPitchbendCallback(final int positionMs) {
         return new PitchbendCallback() {
             @Override
             public void modifySongPitchbend() {
-                Note toModify = noteMap.getNote(position);
+                Note toModify = noteMap.getNote(positionMs);
                 NoteData mutation = new NoteData(
-                        position,
+                        positionMs,
                         toModify.getDurationMs(),
                         PitchUtils.rowNumToPitch(toModify.getRow()),
                         toModify.getLyric(),
-                        noteMap.getPitchbend(position).getData(position));
+                        noteMap.getPitchbend(positionMs).getData(positionMs));
                 toModify.setBackupData(model.modifyNote(mutation));
             }
         };

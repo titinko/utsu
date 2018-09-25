@@ -61,9 +61,9 @@ public class PitchbendFactory {
             String type = pitchbend.getPBM().size() > i ? pitchbend.getPBM().get(i) : "";
             pitchCurves.add(
                     curveFactory.createCurve(
-                            scaler.scaleX(tempX),
+                            scaler.scalePos(tempX),
                             scaler.scaleY(tempY),
-                            scaler.scaleX(curX),
+                            scaler.scalePos(curX),
                             scaler.scaleY(curY),
                             type));
         }

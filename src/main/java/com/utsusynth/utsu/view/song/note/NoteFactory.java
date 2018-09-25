@@ -47,7 +47,7 @@ public class NoteFactory {
         layout.setAlignment(Pos.CENTER_LEFT);
         layout.setTranslateY(
                 scaler.scaleY(PitchUtils.pitchToRowNum(note.getPitch()) * Quantizer.ROW_HEIGHT));
-        layout.setTranslateX(scaler.scaleX(absStart));
+        layout.setTranslateX(scaler.scalePos(absStart));
 
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(
@@ -104,7 +104,7 @@ public class NoteFactory {
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
         layout.setTranslateY(scaler.scaleY(row * Quantizer.ROW_HEIGHT));
-        layout.setTranslateX(scaler.scaleX(positionMs));
+        layout.setTranslateX(scaler.scalePos(positionMs));
 
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(

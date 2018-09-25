@@ -47,7 +47,7 @@ public class PlaybackBarManager {
     void startPlayback(Duration duration, RegionBounds playRegion) {
         if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             // Create a playback bar.
-            double barX = scaler.scaleX(playRegion.getMinMs());
+            double barX = scaler.scalePos(playRegion.getMinMs());
             Line playBar = new Line(barX, 0, barX, scaler.scaleY(totalHeight));
             playBar.getStyleClass().addAll("playback-bar");
             bars.getChildren().add(playBar);
@@ -97,8 +97,8 @@ public class PlaybackBarManager {
 
         // Add start and stop bars to the track at the correct location.
         bars.getChildren().addAll(startBar, endBar);
-        startBar.setTranslateX(scaler.scaleX(region.getMinMs()));
-        endBar.setTranslateX(scaler.scaleX(region.getMaxMs()));
+        startBar.setTranslateX(scaler.scalePos(region.getMinMs()));
+        endBar.setTranslateX(scaler.scalePos(region.getMaxMs()));
 
         // Highlight all notes within the add region.
         for (Note note : allNotes) {
@@ -124,8 +124,8 @@ public class PlaybackBarManager {
 
         // Add start and stop bars to the track at the correct location.
         bars.getChildren().addAll(startBar, endBar);
-        startBar.setTranslateX(scaler.scaleX(highlighted.first().getValidBounds().getMinMs()));
-        endBar.setTranslateX(scaler.scaleX(highlighted.last().getValidBounds().getMaxMs()));
+        startBar.setTranslateX(scaler.scalePos(highlighted.first().getValidBounds().getMinMs()));
+        endBar.setTranslateX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()));
     }
 
     /** Aligns playback bar to reflect actual highlighted notes. */
@@ -140,8 +140,9 @@ public class PlaybackBarManager {
             if (!bars.getChildren().contains(endBar)) {
                 bars.getChildren().add(endBar);
             }
-            startBar.setTranslateX(scaler.scaleX(highlighted.first().getValidBounds().getMinMs()));
-            endBar.setTranslateX(scaler.scaleX(highlighted.last().getValidBounds().getMaxMs()));
+            startBar.setTranslateX(
+                    scaler.scalePos(highlighted.first().getValidBounds().getMinMs()));
+            endBar.setTranslateX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()));
         }
     }
 
@@ -168,12 +169,12 @@ public class PlaybackBarManager {
     void setCursor(int positionMs) {
         clearHighlights();
         bars.getChildren().add(startBar);
-        startBar.setTranslateX(scaler.scaleX(positionMs));
+        startBar.setTranslateX(scaler.scalePos(positionMs));
     }
 
     int getCursorPosition() {
         if (bars.getChildren().contains(startBar)) {
-            return Math.max(0, RoundUtils.round(scaler.unscaleX(startBar.getTranslateX())));
+            return Math.max(0, RoundUtils.round(scaler.unscalePos(startBar.getTranslateX())));
         }
         return 0;
     }
@@ -181,7 +182,7 @@ public class PlaybackBarManager {
     RegionBounds getPlayableRegion() {
         int endPosition = Integer.MAX_VALUE;
         if (bars.getChildren().contains(endBar)) {
-            endPosition = RoundUtils.round(scaler.unscaleX(endBar.getTranslateX()));
+            endPosition = RoundUtils.round(scaler.unscalePos(endBar.getTranslateX()));
         }
         return new RegionBounds(getCursorPosition(), endPosition);
     }

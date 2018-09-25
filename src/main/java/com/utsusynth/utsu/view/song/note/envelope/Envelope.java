@@ -77,7 +77,7 @@ public class Envelope {
     }
 
     public int getStartMs() {
-        return RoundUtils.round(scaler.unscaleX(start.getX()));
+        return RoundUtils.round(scaler.unscalePos(start.getX()));
     }
 
     public EnvelopeData getData() {

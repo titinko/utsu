@@ -56,8 +56,8 @@ public class VibratoCurve {
     }
 
     private CubicCurveTo renderStart(double startMs) {
-        double startX = scaler.scaleX(startMs);
-        double endX = scaler.scaleX(startMs + startWidthMs);
+        double startX = scaler.scalePos(startMs);
+        double endX = scaler.scalePos(startMs + startWidthMs);
         double startY = -scaler.scaleY(startShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
         double endY = -scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
         double controlX_1 = startX + ((endX - startX) * 0.32613); // Sine approximation.
@@ -68,8 +68,8 @@ public class VibratoCurve {
     }
 
     private CubicCurveTo renderEnd(double startMs) {
-        double startX = scaler.scaleX(startMs);
-        double endX = scaler.scaleX(startMs + endWidthMs);
+        double startX = scaler.scalePos(startMs);
+        double endX = scaler.scalePos(startMs + endWidthMs);
         double startY = -scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
         double endY = -scaler.scaleY(endShiftCents / 100 * Quantizer.ROW_HEIGHT) + noteY;
         double controlX_1 = startX + ((endX - startX) * 0.36191); // Sine approximation.

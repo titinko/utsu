@@ -220,7 +220,7 @@ public class Note implements Comparable<Note> {
             if (layout.getScene().getCursor() == Cursor.W_RESIZE) {
                 subMode = SubMode.RESIZING;
             } else {
-                positionInNote = (int) Math.round(scaler.unscaleX(event.getX()));
+                positionInNote = RoundUtils.round(scaler.unscaleX(event.getX()));
                 subMode = SubMode.CLICKING; // Note that this may become dragging in the future.
             }
         });
@@ -235,7 +235,7 @@ public class Note implements Comparable<Note> {
     }
 
     public int getAbsPositionMs() {
-        return RoundUtils.round(scaler.unscaleX(layout.getTranslateX()));
+        return RoundUtils.round(scaler.unscalePos(layout.getTranslateX()));
     }
 
     public int getDurationMs() {
@@ -318,7 +318,7 @@ public class Note implements Comparable<Note> {
     /** Only moves the visual note. */
     public void moveNoteElement(int positionMsDelta, int rowDelta) {
         int newPositionMs = getAbsPositionMs() + positionMsDelta;
-        layout.setTranslateX(scaler.scaleX(newPositionMs));
+        layout.setTranslateX(scaler.scalePos(newPositionMs));
         int newRow = getRow() + rowDelta;
         layout.setTranslateY(scaler.scaleY(newRow * Quantizer.ROW_HEIGHT));
     }

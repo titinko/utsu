@@ -222,7 +222,7 @@ public class Portamento {
 
     public PitchbendData getData(int notePos) {
         assert (curves.size() > 0);
-        double startX = scaler.unscaleX(curves.get(0).getStartX()) - notePos;
+        double startX = scaler.unscalePos(curves.get(0).getStartX()) - notePos;
         double endY = scaler.unscaleY(curves.get(curves.size() - 1).getEndY());
         ImmutableList.Builder<Double> widths = ImmutableList.builder();
         ImmutableList.Builder<Double> heights = ImmutableList.builder();

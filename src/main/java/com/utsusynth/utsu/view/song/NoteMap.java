@@ -112,7 +112,8 @@ public class NoteMap {
     int getFirstPosition(RegionBounds region) {
         int minPosition = Integer.MAX_VALUE;
         for (int position : noteMap.keySet()) {
-            if (position >= region.getMinMs() && position < minPosition) {
+            if (noteMap.get(position).getValidBounds().intersects(region)
+                    && position < minPosition) {
                 minPosition = position;
             }
         }
@@ -122,7 +123,8 @@ public class NoteMap {
     int getLastPosition(RegionBounds region) {
         int maxPosition = Integer.MIN_VALUE;
         for (int position : noteMap.keySet()) {
-            if (position <= region.getMaxMs() && position > maxPosition) {
+            if (noteMap.get(position).getValidBounds().intersects(region)
+                    && position > maxPosition) {
                 maxPosition = position;
             }
         }
