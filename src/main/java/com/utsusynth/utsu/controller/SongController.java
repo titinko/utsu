@@ -224,7 +224,8 @@ public class SongController implements EditorController, Localizable {
             }
         });
 
-        quantizeChoiceBox.setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32"));
+        quantizeChoiceBox
+                .setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32", "1/64"));
         quantizeChoiceBox.setOnAction((action) -> {
             String quantization = quantizeChoiceBox.getValue();
             if (quantization.equals("1/4")) {
@@ -235,6 +236,8 @@ public class SongController implements EditorController, Localizable {
                 quantizer.changeQuant(quantizer.getQuant(), 4);
             } else if (quantization.equals("1/32")) {
                 quantizer.changeQuant(quantizer.getQuant(), 8);
+            } else if (quantization.equals("1/64")) {
+                quantizer.changeQuant(quantizer.getQuant(), 16);
             }
         });
         quantizeChoiceBox.setValue("1/16");
