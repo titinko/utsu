@@ -31,6 +31,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.IconManager.IconType;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.Engine.PlaybackStatus;
@@ -81,6 +82,7 @@ public class SongController implements EditorController, Localizable {
     private final Piano piano;
     private final Localizer localizer;
     private final Quantizer quantizer;
+    private final Scaler scaler;
     private final UndoService undoService;
     private final StatusBar statusBar;
     private final Ust12Reader ust12Reader;
@@ -138,6 +140,7 @@ public class SongController implements EditorController, Localizable {
             Piano piano,
             Localizer localizer,
             Quantizer quantizer,
+            Scaler scaler,
             UndoService undoService,
             StatusBar statusBar,
             Ust12Reader ust12Reader,
@@ -153,6 +156,7 @@ public class SongController implements EditorController, Localizable {
         this.piano = piano;
         this.localizer = localizer;
         this.quantizer = quantizer;
+        this.scaler = scaler;
         this.undoService = undoService;
         this.statusBar = statusBar;
         this.ust12Reader = ust12Reader;
@@ -267,6 +271,7 @@ public class SongController implements EditorController, Localizable {
         languageChoiceBox.setValue(localizer.getCurrentLocale());
 
         refreshView();
+        scrollToPosition(0);
 
         // Set up localization.
         localizer.localize(this);
@@ -293,7 +298,7 @@ public class SongController implements EditorController, Localizable {
 
         anchorLeft.getChildren().add(piano.initPiano());
 
-        // Reloads current
+        // Reloads current song.
         anchorCenter.getChildren().clear();
         anchorCenter.getChildren().add(songEditor.createNewTrack(song.get().getNotes()));
         anchorCenter.getChildren().add(songEditor.getNotesElement());
@@ -347,6 +352,7 @@ public class SongController implements EditorController, Localizable {
         } else if (new KeyCodeCombination(KeyCode.ENTER).match(keyEvent)) {
             Optional<Integer> focusNote = songEditor.getFocusNote();
             if (focusNote.isPresent()) {
+                scrollToPosition(focusNote.get());
                 songEditor.openLyricInput(focusNote.get());
             }
             return true;
@@ -355,6 +361,7 @@ public class SongController implements EditorController, Localizable {
             if (focusNote.isPresent()) {
                 Optional<Integer> newFocus = song.get().getNextNote(focusNote.get());
                 if (newFocus.isPresent()) {
+                    scrollToPosition(newFocus.get());
                     songEditor.focusOnNote(newFocus.get());
                 }
             } else if (song.get().getNoteIterator().hasNext()) {
@@ -379,6 +386,11 @@ public class SongController implements EditorController, Localizable {
             }
         });
         briefPause.play();
+    }
+
+    private void scrollToPosition(int positionMs) {
+        // This is only roughly accurate.
+        scrollPaneCenter.setHvalue(scaler.scalePos(positionMs) / songEditor.getWidthX());
     }
 
     @Override
@@ -574,7 +586,7 @@ public class SongController implements EditorController, Localizable {
         engine.stopPlayback();
         songEditor.stopPlayback();
         songEditor.selectRegion(RegionBounds.INVALID);
-        scrollPaneCenter.setHvalue(0); // Scroll to start of song.
+        scrollToPosition(0); // Scroll to start of song.
         // TODO: Stop scrollbar's existing acceleration.
     }
 

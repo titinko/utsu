@@ -154,8 +154,10 @@ public class PlaybackBarManager {
         // Recreate start and end bars, as scale might have changed.
         startBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
         startBar.getStyleClass().add("start-bar");
+        startBar.setMouseTransparent(true);
         endBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
         endBar.getStyleClass().add("end-bar");
+        endBar.setMouseTransparent(true);
     }
 
     void clearHighlights() {

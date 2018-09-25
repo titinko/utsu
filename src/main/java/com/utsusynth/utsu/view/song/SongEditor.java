@@ -181,6 +181,11 @@ public class SongEditor {
         playbackManager.stopPlayback();
     }
 
+    public double getWidthX() {
+        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
+        return measureWidth * (numMeasures + 1); // Include pre-roll.
+    }
+
     public RegionBounds getPlayableTrack() {
         return playbackManager.getPlayableRegion();
     }
@@ -475,14 +480,14 @@ public class SongEditor {
             return;
         } else {
             int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH));
-            int maxWidth = measureWidth * newNumMeasures;
+            int maxWidth = measureWidth * (newNumMeasures + 1); // Include pre-roll.
             // Remove measures.
             measures.getChildren().removeIf((child) -> {
-                return (int) Math.round(child.getLayoutX()) >= maxWidth;
+                return RoundUtils.round(child.getLayoutX()) >= maxWidth;
             });
             // Remove dynamics columns.
             dynamics.getChildren().removeIf((child) -> {
-                return (int) Math.round(child.getLayoutX()) >= maxWidth;
+                return RoundUtils.round(child.getLayoutX()) >= maxWidth;
             });
             numMeasures = newNumMeasures;
         }
@@ -569,18 +574,22 @@ public class SongEditor {
                 }
             } else {
                 subMode = SubMode.DRAG_CREATE;
-                // Draw selection rectangle.
-                selection.setVisible(true);
-                selection.getStyleClass().setAll("add-note-box");
                 int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
                 int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
                 double endX = newMeasure.getLayoutX() + event.getX();
                 int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
-                selection.setX(scaler.scalePos(startMs));
-                selection.setY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT));
-                selection.setWidth(scaler.scaleX(endMs - startMs));
-                selection.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT));
+                if (endMs > startMs) {
+                    // Draw selection rectangle.
+                    selection.setVisible(true);
+                    selection.getStyleClass().setAll("add-note-box");
+                    selection.setX(scaler.scalePos(startMs));
+                    selection.setY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT));
+                    selection.setWidth(scaler.scaleX(endMs - startMs));
+                    selection.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT));
+                } else {
+                    selection.setVisible(false);
+                }
             }
         });
         newMeasure.setOnMousePressed(event -> {

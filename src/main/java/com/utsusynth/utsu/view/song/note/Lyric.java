@@ -28,6 +28,11 @@ public class Lyric {
         this.textField.setOnAction((event) -> {
             closeTextFieldIfNeeded();
         });
+        this.textField.focusedProperty().addListener(event -> {
+            if (!this.textField.isFocused()) {
+                closeTextFieldIfNeeded();
+            }
+        });
 
         // Initialize with text active.
         activeNode = new Group();
