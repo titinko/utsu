@@ -26,6 +26,9 @@ import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
@@ -418,54 +421,8 @@ public class SongEditor {
         selection = new Rectangle();
 
         numMeasures = 0;
-        addInvalidMeasure();
+        addMeasure(false);
         setNumMeasures(4);
-    }
-
-    private void addInvalidMeasure() {
-        GridPane newMeasure = new GridPane();
-        int rowNum = 0;
-        for (int octave = 7; octave > 0; octave--) {
-            for (int pitch = 0; pitch < PitchUtils.REVERSE_PITCHES.size(); pitch++) {
-                // Add row to track.
-                for (int colNum = 0; colNum < 4; colNum++) {
-                    Pane newCell = new Pane();
-                    newCell.setPrefSize(
-                            Math.round(scaler.scaleX(Quantizer.COL_WIDTH)),
-                            Math.round(scaler.scaleY(Quantizer.ROW_HEIGHT)));
-                    newCell.getStyleClass().addAll("track-cell", "gray-key");
-                    if (colNum == 0) {
-                        newCell.getStyleClass().add("measure-start");
-                    } else if (colNum == 3) {
-                        newCell.getStyleClass().add("measure-end");
-                    }
-                    newMeasure.add(newCell, colNum, rowNum);
-                }
-                rowNum++;
-            }
-        }
-        measures.getChildren().add(newMeasure);
-
-        // Add new columns to dynamics.
-        // TODO: Commonize this.
-        GridPane newDynamics = new GridPane();
-        for (int colNum = 0; colNum < 4; colNum++) {
-            AnchorPane topCell = new AnchorPane();
-            topCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
-            topCell.getStyleClass().add("dynamics-top-cell");
-            if (colNum == 0) {
-                topCell.getStyleClass().add("measure-start");
-            }
-            newDynamics.add(topCell, colNum, 0);
-            AnchorPane bottomCell = new AnchorPane();
-            bottomCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
-            bottomCell.getStyleClass().add("dynamics-bottom-cell");
-            if (colNum == 0) {
-                bottomCell.getStyleClass().add("measure-start");
-            }
-            newDynamics.add(bottomCell, colNum, 1);
-        }
-        dynamics.getChildren().add(newDynamics);
     }
 
     private void setNumMeasures(int newNumMeasures) {
@@ -473,7 +430,7 @@ public class SongEditor {
             return;
         } else if (newNumMeasures > numMeasures) {
             for (int i = numMeasures; i < newNumMeasures; i++) {
-                addMeasure();
+                addMeasure(true);
             }
         } else if (newNumMeasures == numMeasures) {
             // Nothing needs to be done.
@@ -493,7 +450,7 @@ public class SongEditor {
         }
     }
 
-    private void addMeasure() {
+    private void addMeasure(boolean enabled) {
         GridPane newMeasure = new GridPane();
         int rowNum = 0;
         for (int octave = 7; octave > 0; octave--) {
@@ -505,7 +462,12 @@ public class SongEditor {
                             Math.round(scaler.scaleX(Quantizer.COL_WIDTH)),
                             Math.round(scaler.scaleY(Quantizer.ROW_HEIGHT)));
                     newCell.getStyleClass().add("track-cell");
-                    newCell.getStyleClass().add(pitch.endsWith("#") ? "black-key" : "white-key");
+                    if (enabled) {
+                        newCell.getStyleClass()
+                                .add(pitch.endsWith("#") ? "black-key" : "white-key");
+                    } else {
+                        newCell.getStyleClass().add("gray-key");
+                    }
                     if (colNum == 0) {
                         newCell.getStyleClass().add("measure-start");
                     } else if (colNum == 3) {
@@ -516,13 +478,53 @@ public class SongEditor {
                 rowNum++;
             }
         }
-        newMeasure.setOnMouseReleased(event -> {
+        measures.getChildren().add(newMeasure);
+
+        // Add new columns to dynamics.
+        GridPane newDynamics = new GridPane();
+        for (int colNum = 0; colNum < 4; colNum++) {
+            AnchorPane topCell = new AnchorPane();
+            topCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
+            topCell.getStyleClass().add("dynamics-top-cell");
+            if (colNum == 0) {
+                topCell.getStyleClass().add("measure-start");
+            }
+            newDynamics.add(topCell, colNum, 0);
+            AnchorPane bottomCell = new AnchorPane();
+            bottomCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
+            bottomCell.getStyleClass().add("dynamics-bottom-cell");
+            if (colNum == 0) {
+                bottomCell.getStyleClass().add("measure-start");
+            }
+            newDynamics.add(bottomCell, colNum, 1);
+        }
+        dynamics.getChildren().add(newDynamics);
+
+        if (enabled) {
+            activateMeasure(newMeasure);
+            numMeasures++;
+        }
+    }
+
+    private void activateMeasure(GridPane measure) {
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem pasteItem = new MenuItem("Paste");
+        // TODO: Enable only when there is something to paste.
+        pasteItem.setOnAction(event -> pasteSelected());
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+        MenuItem selectAllItem = new MenuItem("Select All");
+        selectAllItem.setOnAction(event -> selectAll());
+        MenuItem deselectItem = new MenuItem("Deselect");
+        deselectItem.setOnAction(event -> playbackManager.clearHighlights());
+        contextMenu.getItems().addAll(pasteItem, separator, selectAllItem, deselectItem);
+
+        measure.setOnMouseReleased(event -> {
             selection.setVisible(false); // Remove selection box if present.
             int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
             int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
             if (subMode == SubMode.DRAG_CREATE) {
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                double endX = newMeasure.getLayoutX() + event.getX();
+                double endX = measure.getLayoutX() + event.getX();
                 int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
                 // Create new note if size would be nonzero.
                 if (endMs > startMs) {
@@ -539,18 +541,18 @@ public class SongEditor {
                 playbackManager.realign();
             } else if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
                 if (event.getButton() == MouseButton.SECONDARY) {
-                    System.out.println("Open context menu.");
+                    contextMenu.show(measure, event.getScreenX(), event.getScreenY());
                 }
                 // Set cursor.
                 playbackManager.setCursor(startMs);
             }
         });
-        newMeasure.setOnMouseDragged(event -> {
+        measure.setOnMouseDragged(event -> {
             if (subMode == SubMode.DRAG_SELECT || event.isShiftDown()
                     || event.getButton() != MouseButton.PRIMARY) {
                 subMode = SubMode.DRAG_SELECT;
                 // Draw selection rectangle.
-                double endX = newMeasure.getLayoutX() + event.getX();
+                double endX = measure.getLayoutX() + event.getX();
                 selection.setVisible(true);
                 selection.getStyleClass().setAll("select-box");
                 selection.setX(Math.min(curX, endX));
@@ -577,7 +579,7 @@ public class SongEditor {
                 int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
                 int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                double endX = newMeasure.getLayoutX() + event.getX();
+                double endX = measure.getLayoutX() + event.getX();
                 int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
                 if (endMs > startMs) {
                     // Draw selection rectangle.
@@ -592,34 +594,12 @@ public class SongEditor {
                 }
             }
         });
-        newMeasure.setOnMousePressed(event -> {
+        measure.setOnMousePressed(event -> {
+            contextMenu.hide();
             subMode = SubMode.NOT_DRAGGING;
-            curX = newMeasure.getLayoutX() + event.getX();
+            curX = measure.getLayoutX() + event.getX();
             curY = event.getY();
         });
-        measures.getChildren().add(newMeasure);
-
-        // Add new columns to dynamics.
-        GridPane newDynamics = new GridPane();
-        for (int colNum = 0; colNum < 4; colNum++) {
-            AnchorPane topCell = new AnchorPane();
-            topCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
-            topCell.getStyleClass().add("dynamics-top-cell");
-            if (colNum == 0) {
-                topCell.getStyleClass().add("measure-start");
-            }
-            newDynamics.add(topCell, colNum, 0);
-            AnchorPane bottomCell = new AnchorPane();
-            bottomCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
-            bottomCell.getStyleClass().add("dynamics-bottom-cell");
-            if (colNum == 0) {
-                bottomCell.getStyleClass().add("measure-start");
-            }
-            newDynamics.add(bottomCell, colNum, 1);
-        }
-        dynamics.getChildren().add(newDynamics);
-
-        numMeasures++;
     }
 
     private final NoteCallback noteCallback = new NoteCallback() {
