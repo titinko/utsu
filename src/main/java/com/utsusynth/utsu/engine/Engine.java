@@ -238,6 +238,9 @@ public class Engine {
             // Apply resampler in separate thread and schedule wavtool.
             final int curTotalDelta = totalDelta;
             final LyricConfig curConfig = config.get();
+            final boolean includeOverlap =
+                    areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter));
+            final boolean isLastNote = !notes.peekNext().isPresent();
             futures.add(executor.submit(() -> {
                 // Re-samples lyric and puts result into renderedNote file.
                 File renderedNote = new File(tempDir, "rendered_note" + curTotalDelta + ".wav");
@@ -259,10 +262,8 @@ public class Engine {
                             curConfig,
                             renderedNote,
                             finalSong,
-                            // Whether to include overlap in the wavtool.
-                            areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter)),
-                            // Whether this is the last note in the song.
-                            !notes.peekNext().isPresent());
+                            includeOverlap,
+                            isLastNote);
                 };
                 return useWavtool;
             }));
