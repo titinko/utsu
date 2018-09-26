@@ -361,6 +361,8 @@ public class SongEditor {
             }
         } else if (curNote != null) {
             curNote.adjustForOverlap(Integer.MAX_VALUE);
+            // If this is the last note, adjust number of measures.
+            setNumMeasures((curNote.getBounds().getMaxMs() / Quantizer.COL_WIDTH / 4) + 4);
         }
     }
 
@@ -647,7 +649,8 @@ public class SongEditor {
             refreshNotes(positionMs, positionMs);
 
             // Increase number of measures if necessary.
-            int minNumMeasures = (positionMs / Quantizer.COL_WIDTH / 4) + 4;
+            int minNumMeasures =
+                    ((positionMs + note.getDurationMs()) / Quantizer.COL_WIDTH / 4) + 4;
             if (minNumMeasures > numMeasures) {
                 setNumMeasures(minNumMeasures);
             }
@@ -693,11 +696,6 @@ public class SongEditor {
                     new RegionBounds(toAdd.getFirst().getPosition(), toAdd.getLast().getPosition());
             toStandardize = toStandardize.mergeWith(addRegion);
             refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
-
-            // If new last note has been added, update track size.
-            if (toStandardize.getMaxMs() == addRegion.getMaxMs()) {
-                setNumMeasures((addRegion.getMaxMs() / Quantizer.COL_WIDTH / 4) + 4);
-            }
         }
 
         @Override
