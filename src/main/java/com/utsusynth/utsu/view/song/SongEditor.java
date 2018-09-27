@@ -232,11 +232,6 @@ public class SongEditor {
             }
             toAdd.add(newNote.getNoteData());
         }
-        // Increase number of measures if necessary.
-        int minNumMeasures = (curPosition / Quantizer.COL_WIDTH / 4) + 4;
-        if (minNumMeasures > numMeasures) {
-            setNumMeasures(minNumMeasures);
-        }
 
         if (toAdd.isEmpty()) {
             return;
@@ -246,18 +241,40 @@ public class SongEditor {
     }
 
     public void deleteSelected() {
-        Set<Integer> positionsToRemove =
-                playbackManager.getHighlightedNotes().stream().filter(curNote -> curNote.isValid())
-                        .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
+        deleteNotes(playbackManager.getHighlightedNotes());
+        playbackManager.clearHighlights();
+    }
+
+    private void deleteNotes(List<Note> notes) {
+        Set<Integer> positionsToRemove = notes.stream().filter(curNote -> curNote.isValid())
+                .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
         RegionBounds toStandardize = removeNotes(positionsToRemove);
         if (!toStandardize.equals(RegionBounds.INVALID)) {
             refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
         }
-
-        for (Note curNote : playbackManager.getHighlightedNotes()) {
-            noteMap.removeNoteElement(curNote);
+        for (Note note : notes) {
+            noteMap.removeNoteElement(note);
         }
-        playbackManager.clearHighlights();
+    }
+
+    private void undoDeleteNotes(List<Note> notes) {
+        LinkedList<NoteData> toAdd = new LinkedList<>();
+        for (Note note : notes) {
+            noteMap.addNoteElement(note);
+            note.setValid(true);
+            try {
+                noteMap.putNote(note.getAbsPositionMs(), note);
+            } catch (NoteAlreadyExistsException e) {
+                note.setValid(false);
+                continue;
+            }
+            toAdd.add(note.getNoteData());
+        }
+        if (toAdd.isEmpty()) {
+            return;
+        }
+        model.addNotes(toAdd);
+        refreshNotes(toAdd.getFirst().getPosition(), toAdd.getLast().getPosition());
     }
 
     /**
@@ -363,6 +380,37 @@ public class SongEditor {
             // If this is the last note, adjust number of measures.
             setNumMeasures((curNote.getBounds().getMaxMs() / Quantizer.COL_WIDTH / 4) + 4);
         }
+    }
+
+    private void moveNotes(List<Note> notes, int positionDelta, int rowDelta) {
+        Set<Integer> positionsToRemove = notes.stream().filter(curNote -> curNote.isValid())
+                .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
+        RegionBounds toStandardize = removeNotes(positionsToRemove);
+
+        LinkedList<NoteData> toAdd = new LinkedList<>();
+        for (Note curNote : notes) {
+            curNote.moveNoteElement(positionDelta, rowDelta);
+            curNote.setValid(true);
+            try {
+                noteMap.putNote(curNote.getAbsPositionMs(), curNote);
+            } catch (NoteAlreadyExistsException e) {
+                curNote.setValid(false);
+                continue;
+            }
+            toAdd.add(curNote.getNoteData());
+        }
+        // Standardize and return early if nothing needs to be added.
+        if (toAdd.isEmpty()) {
+            if (!toStandardize.equals(RegionBounds.INVALID)) {
+                refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
+            }
+            return;
+        }
+        model.addNotes(toAdd);
+        RegionBounds addRegion =
+                new RegionBounds(toAdd.getFirst().getPosition(), toAdd.getLast().getPosition());
+        toStandardize = toStandardize.mergeWith(addRegion);
+        refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
     }
 
     public Optional<Integer> getFocusNote() {
@@ -646,80 +694,24 @@ public class SongEditor {
             }
             // Refreshes notes regardless of whether a new one was placed.
             refreshNotes(positionMs, positionMs);
-
-            // Increase number of measures if necessary.
-            int minNumMeasures =
-                    ((positionMs + note.getDurationMs()) / Quantizer.COL_WIDTH / 4) + 4;
-            if (minNumMeasures > numMeasures) {
-                setNumMeasures(minNumMeasures);
-            }
         }
 
         @Override
         public void moveNote(Note note, int positionDelta, int rowDelta) {
-            Set<Integer> positionsToRemove = ImmutableSet.of();
-            if (playbackManager.isHighlighted(note)) {
-                positionsToRemove = playbackManager.getHighlightedNotes().stream()
-                        .filter(curNote -> curNote.isValid())
-                        .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
-            } else if (note.isValid()) {
-                positionsToRemove = ImmutableSet.of(note.getAbsPositionMs());
-            }
-            RegionBounds toStandardize = removeNotes(positionsToRemove);
-
-            List<Note> notes =
+            List<Note> toMove =
                     playbackManager.isHighlighted(note) ? playbackManager.getHighlightedNotes()
                             : ImmutableList.of(note);
-            LinkedList<NoteData> toAdd = new LinkedList<>();
-            for (Note curNote : notes) {
-                curNote.moveNoteElement(positionDelta, rowDelta);
-                curNote.setValid(true);
-                try {
-                    noteMap.putNote(curNote.getAbsPositionMs(), curNote);
-                } catch (NoteAlreadyExistsException e) {
-                    curNote.setValid(false);
-                    continue;
-                }
-                toAdd.add(curNote.getNoteData());
-            }
-            // Standardize and return early if nothing needs to be added.
-            if (toAdd.isEmpty()) {
-                if (!toStandardize.equals(RegionBounds.INVALID)) {
-                    refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
-                }
-                return;
-            }
-            model.addNotes(toAdd);
-
-            RegionBounds addRegion =
-                    new RegionBounds(toAdd.getFirst().getPosition(), toAdd.getLast().getPosition());
-            toStandardize = toStandardize.mergeWith(addRegion);
-            refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
+            moveNotes(toMove, positionDelta, rowDelta);
         }
 
         @Override
         public void deleteNote(Note note) {
-            Set<Integer> positionsToRemove = ImmutableSet.of();
+            List<Note> toDelete = ImmutableList.of(note);
             if (playbackManager.isHighlighted(note)) {
-                positionsToRemove = playbackManager.getHighlightedNotes().stream()
-                        .filter(curNote -> curNote.isValid())
-                        .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
-            } else if (note.isValid()) {
-                positionsToRemove = ImmutableSet.of(note.getAbsPositionMs());
-            }
-            RegionBounds toStandardize = removeNotes(positionsToRemove);
-            if (!toStandardize.equals(RegionBounds.INVALID)) {
-                refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
-            }
-
-            if (playbackManager.isHighlighted(note)) {
-                for (Note curNote : playbackManager.getHighlightedNotes()) {
-                    noteMap.removeNoteElement(curNote);
-                }
+                toDelete = playbackManager.getHighlightedNotes();
                 playbackManager.clearHighlights();
-            } else {
-                noteMap.removeNoteElement(note);
             }
+            deleteNotes(toDelete);
         }
 
         @Override
