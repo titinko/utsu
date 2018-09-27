@@ -1,33 +1,38 @@
 package com.utsusynth.utsu.common;
 
-import java.util.Stack;
-import com.google.common.base.Optional;
+import java.util.LinkedList;
 
 /** A class that keeps track of the most recent actions and how to undo them. */
 public class UndoService {
     private static final int MAX_STACK_SIZE = 20;
 
-    private Stack<Runnable> redoActions;
-    private Stack<Runnable> undoActions;
-    private Optional<Runnable> nextRedoAction;
+    private LinkedList<Runnable> prevRedoActions;
+    private LinkedList<Runnable> prevUndoActions;
+    private LinkedList<Runnable> nextRedoActions;
+    private LinkedList<Runnable> nextUndoActions;
 
     public UndoService() {
-        redoActions = new Stack<Runnable>();
-        undoActions = new Stack<Runnable>();
-        nextRedoAction = Optional.absent();
+        prevRedoActions = new LinkedList<>();
+        prevUndoActions = new LinkedList<>();
+        nextRedoActions = new LinkedList<>();
+        nextUndoActions = new LinkedList<>();
     }
 
     /** Undo the most recent action. */
     public void undo() {
-        undoActions.pop().run();
-        nextRedoAction = Optional.of(redoActions.pop());
+        if (!prevRedoActions.isEmpty() && !prevUndoActions.isEmpty()) {
+            prevUndoActions.getLast().run();
+            nextRedoActions.addLast(prevRedoActions.pollLast());
+            nextUndoActions.addLast(prevRedoActions.pollLast());
+        }
     }
 
     /** Redo the most recent undo action. */
     public void redo() {
-        if (nextRedoAction.isPresent()) {
-            nextRedoAction.get().run();
-            nextRedoAction = Optional.absent();
+        if (!nextRedoActions.isEmpty() && !nextUndoActions.isEmpty()) {
+            nextRedoActions.getLast().run();
+            prevRedoActions.addLast(nextRedoActions.pollLast());
+            prevUndoActions.addLast(nextUndoActions.pollLast());
         }
     }
 
@@ -35,26 +40,25 @@ public class UndoService {
      * Specifies the most recent action and how to undo it.
      */
     public void setMostRecentAction(Runnable mostRecentAction, Runnable undoMostRecentAction) {
-        if (undoActions.size() >= MAX_STACK_SIZE) {
+        if (prevUndoActions.size() >= MAX_STACK_SIZE) {
             // Removes old actions when stack size becomes too large.
-            redoActions.remove(0);
-            undoActions.remove(0);
+            prevRedoActions.removeFirst();
+            prevUndoActions.removeFirst();
         }
-        redoActions.push(mostRecentAction);
-        undoActions.push(undoMostRecentAction);
+        prevRedoActions.addLast(mostRecentAction);
+        prevUndoActions.addLast(undoMostRecentAction);
+        // Clear list of actions to be redone.
+        nextRedoActions.clear();
+        nextUndoActions.clear();
     }
 
     /**
      * Clears all memory of actions and how to undo/redo them.
      */
     public void clearActions() {
-        redoActions.clear();
-        undoActions.clear();
-        nextRedoAction = Optional.absent();
-    }
-
-    /** Returns true if any undo actions are in memory, false otherwise. */
-    public boolean detectChanges() {
-        return !undoActions.isEmpty();
+        prevRedoActions.clear();
+        prevUndoActions.clear();
+        nextRedoActions.clear();
+        nextUndoActions.clear();
     }
 }

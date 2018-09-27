@@ -258,7 +258,6 @@ public class SongEditor {
             noteMap.removeNoteElement(curNote);
         }
         playbackManager.clearHighlights();
-        // TODO: If last note, remove measures until you have 4 measures + previous note.
     }
 
     /**
@@ -721,7 +720,6 @@ public class SongEditor {
             } else {
                 noteMap.removeNoteElement(note);
             }
-            // TODO: If last note, remove measures until you have 4 measures + previous note.
         }
 
         @Override
