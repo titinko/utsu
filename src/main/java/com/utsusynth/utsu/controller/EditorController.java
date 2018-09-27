@@ -49,6 +49,10 @@ interface EditorController {
 
     void exportToWav();
 
+    void undo();
+
+    void redo();
+
     void cut();
 
     void copy();

@@ -241,7 +241,9 @@ public class SongEditor {
     }
 
     public void deleteSelected() {
-        deleteNotes(playbackManager.getHighlightedNotes());
+        List<Note> toDelete = playbackManager.getHighlightedNotes();
+        deleteNotes(toDelete);
+        model.recordAction(() -> deleteNotes(toDelete), () -> undoDeleteNotes(toDelete));
         playbackManager.clearHighlights();
     }
 
@@ -705,13 +707,26 @@ public class SongEditor {
         }
 
         @Override
+        public void recordNoteMovement(Note note, int positionDelta, int rowDelta) {
+            // Records one note movement and how to undo/redo it.
+            List<Note> toMove =
+                    playbackManager.isHighlighted(note) ? playbackManager.getHighlightedNotes()
+                            : ImmutableList.of(note);
+            model.recordAction(
+                    () -> moveNotes(toMove, positionDelta, rowDelta),
+                    () -> moveNotes(toMove, -positionDelta, -rowDelta));
+        }
+
+        @Override
         public void deleteNote(Note note) {
-            List<Note> toDelete = ImmutableList.of(note);
+            List<Note> toDelete =
+                    playbackManager.isHighlighted(note) ? playbackManager.getHighlightedNotes()
+                            : ImmutableList.of(note);
+            deleteNotes(toDelete);
+            model.recordAction(() -> deleteNotes(toDelete), () -> undoDeleteNotes(toDelete));
             if (playbackManager.isHighlighted(note)) {
-                toDelete = playbackManager.getHighlightedNotes();
                 playbackManager.clearHighlights();
             }
-            deleteNotes(toDelete);
         }
 
         @Override

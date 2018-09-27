@@ -401,12 +401,16 @@ public class UtsuController implements Localizable {
 
     @FXML
     void undo(ActionEvent event) {
-        // TODO
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).undo();
+        }
     }
 
     @FXML
     void redo(ActionEvent event) {
-        // TODO
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).redo();
+        }
     }
 
     @FXML

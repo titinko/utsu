@@ -33,13 +33,16 @@ public class Note implements Comparable<Note> {
     private final Quantizer quantizer;
     private final Scaler scaler;
 
-    // Temporary cache values.
     private enum SubMode {
         CLICKING, DRAGGING, RESIZING,
     }
 
+    // Temporary cache values.
     private SubMode subMode;
     private int positionInNote;
+    private int startPos;
+    private int startRow;
+    private boolean hasMoved;
     private NoteUpdateData backupData; // Cache of backend song data for re-adding backend note.
 
     Note(
@@ -108,7 +111,20 @@ public class Note implements Comparable<Note> {
             if (event.getButton() != MouseButton.PRIMARY) {
                 return;
             }
-            if (subMode == SubMode.CLICKING) {
+            if (subMode == SubMode.DRAGGING && hasMoved) {
+                int newPos = getAbsPositionMs();
+                int newRow = getRow();
+                if (newPos != startPos || newRow != startRow) {
+                    this.track.recordNoteMovement(this, newPos - startPos, newRow - startRow);
+                }
+                if (note.getStyleClass().contains("highlighted")) {
+                    this.track.realignHighlights();
+                }
+            } else if (subMode == SubMode.RESIZING) {
+                if (note.getStyleClass().contains("highlighted")) {
+                    this.track.realignHighlights();
+                }
+            } else if (subMode == SubMode.CLICKING) {
                 contextMenu.hide();
                 if (event.isShiftDown()) {
                     this.track.highlightInclusive(this);
@@ -116,10 +132,6 @@ public class Note implements Comparable<Note> {
                     this.lyric.openTextField();
                 } else {
                     this.track.highlightExclusive(this);
-                }
-            } else if (subMode == SubMode.DRAGGING || subMode == SubMode.RESIZING) {
-                if (note.getStyleClass().contains("highlighted")) {
-                    this.track.realignHighlights();
                 }
             }
             subMode = SubMode.CLICKING;
@@ -205,7 +217,7 @@ public class Note implements Comparable<Note> {
                     int oldPosition = oldQuant * (Quantizer.COL_WIDTH / curQuant);
                     int newPosition = newQuant * (Quantizer.COL_WIDTH / curQuant);
                     this.track.moveNote(this, newPosition - oldPosition, newRow - oldRow);
-                    // moveNote(oldQuant, newQuant, curQuant, newRow);
+                    hasMoved = true;
                 }
                 subMode = SubMode.DRAGGING;
             }
@@ -220,8 +232,11 @@ public class Note implements Comparable<Note> {
             if (layout.getScene().getCursor() == Cursor.W_RESIZE) {
                 subMode = SubMode.RESIZING;
             } else {
-                positionInNote = RoundUtils.round(scaler.unscaleX(event.getX()));
                 subMode = SubMode.CLICKING; // Note that this may become dragging in the future.
+                positionInNote = RoundUtils.round(scaler.unscaleX(event.getX()));
+                startPos = getAbsPositionMs();
+                startRow = getRow();
+                hasMoved = false;
             }
         });
     }

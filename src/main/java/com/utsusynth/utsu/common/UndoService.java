@@ -23,7 +23,7 @@ public class UndoService {
         if (!prevRedoActions.isEmpty() && !prevUndoActions.isEmpty()) {
             prevUndoActions.getLast().run();
             nextRedoActions.addLast(prevRedoActions.pollLast());
-            nextUndoActions.addLast(prevRedoActions.pollLast());
+            nextUndoActions.addLast(prevUndoActions.pollLast());
         }
     }
 

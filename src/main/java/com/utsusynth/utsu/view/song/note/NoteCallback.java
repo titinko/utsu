@@ -19,6 +19,9 @@ public interface NoteCallback {
     void moveNote(Note note, int positionDelta, int rowDelta);
 
     /** Catches all highlighted notes, if applicable. */
+    void recordNoteMovement(Note note, int positionDelta, int rowDelta);
+
+    /** Catches all highlighted notes, if applicable. */
     void deleteNote(Note note);
 
     boolean hasVibrato(int position);

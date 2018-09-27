@@ -23,6 +23,9 @@ public interface SongCallback {
     /** Standardizes a section of notes and returns any frontend updates. */
     MutateResponse standardizeNotes(int firstPosition, int lastPosition);
 
+    /** Records an action so it can be undone or redone later. */
+    void recordAction(Runnable redoAction, Runnable undoAction);
+
     /** Open the note properties editor on the given RegionBounds. */
     void openNoteProperties(RegionBounds regionBounds);
 }

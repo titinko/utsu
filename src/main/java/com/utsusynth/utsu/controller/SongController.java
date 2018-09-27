@@ -197,6 +197,11 @@ public class SongController implements EditorController, Localizable {
             }
 
             @Override
+            public void recordAction(Runnable redoAction, Runnable undoAction) {
+                undoService.setMostRecentAction(redoAction, undoAction);
+            }
+
+            @Override
             public void openNoteProperties(RegionBounds regionBounds) {
                 openNotePropertiesEditor(regionBounds);
             }
@@ -699,6 +704,16 @@ public class SongController implements EditorController, Localizable {
             statusBar.setStatus("Error: Unable to open note properties editor.");
             errorLogger.logError(e);
         }
+    }
+
+    @Override
+    public void undo() {
+        undoService.undo();
+    }
+
+    @Override
+    public void redo() {
+        undoService.redo();
     }
 
     @Override

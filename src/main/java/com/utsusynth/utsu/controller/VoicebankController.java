@@ -325,6 +325,16 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
+    public void undo() {
+        undoService.undo();
+    }
+
+    @Override
+    public void redo() {
+        undoService.redo();
+    }
+
+    @Override
     public void cut() {
         // Voicebanks do not support cut/copy/paste right now.
     }
