@@ -24,6 +24,8 @@ public interface NoteCallback {
     /** Catches all highlighted notes, if applicable. */
     void deleteNote(Note note);
 
+    void recordAction(Runnable redoAction, Runnable undoAction);
+
     boolean hasVibrato(int position);
 
     void setHasVibrato(int position, boolean hasVibrato);

@@ -219,9 +219,11 @@ public class SongEditor {
         int curPosition = playbackManager.getCursorPosition();
         int positionDelta = curPosition - toPaste.get(0).getPosition();
         LinkedList<NoteData> toAdd = new LinkedList<>();
+        LinkedList<Note> newNotes = new LinkedList<>();
         for (NoteData noteData : toPaste) {
             Note newNote = noteFactory.createNote(noteData, noteCallback, vibratoEditor);
             newNote.moveNoteElement(positionDelta, 0);
+            newNotes.add(newNote);
             curPosition = newNote.getAbsPositionMs();
             noteMap.addNoteElement(newNote);
             try {
@@ -238,6 +240,7 @@ public class SongEditor {
         }
         model.addNotes(toAdd);
         refreshNotes(toAdd.getFirst().getPosition(), toAdd.getLast().getPosition());
+        model.recordAction(() -> undoDeleteNotes(newNotes), () -> deleteNotes(newNotes));
     }
 
     public void deleteSelected() {
@@ -586,6 +589,10 @@ public class SongEditor {
                             noteCallback,
                             vibratoEditor);
                     noteMap.addNoteElement(newNote);
+                    List<Note> noteList = ImmutableList.of(newNote);
+                    model.recordAction(
+                            () -> undoDeleteNotes(noteList),
+                            () -> deleteNotes(noteList));
                 }
             } else if (subMode == SubMode.DRAG_SELECT
                     && !playbackManager.getHighlightedNotes().isEmpty()) {
@@ -727,6 +734,11 @@ public class SongEditor {
             if (playbackManager.isHighlighted(note)) {
                 playbackManager.clearHighlights();
             }
+        }
+
+        @Override
+        public void recordAction(Runnable redoAction, Runnable undoAction) {
+            model.recordAction(redoAction, undoAction);
         }
 
         @Override

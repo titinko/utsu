@@ -4,5 +4,7 @@ package com.utsusynth.utsu.view.song.note;
 public interface LyricCallback {
     void setSongLyric(String newLyric);
 
+    void replaceSongLyric(String oldLyric, String newLyric);
+
     void adjustColumnSpan();
 }

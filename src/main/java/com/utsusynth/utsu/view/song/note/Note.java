@@ -38,11 +38,12 @@ public class Note implements Comparable<Note> {
     }
 
     // Temporary cache values.
-    private SubMode subMode;
-    private int positionInNote;
-    private int startPos;
-    private int startRow;
-    private boolean hasMoved;
+    private SubMode subMode = SubMode.CLICKING;
+    private int positionInNote = 0;
+    private int startPos = 0;
+    private int startRow = 0;
+    private int startDuration = 0;
+    private boolean hasMoved = false;
     private NoteUpdateData backupData; // Cache of backend song data for re-adding backend note.
 
     Note(
@@ -59,8 +60,6 @@ public class Note implements Comparable<Note> {
         this.dragEdge = dragEdge;
         this.overlap = overlap;
         this.track = callback;
-        this.subMode = SubMode.CLICKING;
-        this.positionInNote = 0;
         this.quantizer = quantizer;
         this.scaler = scaler;
         this.lyric = lyric;
@@ -73,6 +72,18 @@ public class Note implements Comparable<Note> {
             @Override
             public void setSongLyric(String newLyric) {
                 thisNote.track.updateNote(thisNote);
+            }
+
+            @Override
+            public void replaceSongLyric(String oldLyric, String newLyric) {
+                thisNote.track.updateNote(thisNote);
+                thisNote.track.recordAction(() -> {
+                    lyric.setVisibleLyric(newLyric);
+                    thisNote.track.updateNote(thisNote);
+                }, () -> {
+                    lyric.setVisibleLyric(oldLyric);
+                    thisNote.track.updateNote(thisNote);
+                });
             }
 
             @Override
@@ -121,10 +132,17 @@ public class Note implements Comparable<Note> {
                     this.track.realignHighlights();
                 }
             } else if (subMode == SubMode.RESIZING) {
+                final int oldDuration = startDuration;
+                final int newDuration = getDurationMs();
+                if (newDuration != oldDuration) {
+                    this.track.recordAction(
+                            () -> resizeNote(newDuration),
+                            () -> resizeNote(oldDuration));
+                }
                 if (note.getStyleClass().contains("highlighted")) {
                     this.track.realignHighlights();
                 }
-            } else if (subMode == SubMode.CLICKING) {
+            } else {
                 contextMenu.hide();
                 if (event.isShiftDown()) {
                     this.track.highlightInclusive(this);
@@ -231,6 +249,7 @@ public class Note implements Comparable<Note> {
         layout.setOnMousePressed(event -> {
             if (layout.getScene().getCursor() == Cursor.W_RESIZE) {
                 subMode = SubMode.RESIZING;
+                startDuration = getDurationMs();
             } else {
                 subMode = SubMode.CLICKING; // Note that this may become dragging in the future.
                 positionInNote = RoundUtils.round(scaler.unscaleX(event.getX()));

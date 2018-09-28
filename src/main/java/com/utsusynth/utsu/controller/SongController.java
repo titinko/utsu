@@ -279,7 +279,11 @@ public class SongController implements EditorController, Localizable {
         languageChoiceBox.setValue(localizer.getCurrentLocale());
 
         refreshView();
-        scrollToPosition(0);
+
+        // Do scrolling after a short pause for viewport to establish itself.
+        PauseTransition briefPause = new PauseTransition(Duration.millis(10));
+        briefPause.setOnFinished(event -> scrollToPosition(0));
+        briefPause.play();
 
         // Set up localization.
         localizer.localize(this);
@@ -397,8 +401,11 @@ public class SongController implements EditorController, Localizable {
     }
 
     private void scrollToPosition(int positionMs) {
-        // This is only roughly accurate.
-        scrollPaneCenter.setHvalue(scaler.scalePos(positionMs) / songEditor.getWidthX());
+        double trackWidth = songEditor.getWidthX();
+        double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
+        if (viewportWidth != 0 && trackWidth - viewportWidth > 0) {
+            scrollPaneCenter.setHvalue(scaler.scalePos(positionMs) / (trackWidth - viewportWidth));
+        }
     }
 
     @Override

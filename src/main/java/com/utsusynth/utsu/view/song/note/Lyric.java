@@ -91,9 +91,10 @@ public class Lyric {
         if (isTextFieldOpen()) {
             this.activeNode.getChildren().clear();
             this.activeNode.getChildren().add(this.text);
+            String oldLyric = this.lyric;
             String newLyric = textField.getText();
             setVisibleLyric(newLyric);
-            this.trackNote.setSongLyric(newLyric);
+            this.trackNote.replaceSongLyric(oldLyric, newLyric);
         }
     }
 
