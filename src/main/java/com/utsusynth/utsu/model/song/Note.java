@@ -223,9 +223,13 @@ public class Note {
     public void setConfigData(NoteConfigData configData) {
         if (configData.getPreutter().isPresent()) {
             this.preutter = configData.getPreutter().get();
+        } else {
+            clearPreutter();
         }
         if (configData.getOverlap().isPresent()) {
             this.overlap = configData.getOverlap().get();
+        } else {
+            clearOverlap();
         }
         this.velocity = configData.getConsonantVelocity();
         this.startPoint = configData.getStartPoint();

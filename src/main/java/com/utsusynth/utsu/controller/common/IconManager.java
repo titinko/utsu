@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.controller;
+package com.utsusynth.utsu.controller.common;
 
 import java.io.File;
 import javafx.scene.image.Image;
@@ -37,7 +37,7 @@ public class IconManager {
         this.stopImagePressed = new Image("file:" + stopPathPressed.getAbsolutePath());
     }
 
-    Image getImage(IconType type) {
+    public Image getImage(IconType type) {
         switch (type) {
             case REWIND_NORMAL:
                 return rewindImage;

@@ -12,7 +12,7 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.controller.IconManager;
+import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.engine.FrqGenerator;

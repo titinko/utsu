@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.common;
+package com.utsusynth.utsu.controller.common;
 
 import java.util.LinkedList;
 

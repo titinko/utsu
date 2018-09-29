@@ -11,6 +11,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -21,8 +22,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
-import com.utsusynth.utsu.common.UndoService;
 import com.utsusynth.utsu.common.data.MutateResponse;
+import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
@@ -32,7 +33,9 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.controller.IconManager.IconType;
+import com.utsusynth.utsu.controller.common.IconManager;
+import com.utsusynth.utsu.controller.common.IconManager.IconType;
+import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.Engine.PlaybackStatus;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
@@ -40,6 +43,7 @@ import com.utsusynth.utsu.files.Ust12Reader;
 import com.utsusynth.utsu.files.Ust12Writer;
 import com.utsusynth.utsu.files.Ust20Reader;
 import com.utsusynth.utsu.files.Ust20Writer;
+import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.view.song.Piano;
 import com.utsusynth.utsu.view.song.SongCallback;
@@ -583,10 +587,30 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initOwner(currentStage);
             BorderPane notePropertiesPane = loader.load(fxml);
             NotePropertiesController controller = (NotePropertiesController) loader.getController();
-            controller.setData(song, regionBounds, () -> {
-                onSongChange();
-                songEditor.selectRegion(regionBounds);
-                songEditor.refreshSelected();
+            controller.setData(song, regionBounds, (oldData, newData) -> {
+                Runnable redoAction = () -> {
+                    NoteIterator notes = song.get().getNoteIterator(regionBounds);
+                    Iterator<NoteConfigData> newDataIterator = newData.iterator();
+                    while (notes.hasNext() && newDataIterator.hasNext()) {
+                        notes.next().setConfigData(newDataIterator.next());
+                    }
+                    onSongChange();
+                    songEditor.selectRegion(regionBounds);
+                    songEditor.refreshSelected();
+                };
+                Runnable undoAction = () -> {
+                    NoteIterator notes = song.get().getNoteIterator(regionBounds);
+                    Iterator<NoteConfigData> oldDataIterator = oldData.iterator();
+                    while (notes.hasNext() && oldDataIterator.hasNext()) {
+                        notes.next().setConfigData(oldDataIterator.next());
+                    }
+                    onSongChange();
+                    songEditor.selectRegion(regionBounds);
+                    songEditor.refreshSelected();
+                };
+                // Apply changes and save redo/undo for these changes.
+                redoAction.run();
+                undoService.setMostRecentAction(redoAction, undoAction);
             });
             propertiesWindow.setScene(new Scene(notePropertiesPane));
             propertiesWindow.showAndWait();

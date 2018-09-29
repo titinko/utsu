@@ -6,6 +6,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -34,7 +35,7 @@ public class NotePropertiesController implements Localizable {
 
     private ImmutableList<Note> notes;
     private Voicebank voicebank;
-    private Runnable onSongChange;
+    private NotePropertiesCallback callback;
 
     @FXML // fx:id="root"
     private BorderPane root; // Value injected by FXMLLoader
@@ -164,9 +165,12 @@ public class NotePropertiesController implements Localizable {
     }
 
     /* Initializes properties panel with a SongEditor with the song to edit. */
-    void setData(SongContainer songContainer, RegionBounds selectedRegion, Runnable callback) {
+    void setData(
+            SongContainer songContainer,
+            RegionBounds selectedRegion,
+            NotePropertiesCallback callback) {
         this.voicebank = songContainer.get().getVoicebank();
-        this.onSongChange = callback;
+        this.callback = callback;
 
         ImmutableList.Builder<Note> noteBuilder = ImmutableList.builder();
         NoteIterator iterator = songContainer.get().getNoteIterator(selectedRegion);
@@ -310,39 +314,75 @@ public class NotePropertiesController implements Localizable {
 
     @FXML
     void applyProperties(ActionEvent event) {
+        ImmutableList.Builder<NoteConfigData> oldData =
+                ImmutableList.builderWithExpectedSize(notes.size());
+        ImmutableList.Builder<NoteConfigData> newData =
+                ImmutableList.builderWithExpectedSize(notes.size());
         for (Note note : notes) {
+            double oldVelocity = note.getVelocity();
+            double newVelocity = oldVelocity;
             if (!consonantVelocityLabel.getText().equals("n/a")) {
-                note.setVelocity(consonantVelocitySlider.getValue());
+                newVelocity = consonantVelocitySlider.getValue();
             }
+            Optional<Double> oldPreutter = note.getPreutter();
+            Optional<Double> newPreutter = oldPreutter;
             if (!preutterSlider.isDisabled() && notes.size() == 1) {
                 if (closeEnough(lyricPreutter(note), preutterSlider.getValue())) {
-                    note.clearPreutter();
+                    newPreutter = Optional.absent();
                 } else {
-                    note.setPreutter(preutterSlider.getValue());
+                    newPreutter = Optional.of(preutterSlider.getValue());
                 }
             }
+            Optional<Double> oldOverlap = note.getOverlap();
+            Optional<Double> newOverlap = oldOverlap;
             if (!overlapSlider.isDisabled() && notes.size() == 1) {
                 if (closeEnough(lyricOverlap(note), overlapSlider.getValue())) {
-                    note.clearOverlap();
+                    newOverlap = Optional.absent();
                 } else {
-                    note.setOverlap(overlapSlider.getValue());
+                    newOverlap = Optional.of(overlapSlider.getValue());
                 }
-
             }
+            double oldStartPoint = note.getStartPoint();
+            double newStartPoint = oldStartPoint;
             if (!startPointLabel.getText().equals("n/a")) {
-                note.setStartPoint(startPointSlider.getValue());
+                newStartPoint = startPointSlider.getValue();
             }
+            int oldIntensity = note.getIntensity();
+            int newIntensity = oldIntensity;
             if (!intensityLabel.getText().equals("n/a")) {
-                note.setIntensity(RoundUtils.round(intensitySlider.getValue()));
+                newIntensity = RoundUtils.round(intensitySlider.getValue());
             }
+            int oldModulation = note.getModulation();
+            int newModulation = oldModulation;
             if (!modulationLabel.getText().equals("n/a")) {
-                note.setModulation(RoundUtils.round(modulationSlider.getValue()));
+                newModulation = RoundUtils.round(modulationSlider.getValue());
             }
+            String oldFlags = note.getNoteFlags();
+            String newFlags = oldFlags;
             if (!flagsTF.getStyle().equals("-fx-control-inner-background: lightgray;")) {
-                note.setNoteFlags(flagsTF.getText());
+                newFlags = flagsTF.getText();
             }
+            oldData.add(
+                    new NoteConfigData(
+                            oldPreutter,
+                            oldOverlap,
+                            oldVelocity,
+                            oldStartPoint,
+                            oldIntensity,
+                            oldModulation,
+                            oldFlags));
+            NoteConfigData newNoteData = new NoteConfigData(
+                    newPreutter,
+                    newOverlap,
+                    newVelocity,
+                    newStartPoint,
+                    newIntensity,
+                    newModulation,
+                    newFlags);
+            newData.add(newNoteData);
+            note.setConfigData(newNoteData);
         }
-        onSongChange.run();
+        callback.updateNotes(oldData.build(), newData.build());
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
