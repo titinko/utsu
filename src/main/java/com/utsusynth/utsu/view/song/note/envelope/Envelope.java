@@ -18,6 +18,10 @@ public class Envelope {
     private final Group group;
     private final Scaler scaler;
 
+    // Temporary cache values.
+    private boolean changed = false;
+    private EnvelopeData startData;
+
     Envelope(
             MoveTo start,
             LineTo l1,
@@ -44,8 +48,11 @@ public class Envelope {
             circle.setOnMouseExited(event -> {
                 circle.getScene().setCursor(Cursor.DEFAULT);
             });
+            circle.setOnMousePressed(event -> {
+                changed = false;
+                startData = getData();
+            });
             circle.setOnMouseDragged(event -> {
-                boolean changed = false;
                 // Set reasonable limits for where envelope can be dragged.
                 if (index > 0 && index < 4) {
                     double newX = event.getX();
@@ -59,9 +66,10 @@ public class Envelope {
                     changed = true;
                     circle.setCenterY(newY);
                 }
-
+            });
+            circle.setOnMouseReleased(event -> {
                 if (changed) {
-                    callback.modifySongEnvelope();
+                    callback.modifySongEnvelope(startData, getData());
                 }
             });
             circles[i] = circle;

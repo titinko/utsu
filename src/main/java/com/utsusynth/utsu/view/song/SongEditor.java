@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
@@ -770,15 +771,29 @@ public class SongEditor {
     private EnvelopeCallback getEnvelopeCallback(final int positionMs) {
         return new EnvelopeCallback() {
             @Override
-            public void modifySongEnvelope() {
+            public void modifySongEnvelope(EnvelopeData oldData, EnvelopeData newData) {
+                Note toModify = noteMap.getNote(positionMs);
+                Runnable redoAction = () -> {
+                    modifyBackend(newData);
+                    refreshNotes(positionMs, positionMs); // Update frontend.
+                };
+                Runnable undoAction = () -> {
+                    modifyBackend(oldData);
+                    refreshNotes(positionMs, positionMs); // Update frontend.
+                };
+                model.recordAction(redoAction, undoAction);
+                toModify.setBackupData(modifyBackend(newData));
+            }
+
+            private NoteUpdateData modifyBackend(EnvelopeData updateData) {
                 Note toModify = noteMap.getNote(positionMs);
                 NoteData mutation = new NoteData(
-                        toModify.getAbsPositionMs(),
+                        positionMs,
                         toModify.getDurationMs(),
                         PitchUtils.rowNumToPitch(toModify.getRow()),
                         toModify.getLyric(),
-                        noteMap.getEnvelope(positionMs).getData());
-                toModify.setBackupData(model.modifyNote(mutation));
+                        updateData);
+                return model.modifyNote(mutation);
             }
         };
     }
