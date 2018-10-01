@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.note.pitch;
 
+import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.scene.Group;
@@ -31,7 +32,11 @@ public class Pitchbend {
         }
     }
 
-    public PitchbendData getData(int notePos) {
-        return portamento.getData(notePos).withVibrato(vibrato.getVibrato());
+    public Optional<int[]> getVibrato() {
+        return vibrato.getVibrato();
+    }
+
+    public PitchbendData getData() {
+        return portamento.getData().withVibrato(vibrato.getVibrato());
     }
 }

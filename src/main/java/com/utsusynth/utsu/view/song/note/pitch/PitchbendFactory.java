@@ -67,7 +67,7 @@ public class PitchbendFactory {
                             scaler.scaleY(curY),
                             type));
         }
-        return new Portamento(pitchCurves, callback, curveFactory, scaler);
+        return new Portamento(note.getAbsPositionMs(), pitchCurves, callback, curveFactory, scaler);
     }
 
     private Vibrato createVibrato(

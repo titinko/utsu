@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.view.song.note.pitch;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.function.Function;
 import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.quantize.Quantizer;
@@ -91,7 +92,7 @@ public class Vibrato {
         }
         for (int value : vibrato) {
             if (value != 0) {
-                return Optional.of(vibrato);
+                return Optional.of(Arrays.copyOf(vibrato, vibrato.length));
             }
         }
         // Return absent if all vibrato values are 0.
@@ -99,6 +100,7 @@ public class Vibrato {
     }
 
     public void addDefaultVibrato() {
+        int[] oldVibrato = Arrays.copyOf(vibrato, vibrato.length);
         vibrato = new int[10];
         vibrato[0] = 70; // Vibrato length (% of note)
         vibrato[1] = 185; // Cycle length (ms, range of 10 to 512)
@@ -110,14 +112,16 @@ public class Vibrato {
         vibrato[7] = 100; // Vibrato inversion, unused.
         vibrato[8] = 0; // Frequency slope (range of -100 to 100)
         vibrato[9] = 0; // Unused.
-        callback.modifySongPitchbend();
+        callback.modifySongVibrato(oldVibrato, Arrays.copyOf(vibrato, vibrato.length));
         redrawVibrato();
         redrawEditor();
     }
 
     public void clearVibrato() {
-        vibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        callback.modifySongPitchbend();
+        int[] oldVibrato = Arrays.copyOf(vibrato, vibrato.length);
+        int[] newVibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        callback.modifySongVibrato(oldVibrato, newVibrato);
+        vibrato = Arrays.copyOf(newVibrato, newVibrato.length);
         redrawVibrato();
         redrawEditor();
     }
@@ -127,9 +131,14 @@ public class Vibrato {
             return;
         }
         vibrato[index] = newValue;
-        callback.modifySongPitchbend();
         redrawVibrato();
         // This method should be called from the editor, so no need to redraw editor.
+    }
+
+    private void adjustBackendVibrato(int[] oldVibrato) {
+        // This should only be called after a drag is complete, while adjustVibrato should be
+        // called during the drag.
+        callback.modifySongVibrato(oldVibrato, Arrays.copyOf(vibrato, vibrato.length));
     }
 
     private void redrawVibrato() {
@@ -247,6 +256,10 @@ public class Vibrato {
         private final DoubleProperty phaseX;
         private final DoubleProperty frqSlopeX;
 
+        // Temporary cache values.
+        private boolean changed = false;
+        int[] startVibrato;
+
         public Editor() {
             // Values that don't change.
             this.minX = new SimpleDoubleProperty(scaler.scalePos(noteStartMs));
@@ -323,44 +336,56 @@ public class Vibrato {
 
             // Draggable nodes.
             nodes[7] = createLine(fadeInX, centerY, fadeOutX, centerY, Cursor.V_RESIZE); // Center
+            setUpBackendUpdate(nodes[7]);
             nodes[7].setOnMouseDragged(event -> {
                 double y = event.getY();
                 if (y >= baseY.get() - centsToY(100) && y <= baseY.get() + centsToY(100)) {
+                    changed = true;
                     centerY.set(y);
                 }
             });
             nodes[8] = createLine(fadeInX, highY, fadeOutX, highY, Cursor.V_RESIZE); // Top
+            setUpBackendUpdate(nodes[8]);
             nodes[8].setOnMouseDragged(event -> {
                 double y = event.getY();
                 if (y >= centerY.get() - centsToY(200) && y <= centerY.get() - centsToY(5)) {
+                    changed = true;
                     amplitudeY.set(centerY.get() - y);
                 }
             });
             nodes[9] = createLine(fadeInX, lowY, fadeOutX, lowY, Cursor.V_RESIZE); // Bottom
+            setUpBackendUpdate(nodes[9]);
             nodes[9].setOnMouseDragged(event -> {
                 double y = event.getY();
                 if (y >= centerY.get() + centsToY(5) && y <= centerY.get() + centsToY(200)) {
+                    changed = true;
                     amplitudeY.set(y - centerY.get());
                 }
             });
             nodes[10] = createLine(fadeInX, highY, fadeInX, lowY, Cursor.H_RESIZE); // Fade in
+            setUpBackendUpdate(nodes[10]);
             nodes[10].setOnMouseDragged(event -> {
                 double x = event.getX();
                 if (x > startX.get() && x < maxX.get()) {
+                    changed = true;
                     fadeInX.set(x);
                 }
             });
             nodes[11] = createLine(fadeOutX, highY, fadeOutX, lowY, Cursor.H_RESIZE); // Fade out
+            setUpBackendUpdate(nodes[11]);
             nodes[11].setOnMouseDragged(event -> {
                 double x = event.getX();
                 if (x > startX.get() && x < maxX.get()) {
+                    changed = true;
                     fadeOutX.set(x);
                 }
             });
             nodes[12] = createLine(startX, highBaseY, startX, lowBaseY, Cursor.H_RESIZE); // Start
+            setUpBackendUpdate(nodes[12]);
             nodes[12].setOnMouseDragged(event -> {
                 double x = event.getX();
                 if (x > minX.get() && x < maxX.get()) {
+                    changed = true;
                     startX.set(x);
                     fadeInX.set(x + ((maxX.get() - x) * vibrato[3] / 100.0));
                     fadeOutX.set(maxX.get() - ((maxX.get() - x) * vibrato[4] / 100.0));
@@ -420,13 +445,27 @@ public class Vibrato {
             StackPane slider = new StackPane(point, text);
             slider.translateXProperty().bind(xProp.subtract(radius));
             slider.translateYProperty().bind(DoubleExpression.doubleExpression(y).subtract(radius));
+            setUpBackendUpdate(slider);
             slider.setOnMouseDragged(event -> {
                 double newX = event.getX() + slider.getTranslateX();
                 if (newX >= startX.get() && newX <= maxSliderX.get()) {
+                    changed = true;
                     xProp.set(newX);
                 }
             });
             return slider;
+        }
+
+        private void setUpBackendUpdate(Node node) {
+            node.setOnMousePressed(event -> {
+                changed = false;
+                startVibrato = Arrays.copyOf(vibrato, vibrato.length);
+            });
+            node.setOnMouseReleased(event -> {
+                if (changed) {
+                    adjustBackendVibrato(startVibrato);
+                }
+            });
         }
 
         private double centsToY(double cents) {

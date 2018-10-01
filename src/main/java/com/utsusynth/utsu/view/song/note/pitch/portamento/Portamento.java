@@ -17,6 +17,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class Portamento {
+    private final int noteStartMs;
     private final ArrayList<Curve> curves; // Curves, ordered.
     private final ArrayList<Rectangle> squares; // Control points, ordered.
     private final Group curveGroup; // Curves, unordered.
@@ -26,11 +27,17 @@ public class Portamento {
     private final CurveFactory curveFactory;
     private final Scaler scaler;
 
+    // Temporary cache values.
+    private boolean changed = false;
+    private PitchbendData startData;
+
     public Portamento(
+            int noteStartMs,
             ArrayList<Curve> curves,
             PitchbendCallback callback,
             CurveFactory factory,
             Scaler scaler) {
+        this.noteStartMs = noteStartMs;
         this.callback = callback;
         this.curveFactory = factory;
         this.scaler = scaler;
@@ -81,9 +88,12 @@ public class Portamento {
         square.setOnContextMenuRequested(event -> {
             createContextMenu(square).show(square, event.getScreenX(), event.getScreenY());
         });
+        square.setOnMousePressed(event -> {
+            changed = false;
+            startData = getData();
+        });
         square.setOnMouseDragged(event -> {
             int index = squares.indexOf(square);
-            boolean changed = false;
             double newX = event.getX();
             if (index == 0) {
                 if (newX > 0 && newX < squares.get(index + 1).getX() + 2) {
@@ -108,8 +118,10 @@ public class Portamento {
                     square.setY(newY - 2);
                 }
             }
+        });
+        square.setOnMouseReleased(event -> {
             if (changed) {
-                callback.modifySongPitchbend();
+                callback.modifySongPitchbend(startData, getData());
             }
         });
     }
@@ -122,6 +134,7 @@ public class Portamento {
         MenuItem addControlPoint = new MenuItem("Add control point");
         addControlPoint.setOnAction(event -> {
             // Split curve into two.
+            PitchbendData oldData = getData();
             Curve curveToSplit = curves.remove(curveIndex);
             double halfX = (curveToSplit.getStartX() + curveToSplit.getEndX()) / 2;
             double halfY = (curveToSplit.getStartY() + curveToSplit.getEndY()) / 2;
@@ -152,13 +165,14 @@ public class Portamento {
             squares.add(insertIndex, newSquare);
             initializeControlPoint(newSquare);
             squareGroup.getChildren().add(newSquare);
-            callback.modifySongPitchbend();
+            callback.modifySongPitchbend(oldData, getData());
         });
         addControlPoint.setDisable(squares.size() >= 50); // Arbitrary control point limit.
         MenuItem removeControlPoint = new MenuItem("Remove control point");
         removeControlPoint.setOnAction(event -> {
             // Combine two curves into one.
             assert (curveIndex > 0); // Should disable removeControlPoint if this is true.
+            PitchbendData oldData = getData();
             Curve firstCurve = curves.remove(curveIndex - 1);
             Curve secondCurve = curves.remove(curveIndex - 1);
             Curve combined = curveFactory.createCurve(
@@ -176,7 +190,7 @@ public class Portamento {
             // Remove the control point between the two curves.
             squares.remove(squareIndex);
             squareGroup.getChildren().remove(square);
-            callback.modifySongPitchbend();
+            callback.modifySongPitchbend(oldData, getData());
         });
         removeControlPoint.setDisable(squareIndex == 0 || squareIndex == squares.size() - 1);
 
@@ -200,6 +214,7 @@ public class Portamento {
     private RadioMenuItem createCurveChoice(String label, String curveType, int curveIndex) {
         RadioMenuItem radioItem = new RadioMenuItem(label);
         radioItem.setOnAction(event -> {
+            PitchbendData oldData = getData();
             Curve oldCurve = curves.get(curveIndex);
             Curve newCurve = curveFactory.createCurve(
                     oldCurve.getStartX(),
@@ -212,7 +227,7 @@ public class Portamento {
             curves.set(curveIndex, newCurve);
             curveGroup.getChildren().remove(oldCurve.getElement());
             curveGroup.getChildren().add(newCurve.getElement());
-            callback.modifySongPitchbend();
+            callback.modifySongPitchbend(oldData, getData());
         });
         if (curves.get(curveIndex).getType() == curveType) {
             radioItem.setSelected(true);
@@ -220,9 +235,9 @@ public class Portamento {
         return radioItem;
     }
 
-    public PitchbendData getData(int notePos) {
+    public PitchbendData getData() {
         assert (curves.size() > 0);
-        double startX = scaler.unscalePos(curves.get(0).getStartX()) - notePos;
+        double startX = scaler.unscalePos(curves.get(0).getStartX()) - noteStartMs;
         double endY = scaler.unscaleY(curves.get(curves.size() - 1).getEndY());
         ImmutableList.Builder<Double> widths = ImmutableList.builder();
         ImmutableList.Builder<Double> heights = ImmutableList.builder();

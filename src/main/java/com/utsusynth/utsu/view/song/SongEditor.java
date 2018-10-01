@@ -14,6 +14,7 @@ import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
+import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -772,7 +773,6 @@ public class SongEditor {
         return new EnvelopeCallback() {
             @Override
             public void modifySongEnvelope(EnvelopeData oldData, EnvelopeData newData) {
-                Note toModify = noteMap.getNote(positionMs);
                 Runnable redoAction = () -> {
                     modifyBackend(newData);
                     refreshNotes(positionMs, positionMs); // Update frontend.
@@ -782,7 +782,7 @@ public class SongEditor {
                     refreshNotes(positionMs, positionMs); // Update frontend.
                 };
                 model.recordAction(redoAction, undoAction);
-                toModify.setBackupData(modifyBackend(newData));
+                noteMap.getNote(positionMs).setBackupData(modifyBackend(newData));
             }
 
             private NoteUpdateData modifyBackend(EnvelopeData updateData) {
@@ -801,15 +801,46 @@ public class SongEditor {
     private PitchbendCallback getPitchbendCallback(final int positionMs) {
         return new PitchbendCallback() {
             @Override
-            public void modifySongPitchbend() {
+            public void modifySongPitchbend(PitchbendData oldData, PitchbendData newData) {
+                Optional<int[]> vibrato = noteMap.getPitchbend(positionMs).getVibrato();
+                Runnable redoAction = () -> {
+                    modifyBackend(newData.withVibrato(vibrato));
+                    refreshNotes(positionMs, positionMs); // Update frontend.
+                };
+                Runnable undoAction = () -> {
+                    modifyBackend(oldData.withVibrato(vibrato));
+                    refreshNotes(positionMs, positionMs); // Update frontend.
+                };
+                model.recordAction(redoAction, undoAction);
+                NoteUpdateData update = modifyBackend(newData.withVibrato(vibrato));
+                noteMap.getNote(positionMs).setBackupData(update);
+            }
+
+            @Override
+            public void modifySongVibrato(int[] oldVibrato, int[] newVibrato) {
+                PitchbendData data = noteMap.getPitchbend(positionMs).getData();
+                Runnable redoAction = () -> {
+                    modifyBackend(data.withVibrato(Optional.of(newVibrato)));
+                    refreshNotes(positionMs, positionMs); // Update frontend.
+                };
+                Runnable undoAction = () -> {
+                    modifyBackend(data.withVibrato(Optional.of(oldVibrato)));
+                    refreshNotes(positionMs, positionMs); // Update frontend.
+                };
+                model.recordAction(redoAction, undoAction);
+                NoteUpdateData update = modifyBackend(data.withVibrato(Optional.of(newVibrato)));
+                noteMap.getNote(positionMs).setBackupData(update);
+            }
+
+            private NoteUpdateData modifyBackend(PitchbendData updateData) {
                 Note toModify = noteMap.getNote(positionMs);
                 NoteData mutation = new NoteData(
                         positionMs,
                         toModify.getDurationMs(),
                         PitchUtils.rowNumToPitch(toModify.getRow()),
                         toModify.getLyric(),
-                        noteMap.getPitchbend(positionMs).getData(positionMs));
-                toModify.setBackupData(model.modifyNote(mutation));
+                        updateData);
+                return model.modifyNote(mutation);
             }
         };
     }
