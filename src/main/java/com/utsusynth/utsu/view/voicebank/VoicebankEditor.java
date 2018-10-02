@@ -122,9 +122,7 @@ public class VoicebankEditor {
         });
 
         // Add columns.
-        TableColumn<LyricConfigData, String> lyricCol = new TableColumn<>("Lyric");
-        lyricCol.setCellValueFactory(data -> data.getValue().lyricProperty());
-        lyricCol.setCellFactory(col -> new EditableCell<>(stringToString));
+        TableColumn<LyricConfigData, String> lyricCol = createLyricCol();
         TableColumn<LyricConfigData, String> fileCol = new TableColumn<>("File");
         fileCol.setCellValueFactory(data -> data.getValue().fileNameProperty());
         TableColumn<LyricConfigData, String> frqStatusCol = createFrqStatusCol(lyrics);
@@ -158,6 +156,24 @@ public class VoicebankEditor {
         return scrollPane;
     }
 
+    private TableColumn<LyricConfigData, String> createLyricCol() {
+        TableColumn<LyricConfigData, String> lyricCol = new TableColumn<>("Lyric");
+        lyricCol.setCellValueFactory(data -> data.getValue().lyricProperty());
+        lyricCol.setCellFactory(col -> new EditableCell<>(stringToString));
+        lyricCol.setOnEditCommit(event -> {
+            final LyricConfigData config = event.getRowValue();
+            final String oldLyric = config.lyricProperty().get();
+            final String newLyric = event.getNewValue();
+            if (!oldLyric.equals(newLyric)) {
+                model.recordAction(
+                        () -> config.lyricProperty().set(newLyric),
+                        () -> config.lyricProperty().set(oldLyric));
+                config.lyricProperty().set(newLyric);
+            }
+        });
+        return lyricCol;
+    }
+
     private TableColumn<LyricConfigData, String> createFrqStatusCol(
             ObservableList<LyricConfigData> lyrics) {
         TableColumn<LyricConfigData, String> col = new TableColumn<>("Frq");
@@ -188,9 +204,18 @@ public class VoicebankEditor {
         col.setCellFactory(source -> new EditableCell<>(stringToDouble));
         col.setSortable(false);
         col.setOnEditCommit(event -> {
-            property.apply(event.getRowValue()).set(event.getNewValue());
-            // Re-create config editor if necessary.
-            model.displayLyric(event.getRowValue());
+            final LyricConfigData config = event.getRowValue();
+            final double oldValue = property.apply(config).get();
+            final double newValue = event.getNewValue();
+            model.recordAction(() -> {
+                property.apply(config).set(newValue);
+                model.displayLyric(config);
+            }, () -> {
+                property.apply(config).set(oldValue);
+                model.displayLyric(config);
+            });
+            property.apply(config).set(newValue);
+            model.displayLyric(config); // Re-create config editor if necessary.
         });
         return col;
     }
@@ -203,7 +228,10 @@ public class VoicebankEditor {
             }
             // Remove old lyric.
             model.removeLyric(oldLyric);
-            // Disallow change if new lyric would be a repeat.
+            if (newLyric.equals("?")) {
+                return; // Don't try to modify model if new lyric is a question mark.
+            }
+            // Immediately revert change if new lyric would be a repeat.
             if (!model.addLyric(data)) {
                 data.lyricProperty().set(oldLyric);
                 model.addLyric(data);

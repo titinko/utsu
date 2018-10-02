@@ -135,12 +135,6 @@ public class Vibrato {
         // This method should be called from the editor, so no need to redraw editor.
     }
 
-    private void adjustBackendVibrato(int[] oldVibrato) {
-        // This should only be called after a drag is complete, while adjustVibrato should be
-        // called during the drag.
-        callback.modifySongVibrato(oldVibrato, Arrays.copyOf(vibrato, vibrato.length));
-    }
-
     private void redrawVibrato() {
         // TODO: Validate that vibrato values are within correct ranges.
         vibratoPath.getElements().clear();
@@ -463,7 +457,9 @@ public class Vibrato {
             });
             node.setOnMouseReleased(event -> {
                 if (changed) {
-                    adjustBackendVibrato(startVibrato);
+                    callback.modifySongVibrato(
+                            startVibrato,
+                            Arrays.copyOf(vibrato, vibrato.length));
                 }
             });
         }

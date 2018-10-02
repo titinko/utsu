@@ -170,6 +170,11 @@ public class VoicebankController implements EditorController, Localizable {
                     // Change cannot be saved or undone, so don't call onVoicebankChange.
                 }).start();
             }
+
+            @Override
+            public void recordAction(Runnable redoAction, Runnable undoAction) {
+                undoService.setMostRecentAction(redoAction, undoAction);
+            }
         });
 
         // Pass callback to pitch editor.
@@ -178,6 +183,11 @@ public class VoicebankController implements EditorController, Localizable {
             public void setPitch(PitchMapData pitchData) {
                 voicebank.get().setPitchData(pitchData);
                 onVoicebankChange();
+            }
+
+            @Override
+            public void recordAction(Runnable redoAction, Runnable undoAction) {
+                undoService.setMostRecentAction(redoAction, undoAction);
             }
         });
 
