@@ -87,9 +87,14 @@ public class VoicebankEditor {
             MenuItem addAliasItem = new MenuItem("Add Alias");
             addAliasItem.setOnAction(event -> {
                 LyricConfigData newData = row.getItem().deepCopy();
-                lyrics.add(row.getIndex() + 1, newData);
+                int indexToAdd = row.getIndex() + 1;
+                lyrics.add(indexToAdd, newData);
                 newData.lyricProperty().set("?");
                 initializeLyric(newData);
+                // Set up undo/redo.
+                model.recordAction(
+                        () -> lyrics.add(indexToAdd, newData),
+                        () -> lyrics.remove(newData));
             });
             MenuItem genFrqItem = new MenuItem("Generate .frq File");
             genFrqItem.setOnAction(event -> {
@@ -100,8 +105,17 @@ public class VoicebankEditor {
             MenuItem deleteItem = new MenuItem("Delete");
             deleteItem.setOnAction(event -> {
                 LyricConfigData toRemove = row.getItem();
+                int index = row.getIndex();
                 table.getItems().remove(toRemove);
                 model.removeLyric(toRemove.getLyric());
+                // Set up undo/redo.
+                model.recordAction(() -> {
+                    table.getItems().remove(toRemove);
+                    model.removeLyric(toRemove.getLyric());
+                }, () -> {
+                    table.getItems().add(index, toRemove);
+                    model.addLyric(toRemove);
+                });
             });
             contextMenu.getItems().addAll(addAliasItem, genFrqItem, deleteItem);
             row.setOnContextMenuRequested(event -> {
