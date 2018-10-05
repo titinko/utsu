@@ -35,9 +35,14 @@ public class LyricConfigEditor {
     private final SoundFileReader soundFileReader;
 
     private Optional<LyricConfigData> configData;
+    private LyricConfigCallback model;
     private GridPane background;
     private LineChart<Number, Number> chart;
     private Group controlBars;
+
+    // Temporary cache values.
+    private boolean changed = false;
+    private double[] cachedConfig;
 
     @Inject
     public LyricConfigEditor(SoundFileReader soundFileReader) {
@@ -49,6 +54,11 @@ public class LyricConfigEditor {
         chart = new LineChart<>(new NumberAxis(), new NumberAxis());
         chart.setOpacity(0);
         controlBars = new Group();
+    }
+
+    /** Initialize editor with data from the controller. */
+    public void initialize(LyricConfigCallback callback) {
+        model = callback;
     }
 
     public GridPane createConfigEditor(LyricConfigData config) {
@@ -87,11 +97,11 @@ public class LyricConfigEditor {
 
         // Control bars.
         controlBars.getChildren().clear();
-        Line offsetBar = createControlBar(offsetBarX, totalX, "offset");
-        Line consonantBar = createControlBar(consonantBarX, totalX, "consonant");
-        Line cutoffBar = createControlBar(cutoffBarX, totalX, "cutoff");
-        Line preutterBar = createControlBar(preutterBarX, totalX, "preutterance");
-        Line overlapBar = createControlBar(overlapBarX, totalX, "overlap");
+        Line offsetBar = createControlBar(config, offsetBarX, totalX, "offset");
+        Line consonantBar = createControlBar(config, consonantBarX, totalX, "consonant");
+        Line cutoffBar = createControlBar(config, cutoffBarX, totalX, "cutoff");
+        Line preutterBar = createControlBar(config, preutterBarX, totalX, "preutterance");
+        Line overlapBar = createControlBar(config, overlapBarX, totalX, "overlap");
         controlBars.getChildren()
                 .setAll(offsetBar, overlapBar, preutterBar, consonantBar, cutoffBar);
 
@@ -116,6 +126,7 @@ public class LyricConfigEditor {
 
         // Enable dragging bars to change config values.
         offsetBar.setOnMouseDragged(event -> {
+            changed = true;
             double newX = Math.min(
                     Math.max(event.getX(), 0),
                     cutoffBar.getStartX() - consonantPane.getPrefWidth());
@@ -146,6 +157,7 @@ public class LyricConfigEditor {
             }
         });
         consonantBar.setOnMouseDragged(event -> {
+            changed = true;
             double newX =
                     Math.min(Math.max(event.getX(), offsetBar.getStartX()), cutoffBar.getStartX());
             double addedX = newX - consonantBar.getStartX();
@@ -156,6 +168,7 @@ public class LyricConfigEditor {
             config.consonantProperty().set(consonantPane.getPrefWidth() / scaleX);
         });
         cutoffBar.setOnMouseDragged(event -> {
+            changed = true;
             double newX = Math.min(Math.max(event.getX(), consonantBar.getStartX()), totalX);
             double addedX = newX - cutoffBar.getStartX();
             cutoffBar.setStartX(newX);
@@ -165,6 +178,7 @@ public class LyricConfigEditor {
             config.cutoffProperty().set(cutoffPane.getPrefWidth() / scaleX);
         });
         preutterBar.setOnMouseDragged(event -> {
+            changed = true;
             double newX = Math.min(Math.max(event.getX(), 0), totalX);
             preutterBar.setStartX(newX);
             preutterBar.setEndX(newX);
@@ -172,6 +186,7 @@ public class LyricConfigEditor {
             config.preutterProperty().set(newPreutterX / scaleX);
         });
         overlapBar.setOnMouseDragged(event -> {
+            changed = true;
             double newX = Math.min(Math.max(event.getX(), 0), totalX);
             overlapBar.setStartX(newX);
             overlapBar.setEndX(newX);
@@ -220,7 +235,11 @@ public class LyricConfigEditor {
         return pane;
     }
 
-    private Line createControlBar(double xPos, double totalX, String style) {
+    private Line createControlBar(
+            LyricConfigData config,
+            double xPos,
+            double totalX,
+            String style) {
         Line bar = new Line(xPos, 0, xPos, height);
         bar.getStyleClass().add(style);
         bar.setOnMouseEntered(event -> {
@@ -235,6 +254,23 @@ public class LyricConfigEditor {
             bar.getScene().setCursor(Cursor.DEFAULT);
             if (bar.getStyleClass().contains("selected")) {
                 bar.getStyleClass().remove("selected");
+            }
+        });
+        bar.setOnMousePressed(event -> {
+            changed = false;
+            cachedConfig = config.getConfigValues();
+        });
+        bar.setOnMouseReleased(event -> {
+            if (changed) {
+                final double[] oldConfig = cachedConfig;
+                final double[] newConfig = config.getConfigValues();
+                model.recordAction(() -> {
+                    config.setConfigValues(newConfig);
+                    model.refreshEditor(config);
+                }, () -> {
+                    config.setConfigValues(oldConfig);
+                    model.refreshEditor(config);
+                });
             }
         });
         return bar;

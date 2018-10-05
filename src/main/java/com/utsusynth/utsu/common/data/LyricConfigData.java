@@ -107,6 +107,18 @@ public class LyricConfigData {
                 overlap.get()};
     }
 
+    /** Quick setter for config values using the same format as getConfigValues. */
+    public void setConfigValues(double[] configValues) {
+        if (configValues.length != 5) {
+            return;
+        }
+        offset.set(configValues[0]);
+        consonant.set(configValues[1]);
+        cutoff.set(configValues[2]);
+        preutter.set(configValues[3]);
+        overlap.set(configValues[4]);
+    }
+
     /** Returns any properties that can mutate without changing lyric save/display location. */
     public List<Property<?>> mutableProperties() {
         return ImmutableList.of(offset, consonant, cutoff, preutter, overlap);

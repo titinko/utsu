@@ -14,6 +14,7 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.files.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
+import com.utsusynth.utsu.view.voicebank.LyricConfigCallback;
 import com.utsusynth.utsu.view.voicebank.LyricConfigEditor;
 import com.utsusynth.utsu.view.voicebank.PitchCallback;
 import com.utsusynth.utsu.view.voicebank.PitchEditor;
@@ -188,6 +189,24 @@ public class VoicebankController implements EditorController, Localizable {
             @Override
             public void recordAction(Runnable redoAction, Runnable undoAction) {
                 undoService.setMostRecentAction(redoAction, undoAction);
+            }
+        });
+
+        // Pass callback to lyric config editor.
+        configEditor.initialize(new LyricConfigCallback() {
+            @Override
+            public void recordAction(Runnable redoAction, Runnable undoAction) {
+                undoService.setMostRecentAction(redoAction, undoAction);
+            }
+
+            @Override
+            public void refreshEditor(LyricConfigData lyricData) {
+                // Reload lyric config editor.
+                anchorBottom.getChildren().clear();
+                anchorBottom.getChildren().add(configEditor.createConfigEditor(lyricData));
+                anchorBottom.getChildren().add(configEditor.getControlElement());
+                anchorBottom.getChildren().add(configEditor.getChartElement());
+                bindLabelsAndControlBars(configEditor.getControlElement());
             }
         });
 
