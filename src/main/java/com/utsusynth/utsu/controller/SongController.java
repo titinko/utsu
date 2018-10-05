@@ -774,6 +774,13 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
+    public void openNoteProperties() {
+        if (!songEditor.getSelectedTrack().equals(RegionBounds.INVALID)) {
+            openNotePropertiesEditor(songEditor.getSelectedTrack());
+        }
+    }
+
+    @Override
     public Optional<File> openPlugin() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select executable file");

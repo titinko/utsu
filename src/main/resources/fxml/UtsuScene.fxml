@@ -43,6 +43,8 @@
                   <MenuItem fx:id="deleteItem" mnemonicParsing="false" onAction="#delete" text="Delete" />
                   <SeparatorMenuItem mnemonicParsing="false" />
               <MenuItem fx:id="selectAllItem" mnemonicParsing="false" onAction="#selectAll" text="Select All" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="notePropertiesItem" mnemonicParsing="false" onAction="#openNoteProperties" text="Note Properties" />
             </items>
           </Menu>
             <Menu fx:id="viewMenu" mnemonicParsing="false" text="View">

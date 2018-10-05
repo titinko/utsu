@@ -134,6 +134,8 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem selectAllItem; // Value injected by FXMLLoader
     @FXML
+    private MenuItem notePropertiesItem; // Value injected by FXMLLoader
+    @FXML
     private Menu viewMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem zoomInItem; // Value injected by FXMLLoader
@@ -173,6 +175,7 @@ public class UtsuController implements Localizable {
         pasteItem.setText(bundle.getString("menu.edit.paste"));
         deleteItem.setText(bundle.getString("menu.edit.delete"));
         selectAllItem.setText(bundle.getString("menu.edit.selectAll"));
+        notePropertiesItem.setText(bundle.getString("menu.edit.noteProperties"));
         viewMenu.setText(bundle.getString("menu.view"));
         zoomInItem.setText(bundle.getString("menu.view.zoomIn"));
         zoomOutItem.setText(bundle.getString("menu.view.zoomOut"));
@@ -200,6 +203,7 @@ public class UtsuController implements Localizable {
         pasteItem.setAccelerator(new KeyCodeCombination(KeyCode.V, SHORTCUT_DOWN));
         deleteItem.setAccelerator(new KeyCodeCombination(KeyCode.D, SHORTCUT_DOWN));
         selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN));
+        notePropertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.E, SHORTCUT_DOWN));
         zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
         zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN));
         propertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.P, SHORTCUT_DOWN));
@@ -445,6 +449,13 @@ public class UtsuController implements Localizable {
     void selectAll(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             editors.get(tabs.getSelectionModel().getSelectedItem().getId()).selectAll();
+        }
+    }
+
+    @FXML
+    void openNoteProperties(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).openNoteProperties();
         }
     }
 

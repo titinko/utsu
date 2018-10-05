@@ -63,6 +63,8 @@ interface EditorController {
 
     void selectAll();
 
+    void openNoteProperties();
+
     void openProperties();
 
     /** Opens a legacy UTAU plugin. Returns the file of the plugin opened, if any. */

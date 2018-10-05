@@ -392,6 +392,11 @@ public class VoicebankController implements EditorController, Localizable {
         }
     }
 
+    @Override
+    public void openNoteProperties() {
+        // Note properties do not apply to voicebanks.
+    }
+
     @FXML
     public void applySuffix(ActionEvent event) {
         String suffix = suffixTextField.getText() != null ? suffixTextField.getText() : "";
