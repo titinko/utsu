@@ -250,13 +250,25 @@ public class SongEditor {
         }
         model.addNotes(toAdd);
         refreshNotes(toAdd.getFirst().getPosition(), toAdd.getLast().getPosition());
-        model.recordAction(() -> undoDeleteNotes(newNotes), () -> deleteNotes(newNotes));
+        model.recordAction(() -> {
+            playbackManager.clearHighlights();
+            undoDeleteNotes(newNotes);
+        }, () -> {
+            playbackManager.clearHighlights();
+            deleteNotes(newNotes);
+        });
     }
 
     public void deleteSelected() {
         List<Note> toDelete = playbackManager.getHighlightedNotes();
         deleteNotes(toDelete);
-        model.recordAction(() -> deleteNotes(toDelete), () -> undoDeleteNotes(toDelete));
+        model.recordAction(() -> {
+            playbackManager.clearHighlights();
+            deleteNotes(toDelete);
+        }, () -> {
+            playbackManager.clearHighlights();
+            undoDeleteNotes(toDelete);
+        });
         playbackManager.clearHighlights();
     }
 
@@ -600,9 +612,13 @@ public class SongEditor {
                             vibratoEditor);
                     noteMap.addNoteElement(newNote);
                     List<Note> noteList = ImmutableList.of(newNote);
-                    model.recordAction(
-                            () -> undoDeleteNotes(noteList),
-                            () -> deleteNotes(noteList));
+                    model.recordAction(() -> {
+                        playbackManager.clearHighlights();
+                        undoDeleteNotes(noteList);
+                    }, () -> {
+                        playbackManager.clearHighlights();
+                        deleteNotes(noteList);
+                    });
                 }
             } else if (subMode == SubMode.DRAG_SELECT
                     && !playbackManager.getHighlightedNotes().isEmpty()) {
@@ -729,9 +745,13 @@ public class SongEditor {
             List<Note> toMove =
                     playbackManager.isHighlighted(note) ? playbackManager.getHighlightedNotes()
                             : ImmutableList.of(note);
-            model.recordAction(
-                    () -> moveNotes(toMove, positionDelta, rowDelta),
-                    () -> moveNotes(toMove, -positionDelta, -rowDelta));
+            model.recordAction(() -> {
+                playbackManager.clearHighlights();
+                moveNotes(toMove, positionDelta, rowDelta);
+            }, () -> {
+                playbackManager.clearHighlights();
+                moveNotes(toMove, -positionDelta, -rowDelta);
+            });
         }
 
         @Override
@@ -740,7 +760,13 @@ public class SongEditor {
                     playbackManager.isHighlighted(note) ? playbackManager.getHighlightedNotes()
                             : ImmutableList.of(note);
             deleteNotes(toDelete);
-            model.recordAction(() -> deleteNotes(toDelete), () -> undoDeleteNotes(toDelete));
+            model.recordAction(() -> {
+                playbackManager.clearHighlights();
+                deleteNotes(toDelete);
+            }, () -> {
+                playbackManager.clearHighlights();
+                undoDeleteNotes(toDelete);
+            });
             if (playbackManager.isHighlighted(note)) {
                 playbackManager.clearHighlights();
             }

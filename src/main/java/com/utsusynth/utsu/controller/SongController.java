@@ -359,11 +359,6 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
-    public boolean hasPermanentLocation() {
-        return song.hasPermanentLocation();
-    }
-
-    @Override
     public boolean onKeyPressed(KeyEvent keyEvent) {
         if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
             // In the pause case, flicker will be overridden before it can happen.

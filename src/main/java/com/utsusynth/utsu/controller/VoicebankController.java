@@ -297,11 +297,6 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
-    public boolean hasPermanentLocation() {
-        return true;
-    }
-
-    @Override
     public boolean onKeyPressed(KeyEvent keyEvent) {
         if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
             configEditor.playSound(); // Does nothing if config editor not loaded.

@@ -19,8 +19,6 @@ interface EditorController {
 
     MenuItemManager getMenuItems();
 
-    boolean hasPermanentLocation();
-
     /**
      * Called whenever a key is pressed, excluding text input. Can override default key press
      * behaviors. Accelerators should be used instead when overrides are not needed.
