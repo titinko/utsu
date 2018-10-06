@@ -297,10 +297,8 @@ public class SongController implements EditorController, Localizable {
                 songEditor.isAnythingSelectedProperty(),
                 songEditor.clibboardFilledProperty());
 
-        // Do scrolling after a short pause for viewport to establish itself.
-        PauseTransition briefPause = new PauseTransition(Duration.millis(10));
-        briefPause.setOnFinished(event -> scrollToPosition(0));
-        briefPause.play();
+        // Scroll to the end of the pre-roll measure. Pre-calculated to save time.
+        scrollPaneCenter.setHvalue(0.335);
 
         // Set up localization.
         localizer.localize(this);
@@ -518,6 +516,10 @@ public class SongController implements EditorController, Localizable {
                         callback.markChanged(false);
                         menuItemManager.disableSave();
                         statusBar.setStatus("Opened " + file.getName());
+                        // Do scrolling after a short pause for viewport to establish itself.
+                        PauseTransition briefPause = new PauseTransition(Duration.millis(10));
+                        briefPause.setOnFinished(event -> scrollToPosition(0));
+                        briefPause.play();
                     });
                 } catch (Exception e) {
                     Platform.runLater(
