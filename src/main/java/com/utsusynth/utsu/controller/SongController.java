@@ -35,6 +35,7 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.controller.common.IconManager.IconType;
+import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.Engine.PlaybackStatus;
@@ -88,6 +89,7 @@ public class SongController implements EditorController, Localizable {
     private final Quantizer quantizer;
     private final Scaler scaler;
     private final UndoService undoService;
+    private final MenuItemManager menuItemManager;
     private final StatusBar statusBar;
     private final Ust12Reader ust12Reader;
     private final Ust20Reader ust20Reader;
@@ -146,6 +148,7 @@ public class SongController implements EditorController, Localizable {
             Quantizer quantizer,
             Scaler scaler,
             UndoService undoService,
+            MenuItemManager menuItemManager,
             StatusBar statusBar,
             Ust12Reader ust12Reader,
             Ust20Reader ust20Reader,
@@ -162,6 +165,7 @@ public class SongController implements EditorController, Localizable {
         this.quantizer = quantizer;
         this.scaler = scaler;
         this.undoService = undoService;
+        this.menuItemManager = menuItemManager;
         this.statusBar = statusBar;
         this.ust12Reader = ust12Reader;
         this.ust20Reader = ust20Reader;
@@ -284,6 +288,13 @@ public class SongController implements EditorController, Localizable {
 
         refreshView();
 
+        // Set up enabled/disabled menu items.
+        menuItemManager.initializeSong(
+                undoService.canUndoProperty(),
+                undoService.canRedoProperty(),
+                songEditor.isAnythingSelectedProperty(),
+                songEditor.clibboardFilledProperty());
+
         // Do scrolling after a short pause for viewport to establish itself.
         PauseTransition briefPause = new PauseTransition(Duration.millis(10));
         briefPause.setOnFinished(event -> scrollToPosition(0));
@@ -340,6 +351,11 @@ public class SongController implements EditorController, Localizable {
     @Override
     public String getFileName() {
         return song.getLocation().getName();
+    }
+
+    @Override
+    public MenuItemManager getMenuItems() {
+        return menuItemManager;
     }
 
     @Override
@@ -457,7 +473,8 @@ public class SongController implements EditorController, Localizable {
                     song.setSaveFormat(saveFormat);
                     Platform.runLater(() -> {
                         refreshView();
-                        callback.enableSave(false);
+                        callback.markChanged(false);
+                        menuItemManager.disableSave();
                         statusBar.setStatus("Opened " + file.getName());
                     });
                 } catch (Exception e) {
@@ -489,7 +506,8 @@ public class SongController implements EditorController, Localizable {
                     ps.close();
                     // Report results to UI.
                     Platform.runLater(() -> {
-                        callback.enableSave(false);
+                        callback.markChanged(false);
+                        menuItemManager.disableSave();
                         statusBar.setStatus("Saved changes to " + saveLocation.getName());
                     });
                 } catch (Exception e) {
@@ -545,7 +563,8 @@ public class SongController implements EditorController, Localizable {
                     // Report results to UI.
                     song.setSaveFormat(chosenFormat.getDescription());
                     Platform.runLater(() -> {
-                        callback.enableSave(false);
+                        callback.markChanged(false);
+                        menuItemManager.disableSave();
                         statusBar.setStatus("Saved as " + file.getName());
                     });
                 } catch (Exception e) {
@@ -566,11 +585,11 @@ public class SongController implements EditorController, Localizable {
         if (callback == null) {
             return;
         }
+        callback.markChanged(true);
         if (song.hasPermanentLocation()) {
-            callback.enableSave(true);
+            menuItemManager.enableSave();
         } else {
-            callback.enableSave(false);
-            callback.markChanged(); // Don't enable save, but enable asterisk.
+            menuItemManager.disableSave();
         }
     }
 

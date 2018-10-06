@@ -13,6 +13,8 @@ import com.utsusynth.utsu.view.song.note.Note;
 import javafx.animation.Animation.Status;
 import javafx.animation.Interpolator;
 import javafx.animation.TranslateTransition;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
 import javafx.scene.shape.Line;
 import javafx.util.Duration;
@@ -25,6 +27,7 @@ public class PlaybackBarManager {
 
     private final Scaler scaler;
     private final TreeSet<Note> highlighted;
+    private final BooleanProperty isAnythingHighlighted;
     private final TranslateTransition playback;
 
     private Line startBar;
@@ -35,6 +38,7 @@ public class PlaybackBarManager {
     public PlaybackBarManager(Scaler scaler) {
         this.scaler = scaler;
         highlighted = new TreeSet<>();
+        isAnythingHighlighted = new SimpleBooleanProperty(false);
         playback = new TranslateTransition();
         clear();
     }
@@ -85,6 +89,7 @@ public class PlaybackBarManager {
     /** Adds a specific note to highlighted set and adjust playback bars. */
     void highlightNote(Note highlightMe) {
         highlighted.add(highlightMe);
+        isAnythingHighlighted.set(true);
         highlightMe.setHighlighted(true);
     }
 
@@ -108,6 +113,7 @@ public class PlaybackBarManager {
                 note.setHighlighted(true);
             }
         }
+        isAnythingHighlighted.set(!highlighted.isEmpty());
     }
 
     /** Highlights all notes and places playback bars at their edges. */
@@ -121,6 +127,7 @@ public class PlaybackBarManager {
             highlighted.add(note);
             note.setHighlighted(true);
         }
+        isAnythingHighlighted.set(!highlighted.isEmpty());
 
         // Add start and stop bars to the track at the correct location.
         bars.getChildren().addAll(startBar, endBar);
@@ -165,6 +172,7 @@ public class PlaybackBarManager {
             note.setHighlighted(false);
         }
         highlighted.clear();
+        isAnythingHighlighted.set(false);
         bars.getChildren().removeAll(startBar, endBar);
     }
 
@@ -202,6 +210,10 @@ public class PlaybackBarManager {
 
     boolean isHighlighted(Note note) {
         return highlighted.contains(note);
+    }
+
+    BooleanProperty isAnythingHighlightedProperty() {
+        return isAnythingHighlighted;
     }
 
     ImmutableList<Note> getHighlightedNotes() {

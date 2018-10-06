@@ -191,6 +191,14 @@ public class SongEditor {
         return measureWidth * (numMeasures + 1); // Include pre-roll.
     }
 
+    public BooleanProperty clibboardFilledProperty() {
+        return clipboard.clipboardFilledProperty();
+    }
+
+    public BooleanProperty isAnythingSelectedProperty() {
+        return playbackManager.isAnythingHighlightedProperty();
+    }
+
     public RegionBounds getPlayableTrack() {
         return playbackManager.getPlayableRegion();
     }

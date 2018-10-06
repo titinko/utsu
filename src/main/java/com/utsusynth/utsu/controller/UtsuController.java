@@ -281,29 +281,19 @@ public class UtsuController implements Localizable {
             tab.setId(tabId);
             tab.setOnSelectionChanged(event -> {
                 if (tab.isSelected()) {
-                    // Enable saveItem if tab can be saved.
-                    EditorController editor = editors.get(tabId);
-                    boolean fileChanged = editor.getFileName().length() < tab.getText().length();
-                    saveItem.setDisable(!fileChanged || !editor.hasPermanentLocation());
-                    if (type == EditorType.SONG) {
-                        saveAsItem.setDisable(false);
-                        exportToWavItem.setDisable(false);
-                        cutItem.setDisable(false);
-                        copyItem.setDisable(false);
-                        pasteItem.setDisable(false);
-                        deleteItem.setDisable(false);
-                        propertiesItem.setDisable(false);
-                        recentPluginsMenu.setDisable(recentPluginsMenu.getItems().isEmpty());
-                    } else if (type == EditorType.VOICEBANK) {
-                        saveAsItem.setDisable(true);
-                        exportToWavItem.setDisable(true);
-                        cutItem.setDisable(true);
-                        copyItem.setDisable(true);
-                        pasteItem.setDisable(true);
-                        deleteItem.setDisable(true);
-                        propertiesItem.setDisable(true);
-                        recentPluginsMenu.setDisable(true);
-                    }
+                    // Enable or disable menu items depending on which tab is selected.
+                    editors.get(tabId).getMenuItems().bindProperties(
+                            saveItem.disableProperty(),
+                            saveAsItem.disableProperty(),
+                            exportToWavItem.disableProperty(),
+                            undoItem.disableProperty(),
+                            redoItem.disableProperty(),
+                            cutItem.disableProperty(),
+                            copyItem.disableProperty(),
+                            pasteItem.disableProperty(),
+                            deleteItem.disableProperty(),
+                            propertiesItem.disableProperty(),
+                            notePropertiesItem.disableProperty());
                 }
             });
             tab.setOnCloseRequest(event -> {
@@ -319,16 +309,8 @@ public class UtsuController implements Localizable {
             editors.put(tab.getId(), editor);
             editor.openEditor(new EditorCallback() {
                 @Override
-                public void markChanged() {
-                    // Adds a handy * to indicate unsaved changes.
-                    if (!tab.getText().startsWith("*")) {
-                        tab.setText("*" + tab.getText());
-                    }
-                }
-
-                @Override
-                public void enableSave(boolean enabled) {
-                    if (enabled) {
+                public void markChanged(boolean hasUnsavedChanges) {
+                    if (hasUnsavedChanges) {
                         // Adds a handy * to indicate unsaved changes.
                         if (!tab.getText().startsWith("*")) {
                             tab.setText("*" + tab.getText());
@@ -339,7 +321,6 @@ public class UtsuController implements Localizable {
                             tab.setText(tab.getText().substring(1));
                         }
                     }
-                    saveItem.setDisable(!enabled);
                 }
             });
             editor.refreshView();

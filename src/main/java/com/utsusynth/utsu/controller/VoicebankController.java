@@ -11,6 +11,7 @@ import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.files.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
@@ -60,6 +61,7 @@ public class VoicebankController implements EditorController, Localizable {
     private final LyricConfigEditor configEditor;
     private final Localizer localizer;
     private final UndoService undoService;
+    private final MenuItemManager menuItemManager;
     private final StatusBar statusBar;
     private final VoicebankWriter voicebankWriter;
 
@@ -95,6 +97,7 @@ public class VoicebankController implements EditorController, Localizable {
             LyricConfigEditor configEditor,
             Localizer localizer,
             UndoService undoService,
+            MenuItemManager menuItemManager,
             StatusBar statusBar,
             VoicebankWriter voicebankWriter) {
         this.voicebank = voicebankContainer;
@@ -103,6 +106,7 @@ public class VoicebankController implements EditorController, Localizable {
         this.configEditor = configEditor;
         this.localizer = localizer;
         this.undoService = undoService;
+        this.menuItemManager = menuItemManager;
         this.statusBar = statusBar;
         this.voicebankWriter = voicebankWriter;
     }
@@ -212,6 +216,10 @@ public class VoicebankController implements EditorController, Localizable {
 
         refreshView();
 
+        // Set up enabled/disabled menu items.
+        menuItemManager
+                .initializeVoicebank(undoService.canUndoProperty(), undoService.canRedoProperty());
+
         // Set up localization.
         localizer.localize(this);
     }
@@ -284,6 +292,11 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
+    public MenuItemManager getMenuItems() {
+        return menuItemManager;
+    }
+
+    @Override
     public boolean hasPermanentLocation() {
         return true;
     }
@@ -314,7 +327,8 @@ public class VoicebankController implements EditorController, Localizable {
                     Platform.runLater(() -> {
                         // UI thread.
                         refreshView();
-                        callback.enableSave(false);
+                        callback.markChanged(false);
+                        menuItemManager.disableSave();
                         statusBar.setStatus("Loaded voicebank: " + file.getName());
                     });
                 } catch (Exception e) {
@@ -337,7 +351,8 @@ public class VoicebankController implements EditorController, Localizable {
                 Platform.runLater(() -> {
                     statusBar.setStatus(
                             "Saved changes to voicebank: " + voicebank.getLocation().getName());
-                    callback.enableSave(false);
+                    callback.markChanged(false);
+                    menuItemManager.disableSave();
                 });
             } catch (Exception e) {
                 Platform.runLater(
@@ -406,11 +421,11 @@ public class VoicebankController implements EditorController, Localizable {
 
     /** Called whenever voicebank is changed. */
     private void onVoicebankChange() {
-        // TODO: Add handling of the undo service.
         if (callback == null) {
             return;
         }
-        callback.enableSave(true);
+        callback.markChanged(true);
+        menuItemManager.enableSave();
         // TODO: Refresh lyrics/envelopes after this.
     }
 

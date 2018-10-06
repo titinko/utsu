@@ -2,6 +2,7 @@ package com.utsusynth.utsu.controller;
 
 import java.io.File;
 import com.google.common.base.Optional;
+import com.utsusynth.utsu.controller.common.MenuItemManager;
 import javafx.scene.input.KeyEvent;
 
 /** Used to signify a controller of some sort of file editor. */
@@ -15,6 +16,8 @@ interface EditorController {
     void refreshView();
 
     String getFileName();
+
+    MenuItemManager getMenuItems();
 
     boolean hasPermanentLocation();
 
