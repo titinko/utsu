@@ -95,6 +95,13 @@ public class Note implements Comparable<Note> {
 
         // Create context menu.
         this.contextMenu = new ContextMenu();
+        MenuItem cutMenuItem = new MenuItem("Cut");
+        cutMenuItem.setOnAction(action -> {
+            track.copyNote(thisNote);
+            deleteNote();
+        });
+        MenuItem copyMenuItem = new MenuItem("Copy");
+        copyMenuItem.setOnAction(action -> track.copyNote(thisNote));
         MenuItem deleteMenuItem = new MenuItem("Delete");
         deleteMenuItem.setOnAction(action -> deleteNote());
         CheckMenuItem vibratoMenuItem = new CheckMenuItem("Vibrato");
@@ -107,9 +114,11 @@ public class Note implements Comparable<Note> {
         MenuItem notePropertiesItem = new MenuItem("Note Properties");
         notePropertiesItem.setOnAction(action -> track.openNoteProperties(this));
         contextMenu.getItems().addAll(
+                cutMenuItem,
+                copyMenuItem,
                 deleteMenuItem,
-                vibratoMenuItem,
                 new SeparatorMenuItem(),
+                vibratoMenuItem,
                 vibratoEditorMenuItem,
                 new SeparatorMenuItem(),
                 notePropertiesItem);
@@ -225,8 +234,9 @@ public class Note implements Comparable<Note> {
                 int oldQuant = getQuantizedStart(curQuant);
                 int newQuant = oldQuant + quantChange;
 
-                // Check column bounds.
-                if (newQuant < 0) {
+                // Check column bounds of leftmost note.
+                int positionChange = (newQuant - oldQuant) * (Quantizer.COL_WIDTH / curQuant);
+                if (this.track.getBounds(thisNote).getMinMs() + positionChange < 0) {
                     newQuant = oldQuant;
                 }
 

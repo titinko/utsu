@@ -42,6 +42,7 @@ import javafx.util.Duration;
 
 public class SongEditor {
     private final PlaybackBarManager playbackManager;
+    private final ContextMenu editorContextMenu;
     private final SongClipboard clipboard;
     private final NoteFactory noteFactory;
     private final NoteMap noteMap;
@@ -82,6 +83,18 @@ public class SongEditor {
         this.scaler = scaler;
 
         vibratoEditor = new SimpleBooleanProperty(false);
+
+        // Initialize context menu here so we can reuse it everywhere.
+        editorContextMenu = new ContextMenu();
+        MenuItem pasteItem = new MenuItem("Paste");
+        pasteItem.disableProperty().bind(clipboard.clipboardFilledProperty().not());
+        pasteItem.setOnAction(event -> pasteSelected());
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+        MenuItem selectAllItem = new MenuItem("Select All");
+        selectAllItem.setOnAction(event -> selectAll());
+        MenuItem deselectItem = new MenuItem("Deselect");
+        deselectItem.setOnAction(event -> playbackManager.clearHighlights());
+        editorContextMenu.getItems().addAll(pasteItem, separator, selectAllItem, deselectItem);
     }
 
     /** Initialize track with data from the controller. Not song-specific. */
@@ -585,17 +598,6 @@ public class SongEditor {
     }
 
     private void activateMeasure(GridPane measure) {
-        ContextMenu contextMenu = new ContextMenu();
-        MenuItem pasteItem = new MenuItem("Paste");
-        // TODO: Enable only when there is something to paste.
-        pasteItem.setOnAction(event -> pasteSelected());
-        SeparatorMenuItem separator = new SeparatorMenuItem();
-        MenuItem selectAllItem = new MenuItem("Select All");
-        selectAllItem.setOnAction(event -> selectAll());
-        MenuItem deselectItem = new MenuItem("Deselect");
-        deselectItem.setOnAction(event -> playbackManager.clearHighlights());
-        contextMenu.getItems().addAll(pasteItem, separator, selectAllItem, deselectItem);
-
         measure.setOnMouseReleased(event -> {
             selection.setVisible(false); // Remove selection box if present.
             int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
@@ -629,7 +631,7 @@ public class SongEditor {
                 playbackManager.realign();
             } else if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
                 if (event.getButton() == MouseButton.SECONDARY) {
-                    contextMenu.show(measure, event.getScreenX(), event.getScreenY());
+                    editorContextMenu.show(measure, event.getScreenX(), event.getScreenY());
                 }
                 // Set cursor.
                 playbackManager.setCursor(endMs);
@@ -686,7 +688,7 @@ public class SongEditor {
             }
         });
         measure.setOnMousePressed(event -> {
-            contextMenu.hide();
+            editorContextMenu.hide();
             subMode = SubMode.NOT_DRAGGING;
             curX = measure.getLayoutX() + event.getX();
             curY = event.getY();
@@ -761,6 +763,16 @@ public class SongEditor {
         }
 
         @Override
+        public void copyNote(Note note) {
+            List<Note> notesToCopy =
+                    playbackManager.isHighlighted(note) ? playbackManager.getHighlightedNotes()
+                            : ImmutableList.of(note);
+            List<NoteData> dataToCopy = notesToCopy.stream().map(curNote -> curNote.getNoteData())
+                    .collect(Collectors.toList());
+            clipboard.setNotes(dataToCopy);
+        }
+
+        @Override
         public void deleteNote(Note note) {
             List<Note> toDelete =
                     playbackManager.isHighlighted(note) ? playbackManager.getHighlightedNotes()
@@ -776,6 +788,12 @@ public class SongEditor {
             if (playbackManager.isHighlighted(note)) {
                 playbackManager.clearHighlights();
             }
+        }
+
+        @Override
+        public RegionBounds getBounds(Note note) {
+            return playbackManager.isHighlighted(note) ? playbackManager.getSelectedRegion()
+                    : note.getBounds();
         }
 
         @Override
