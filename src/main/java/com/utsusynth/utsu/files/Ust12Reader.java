@@ -187,7 +187,7 @@ public class Ust12Reader {
         for (int i = settingStart; i < lines.length; i++) {
             String line = lines[i].trim();
             if (line.startsWith("Tempo=")) {
-                builder.setTempo(Double.parseDouble(line.substring(6)));
+                builder.setTempo(Double.parseDouble(line.substring("Tempo=".length())));
             } else if (line.startsWith("ProjectName=")) {
                 builder.setProjectName(line.substring("ProjectName=".length()));
             } else if (line.startsWith("OutFile=")) {

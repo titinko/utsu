@@ -5,6 +5,7 @@ import java.util.ResourceBundle;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
@@ -119,7 +120,7 @@ public class SongPropertiesController implements Localizable {
 
         // Setup tempo slider.
         tempoSlider.valueProperty().addListener((event) -> {
-            int sliderValue = (int) Math.round(tempoSlider.getValue());
+            int sliderValue = RoundUtils.round(tempoSlider.getValue());
             tempoSlider.setValue(sliderValue);
             curTempo.setText(Integer.toString(sliderValue));
         });
@@ -186,7 +187,7 @@ public class SongPropertiesController implements Localizable {
                 songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
                         .setOutputFile(new File(outputFileTF.getText())).setFlags(flagsTF.getText())
                         .setVoiceDirectory(voicebankContainer.getLocation())
-                        .setTempo((int) Math.round(tempoSlider.getValue())).build());
+                        .setTempo(RoundUtils.round(tempoSlider.getValue())).build());
         engine.setResamplerPath(resamplerPath);
         engine.setWavtoolPath(wavtoolPath);
         onSongChange.run();

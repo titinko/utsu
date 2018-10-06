@@ -599,11 +599,13 @@ public class SongEditor {
         measure.setOnMouseReleased(event -> {
             selection.setVisible(false); // Remove selection box if present.
             int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
+            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
+            double endX = Math
+                    .min(getWidthX(), Math.max(measureWidth, measure.getLayoutX() + event.getX()));
             int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
+            int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
             if (subMode == SubMode.DRAG_CREATE) {
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                double endX = measure.getLayoutX() + event.getX();
-                int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
                 // Create new note if size would be nonzero.
                 if (endMs > startMs) {
                     Note newNote = noteFactory.createDefaultNote(
@@ -630,24 +632,27 @@ public class SongEditor {
                     contextMenu.show(measure, event.getScreenX(), event.getScreenY());
                 }
                 // Set cursor.
-                playbackManager.setCursor(startMs);
+                playbackManager.setCursor(endMs);
             }
         });
         measure.setOnMouseDragged(event -> {
+            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
+            double endX = Math
+                    .min(getWidthX(), Math.max(measureWidth, measure.getLayoutX() + event.getX()));
             if (subMode == SubMode.DRAG_SELECT || event.isShiftDown()
                     || event.getButton() != MouseButton.PRIMARY) {
                 subMode = SubMode.DRAG_SELECT;
                 // Draw selection rectangle.
-                double endX = measure.getLayoutX() + event.getX();
+                double endY = Math.min(measure.getHeight(), Math.max(0, event.getY()));
                 selection.setVisible(true);
                 selection.getStyleClass().setAll("select-box");
                 selection.setX(Math.min(curX, endX));
-                selection.setY(Math.min(curY, event.getY()));
+                selection.setY(Math.min(curY, endY));
                 selection.setWidth(Math.abs(endX - curX));
-                selection.setHeight(Math.abs(event.getY() - curY));
+                selection.setHeight(Math.abs(endY - curY));
                 // Update highlighted notes.
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                int endRow = (int) scaler.unscaleY(event.getY()) / Quantizer.ROW_HEIGHT;
+                int endRow = (int) scaler.unscaleY(endY) / Quantizer.ROW_HEIGHT;
                 int startMs = RoundUtils.round(scaler.unscalePos(curX));
                 int endMs = RoundUtils.round(scaler.unscalePos(endX));
                 RegionBounds horizontalBounds = endMs >= startMs ? new RegionBounds(startMs, endMs)
@@ -666,7 +671,6 @@ public class SongEditor {
                 int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
                 int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                double endX = measure.getLayoutX() + event.getX();
                 int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
                 if (endMs > startMs) {
                     // Draw selection rectangle.
