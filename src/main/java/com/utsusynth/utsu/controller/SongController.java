@@ -52,6 +52,7 @@ import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -714,8 +715,20 @@ public class SongController implements EditorController, Localizable {
         // If there is no track selected, play the whole song instead.
         RegionBounds regionToPlay = songEditor.getPlayableTrack();
 
-        Function<Duration, Void> startPlaybackFn =
-                duration -> songEditor.startPlayback(regionToPlay, duration);
+        Function<Duration, Void> startPlaybackFn = duration -> {
+            DoubleProperty playbackX = songEditor.startPlayback(regionToPlay, duration);
+            if (playbackX != null) {
+                // Implements autoscroll to follow playback bar.
+                playbackX.addListener(event -> {
+                    int newPositionMs = regionToPlay.getMinMs()
+                            + RoundUtils.round(scaler.unscaleX(playbackX.get()));
+                    if (!scrollPaneRegion().contains(newPositionMs)) {
+                        scrollToPosition(newPositionMs);
+                    }
+                });
+            }
+            return null;
+        };
         Runnable endPlaybackFn = () -> {
             playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
         };

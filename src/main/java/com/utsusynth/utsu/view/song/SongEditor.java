@@ -26,6 +26,7 @@ import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
@@ -159,14 +160,15 @@ public class SongEditor {
     }
 
     /** Start the playback bar animation. It will end on its own. */
-    public Void startPlayback(RegionBounds rendered, Duration duration) {
+    public DoubleProperty startPlayback(RegionBounds rendered, Duration duration) {
         int firstPosition = noteMap.getFirstPosition(rendered);
         int lastPosition = noteMap.getLastPosition(rendered);
         if (noteMap.hasNote(firstPosition) && noteMap.hasNote(lastPosition)) {
             int firstNoteStart = noteMap.getEnvelope(firstPosition).getStartMs();
             int renderStart = Math.min(firstNoteStart, rendered.getMinMs());
             int renderEnd = lastPosition + noteMap.getNote(lastPosition).getDurationMs();
-            playbackManager.startPlayback(duration, new RegionBounds(renderStart, renderEnd));
+            return playbackManager
+                    .startPlayback(duration, new RegionBounds(renderStart, renderEnd));
         }
         return null;
     }

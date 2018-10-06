@@ -14,6 +14,7 @@ import javafx.animation.Animation.Status;
 import javafx.animation.Interpolator;
 import javafx.animation.TranslateTransition;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
 import javafx.scene.shape.Line;
@@ -47,8 +48,12 @@ public class PlaybackBarManager {
         return bars;
     }
 
-    // Sends the playback bar across the part of the song that plays.
-    void startPlayback(Duration duration, RegionBounds playRegion) {
+    /**
+     * Sends the playback bar across the part of the song that plays.
+     * 
+     * @return A double binding of the playback bar's current x-value.
+     */
+    DoubleProperty startPlayback(Duration duration, RegionBounds playRegion) {
         if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             // Create a playback bar.
             double barX = scaler.scalePos(playRegion.getMinMs());
@@ -68,7 +73,10 @@ public class PlaybackBarManager {
                 }
             });
             playback.play();
+            return playBar.translateXProperty();
         }
+        // Return null if no playback bar created.
+        return null;
     }
 
     void pausePlayback() {
