@@ -116,6 +116,6 @@ public class UtsuModule extends AbstractModule {
     @Provides
     @Singleton
     private Scaler provideScaler() {
-        return new Scaler(0.2, 1.0);
+        return new Scaler(0.15, 0.85);
     }
 }

@@ -297,8 +297,10 @@ public class SongController implements EditorController, Localizable {
                 songEditor.isAnythingSelectedProperty(),
                 songEditor.clibboardFilledProperty());
 
-        // Scroll to the end of the pre-roll measure. Pre-calculated to save time.
-        scrollPaneCenter.setHvalue(0.335);
+        // Do scrolling after a short pause for viewport to establish itself.
+        PauseTransition briefPause = new PauseTransition(Duration.millis(50));
+        briefPause.setOnFinished(event -> scrollToPosition(0));
+        briefPause.play();
 
         // Set up localization.
         localizer.localize(this);

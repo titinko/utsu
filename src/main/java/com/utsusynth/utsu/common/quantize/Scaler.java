@@ -1,13 +1,13 @@
 package com.utsusynth.utsu.common.quantize;
 
 public class Scaler {
-    public static final double MIN_HORIZONTAL_SCALE = 0.15;
-    public static final double HORIZONTAL_SCALE_INDREMENT = 0.1;
-    public static final double MAX_HORIZONTAL_SCALE = 0.45;
+    public static final double MIN_HORIZONTAL_SCALE = 0.05;
+    public static final double HORIZONTAL_SCALE_INDREMENT = 0.05;
+    public static final double MAX_HORIZONTAL_SCALE = 0.3;
 
     public static final double MIN_VERTICAL_SCALE = 0.85;
-    public static final double VERTICAL_SCALE_INDREMENT = 0.2;
-    public static final double MAX_VERTICAL_SCALE = 1.95;
+    public static final double VERTICAL_SCALE_INDREMENT = 0.15;
+    public static final double MAX_VERTICAL_SCALE = 1.9;
 
     private double horizontalScale;
     private double verticalScale;
