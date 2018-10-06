@@ -33,6 +33,7 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.controller.common.IconManager.IconType;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
@@ -379,20 +380,47 @@ public class SongController implements EditorController, Localizable {
         } else if (new KeyCodeCombination(KeyCode.ENTER).match(keyEvent)) {
             Optional<Integer> focusNote = songEditor.getFocusNote();
             if (focusNote.isPresent()) {
-                scrollToPosition(focusNote.get());
+                if (!scrollPaneRegion().contains(focusNote.get())) {
+                    scrollToPosition(focusNote.get());
+                }
                 songEditor.openLyricInput(focusNote.get());
             }
             return true;
-        } else if (new KeyCodeCombination(KeyCode.TAB).match(keyEvent)) {
+        } else if (new KeyCodeCombination(KeyCode.TAB).match(keyEvent)
+                || new KeyCodeCombination(KeyCode.RIGHT).match(keyEvent)) {
             Optional<Integer> focusNote = songEditor.getFocusNote();
             if (focusNote.isPresent()) {
                 Optional<Integer> newFocus = song.get().getNextNote(focusNote.get());
                 if (newFocus.isPresent()) {
-                    scrollToPosition(newFocus.get());
+                    if (!scrollPaneRegion().contains(newFocus.get())) {
+                        scrollToPosition(newFocus.get());
+                    }
                     songEditor.focusOnNote(newFocus.get());
                 }
             } else if (song.get().getNoteIterator().hasNext()) {
-                songEditor.focusOnNote(song.get().getNoteIterator().next().getDelta());
+                int positionMs = song.get().getNoteIterator().next().getDelta();
+                if (!scrollPaneRegion().contains(positionMs)) {
+                    scrollToPosition(positionMs);
+                }
+                songEditor.focusOnNote(positionMs);
+            }
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.LEFT).match(keyEvent)) {
+            Optional<Integer> focusNote = songEditor.getFocusNote();
+            if (focusNote.isPresent()) {
+                Optional<Integer> newFocus = song.get().getPrevNote(focusNote.get());
+                if (newFocus.isPresent()) {
+                    if (!scrollPaneRegion().contains(newFocus.get())) {
+                        scrollToPosition(newFocus.get());
+                    }
+                    songEditor.focusOnNote(newFocus.get());
+                }
+            } else if (song.get().getNoteIterator().hasNext()) {
+                int positionMs = song.get().getNoteIterator().next().getDelta();
+                if (!scrollPaneRegion().contains(positionMs)) {
+                    scrollToPosition(positionMs);
+                }
+                songEditor.focusOnNote(positionMs);
             }
             return true;
         } else {
@@ -415,10 +443,28 @@ public class SongController implements EditorController, Localizable {
         briefPause.play();
     }
 
+    /** Returns region contained within scroll pane. */
+    private RegionBounds scrollPaneRegion() {
+        double trackWidth = songEditor.getWidthX();
+        double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
+        if (viewportWidth <= 0 || trackWidth <= 0) {
+            return RegionBounds.INVALID;
+        } else if (viewportWidth >= trackWidth) {
+            return RegionBounds.WHOLE_SONG;
+        } else {
+            double hvalue = scrollPaneCenter.getHvalue();
+            double leftX = hvalue * (trackWidth - viewportWidth);
+            double rightX = leftX + viewportWidth;
+            int startPos = RoundUtils.round(scaler.unscalePos(leftX));
+            int endPos = RoundUtils.round(scaler.unscalePos(rightX));
+            return new RegionBounds(startPos, endPos); // May be negative positions.
+        }
+    }
+
     private void scrollToPosition(int positionMs) {
         double trackWidth = songEditor.getWidthX();
         double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
-        if (viewportWidth != 0 && trackWidth - viewportWidth > 0) {
+        if (viewportWidth != 0 && trackWidth > viewportWidth) {
             scrollPaneCenter.setHvalue(scaler.scalePos(positionMs) / (trackWidth - viewportWidth));
         }
     }

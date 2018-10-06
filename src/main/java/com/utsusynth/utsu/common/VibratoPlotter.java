@@ -30,6 +30,10 @@ public class VibratoPlotter {
         this.startFreq = baseFreq * (-1 * baseFreqSlope / 800.0 + 1);
         double endFreq = baseFreq * (baseFreqSlope / 800.0 + 1);
         this.freqSlope = lengthMs == 0 ? 0 : (endFreq - startFreq) / lengthMs;
+
+        System.out.println(
+                this.lengthMs + " " + phaseInMs + " " + phaseOutMs + " " + amplitudeCents + " "
+                        + freqSlope);
     }
 
 }

@@ -343,6 +343,14 @@ public class Song {
         return Optional.absent();
     }
 
+    public Optional<Integer> getPrevNote(int currentPos) {
+        NoteNode curNode = noteList.getNote(currentPos);
+        if (curNode != null && curNode.getPrev().isPresent()) {
+            return Optional.of(currentPos - curNode.getNote().getDelta());
+        }
+        return Optional.absent();
+    }
+
     public String getProjectName() {
         return projectName;
     }
