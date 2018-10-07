@@ -803,8 +803,12 @@ public class SongController implements EditorController, Localizable {
             BorderPane propertiesPane = loader.load(fxml);
             SongPropertiesController controller = (SongPropertiesController) loader.getController();
             controller.setData(song, engine, () -> {
-                onSongChange();
-                refreshView();
+                // Should only be called after song changes are applied.
+                Platform.runLater(() -> {
+                    onSongChange();
+                    refreshView();
+                    statusBar.setStatus("Property changes applied.");
+                });
             });
             propertiesWindow.setScene(new Scene(propertiesPane));
             propertiesWindow.showAndWait();

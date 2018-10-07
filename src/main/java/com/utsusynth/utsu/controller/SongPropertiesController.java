@@ -9,6 +9,7 @@ import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -176,6 +177,11 @@ public class SongPropertiesController implements Localizable {
         dc.setTitle("Select voicebank");
         File file = dc.showDialog(null);
         if (file != null) {
+            new Thread(() -> {
+                voicebankContainer.setVoicebank(file);
+                String name = voicebankContainer.get().getName();
+                Platform.runLater(() -> voicebankName.setText(name));
+            }).run();
             voicebankContainer.setVoicebank(file);
             voicebankName.setText(voicebankContainer.get().getName());
         }
@@ -183,14 +189,17 @@ public class SongPropertiesController implements Localizable {
 
     @FXML
     void applyProperties(ActionEvent event) {
-        songContainer.setSong(
-                songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
-                        .setOutputFile(new File(outputFileTF.getText())).setFlags(flagsTF.getText())
-                        .setVoiceDirectory(voicebankContainer.getLocation())
-                        .setTempo(RoundUtils.round(tempoSlider.getValue())).build());
-        engine.setResamplerPath(resamplerPath);
-        engine.setWavtoolPath(wavtoolPath);
-        onSongChange.run();
+        new Thread(() -> {
+            songContainer.setSong(
+                    songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
+                            .setOutputFile(new File(outputFileTF.getText()))
+                            .setFlags(flagsTF.getText())
+                            .setVoiceDirectory(voicebankContainer.getLocation())
+                            .setTempo(RoundUtils.round(tempoSlider.getValue())).build());
+            engine.setResamplerPath(resamplerPath);
+            engine.setWavtoolPath(wavtoolPath);
+            onSongChange.run();
+        }).start();
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
