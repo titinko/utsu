@@ -7,7 +7,7 @@ public class Scaler {
             ImmutableList.of(0.05, 0.1, 0.15, 0.2, 0.25, 0.3);
 
     public static final ImmutableList<Double> VERTICAL_SCALES =
-            ImmutableList.of(0.85, 1.0, 1.15, 1.3, 1.6);
+            ImmutableList.of(0.85, 1.0, 1.15, 1.3, 1.75);
 
     private int horizontalRank;
     private int verticalRank;

@@ -30,6 +30,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
@@ -199,6 +200,12 @@ public class UtsuController implements Localizable {
     }
 
     private void createMenuKeyboardShortcuts() {
+        newSongItem.setAccelerator(new KeyCodeCombination(KeyCode.N, SHORTCUT_DOWN));
+        newVoicebankItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.N, SHORTCUT_DOWN, SHIFT_DOWN));
+        openSongItem.setAccelerator(new KeyCodeCombination(KeyCode.O, SHORTCUT_DOWN));
+        openVoicebankItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.O, SHORTCUT_DOWN, SHIFT_DOWN));
         saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN));
         saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN, SHIFT_DOWN));
         exportToWavItem.setAccelerator(new KeyCodeCombination(KeyCode.W, SHORTCUT_DOWN));
@@ -210,15 +217,19 @@ public class UtsuController implements Localizable {
         deleteItem.setAccelerator(new KeyCodeCombination(KeyCode.D, SHORTCUT_DOWN));
         selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN));
         notePropertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.E, SHORTCUT_DOWN));
-        zoomInHorizontallyItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS));
+        zoomInHorizontallyItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
         zoomInHorizontallyItem
                 .setDisable(scaler.getHorizontalRank() == Scaler.HORIZONTAL_SCALES.size() - 1);
-        zoomOutHorizontallyItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS));
+        zoomOutHorizontallyItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN));
         zoomOutHorizontallyItem.setDisable(scaler.getHorizontalRank() == 0);
-        zoomInVerticallyItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHIFT_DOWN));
+        zoomInVerticallyItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN, SHIFT_DOWN));
         zoomInVerticallyItem
                 .setDisable(scaler.getVerticalRank() == Scaler.VERTICAL_SCALES.size() - 1);
-        zoomOutVerticallyItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHIFT_DOWN));
+        zoomOutVerticallyItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN, SHIFT_DOWN));
         zoomOutVerticallyItem.setDisable(scaler.getVerticalRank() == 0);
         propertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.P, SHORTCUT_DOWN));
         helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, SHORTCUT_DOWN, SHIFT_DOWN));
@@ -231,16 +242,14 @@ public class UtsuController implements Localizable {
      * @return true if an override behavior for this key was found, false otherwise
      */
     public boolean onKeyPressed(KeyEvent keyEvent) {
-        if (new KeyCodeCombination(KeyCode.EQUALS).match(keyEvent)) {
+        if (new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN).match(keyEvent)) {
             zoomInH(null);
             return true;
-        } else if (new KeyCodeCombination(KeyCode.MINUS).match(keyEvent)) {
+        } else if (new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN).match(keyEvent)) {
             zoomOutH(null);
             return true;
-        } else if (new KeyCodeCombination(KeyCode.EQUALS, SHIFT_DOWN).match(keyEvent)) {
-            zoomInV(null);
-            return true;
-        } else if (new KeyCodeCombination(KeyCode.MINUS, SHIFT_DOWN).match(keyEvent)) {
+        } else if (new KeyCodeCombination(KeyCode.MINUS, SHIFT_DOWN, KeyCombination.SHORTCUT_ANY)
+                .match(keyEvent)) {
             zoomOutV(null);
             return true;
         } else if (!tabs.getTabs().isEmpty()) {
