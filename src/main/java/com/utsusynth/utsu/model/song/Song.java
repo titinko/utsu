@@ -21,6 +21,9 @@ import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
  * In-code representation of a song. Compatible with UST versions 1.2 and 2.0.
  */
 public class Song {
+    public static final int MIN_TEMPO = 50;
+    public static final int MAX_TEMPO = 260;
+
     private final VoicebankContainer voicebank;
     private final NoteStandardizer standardizer;
 
@@ -48,7 +51,12 @@ public class Song {
         }
 
         public Builder setTempo(double tempo) {
-            newSong.tempo = tempo;
+            // Use default tempo value if file has unreasonable tempo.
+            if (tempo >= MIN_TEMPO && tempo <= MAX_TEMPO) {
+                newSong.tempo = tempo;
+            } else {
+                System.out.println("Warning: Tempo of " + tempo + " is out of bounds.");
+            }
             return this;
         }
 
