@@ -138,9 +138,13 @@ public class UtsuController implements Localizable {
     @FXML
     private Menu viewMenu; // Value injected by FXMLLoader
     @FXML
-    private MenuItem zoomInItem; // Value injected by FXMLLoader
+    private MenuItem zoomInHorizontallyItem; // Value injected by FXMLLoader
     @FXML
-    private MenuItem zoomOutItem; // Value injected by FXMLLoader
+    private MenuItem zoomOutHorizontallyItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem zoomInVerticallyItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem zoomOutVerticallyItem; // Value injected by FXMLLoader
     @FXML
     private Menu projectMenu; // Value injected by FXMLLoader
     @FXML
@@ -177,8 +181,10 @@ public class UtsuController implements Localizable {
         selectAllItem.setText(bundle.getString("menu.edit.selectAll"));
         notePropertiesItem.setText(bundle.getString("menu.edit.noteProperties"));
         viewMenu.setText(bundle.getString("menu.view"));
-        zoomInItem.setText(bundle.getString("menu.view.zoomIn"));
-        zoomOutItem.setText(bundle.getString("menu.view.zoomOut"));
+        zoomInHorizontallyItem.setText(bundle.getString("menu.view.zoomInHorizontally"));
+        zoomOutHorizontallyItem.setText(bundle.getString("menu.view.zoomOutHorizontally"));
+        zoomInVerticallyItem.setText(bundle.getString("menu.view.zoomInVertically"));
+        zoomOutVerticallyItem.setText(bundle.getString("menu.view.zoomOutVertically"));
         projectMenu.setText(bundle.getString("menu.project"));
         propertiesItem.setText(bundle.getString("menu.project.properties"));
         pluginsMenu.setText(bundle.getString("menu.plugins"));
@@ -204,8 +210,16 @@ public class UtsuController implements Localizable {
         deleteItem.setAccelerator(new KeyCodeCombination(KeyCode.D, SHORTCUT_DOWN));
         selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN));
         notePropertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.E, SHORTCUT_DOWN));
-        zoomInItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
-        zoomOutItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN));
+        zoomInHorizontallyItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS));
+        zoomInHorizontallyItem
+                .setDisable(scaler.getHorizontalRank() == Scaler.HORIZONTAL_SCALES.size() - 1);
+        zoomOutHorizontallyItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS));
+        zoomOutHorizontallyItem.setDisable(scaler.getHorizontalRank() == 0);
+        zoomInVerticallyItem.setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHIFT_DOWN));
+        zoomInVerticallyItem
+                .setDisable(scaler.getVerticalRank() == Scaler.VERTICAL_SCALES.size() - 1);
+        zoomOutVerticallyItem.setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHIFT_DOWN));
+        zoomOutVerticallyItem.setDisable(scaler.getVerticalRank() == 0);
         propertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.P, SHORTCUT_DOWN));
         helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, SHORTCUT_DOWN, SHIFT_DOWN));
     }
@@ -217,11 +231,25 @@ public class UtsuController implements Localizable {
      * @return true if an override behavior for this key was found, false otherwise
      */
     public boolean onKeyPressed(KeyEvent keyEvent) {
-        if (!tabs.getTabs().isEmpty()) {
+        if (new KeyCodeCombination(KeyCode.EQUALS).match(keyEvent)) {
+            zoomInH(null);
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.MINUS).match(keyEvent)) {
+            zoomOutH(null);
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.EQUALS, SHIFT_DOWN).match(keyEvent)) {
+            zoomInV(null);
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.MINUS, SHIFT_DOWN).match(keyEvent)) {
+            zoomOutV(null);
+            return true;
+        } else if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
             return editors.get(curTab.getId()).onKeyPressed(keyEvent);
         }
+        // No need to override default key behavior.
         return false;
+
     }
 
     /**
@@ -441,30 +469,42 @@ public class UtsuController implements Localizable {
     }
 
     @FXML
-    void zoomIn(ActionEvent event) {
-        double newScale = scaler.getHorizontalScale() + Scaler.HORIZONTAL_SCALE_INDREMENT;
-        scaler.changeHorizontalScale(scaler.getHorizontalScale(), newScale);
-        if (newScale >= Scaler.MAX_HORIZONTAL_SCALE) {
-            zoomInItem.setDisable(true);
+    void zoomInH(ActionEvent event) {
+        changeHorizontalScale(scaler.getHorizontalRank() + 1);
+    }
+
+    @FXML
+    void zoomOutH(ActionEvent event) {
+        changeHorizontalScale(scaler.getHorizontalRank() - 1);
+    }
+
+    private void changeHorizontalScale(int newRank) {
+        if (!scaler.changeHorizontalScale(scaler.getHorizontalRank(), newRank)) {
+            return;
         }
-        if (newScale > Scaler.MIN_HORIZONTAL_SCALE) {
-            zoomOutItem.setDisable(false);
-        }
+        zoomOutHorizontallyItem.setDisable(newRank <= 0);
+        zoomInHorizontallyItem.setDisable(newRank >= Scaler.HORIZONTAL_SCALES.size() - 1);
         for (Tab tab : tabs.getTabs()) {
             editors.get(tab.getId()).refreshView();
         }
     }
 
     @FXML
-    void zoomOut(ActionEvent event) {
-        double newScale = scaler.getHorizontalScale() - Scaler.HORIZONTAL_SCALE_INDREMENT;
-        scaler.changeHorizontalScale(scaler.getHorizontalScale(), newScale);
-        if (newScale <= Scaler.MIN_HORIZONTAL_SCALE) {
-            zoomOutItem.setDisable(true);
+    void zoomInV(ActionEvent event) {
+        changeVerticalScale(scaler.getVerticalRank() + 1);
+    }
+
+    @FXML
+    void zoomOutV(ActionEvent event) {
+        changeVerticalScale(scaler.getVerticalRank() - 1);
+    }
+
+    private void changeVerticalScale(int newRank) {
+        if (!scaler.changeVerticalScale(scaler.getVerticalRank(), newRank)) {
+            return;
         }
-        if (newScale < Scaler.MAX_HORIZONTAL_SCALE) {
-            zoomInItem.setDisable(false);
-        }
+        zoomOutVerticallyItem.setDisable(newRank <= 0);
+        zoomInVerticallyItem.setDisable(newRank >= Scaler.VERTICAL_SCALES.size() - 1);
         for (Tab tab : tabs.getTabs()) {
             editors.get(tab.getId()).refreshView();
         }
