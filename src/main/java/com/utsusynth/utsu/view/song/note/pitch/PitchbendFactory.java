@@ -78,7 +78,7 @@ public class PitchbendFactory {
         return new Vibrato(
                 note.getAbsPositionMs(),
                 note.getAbsPositionMs() + note.getDurationMs(),
-                (note.getRow() + .5) * Quantizer.ROW_HEIGHT,
+                scaler.scaleY((note.getRow() + .5) * Quantizer.ROW_HEIGHT),
                 callback,
                 scaler,
                 pitchbend.getVibrato(),
