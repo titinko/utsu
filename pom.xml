@@ -7,7 +7,7 @@
 
   <groupId>com.utsusynth</groupId>
   <artifactId>utsu</artifactId>
-  <version>0.3.1</version>
+  <version>0.4</version>
   <packaging>jar</packaging>
 
   <name>utsu</name>
