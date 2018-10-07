@@ -1,17 +1,18 @@
 package com.utsusynth.utsu.model.song;
 
 import java.io.File;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import com.google.common.base.Optional;
-import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.RegionBounds;
-import com.utsusynth.utsu.common.data.AddResponse;
-import com.utsusynth.utsu.common.data.NeighborData;
+import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.PitchbendData;
-import com.utsusynth.utsu.common.data.RemoveResponse;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.model.song.pitch.PitchCurve;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
@@ -20,6 +21,9 @@ import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
  * In-code representation of a song. Compatible with UST versions 1.2 and 2.0.
  */
 public class Song {
+    public static final int MIN_TEMPO = 50;
+    public static final int MAX_TEMPO = 260;
+
     private final VoicebankContainer voicebank;
     private final NoteStandardizer standardizer;
 
@@ -47,7 +51,12 @@ public class Song {
         }
 
         public Builder setTempo(double tempo) {
-            newSong.tempo = tempo;
+            // Use default tempo value if file has unreasonable tempo.
+            if (tempo >= MIN_TEMPO && tempo <= MAX_TEMPO) {
+                newSong.tempo = tempo;
+            } else {
+                System.out.println("Warning: Tempo of " + tempo + " is out of bounds.");
+            }
             return this;
         }
 
@@ -134,160 +143,105 @@ public class Song {
     }
 
     /**
-     * Adds a note to the song object.
+     * Adds a note or notes to the song object.
      * 
+     * @param toAdd In-order list of notes to add.
      * @throws NoteAlreadyExistsException
      */
-    public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
-        Note note = new Note();
-        // New note's delta/length may be overridden while inserting into note list.
-        note.setDelta(toAdd.getPosition());
-        note.safeSetDuration(toAdd.getDuration());
-        note.safeSetLength(toAdd.getDuration());
-        note.setLyric(toAdd.getLyric());
-        note.setNoteNum(PitchUtils.pitchToNoteNum(toAdd.getPitch()));
-        note.setNoteFlags("B0");
-        if (toAdd.getEnvelope().isPresent()) {
-            note.setEnvelope(toAdd.getEnvelope().get());
+    public void addNotes(List<NoteData> notesToAdd) {
+        if (notesToAdd.isEmpty()) {
+            System.out.println("Error: Add notes called on empty list!");
+            return;
         }
-        if (toAdd.getPitchbend().isPresent()) {
-            note.setPitchbends(toAdd.getPitchbend().get());
+        NoteNode curNode = null; // Where to start search for place to insert new note.
+        int searchStartMs = 0;
+        for (NoteData toAdd : notesToAdd) {
+            Note note = new Note();
+            // New note's delta/length may be overridden while inserting into note list.
+            note.setDelta(toAdd.getPosition());
+            note.safeSetDuration(toAdd.getDuration());
+            note.safeSetLength(toAdd.getDuration());
+            note.setLyric(toAdd.getLyric());
+            note.setNoteNum(PitchUtils.pitchToNoteNum(toAdd.getPitch()));
+            if (toAdd.getEnvelope().isPresent()) {
+                note.setEnvelope(toAdd.getEnvelope().get());
+            }
+            if (toAdd.getPitchbend().isPresent()) {
+                note.setPitchbends(toAdd.getPitchbend().get());
+            }
+            if (toAdd.getConfigData().isPresent()) {
+                note.setConfigData(toAdd.getConfigData().get());
+            }
+
+            int positionMs = toAdd.getPosition();
+            try {
+                if (curNode == null) {
+                    curNode = this.noteList.insertNote(note, positionMs);
+                } else {
+                    curNode = this.noteList.insertNote(note, positionMs, curNode, searchStartMs);
+                }
+                searchStartMs = positionMs - curNode.getNote().getDelta();
+            } catch (NoteAlreadyExistsException e) {
+                // Swallow this for now.
+            }
         }
-
-        int positionMs = toAdd.getPosition();
-        NoteNode insertedNode = this.noteList.insertNote(note, positionMs);
-
-        // Standardize note lengths and envelopes, in last -> first order.
-        if (insertedNode.getNext().isPresent()) {
-            insertedNode.getNext().get().standardize(standardizer, voicebank.get());
-        }
-        insertedNode.standardize(standardizer, voicebank.get());
-        if (insertedNode.getPrev().isPresent()) {
-            insertedNode.getPrev().get().standardize(standardizer, voicebank.get());
-        }
-
-        // Find neighbors to newly added note.
-        Optional<NeighborData> prevNote = Optional.absent();
-        if (insertedNode.getPrev().isPresent()) {
-            Note prevSongNote = insertedNode.getPrev().get().getNote();
-            prevNote = Optional.of(
-                    new NeighborData(
-                            note.getDelta(),
-                            prevSongNote.getEnvelope(),
-                            prevSongNote.getPitchbends(),
-                            prevSongNote.getConfigData()));
-        }
-        Optional<NeighborData> nextNote = Optional.absent();
-        if (insertedNode.getNext().isPresent()) {
-            // Modify the next note's portamento.
-            Note nextSongNote = insertedNode.getNext().get().getNote();
-            int nextStart = positionMs + note.getLength();
-            pitchbends.removePitchbends(
-                    nextStart,
-                    nextSongNote.getLength(),
-                    nextSongNote.getPitchbends());
-            pitchbends.addPitchbends(
-                    nextStart,
-                    nextSongNote.getLength(),
-                    nextSongNote.getPitchbends(),
-                    note.getNoteNum(),
-                    nextSongNote.getNoteNum());
-
-            nextNote = Optional.of(
-                    new NeighborData(
-                            note.getLength(),
-                            nextSongNote.getEnvelope(),
-                            nextSongNote.getPitchbends(),
-                            nextSongNote.getConfigData()));
-        }
-
-        // Add this note's pitchbends.
-        int prevNoteNum = insertedNode.getPrev().isPresent()
-                ? insertedNode.getPrev().get().getNote().getNoteNum()
-                : note.getNoteNum();
-        this.pitchbends.addPitchbends(
-                positionMs,
-                note.getLength(),
-                note.getPitchbends(),
-                prevNoteNum,
-                note.getNoteNum());
-
-        return new AddResponse(
-                new NoteData(
-                        positionMs,
-                        note.getDuration(),
-                        toAdd.getPitch(),
-                        note.getLyric(),
-                        Optional.of(note.getEnvelope()),
-                        Optional.of(note.getPitchbends()),
-                        Optional.of(note.getConfigData())),
-                prevNote,
-                nextNote);
     }
 
-    /** Removes the note at the specified position from the song object. */
-    public RemoveResponse removeNote(int positionMs) {
-        NoteNode removedNode = this.noteList.removeNote(positionMs);
-
-        // Do standardization separately as it must happen in back -> front order.
-        if (removedNode.getNext().isPresent()) {
-            // Adjust envelope, preutterance, and length of next note.
-            removedNode.getNext().get().standardize(standardizer, voicebank.get());
-        }
-        if (removedNode.getPrev().isPresent()) {
-            // Adjust envelope, preutterance, and length of previous note.
-            removedNode.getPrev().get().standardize(standardizer, voicebank.get());
+    /** Removes all notes at the specified positions from the song object. */
+    public MutateResponse removeNotes(Set<Integer> positions) {
+        if (positions.isEmpty()) {
+            System.out.println("Error: Remove notes called on empty collection!");
+            return null;
         }
 
-        Optional<NeighborData> prevNote = Optional.absent();
-        if (removedNode.getPrev().isPresent()) {
-            Note prevSongNote = removedNode.getPrev().get().getNote();
-            prevNote = Optional.of(
-                    new NeighborData(
-                            removedNode.getNote().getDelta(),
-                            prevSongNote.getEnvelope(),
-                            prevSongNote.getPitchbends(),
-                            prevSongNote.getConfigData()));
+        HashSet<NoteUpdateData> removedNotes = new HashSet<>(); // Return value.
+        int firstNeighbor = Integer.MAX_VALUE;
+        int lastNeighbor = Integer.MIN_VALUE;
+
+        NoteNode curNode;
+        for (int position : positions) {
+            curNode = this.noteList.removeNote(position);
+            this.pitchbends.removePitchbends(
+                    position,
+                    curNode.getNote().getDuration(),
+                    curNode.getNote().getPitchbends());
+            removedNotes.add(curNode.getNote().getUpdateData(position));
+
+            if (curNode.getPrev().isPresent()) {
+                int prevPosition = position - curNode.getNote().getDelta();
+                if (prevPosition < firstNeighbor && !positions.contains(prevPosition)) {
+                    firstNeighbor = prevPosition;
+                }
+                if (prevPosition > lastNeighbor && !positions.contains(prevPosition)) {
+                    lastNeighbor = prevPosition;
+                }
+            }
+            if (curNode.getNext().isPresent()) {
+                int nextPosition = position + curNode.getNote().getLength();
+                if (nextPosition < firstNeighbor && !positions.contains(nextPosition)) {
+                    firstNeighbor = nextPosition;
+                }
+                if (nextPosition > lastNeighbor && !positions.contains(nextPosition)) {
+                    lastNeighbor = nextPosition;
+                }
+            }
         }
 
-        Optional<NeighborData> nextNote = Optional.absent();
-        if (removedNode.getNext().isPresent()) {
-            // Modify the next note's portamento.
-            Note nextSongNote = removedNode.getNext().get().getNote();
-            int nextStart = positionMs + removedNode.getNote().getLength();
-            int prevNoteNum = removedNode.getPrev().isPresent()
-                    ? removedNode.getPrev().get().getNote().getNoteNum()
-                    : nextSongNote.getNoteNum();
-            pitchbends.removePitchbends(
-                    nextStart,
-                    nextSongNote.getLength(),
-                    nextSongNote.getPitchbends());
-            pitchbends.addPitchbends(
-                    nextStart,
-                    nextSongNote.getLength(),
-                    nextSongNote.getPitchbends(),
-                    prevNoteNum,
-                    nextSongNote.getNoteNum());
-
-            nextNote = Optional.of(
-                    new NeighborData(
-                            removedNode.getNote().getLength(),
-                            nextSongNote.getEnvelope(),
-                            nextSongNote.getPitchbends(),
-                            nextSongNote.getConfigData()));
+        Optional<NoteUpdateData> prevNote = Optional.absent();
+        Optional<NoteUpdateData> nextNote = Optional.absent();
+        // If no neighbors were detected, skip this step.
+        if (lastNeighbor >= firstNeighbor) {
+            Note firstNote = noteList.getNote(firstNeighbor).getNote();
+            prevNote = Optional.of(firstNote.getUpdateData(firstNeighbor));
+            Note lastNote = noteList.getNote(lastNeighbor).getNote();
+            nextNote = Optional.of(lastNote.getUpdateData(lastNeighbor));
         }
 
-        // Remove this note's pitchbends.
-        this.pitchbends.removePitchbends(
-                positionMs,
-                removedNode.getNote().getLength(),
-                removedNode.getNote().getPitchbends());
-
-        return new RemoveResponse(prevNote, nextNote);
+        return new MutateResponse(removedNotes, prevNote, nextNote);
     }
 
     /** Modifies a note in-place without changing its lyric, position, or duration. */
-    public void modifyNote(NoteData toModify) {
+    public NoteUpdateData modifyNote(NoteData toModify) {
         int positionMs = toModify.getPosition();
         NoteNode node = this.noteList.getNote(positionMs);
         Note note = node.getNote();
@@ -295,7 +249,7 @@ public class Song {
             note.setEnvelope(toModify.getEnvelope().get());
         }
         if (toModify.getPitchbend().isPresent()) {
-            this.pitchbends.removePitchbends(positionMs, note.getLength(), note.getPitchbends());
+            this.pitchbends.removePitchbends(positionMs, note.getDuration(), note.getPitchbends());
             PitchbendData newPitchbend = toModify.getPitchbend().get();
             note.setPitchbends(newPitchbend);
 
@@ -304,11 +258,68 @@ public class Song {
                             : note.getNoteNum();
             this.pitchbends.addPitchbends(
                     positionMs,
-                    note.getLength(),
+                    note.getDuration(),
                     newPitchbend,
                     prevNoteNum,
                     note.getNoteNum());
         }
+        return note.getUpdateData(positionMs);
+    }
+
+    public MutateResponse standardizeNotes(int firstPosition, int lastPosition) {
+        LinkedList<NoteUpdateData> updatedNotes = new LinkedList<>();
+        Optional<NoteUpdateData> prevNeighbor = Optional.absent();
+        Optional<NoteUpdateData> nextNeighbor = Optional.absent();
+
+        NoteNode startNode = this.noteList.getNote(lastPosition);
+        if (startNode == null) {
+            // TODO: Handle this better.
+            System.out.println("Could not find last note when standardizing notes!");
+            return new MutateResponse(updatedNotes, Optional.absent(), Optional.absent());
+        }
+
+        // Include the next neighbor of the last note, if present.
+        int startPosition = lastPosition;
+        if (startNode.getNext().isPresent()) {
+            startPosition += startNode.getNote().getLength();
+            startNode = startNode.getNext().get();
+            nextNeighbor = Optional.of(startNode.getNote().getUpdateData(startPosition));
+        }
+
+        int curPosition = startPosition;
+        Optional<NoteNode> curNode = Optional.of(startNode);
+        while (curNode.isPresent()) {
+            Note note = curNode.get().getNote();
+            // Standardize.
+            curNode.get().standardize(standardizer, voicebank.get());
+            if (!nextNeighbor.isPresent() || curPosition < startPosition) {
+                updatedNotes.addFirst(note.getUpdateData(curPosition));
+            }
+            // Pitch curve corrections.
+            int prevNoteNum = curNode.get().getPrev().isPresent()
+                    ? curNode.get().getPrev().get().getNote().getNoteNum()
+                    : note.getNoteNum();
+            this.pitchbends.removePitchbends(curPosition, note.getDuration(), note.getPitchbends());
+            this.pitchbends.addPitchbends(
+                    curPosition,
+                    note.getDuration(),
+                    note.getPitchbends(),
+                    prevNoteNum,
+                    note.getNoteNum());
+            // Break if going further back would pass firstPosition.
+            curPosition -= note.getDelta();
+            curNode = curNode.get().getPrev();
+            if (curPosition < firstPosition) {
+                break;
+            }
+        }
+
+        // Include the prev neighbor of the first note, if present. No need to change pitch.
+        if (curNode.isPresent()) {
+            curNode.get().standardize(standardizer, voicebank.get());
+            prevNeighbor = Optional.of(curNode.get().getNote().getUpdateData(curPosition));
+        }
+        return new MutateResponse(updatedNotes, prevNeighbor, nextNeighbor);
     }
 
     public LinkedList<NoteData> getNotes() {
@@ -324,11 +335,28 @@ public class Song {
                             note.getDuration(),
                             PitchUtils.noteNumToPitch(note.getNoteNum()),
                             note.getLyric(),
+                            Optional.of(note.getTrueLyric()),
                             Optional.of(note.getEnvelope()),
                             Optional.of(note.getPitchbends()),
                             Optional.of(note.getConfigData())));
         }
         return notes;
+    }
+
+    public Optional<Integer> getNextNote(int currentPos) {
+        NoteNode curNode = noteList.getNote(currentPos);
+        if (curNode != null && curNode.getNext().isPresent()) {
+            return Optional.of(currentPos + curNode.getNote().getLength());
+        }
+        return Optional.absent();
+    }
+
+    public Optional<Integer> getPrevNote(int currentPos) {
+        NoteNode curNode = noteList.getNote(currentPos);
+        if (curNode != null && curNode.getPrev().isPresent()) {
+            return Optional.of(currentPos - curNode.getNote().getDelta());
+        }
+        return Optional.absent();
     }
 
     public String getProjectName() {
@@ -367,19 +395,11 @@ public class Song {
         return mode2;
     }
 
-    public String getPitchString(int firstPitchStep, int lastPitchStep, int noteNum) {
-        return pitchbends.renderPitchbends(firstPitchStep, lastPitchStep, noteNum);
+    public int getNumNotes() {
+        return noteList.getSize();
     }
 
-    @Override
-    public String toString() {
-        // Crappy string representation of a Song object.
-        String result = "";
-        Iterator<Note> iterator = noteList.iterator();
-        while (iterator.hasNext()) {
-            result += iterator.next() + "\n";
-        }
-        result += voicebank + "\n";
-        return result + tempo + projectName + outputFile + voicebank.getLocation() + flags + mode2;
+    public String getPitchString(int firstPitchStep, int lastPitchStep, int noteNum) {
+        return pitchbends.renderPitchbends(firstPitchStep, lastPitchStep, noteNum);
     }
 }

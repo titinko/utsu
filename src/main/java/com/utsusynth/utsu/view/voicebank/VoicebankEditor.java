@@ -85,8 +85,17 @@ public class VoicebankEditor {
             TableRow<LyricConfigData> row = new TableRow<>();
             ContextMenu contextMenu = new ContextMenu();
             MenuItem addAliasItem = new MenuItem("Add Alias");
-            // TODO: Implement this.
-            addAliasItem.setDisable(true);
+            addAliasItem.setOnAction(event -> {
+                LyricConfigData newData = row.getItem().deepCopy();
+                int indexToAdd = row.getIndex() + 1;
+                lyrics.add(indexToAdd, newData);
+                newData.lyricProperty().set("?");
+                initializeLyric(newData);
+                // Set up undo/redo.
+                model.recordAction(
+                        () -> lyrics.add(indexToAdd, newData),
+                        () -> lyrics.remove(newData));
+            });
             MenuItem genFrqItem = new MenuItem("Generate .frq File");
             genFrqItem.setOnAction(event -> {
                 File wavFile = row.getItem().getPathToFile();
@@ -95,16 +104,28 @@ public class VoicebankEditor {
             });
             MenuItem deleteItem = new MenuItem("Delete");
             deleteItem.setOnAction(event -> {
-                // TODO: Remove this from backend as well.
-                table.getItems().remove(row.getItem());
+                LyricConfigData toRemove = row.getItem();
+                int index = row.getIndex();
+                table.getItems().remove(toRemove);
+                model.removeLyric(toRemove.getLyric());
+                // Set up undo/redo.
+                model.recordAction(() -> {
+                    table.getItems().remove(toRemove);
+                    model.removeLyric(toRemove.getLyric());
+                }, () -> {
+                    table.getItems().add(index, toRemove);
+                    model.addLyric(toRemove);
+                });
             });
             contextMenu.getItems().addAll(addAliasItem, genFrqItem, deleteItem);
             row.setOnContextMenuRequested(event -> {
                 // Don't show context menu for empty rows.
                 if (row.getItem() != null) {
-                    contextMenu.hide();
                     contextMenu.show(row, event.getScreenX(), event.getScreenY());
                 }
+            });
+            row.setOnMousePressed(event -> {
+                contextMenu.hide();
             });
             row.setOnMouseClicked(event -> {
                 if (event.getButton().equals(MouseButton.PRIMARY)) {
@@ -115,9 +136,7 @@ public class VoicebankEditor {
         });
 
         // Add columns.
-        TableColumn<LyricConfigData, String> lyricCol = new TableColumn<>("Lyric");
-        lyricCol.setCellValueFactory(data -> data.getValue().lyricProperty());
-        lyricCol.setCellFactory(col -> new EditableCell<>(stringToString));
+        TableColumn<LyricConfigData, String> lyricCol = createLyricCol();
         TableColumn<LyricConfigData, String> fileCol = new TableColumn<>("File");
         fileCol.setCellValueFactory(data -> data.getValue().fileNameProperty());
         TableColumn<LyricConfigData, String> frqStatusCol = createFrqStatusCol(lyrics);
@@ -146,21 +165,27 @@ public class VoicebankEditor {
         while (lyricIterator.hasNext()) {
             LyricConfigData data = lyricIterator.next();
             lyrics.add(data);
-            data.lyricProperty().addListener((observable, oldLyric, newLyric) -> {
-                // Set old lyric to new lyric and set whether new lyric is valid.
-                // TODO: Don't remove if old lyric is invalid.
-                model.removeLyric(oldLyric);
-                model.addLyric(data);
-                // TODO: Mark invalid if current lyric isn't valid.
-            });
-            for (Property<?> property : data.mutableProperties()) {
-                property.addListener(event -> {
-                    // Mutate lyric with new data.
-                    model.modifyLyric(data);
-                });
-            }
+            initializeLyric(data);
         }
         return scrollPane;
+    }
+
+    private TableColumn<LyricConfigData, String> createLyricCol() {
+        TableColumn<LyricConfigData, String> lyricCol = new TableColumn<>("Lyric");
+        lyricCol.setCellValueFactory(data -> data.getValue().lyricProperty());
+        lyricCol.setCellFactory(col -> new EditableCell<>(stringToString));
+        lyricCol.setOnEditCommit(event -> {
+            final LyricConfigData config = event.getRowValue();
+            final String oldLyric = config.lyricProperty().get();
+            final String newLyric = event.getNewValue();
+            if (!oldLyric.equals(newLyric)) {
+                model.recordAction(
+                        () -> config.lyricProperty().set(newLyric),
+                        () -> config.lyricProperty().set(oldLyric));
+                config.lyricProperty().set(newLyric);
+            }
+        });
+        return lyricCol;
     }
 
     private TableColumn<LyricConfigData, String> createFrqStatusCol(
@@ -193,11 +218,45 @@ public class VoicebankEditor {
         col.setCellFactory(source -> new EditableCell<>(stringToDouble));
         col.setSortable(false);
         col.setOnEditCommit(event -> {
-            property.apply(event.getRowValue()).set(event.getNewValue());
-            // Re-create config editor if necessary.
-            model.displayLyric(event.getRowValue());
+            final LyricConfigData config = event.getRowValue();
+            final double oldValue = property.apply(config).get();
+            final double newValue = event.getNewValue();
+            model.recordAction(() -> {
+                property.apply(config).set(newValue);
+                model.displayLyric(config);
+            }, () -> {
+                property.apply(config).set(oldValue);
+                model.displayLyric(config);
+            });
+            property.apply(config).set(newValue);
+            model.displayLyric(config); // Re-create config editor if necessary.
         });
         return col;
+    }
+
+    private void initializeLyric(LyricConfigData data) {
+        data.lyricProperty().addListener((observable, oldLyric, newLyric) -> {
+            // Do nothing if lyric doesn't change.
+            if (oldLyric.equals(newLyric)) {
+                return;
+            }
+            // Remove old lyric.
+            model.removeLyric(oldLyric);
+            if (newLyric.equals("?")) {
+                return; // Don't try to modify model if new lyric is a question mark.
+            }
+            // Immediately revert change if new lyric would be a repeat.
+            if (!model.addLyric(data)) {
+                data.lyricProperty().set(oldLyric);
+                model.addLyric(data);
+            }
+        });
+        for (Property<?> property : data.mutableProperties()) {
+            property.addListener(event -> {
+                // Mutate lyric with new data.
+                model.modifyLyric(data);
+            });
+        }
     }
 
     private void clear() {

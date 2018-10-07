@@ -1,30 +1,31 @@
 package com.utsusynth.utsu.view.song;
 
-import com.utsusynth.utsu.common.data.AddResponse;
+import java.util.List;
+import java.util.Set;
+import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.RemoveResponse;
-import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
-import com.utsusynth.utsu.controller.SongController.Mode;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 
 /**
- * The view can use this interface to communicate with the model by way of the constructor.
+ * The view can use this interface to communicate with the model by way of the controller.
  */
 public interface SongCallback {
-    /** Add a note to the song. */
-    AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException;
+    /** Add a one or more notes to the song. Input list must be in order. */
+    void addNotes(List<NoteData> toAdd);
 
-    /** Remove a note from the song. */
-    RemoveResponse removeNote(int position);
+    /** Remove one or more notes from the song. */
+    MutateResponse removeNotes(Set<Integer> positions);
 
     /** Modify a note without changing its position or duration. */
-    void modifyNote(NoteData toModify);
+    NoteUpdateData modifyNote(NoteData toModify);
 
-    /** Gets the current mode: ADD, EDIT, or DELETE. */
-    Mode getCurrentMode();
+    /** Standardizes a section of notes and returns any frontend updates. */
+    MutateResponse standardizeNotes(int firstPosition, int lastPosition);
 
-    /**
-     * When measures are added/removed and the track width changes, call this method to make sure
-     * that the user is scrolled to the same spot as before.
-     */
-    void adjustScrollbar(double oldWidth, double newWidth);
+    /** Records an action so it can be undone or redone later. */
+    void recordAction(Runnable redoAction, Runnable undoAction);
+
+    /** Open the note properties editor on the given RegionBounds. */
+    void openNoteProperties(RegionBounds regionBounds);
 }

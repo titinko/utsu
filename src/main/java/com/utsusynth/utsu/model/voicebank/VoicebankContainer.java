@@ -19,22 +19,26 @@ public class VoicebankContainer {
     }
 
     public Voicebank get() {
-        return voicebankManager.getVoicebank(location);
+        // Reloads voicebank from file if necessary.
+        if (voicebankManager.hasVoicebank(location)) {
+            return voicebankManager.getVoicebank(location);
+        } else {
+            Voicebank voicebank = voicebankReader.loadVoicebankFromDirectory(location);
+            voicebankManager.setVoicebank(location, voicebank);
+            return voicebank;
+        }
     }
 
     public void mutate(Voicebank newVoicebank) {
         voicebankManager.setVoicebank(location, newVoicebank);
     }
 
-    public Voicebank setVoicebank(File newLocation) {
+    public void setVoicebank(File newLocation) {
         location = newLocation;
-        if (voicebankManager.hasVoicebank(location)) {
-            return voicebankManager.getVoicebank(location);
-        } else {
-            Voicebank voicebank = voicebankReader.loadVoicebankFromDirectory(newLocation);
-            voicebankManager.setVoicebank(newLocation, voicebank);
-            return voicebank;
-        }
+    }
+
+    public void removeVoicebank() {
+        voicebankManager.removeVoicebank(location);
     }
 
     public File getLocation() {

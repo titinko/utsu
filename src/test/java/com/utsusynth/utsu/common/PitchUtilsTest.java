@@ -3,6 +3,7 @@ package com.utsusynth.utsu.common;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import org.junit.Test;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 
 /** Tests for the {@link PitchUtilsTest}. */
 public class PitchUtilsTest {

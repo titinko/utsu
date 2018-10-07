@@ -1,11 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
-import com.google.common.base.Optional;
-import com.utsusynth.utsu.common.data.EnvelopeData;
-import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.PitchbendData;
-import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
-import com.utsusynth.utsu.controller.SongController.Mode;
+import com.utsusynth.utsu.common.RegionBounds;
 
 /**
  * A way of communicating TrackNote information back to its parent Track.
@@ -15,21 +10,33 @@ public interface NoteCallback {
 
     void highlightInclusive(Note note);
 
+    void realignHighlights();
+
     boolean isExclusivelyHighlighted(Note note);
 
-    boolean isInBounds(int rowNum);
+    /** Only catches current note. */
+    void updateNote(Note note);
 
-    void addSongNote(Note note, NoteData toAdd) throws NoteAlreadyExistsException;
+    /** Catches all highlighted notes, if applicable. */
+    void moveNote(Note note, int positionDelta, int rowDelta);
 
-    void removeSongNote(int position);
+    /** Catches all highlighted notes, if applicable. */
+    void recordNoteMovement(Note note, int positionDelta, int rowDelta);
 
-    void modifySongVibrato(int position);
+    /** Catches all highlighted notes, if applicable. */
+    void copyNote(Note note);
 
-    void removeTrackNote(Note trackNote);
+    /** Catches all highlighted notes, if applicable. */
+    void deleteNote(Note note);
 
-    Optional<EnvelopeData> getEnvelope(int position);
+    /** Catches all highlighted notes, if applicable. */
+    RegionBounds getBounds(Note note);
 
-    Optional<PitchbendData> getPortamento(int position);
+    void recordAction(Runnable redoAction, Runnable undoAction);
 
-    Mode getCurrentMode();
+    boolean hasVibrato(int position);
+
+    void setHasVibrato(int position, boolean hasVibrato);
+
+    void openNoteProperties(Note note);
 }

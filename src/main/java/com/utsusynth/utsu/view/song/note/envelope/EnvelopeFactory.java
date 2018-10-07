@@ -15,13 +15,10 @@ public class EnvelopeFactory {
         this.scaler = scaler;
     }
 
-    public Envelope createEnvelope(
-            Note note,
-            EnvelopeData envelope,
-            EnvelopeCallback callback) {
+    public Envelope createEnvelope(Note note, EnvelopeData envelope, EnvelopeCallback callback) {
         double preutter = envelope.getPreutter().isPresent() ? envelope.getPreutter().get() : 0;
         double length = envelope.getLength().isPresent() ? envelope.getLength().get() : 0;
-        double startPos = note.getAbsPosition() - preutter;
+        double startPos = note.getAbsPositionMs() - preutter;
         double endPos = startPos + length;
 
         double[] widths = envelope.getWidths();
@@ -40,13 +37,13 @@ public class EnvelopeFactory {
 
         // Do not scale y axis for envelopes.
         return new Envelope(
-                new MoveTo(scaler.scaleX(startPos), 100),
-                new LineTo(scaler.scaleX(startPos + p1), v1),
-                new LineTo(scaler.scaleX(startPos + p1 + p2), v2),
-                new LineTo(scaler.scaleX(startPos + p1 + p2 + p5), v5),
-                new LineTo(scaler.scaleX(endPos - p4 - p3), v3),
-                new LineTo(scaler.scaleX(endPos - p4), v4),
-                new LineTo(scaler.scaleX(endPos), 100),
+                new MoveTo(scaler.scalePos(startPos), 100),
+                new LineTo(scaler.scalePos(startPos + p1), v1),
+                new LineTo(scaler.scalePos(startPos + p1 + p2), v2),
+                new LineTo(scaler.scalePos(startPos + p1 + p2 + p5), v5),
+                new LineTo(scaler.scalePos(endPos - p4 - p3), v3),
+                new LineTo(scaler.scalePos(endPos - p4), v4),
+                new LineTo(scaler.scalePos(endPos), 100),
                 callback,
                 scaler);
     }

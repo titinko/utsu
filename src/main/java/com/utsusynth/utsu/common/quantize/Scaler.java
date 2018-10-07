@@ -1,67 +1,87 @@
 package com.utsusynth.utsu.common.quantize;
 
+import com.google.common.collect.ImmutableList;
+
 public class Scaler {
-    public static final double MIN_HORIZONTAL_SCALE = 0.15;
-    public static final double HORIZONTAL_SCALE_INDREMENT = 0.1;
-    public static final double MAX_HORIZONTAL_SCALE = 0.45;
+    public static final ImmutableList<Double> HORIZONTAL_SCALES =
+            ImmutableList.of(0.05, 0.1, 0.15, 0.2, 0.25, 0.3);
 
-    public static final double MIN_VERTICAL_SCALE = 0.85;
-    public static final double VERTICAL_SCALE_INDREMENT = 0.2;
-    public static final double MAX_VERTICAL_SCALE = 1.95;
+    public static final ImmutableList<Double> VERTICAL_SCALES =
+            ImmutableList.of(0.85, 1.0, 1.15, 1.3, 1.75);
 
-    private double horizontalScale;
-    private double verticalScale;
+    private int horizontalRank;
+    private int verticalRank;
 
-    public Scaler(double defaultHorizontalScale, double defaultVerticalScale) {
-        this.horizontalScale = defaultHorizontalScale;
-        this.verticalScale = defaultVerticalScale;
+    public Scaler(int defaultHorizontalRank, int defaultVerticalRank) {
+        this.horizontalRank = defaultHorizontalRank;
+        this.verticalRank = defaultVerticalRank;
     }
 
     public double scaleX(int scaleMe) {
-        return horizontalScale * scaleMe;
+        return HORIZONTAL_SCALES.get(horizontalRank) * scaleMe;
     }
 
     public double scaleX(double scaleMe) {
-        return horizontalScale * scaleMe;
+        return HORIZONTAL_SCALES.get(horizontalRank) * scaleMe;
+    }
+
+    public double scalePos(int scaleMe) {
+        return HORIZONTAL_SCALES.get(horizontalRank) * (Quantizer.COL_WIDTH * 4 + scaleMe);
+    }
+
+    public double scalePos(double scaleMe) {
+        return HORIZONTAL_SCALES.get(horizontalRank) * (Quantizer.COL_WIDTH * 4 + scaleMe);
     }
 
     public double scaleY(int scaleMe) {
-        return verticalScale * scaleMe;
+        return VERTICAL_SCALES.get(verticalRank) * scaleMe;
     }
 
     public double scaleY(double scaleMe) {
-        return verticalScale * scaleMe;
+        return VERTICAL_SCALES.get(verticalRank) * scaleMe;
     }
 
     public double unscaleX(double unscaleMe) {
-        return unscaleMe / horizontalScale;
+        return unscaleMe / HORIZONTAL_SCALES.get(horizontalRank);
+    }
+
+    public double unscalePos(double unscaleMe) {
+        return (unscaleMe / HORIZONTAL_SCALES.get(horizontalRank)) - (Quantizer.COL_WIDTH * 4);
     }
 
     public double unscaleY(double unscaleMe) {
-        return unscaleMe / verticalScale;
+        return unscaleMe / VERTICAL_SCALES.get(verticalRank);
     }
 
-    public double getHorizontalScale() {
-        return horizontalScale;
+    public int getHorizontalRank() {
+        return horizontalRank;
     }
 
-    public void changeHorizontalScale(double oldScale, double newScale) {
-        if (oldScale != horizontalScale) {
+    /** Updates horizontal scale and returns whether update was successful. */
+    public boolean changeHorizontalScale(int oldRank, int newRank) {
+        if (oldRank != horizontalRank) {
             // TODO: Handle this better.
             System.out.println("ERROR: Data race when changing horizontal scale!");
+        } else if (newRank < 0 || newRank >= HORIZONTAL_SCALES.size()) {
+            return false;
         }
-        horizontalScale = newScale;
+        horizontalRank = newRank;
+        return true;
     }
 
-    public double getVerticalScale() {
-        return verticalScale;
+    public int getVerticalRank() {
+        return verticalRank;
     }
 
-    public void changeVerticalScale(double oldScale, double newScale) {
-        if (oldScale != verticalScale) {
+    /** Updates vertical scale and returns whether update was successful. */
+    public boolean changeVerticalScale(int oldRank, int newRank) {
+        if (oldRank != verticalRank) {
             // TODO: Handle this better.
-            System.out.println("ERROR: Data race when changing horizontal scale!");
+            System.out.println("ERROR: Data race when changing vertical scale!");
+        } else if (newRank < 0 || newRank >= VERTICAL_SCALES.size()) {
+            return false;
         }
-        verticalScale = newScale;
+        verticalRank = newRank;
+        return true;
     }
 }

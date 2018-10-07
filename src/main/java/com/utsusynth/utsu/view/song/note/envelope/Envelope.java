@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.song.note.envelope;
 
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
@@ -16,6 +17,10 @@ public class Envelope {
     private final LineTo end;
     private final Group group;
     private final Scaler scaler;
+
+    // Temporary cache values.
+    private boolean changed = false;
+    private EnvelopeData startData;
 
     Envelope(
             MoveTo start,
@@ -43,8 +48,11 @@ public class Envelope {
             circle.setOnMouseExited(event -> {
                 circle.getScene().setCursor(Cursor.DEFAULT);
             });
+            circle.setOnMousePressed(event -> {
+                changed = false;
+                startData = getData();
+            });
             circle.setOnMouseDragged(event -> {
-                boolean changed = false;
                 // Set reasonable limits for where envelope can be dragged.
                 if (index > 0 && index < 4) {
                     double newX = event.getX();
@@ -58,9 +66,10 @@ public class Envelope {
                     changed = true;
                     circle.setCenterY(newY);
                 }
-
+            });
+            circle.setOnMouseReleased(event -> {
                 if (changed) {
-                    callback.modifySongEnvelope();
+                    callback.modifySongEnvelope(startData, getData());
                 }
             });
             circles[i] = circle;
@@ -73,6 +82,10 @@ public class Envelope {
 
     public Group getElement() {
         return group;
+    }
+
+    public int getStartMs() {
+        return RoundUtils.round(scaler.unscalePos(start.getX()));
     }
 
     public EnvelopeData getData() {

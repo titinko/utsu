@@ -1,54 +1,70 @@
 package com.utsusynth.utsu.controller;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.common.UndoService;
-import com.utsusynth.utsu.common.data.AddResponse;
+import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.StatusBar;
+import com.utsusynth.utsu.common.data.MutateResponse;
+import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.RemoveResponse;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
-import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.controller.common.IconManager;
+import com.utsusynth.utsu.controller.common.IconManager.IconType;
+import com.utsusynth.utsu.controller.common.MenuItemManager;
+import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.engine.Engine;
+import com.utsusynth.utsu.engine.Engine.PlaybackStatus;
+import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.Ust12Reader;
 import com.utsusynth.utsu.files.Ust12Writer;
 import com.utsusynth.utsu.files.Ust20Reader;
 import com.utsusynth.utsu.files.Ust20Writer;
+import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.view.song.Piano;
 import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
+import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
@@ -63,26 +79,26 @@ import javafx.util.Duration;
 public class SongController implements EditorController, Localizable {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
-    public enum Mode {
-        ADD, EDIT, DELETE,
-    }
-
     // User session data goes here.
-    private Mode currentMode;
     private EditorCallback callback;
 
     // Helper classes go here.
     private final SongContainer song;
     private final Engine engine;
-    private final SongEditor track;
+    private final SongEditor songEditor;
     private final Piano piano;
     private final Localizer localizer;
     private final Quantizer quantizer;
+    private final Scaler scaler;
     private final UndoService undoService;
+    private final MenuItemManager menuItemManager;
+    private final StatusBar statusBar;
     private final Ust12Reader ust12Reader;
     private final Ust20Reader ust20Reader;
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
+    private final IconManager iconManager;
+    private final ExternalProcessRunner processRunner;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
     @FXML // fx:id="scrollPaneLeft"
@@ -91,8 +107,11 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="anchorLeft"
     private AnchorPane anchorLeft; // Value injected by FXMLLoader
 
+    @FXML // fx:id="anchorCenter"
+    private AnchorPane anchorCenter; // Value injected by FXMLLoader
+
     @FXML // fx:id="scrollPaneRight"
-    private ScrollPane scrollPaneRight; // Value injected by FXMLLoader
+    private ScrollPane scrollPaneCenter; // Value injected by FXMLLoader
 
     @FXML // fx:id="anchorRight"
     private AnchorPane anchorRight; // Value injected by FXMLLoader
@@ -106,8 +125,14 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="voicebankImage"
     private ImageView voicebankImage; // Value injected by FXMLLoader
 
-    @FXML // fx:id="modeChoiceBox"
-    private ChoiceBox<Mode> modeChoiceBox; // Value injected by FXMLLoader
+    @FXML // fx:id="rewindIcon"
+    private ImageView rewindIcon; // Value injected by FXMLLoader
+
+    @FXML // fx:id="playPauseIcon"
+    private ImageView playPauseIcon; // Value injected by FXMLLoader
+
+    @FXML // fx:id="stopIcon"
+    private ImageView stopIcon; // Value injected by FXMLLoader
 
     @FXML // fx:id="quantizeChoiceBox"
     private ChoiceBox<String> quantizeChoiceBox; // Value injected by FXMLLoader
@@ -119,84 +144,103 @@ public class SongController implements EditorController, Localizable {
     public SongController(
             SongContainer songContainer, // Inject an empty song.
             Engine engine,
-            SongEditor track,
+            SongEditor songEditor,
             Piano piano,
             Localizer localizer,
             Quantizer quantizer,
+            Scaler scaler,
             UndoService undoService,
+            MenuItemManager menuItemManager,
+            StatusBar statusBar,
             Ust12Reader ust12Reader,
             Ust20Reader ust20Reader,
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
+            IconManager iconManager,
+            ExternalProcessRunner processRunner,
             Provider<FXMLLoader> fxmlLoaders) {
         this.song = songContainer;
         this.engine = engine;
-        this.track = track;
+        this.songEditor = songEditor;
         this.piano = piano;
         this.localizer = localizer;
         this.quantizer = quantizer;
+        this.scaler = scaler;
         this.undoService = undoService;
+        this.menuItemManager = menuItemManager;
+        this.statusBar = statusBar;
         this.ust12Reader = ust12Reader;
         this.ust20Reader = ust20Reader;
         this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
+        this.iconManager = iconManager;
+        this.processRunner = processRunner;
         this.fxmlLoaderProvider = fxmlLoaders;
     }
 
     // Provide setup for other frontend song management.
     // This is called automatically when fxml loads.
     public void initialize() {
-        DoubleProperty scrollbarTracker = new SimpleDoubleProperty();
-        scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
-        track.initialize(new SongCallback() {
+        songEditor.initialize(new SongCallback() {
             @Override
-            public AddResponse addNote(NoteData toAdd) throws NoteAlreadyExistsException {
+            public void addNotes(List<NoteData> toAdd) {
                 onSongChange();
-                return song.get().addNote(toAdd);
+                song.get().addNotes(toAdd);
             }
 
             @Override
-            public RemoveResponse removeNote(int position) {
+            public MutateResponse removeNotes(Set<Integer> positions) {
                 onSongChange();
-                return song.get().removeNote(position);
+                return song.get().removeNotes(positions);
             }
 
             @Override
-            public void modifyNote(NoteData toModify) {
+            public NoteUpdateData modifyNote(NoteData toModify) {
                 onSongChange();
-                song.get().modifyNote(toModify);
+                return song.get().modifyNote(toModify);
             }
 
             @Override
-            public Mode getCurrentMode() {
-                return currentMode;
+            public MutateResponse standardizeNotes(int firstPos, int lastPos) {
+                // Only called in response to other changes, so this does not trigger onSongChange.
+                return song.get().standardizeNotes(firstPos, lastPos);
             }
 
             @Override
-            public void adjustScrollbar(double oldWidth, double newWidth) {
-                // Note down what scrollbar position will be next time anchorRight's width changes.
-                double scrollPosition =
-                        scrollPaneRight.getHvalue() * (oldWidth - scrollPaneRight.getWidth());
-                scrollbarTracker.unbind();
-                scrollbarTracker.set(scrollPosition / (newWidth - scrollPaneRight.getWidth()));
+            public void recordAction(Runnable redoAction, Runnable undoAction) {
+                undoService.setMostRecentAction(redoAction, undoAction);
+            }
+
+            @Override
+            public void openNoteProperties(RegionBounds regionBounds) {
+                openNotePropertiesEditor(regionBounds);
             }
         });
-        scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneRight.vvalueProperty());
-        scrollPaneRight.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
-        anchorRight.widthProperty().addListener(observable -> {
-            // Sync up the scrollbar's position with where the track thinks it should be.
-            if (!scrollbarTracker.isBound()) {
-                scrollPaneRight.setHvalue(scrollbarTracker.get());
-                scrollbarTracker.bind(scrollPaneRight.hvalueProperty());
+        anchorCenter.widthProperty().addListener((obs, oldWidthNum, newWidthNum) -> {
+            // Scrollbar should still be at its old location.
+            double oldWidth = oldWidthNum.doubleValue() - scrollPaneCenter.getWidth();
+            double newWidth = newWidthNum.doubleValue() - scrollPaneCenter.getWidth();
+            if (oldWidth > 0 && newWidth > 0) {
+                scrollPaneCenter.setHvalue(scrollPaneCenter.getHvalue() * newWidth / oldWidth);
+            }
+        });
+        scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneCenter.vvalueProperty());
+        scrollPaneCenter.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
+        scrollPaneCenter.hvalueProperty().addListener(event -> {
+            double hvalue = scrollPaneCenter.getHvalue();
+            double margin = scrollPaneCenter.getViewportBounds().getWidth();
+            songEditor.selectivelyShowRegion(hvalue, margin);
+        });
+        scrollPaneCenter.viewportBoundsProperty().addListener((event, oldValue, newValue) -> {
+            if (oldValue.getWidth() != newValue.getWidth()) {
+                double hvalue = scrollPaneCenter.getHvalue();
+                double margin = scrollPaneCenter.getViewportBounds().getWidth();
+                songEditor.selectivelyShowRegion(hvalue, margin);
             }
         });
 
-        modeChoiceBox.setItems(FXCollections.observableArrayList(Mode.ADD, Mode.EDIT, Mode.DELETE));
-        modeChoiceBox.setOnAction((action) -> {
-            currentMode = modeChoiceBox.getValue();
-        });
-        modeChoiceBox.setValue(Mode.ADD);
-        quantizeChoiceBox.setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32"));
+        quantizeChoiceBox
+                .setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32", "1/64"));
         quantizeChoiceBox.setOnAction((action) -> {
             String quantization = quantizeChoiceBox.getValue();
             if (quantization.equals("1/4")) {
@@ -207,9 +251,37 @@ public class SongController implements EditorController, Localizable {
                 quantizer.changeQuant(quantizer.getQuant(), 4);
             } else if (quantization.equals("1/32")) {
                 quantizer.changeQuant(quantizer.getQuant(), 8);
+            } else if (quantization.equals("1/64")) {
+                quantizer.changeQuant(quantizer.getQuant(), 16);
             }
         });
-        quantizeChoiceBox.setValue("1/4");
+        quantizeChoiceBox.setValue("1/16");
+
+        rewindIcon.setImage(iconManager.getImage(IconType.REWIND_NORMAL));
+        rewindIcon.setOnMousePressed(
+                event -> rewindIcon.setImage(iconManager.getImage(IconType.REWIND_PRESSED)));
+        rewindIcon.setOnMouseReleased(
+                event -> rewindIcon.setImage(iconManager.getImage(IconType.REWIND_NORMAL)));
+        playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
+        playPauseIcon.setOnMousePressed(event -> {
+            if (engine.getStatus() == PlaybackStatus.PLAYING) {
+                playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_PRESSED));
+            } else {
+                playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_PRESSED));
+            }
+        });
+        playPauseIcon.setOnMouseReleased(event -> {
+            if (engine.getStatus() == PlaybackStatus.PLAYING) {
+                playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
+            } else {
+                playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
+            }
+        });
+        stopIcon.setImage(iconManager.getImage(IconType.STOP_NORMAL));
+        stopIcon.setOnMousePressed(
+                event -> stopIcon.setImage(iconManager.getImage(IconType.STOP_PRESSED)));
+        stopIcon.setOnMouseReleased(
+                event -> stopIcon.setImage(iconManager.getImage(IconType.STOP_NORMAL)));
 
         languageChoiceBox.setItems(FXCollections.observableArrayList(localizer.getAllLocales()));
         languageChoiceBox
@@ -218,44 +290,53 @@ public class SongController implements EditorController, Localizable {
 
         refreshView();
 
+        // Set up enabled/disabled menu items.
+        menuItemManager.initializeSong(
+                undoService.canUndoProperty(),
+                undoService.canRedoProperty(),
+                songEditor.isAnythingSelectedProperty(),
+                songEditor.clibboardFilledProperty());
+
+        // Do scrolling after a short pause for viewport to establish itself.
+        PauseTransition briefPause = new PauseTransition(Duration.millis(50));
+        briefPause.setOnFinished(event -> scrollToPosition(0));
+        briefPause.play();
+
         // Set up localization.
         localizer.localize(this);
     }
 
     @FXML
-    private Label modeLabel; // Value injected by FXMLLoader
-    @FXML
     private Label quantizationLabel; // Value injected by FXMLLoader
-    @FXML
-    private Button renderButton; // Value injected by FXMLLoader
-    @FXML
-    private Button exportWavButton; // Value injected by FXMLLoader
 
     @Override
     public void localize(ResourceBundle bundle) {
-        modeLabel.setText(bundle.getString("song.mode"));
         quantizationLabel.setText(bundle.getString("song.quantization"));
-        renderButton.setText(bundle.getString("song.render"));
-        exportWavButton.setText(bundle.getString("song.exportWav"));
     }
 
     @Override
     public void refreshView() {
         // Set song image.
-        Image image = new Image("file:" + song.get().getVoicebank().getImagePath());
-        voicebankImage.setImage(image);
+        try {
+            Image image = new Image("file:" + song.get().getVoicebank().getImagePath());
+            voicebankImage.setImage(image);
+        } catch (Exception e) {
+            System.out.println("Exception while loading voicebank image.");
+            errorLogger.logWarning(e);
+        }
 
         anchorLeft.getChildren().add(piano.initPiano());
 
-        // Reloads current
-        anchorRight.getChildren().clear();
-        anchorRight.getChildren().add(track.createNewTrack(song.get().getNotes()));
-        anchorRight.getChildren().add(track.getNotesElement());
-        anchorRight.getChildren().add(track.getPitchbendsElement());
-        anchorRight.getChildren().add(track.getPlaybackElement());
+        // Reloads current song.
+        anchorCenter.getChildren().clear();
+        anchorCenter.getChildren().add(songEditor.createNewTrack(song.get().getNotes()));
+        anchorCenter.getChildren().add(songEditor.getNotesElement());
+        anchorCenter.getChildren().add(songEditor.getPitchbendsElement());
+        anchorCenter.getChildren().add(songEditor.getPlaybackElement());
+        anchorCenter.getChildren().add(songEditor.getSelectionElement());
         anchorBottom.getChildren().clear();
-        anchorBottom.getChildren().add(track.getDynamicsElement());
-        anchorBottom.getChildren().add(track.getEnvelopesElement());
+        anchorBottom.getChildren().add(songEditor.getDynamicsElement());
+        anchorBottom.getChildren().add(songEditor.getEnvelopesElement());
     }
 
     @Override
@@ -264,7 +345,133 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
-    public String open() {
+    public void closeEditor() {
+        // Remove this song from local memory.
+        song.removeSong();
+    }
+
+    @Override
+    public String getFileName() {
+        return song.getLocation().getName();
+    }
+
+    @Override
+    public MenuItemManager getMenuItems() {
+        return menuItemManager;
+    }
+
+    @Override
+    public boolean onKeyPressed(KeyEvent keyEvent) {
+        if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
+            // In the pause case, flicker will be overridden before it can happen.
+            flickerImage(playPauseIcon, iconManager.getImage(IconType.PLAY_PRESSED));
+            playOrPause();
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.V).match(keyEvent)) {
+            flickerImage(rewindIcon, iconManager.getImage(IconType.REWIND_PRESSED));
+            rewindPlayback(); // Rewind button's event handler.
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.B).match(keyEvent)) {
+            flickerImage(stopIcon, iconManager.getImage(IconType.STOP_PRESSED));
+            stopPlayback(); // Stop button's event handler.
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.BACK_SPACE).match(keyEvent)) {
+            songEditor.deleteSelected();
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.ENTER).match(keyEvent)) {
+            Optional<Integer> focusNote = songEditor.getFocusNote();
+            if (focusNote.isPresent()) {
+                if (!scrollPaneRegion().contains(focusNote.get())) {
+                    scrollToPosition(focusNote.get());
+                }
+                songEditor.openLyricInput(focusNote.get());
+            }
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.TAB).match(keyEvent)
+                || new KeyCodeCombination(KeyCode.RIGHT).match(keyEvent)) {
+            Optional<Integer> focusNote = songEditor.getFocusNote();
+            if (focusNote.isPresent()) {
+                Optional<Integer> newFocus = song.get().getNextNote(focusNote.get());
+                if (newFocus.isPresent()) {
+                    if (!scrollPaneRegion().contains(newFocus.get())) {
+                        scrollToPosition(newFocus.get());
+                    }
+                    songEditor.focusOnNote(newFocus.get());
+                }
+            } else if (song.get().getNoteIterator().hasNext()) {
+                int positionMs = song.get().getNoteIterator().next().getDelta();
+                if (!scrollPaneRegion().contains(positionMs)) {
+                    scrollToPosition(positionMs);
+                }
+                songEditor.focusOnNote(positionMs);
+            }
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.LEFT).match(keyEvent)) {
+            Optional<Integer> focusNote = songEditor.getFocusNote();
+            if (focusNote.isPresent()) {
+                Optional<Integer> newFocus = song.get().getPrevNote(focusNote.get());
+                if (newFocus.isPresent()) {
+                    if (!scrollPaneRegion().contains(newFocus.get())) {
+                        scrollToPosition(newFocus.get());
+                    }
+                    songEditor.focusOnNote(newFocus.get());
+                }
+            } else if (song.get().getNoteIterator().hasNext()) {
+                int positionMs = song.get().getNoteIterator().next().getDelta();
+                if (!scrollPaneRegion().contains(positionMs)) {
+                    scrollToPosition(positionMs);
+                }
+                songEditor.focusOnNote(positionMs);
+            }
+            return true;
+        } else {
+            // No need to override default key behavior.
+            return false;
+        }
+    }
+
+    /** Quickly sets an icon to a different image, then changes it back. */
+    private void flickerImage(ImageView icon, Image flickerImage) {
+        Image defaultImage = icon.getImage();
+        icon.setImage(flickerImage);
+        PauseTransition briefPause = new PauseTransition(Duration.millis(120));
+        briefPause.setOnFinished(event -> {
+            // Do nothing if an external source has already changed the image.
+            if (icon.getImage().equals(flickerImage)) {
+                icon.setImage(defaultImage);
+            }
+        });
+        briefPause.play();
+    }
+
+    /** Returns region contained within scroll pane. */
+    private RegionBounds scrollPaneRegion() {
+        double trackWidth = songEditor.getWidthX();
+        double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
+        if (viewportWidth <= 0 || trackWidth <= 0) {
+            return RegionBounds.INVALID;
+        } else if (viewportWidth >= trackWidth) {
+            return RegionBounds.WHOLE_SONG;
+        } else {
+            double hvalue = scrollPaneCenter.getHvalue();
+            double leftX = hvalue * (trackWidth - viewportWidth);
+            double rightX = leftX + viewportWidth;
+            int startPos = RoundUtils.round(scaler.unscalePos(leftX));
+            int endPos = RoundUtils.round(scaler.unscalePos(rightX));
+            return new RegionBounds(startPos, endPos); // May be negative positions.
+        }
+    }
+
+    private void scrollToPosition(int positionMs) {
+        double trackWidth = songEditor.getWidthX();
+        double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
+        if (viewportWidth != 0 && trackWidth > viewportWidth) {
+            scrollPaneCenter.setHvalue(scaler.scalePos(positionMs) / (trackWidth - viewportWidth));
+        }
+    }
+
+    @Override
+    public Optional<String> open() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         fc.getExtensionFilters().addAll(
@@ -272,73 +479,99 @@ public class SongController implements EditorController, Localizable {
                 new ExtensionFilter("All files", "*.*"));
         File file = fc.showOpenDialog(null);
         if (file != null) {
+            statusBar.setStatus("Opening " + file.getName() + "...");
             try {
-                String saveFormat; // Format to save this song in the future.
-                String charset = "UTF-8";
-                CharsetDecoder utf8Decoder = Charset.forName("UTF-8").newDecoder()
-                        .onMalformedInput(CodingErrorAction.REPORT)
-                        .onUnmappableCharacter(CodingErrorAction.REPORT);
-                try {
-                    utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
-                } catch (MalformedInputException | UnmappableCharacterException e) {
-                    charset = "SJIS";
-                }
-                String content = FileUtils.readFileToString(file, charset);
-                if (content.contains("UST Version1.2")) {
-                    song.setSong(ust12Reader.loadSong(content));
-                    saveFormat = "UST 1.2 (Shift JIS)";
-                } else if (content.contains("UST Version2.0")) {
-                    song.setSong(ust20Reader.loadSong(content));
-                    saveFormat = "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
-                } else {
-                    // If no version found, assume UST 1.2 for now.
-                    song.setSong(ust12Reader.loadSong(content));
-                    saveFormat = "UST 1.2 (Shift JIS)";
-                }
-                undoService.clearActions();
-                callback.enableSave(false);
                 song.setLocation(file);
-                song.setSaveFormat(saveFormat);
-                refreshView();
-                return file.getName();
-            } catch (IOException e) {
-                // TODO Handle this.
-                errorLogger.logError(e);
+            } catch (FileAlreadyOpenException e) {
+                statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
+                return Optional.absent();
             }
+            new Thread(() -> {
+                try {
+                    String saveFormat; // Format to save this song in the future.
+                    String charset = "UTF-8";
+                    CharsetDecoder utf8Decoder = Charset.forName("UTF-8").newDecoder()
+                            .onMalformedInput(CodingErrorAction.REPORT)
+                            .onUnmappableCharacter(CodingErrorAction.REPORT);
+                    try {
+                        utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
+                    } catch (MalformedInputException | UnmappableCharacterException e) {
+                        charset = "SJIS";
+                    }
+                    String content = FileUtils.readFileToString(file, charset);
+                    if (content.contains("UST Version1.2")) {
+                        song.setSong(ust12Reader.loadSong(content));
+                        saveFormat = "UST 1.2 (Shift JIS)";
+                    } else if (content.contains("UST Version2.0")) {
+                        song.setSong(ust20Reader.loadSong(content));
+                        saveFormat =
+                                "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
+                    } else {
+                        // If no version found, assume UST 1.2 for now.
+                        song.setSong(ust12Reader.loadSong(content));
+                        saveFormat = "UST 1.2 (Shift JIS)";
+                    }
+                    undoService.clearActions();
+                    song.setSaveFormat(saveFormat);
+                    Platform.runLater(() -> {
+                        refreshView();
+                        callback.markChanged(false);
+                        menuItemManager.disableSave();
+                        statusBar.setStatus("Opened " + file.getName());
+                        // Do scrolling after a short pause for viewport to establish itself.
+                        PauseTransition briefPause = new PauseTransition(Duration.millis(10));
+                        briefPause.setOnFinished(event -> scrollToPosition(0));
+                        briefPause.play();
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(
+                            () -> statusBar.setStatus("Error: Unable to open " + file.getName()));
+                    errorLogger.logError(e);
+                }
+            }).start();
+            return Optional.of(file.getName());
         }
-        return "*Untitled";
+        return Optional.absent();
     }
 
     @Override
-    public String save() {
-        callback.enableSave(false);
+    public Optional<String> save() {
         if (song.hasPermanentLocation()) {
             String saveFormat = song.getSaveFormat();
-            String charset = "UTF-8";
-            if (saveFormat.contains("Shift JIS")) {
-                charset = "SJIS";
-            }
+            String charset = saveFormat.contains("Shift JIS") ? "SJIS" : "UTF-8";
             File saveLocation = song.getLocation();
-            try (PrintStream ps = new PrintStream(saveLocation, charset)) {
-                if (saveFormat.contains("UST 1.2")) {
-                    ust12Writer.writeSong(song.get(), ps);
-                } else {
-                    ust20Writer.writeSong(song.get(), ps, charset);
+            statusBar.setStatus("Saving...");
+            new Thread(() -> {
+                try (PrintStream ps = new PrintStream(saveLocation, charset)) {
+                    if (saveFormat.contains("UST 1.2")) {
+                        ust12Writer.writeSong(song.get(), ps);
+                    } else {
+                        ust20Writer.writeSong(song.get(), ps, charset);
+                    }
+                    ps.flush();
+                    ps.close();
+                    // Report results to UI.
+                    Platform.runLater(() -> {
+                        callback.markChanged(false);
+                        menuItemManager.disableSave();
+                        statusBar.setStatus("Saved changes to " + saveLocation.getName());
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(
+                            () -> statusBar
+                                    .setStatus("Error: Unable to save " + saveLocation.getName()));
+                    errorLogger.logError(e);
                 }
-                ps.flush();
-                ps.close();
-            } catch (FileNotFoundException | UnsupportedEncodingException e) {
-                // TODO: Handle this.
-                errorLogger.logError(e);
-            }
-            return saveLocation.getName();
+            }).start();
+            return Optional.absent();
+        } else {
+            // Default to "Save As" if no permanent location found.
+            return saveAs();
         }
-        return "*Untitled";
     }
 
     @Override
-    public String saveAs() {
-        callback.enableSave(false);
+    public Optional<String> saveAs() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
@@ -355,83 +588,333 @@ public class SongController implements EditorController, Localizable {
         }
         File file = fc.showSaveDialog(null);
         if (file != null) {
+            statusBar.setStatus("Saving...");
+            try {
+                song.setLocation(file);
+            } catch (FileAlreadyOpenException e) {
+                statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
+                return Optional.absent();
+            }
             ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
-            String charset = "UTF-8";
-            if (chosenFormat.getDescription().contains("Shift JIS")) {
-                charset = "SJIS";
-            }
-            try (PrintStream ps = new PrintStream(file, charset)) {
-                if (chosenFormat.getDescription().contains("UST 1.2")) {
-                    ust12Writer.writeSong(song.get(), ps);
-                } else {
-                    ust20Writer.writeSong(song.get(), ps, charset);
+            String charset = chosenFormat.getDescription().contains("Shift JIS") ? "SJIS" : "UTF-8";
+            new Thread(() -> {
+                try (PrintStream ps = new PrintStream(file, charset)) {
+                    if (chosenFormat.getDescription().contains("UST 1.2")) {
+                        ust12Writer.writeSong(song.get(), ps);
+                    } else {
+                        ust20Writer.writeSong(song.get(), ps, charset);
+                    }
+                    ps.flush();
+                    ps.close();
+                    // Report results to UI.
+                    song.setSaveFormat(chosenFormat.getDescription());
+                    Platform.runLater(() -> {
+                        callback.markChanged(false);
+                        menuItemManager.disableSave();
+                        statusBar.setStatus("Saved as " + file.getName());
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(
+                            () -> statusBar
+                                    .setStatus("Error: Unable to save as " + file.getName()));
+                    errorLogger.logError(e);
                 }
-                ps.flush();
-                ps.close();
-            } catch (FileNotFoundException | UnsupportedEncodingException e) {
-                // TODO: Handle this.
-                errorLogger.logError(e);
-            }
-            song.setLocation(file);
-            song.setSaveFormat(chosenFormat.getDescription());
-            return file.getName();
+            }).start();
+            // File name may have changed, so just return new file name.
+            return Optional.of(file.getName());
         }
-        // Default file name.
-        return "*Untitled";
+        return Optional.absent();
     }
 
     /** Called whenever a Song is changed. */
     private void onSongChange() {
+        if (callback == null) {
+            return;
+        }
+        callback.markChanged(true);
         if (song.hasPermanentLocation()) {
-            callback.enableSave(true);
+            menuItemManager.enableSave();
         } else {
-            callback.enableSave(false);
+            menuItemManager.disableSave();
+        }
+    }
+
+    /** Allows users to alter properties of individual notes and note regions. */
+    private void openNotePropertiesEditor(RegionBounds regionBounds) {
+        // Open note properties modal.
+        InputStream fxml = getClass().getResourceAsStream("/fxml/NotePropertiesScene.fxml");
+        FXMLLoader loader = fxmlLoaderProvider.get();
+        try {
+            Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
+            Stage propertiesWindow = new Stage();
+            propertiesWindow.setTitle("Note Properties");
+            propertiesWindow.initModality(Modality.APPLICATION_MODAL);
+            propertiesWindow.initOwner(currentStage);
+            BorderPane notePropertiesPane = loader.load(fxml);
+            NotePropertiesController controller = (NotePropertiesController) loader.getController();
+            controller.setData(song, regionBounds, (oldData, newData) -> {
+                Runnable redoAction = () -> {
+                    NoteIterator notes = song.get().getNoteIterator(regionBounds);
+                    Iterator<NoteConfigData> newDataIterator = newData.iterator();
+                    while (notes.hasNext() && newDataIterator.hasNext()) {
+                        notes.next().setConfigData(newDataIterator.next());
+                    }
+                    onSongChange();
+                    songEditor.selectRegion(regionBounds);
+                    songEditor.refreshSelected();
+                };
+                Runnable undoAction = () -> {
+                    NoteIterator notes = song.get().getNoteIterator(regionBounds);
+                    Iterator<NoteConfigData> oldDataIterator = oldData.iterator();
+                    while (notes.hasNext() && oldDataIterator.hasNext()) {
+                        notes.next().setConfigData(oldDataIterator.next());
+                    }
+                    onSongChange();
+                    songEditor.selectRegion(regionBounds);
+                    songEditor.refreshSelected();
+                };
+                // Apply changes and save redo/undo for these changes.
+                redoAction.run();
+                undoService.setMostRecentAction(redoAction, undoAction);
+            });
+            propertiesWindow.setScene(new Scene(notePropertiesPane));
+            propertiesWindow.showAndWait();
+        } catch (IOException e) {
+            statusBar.setStatus("Error: Unable to open note properties editor.");
+            errorLogger.logError(e);
         }
     }
 
     @FXML
-    void renderSong(ActionEvent event) {
-        double tempo = song.get().getTempo();
-        Function<Duration, Void> playbackFn = (duration) -> track.startPlayback(duration, tempo);
-
-        // Disable the render button while rendering.
-        renderButton.setDisable(true);
-        new Thread(() -> {
-            engine.playSong(song.get(), playbackFn, track.getSelectedTrack());
-            renderButton.setDisable(false);
-        }).start();
+    void rewindPlayback() {
+        engine.stopPlayback();
+        songEditor.stopPlayback();
+        songEditor.selectRegion(RegionBounds.INVALID);
+        scrollToPosition(0); // Scroll to start of song.
+        // TODO: Stop scrollbar's existing acceleration.
     }
 
     @FXML
-    void exportSongAsWav(ActionEvent event) {
+    void playOrPause() {
+        // Do nothing if play icon is currently disabled.
+        if (playPauseIcon.isDisabled()) {
+            return;
+        }
+
+        // Get current playback status to decide what to do.
+        switch (engine.getStatus()) {
+            case PLAYING:
+                pausePlayback();
+                break;
+            case PAUSED:
+                resumePlayback();
+                break;
+            case STOPPED:
+                startPlayback();
+                break;
+        }
+    }
+
+    private void startPlayback() {
+        // If there is no track selected, play the whole song instead.
+        RegionBounds regionToPlay = songEditor.getPlayableTrack();
+
+        Function<Duration, Void> startPlaybackFn = duration -> {
+            DoubleProperty playbackX = songEditor.startPlayback(regionToPlay, duration);
+            if (playbackX != null) {
+                // Implements autoscroll to follow playback bar.
+                playbackX.addListener(event -> {
+                    int newPositionMs = regionToPlay.getMinMs()
+                            + RoundUtils.round(scaler.unscaleX(playbackX.get()));
+                    if (!scrollPaneRegion().contains(newPositionMs)) {
+                        scrollToPosition(newPositionMs);
+                    }
+                });
+            }
+            return null;
+        };
+        Runnable endPlaybackFn = () -> {
+            playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
+        };
+
+        // Disable the play button while rendering.
+        playPauseIcon.setDisable(true);
+
+        statusBar.setStatus("Rendering...");
+        new Thread(() -> {
+            if (engine.startPlayback(song.get(), regionToPlay, startPlaybackFn, endPlaybackFn)) {
+                playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
+                Platform.runLater(() -> statusBar.setStatus("Render complete."));
+            } else {
+                Platform.runLater(() -> statusBar.setStatus("Render produced no output."));
+            }
+            playPauseIcon.setDisable(false);
+        }).start();
+    }
+
+    private void pausePlayback() {
+        engine.pausePlayback();
+        songEditor.pausePlayback();
+        playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
+    }
+
+    private void resumePlayback() {
+        engine.resumePlayback();
+        songEditor.resumePlayback();
+        playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
+    }
+
+    @FXML
+    void stopPlayback() {
+        engine.stopPlayback();
+        songEditor.stopPlayback();
+    }
+
+    @Override
+    public void exportToWav() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select WAV File");
         fc.getExtensionFilters().addAll(new ExtensionFilter(".wav files", "*.wav"));
         File file = fc.showSaveDialog(null);
         if (file != null) {
-            engine.renderWav(song.get(), file);
+            statusBar.setStatus("Exporting...");
+            new Thread(() -> {
+                if (engine.renderWav(song.get(), file)) {
+                    Platform.runLater(
+                            () -> statusBar.setStatus("Exported to file: " + file.getName()));
+                } else {
+                    Platform.runLater(() -> statusBar.setStatus("Export produced no output."));
+                }
+            }).start();
         }
     }
 
     @Override
     public void openProperties() {
-        // Open properties modal.
-        InputStream fxml = getClass().getResourceAsStream("/fxml/PropertiesScene.fxml");
+        // Open song properties modal.
+        InputStream fxml = getClass().getResourceAsStream("/fxml/SongPropertiesScene.fxml");
         FXMLLoader loader = fxmlLoaderProvider.get();
         try {
-            Stage currentStage = (Stage) anchorRight.getScene().getWindow();
+            Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
             Stage propertiesWindow = new Stage();
+            propertiesWindow.setTitle("Song Properties");
             propertiesWindow.initModality(Modality.APPLICATION_MODAL);
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);
-            PropertiesController controller = (PropertiesController) loader.getController();
-            controller.setSongContainer(song);
+            SongPropertiesController controller = (SongPropertiesController) loader.getController();
+            controller.setData(song, engine, () -> {
+                // Should only be called after song changes are applied.
+                Platform.runLater(() -> {
+                    onSongChange();
+                    refreshView();
+                    statusBar.setStatus("Property changes applied.");
+                });
+            });
             propertiesWindow.setScene(new Scene(propertiesPane));
             propertiesWindow.showAndWait();
         } catch (IOException e) {
-            // TODO Handle this.
+            statusBar.setStatus("Error: Unable to open note properties editor.");
             errorLogger.logError(e);
         }
-        refreshView();
+    }
+
+    @Override
+    public void undo() {
+        undoService.undo();
+    }
+
+    @Override
+    public void redo() {
+        undoService.redo();
+    }
+
+    @Override
+    public void cut() {
+        songEditor.copySelected();
+        songEditor.deleteSelected();
+    }
+
+    @Override
+    public void copy() {
+        songEditor.copySelected();
+    }
+
+    @Override
+    public void paste() {
+        songEditor.pasteSelected();
+    }
+
+    @Override
+    public void delete() {
+        songEditor.deleteSelected();
+    }
+
+    @Override
+    public void selectAll() {
+        songEditor.selectAll();
+    }
+
+    @Override
+    public void openNoteProperties() {
+        if (!songEditor.getSelectedTrack().equals(RegionBounds.INVALID)) {
+            openNotePropertiesEditor(songEditor.getSelectedTrack());
+        }
+    }
+
+    @Override
+    public Optional<File> openPlugin() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Select executable file");
+        fc.getExtensionFilters().addAll(
+                new ExtensionFilter("Executables", "*", "*.exe"), // TODO: Support .jar
+                new ExtensionFilter("OSX Executables", "*.out", "*.app"),
+                new ExtensionFilter("All Files", "*.*"));
+        File file = fc.showOpenDialog(null);
+        if (file != null) {
+            invokePlugin(file);
+            return Optional.of(file);
+        }
+        return Optional.absent();
+    }
+
+    @Override
+    public void invokePlugin(File plugin) {
+        if (plugin != null) {
+            try {
+                // Plugin input. Only give Shift-JIS UST 1.2 files to plugins for now.
+                File pluginFile = File.createTempFile("plugin", ".ust");
+                System.out.println("Plugin input: " + pluginFile.getAbsolutePath());
+                pluginFile.deleteOnExit();
+                PrintStream ps = new PrintStream(pluginFile, "SJIS");
+                String[] headers =
+                        ust12Writer.writeToPlugin(song.get(), songEditor.getSelectedTrack(), ps);
+                ps.flush();
+                ps.close();
+                System.out.println(headers[0] + " " + headers[1]);
+
+                // Write pre-plugin song to a string.
+                ByteArrayOutputStream songBytes = new ByteArrayOutputStream();
+                ps = new PrintStream(songBytes, true, "SJIS");
+                ust12Writer.writeSong(song.get(), ps);
+                ps.close();
+                String songString = songBytes.toString("SJIS");
+
+                // Attempt to run plugin.
+                processRunner.runProcess(
+                        new File(plugin.getAbsolutePath()).getParent(),
+                        plugin.getAbsolutePath(),
+                        pluginFile.getAbsolutePath());
+
+                // Read song from plugin output.
+                String output = FileUtils.readFileToString(pluginFile, "SJIS");
+                song.setSong(ust12Reader.readFromPlugin(headers, songString, output));
+                onSongChange();
+                refreshView();
+
+            } catch (IOException e) {
+                // TODO: Handle this.
+                errorLogger.logError(e);
+            }
+        }
     }
 }

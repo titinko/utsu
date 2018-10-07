@@ -11,7 +11,14 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
+import java.nio.file.Path;
+import java.util.Iterator;
+import com.google.common.collect.ImmutableSet;
+import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
+import com.utsusynth.utsu.model.voicebank.LyricConfigMap;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 
 public class VoicebankWriter {
@@ -47,8 +54,82 @@ public class VoicebankWriter {
             errorLogger.logError(e);
         }
 
-        // TODO: Save lyric configs.
-        // TODO: Save pitch map.
+        // Save lyric configs. Include blank file in main directory if necessary.
+        File utfOtoFile = saveDir.toPath().resolve("oto_ini.txt").toFile();
+        try (PrintStream utfPs = new PrintStream(utfOtoFile, "UTF-8")) {
+            utfPs.println("#Charset:UTF-8");
+            ImmutableSet<String> categories = ImmutableSet.<String>builder()
+                    .addAll(voicebank.getCategories()).add(LyricConfigMap.MAIN_CATEGORY).build();
+            for (String category : categories) {
+                // For now, always use foldered oto structure for oto.ini.
+                Path categoryDir = category.equals(LyricConfigMap.MAIN_CATEGORY) ? saveDir.toPath()
+                        : saveDir.toPath().resolve(category);
+                File otoFile = categoryDir.resolve("oto.ini").toFile();
+                PrintStream ps = new PrintStream(otoFile, "SJIS");
+                Iterator<LyricConfig> iterator = voicebank.getLyricConfigs(category);
+                while (iterator.hasNext()) {
+                    LyricConfig config = iterator.next();
+                    if (config == null) {
+                        continue;
+                    }
+                    for (PrintStream stream : ImmutableSet.of(utfPs, ps)) {
+                        String charset = getCharset(config.getFilename() + config.getTrueLyric());
+                        if (!charset.equals("SJIS") && stream.equals(ps)) {
+                            continue;
+                        }
+                        if (stream.equals(utfPs)) {
+                            stream.print(config.getFilename() + "=");
+                        } else {
+                            stream.print(config.getPathToFile().getName() + "=");
+                        }
+                        stream.print(config.getTrueLyric() + ",");
+                        stream.print(RoundUtils.roundDecimal(config.getOffset(), "#.#") + ",");
+                        stream.print(RoundUtils.roundDecimal(config.getConsonant(), "#.#") + ",");
+                        stream.print(RoundUtils.roundDecimal(config.getCutoff(), "#.#") + ",");
+                        stream.print(
+                                RoundUtils.roundDecimal(config.getPreutterance(), "#.#") + ",");
+                        stream.print(RoundUtils.roundDecimal(config.getOverlap(), "#.#") + "\n");
+                    }
+                }
+                ps.flush();
+                ps.close();
+            }
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            // TODO: Handle this.
+            errorLogger.logError(e);
+        }
+
+        // Save pitch map.
+        for (String prefixmapName : ImmutableSet.of("prefixmap", "prefix.map")) {
+            File pitchFile = saveDir.toPath().resolve(prefixmapName).toFile();
+            if (pitchFile.canWrite() || pitchFile.isDirectory()) {
+                continue; // Don't try to overwrite a directory.
+            }
+            String charset = prefixmapName.equals("prefix.map") ? "SJIS" : "UTF-8";
+            try (PrintStream ps = new PrintStream(pitchFile, charset)) {
+                if (charset.equals("UTF-8")) {
+                    ps.println("#Charset:UTF-8");
+                }
+                Iterator<PitchMapData> iterator = voicebank.getPitchData();
+                while (iterator.hasNext()) {
+                    PitchMapData data = iterator.next();
+                    if (data == null) {
+                        continue;
+                    }
+                    // Don't try to save Unicode characters to prefix.map.
+                    String pitchCharset = getCharset(data.getPitch() + data.getSuffix());
+                    if (charset.equals("SJIS") && !pitchCharset.equals("SJIS")) {
+                        continue;
+                    }
+                    ps.print(data.getPitch() + "\t\t" + data.getSuffix() + "\n");
+                }
+                ps.flush();
+                ps.close();
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                // TODO: Handle this.
+                errorLogger.logError(e);
+            }
+        }
     }
 
     private String getCharset(String toRender) {

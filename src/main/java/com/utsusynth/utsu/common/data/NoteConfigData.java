@@ -1,49 +1,58 @@
 package com.utsusynth.utsu.common.data;
 
+import com.google.common.base.Optional;
+
 public class NoteConfigData {
-    private final String trueLyric;
-    private final double velocity; // Consonant velocity.
-    private final double startPoint; // User-set start point of a note.
+    private final Optional<Double> preutter;
+    private final Optional<Double> overlap;
+    private final double consonantVelocity;
+    private final double startPoint;
     private final int intensity;
     private final int modulation;
     private final String noteFlags;
 
     public NoteConfigData(
-            String trueLyric,
-            double velocity,
+            Optional<Double> preutter,
+            Optional<Double> overlap,
+            double consonantVelocity,
             double startPoint,
             int intensity,
             int modulation,
             String noteFlags) {
-        this.trueLyric = trueLyric;
-        this.velocity = velocity;
+        this.preutter = preutter;
+        this.overlap = overlap;
+        this.consonantVelocity = consonantVelocity;
         this.startPoint = startPoint;
         this.intensity = intensity;
         this.modulation = modulation;
         this.noteFlags = noteFlags;
     }
 
-    public String getTrueLyric() {
-        return this.trueLyric;
+    public Optional<Double> getPreutter() {
+        return preutter;
     }
 
-    public double getVelocity() {
-        return this.velocity;
+    public Optional<Double> getOverlap() {
+        return overlap;
+    }
+
+    public double getConsonantVelocity() {
+        return consonantVelocity;
     }
 
     public double getStartPoint() {
-        return this.startPoint;
+        return startPoint;
     }
 
     public int getIntensity() {
-        return this.intensity;
+        return intensity;
     }
 
     public int getModulation() {
-        return this.modulation;
+        return modulation;
     }
 
     public String getNoteFlags() {
-        return this.noteFlags;
+        return noteFlags;
     }
 }

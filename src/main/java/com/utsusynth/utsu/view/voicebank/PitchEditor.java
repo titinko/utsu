@@ -1,6 +1,8 @@
 package com.utsusynth.utsu.view.voicebank;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.PitchMapData;
 import javafx.collections.FXCollections;
@@ -40,6 +42,15 @@ public class PitchEditor {
         suffixCol.prefWidthProperty().bind(table.widthProperty().multiply(0.63));
         suffixCol.setResizable(false);
         suffixCol.setSortable(false);
+        suffixCol.setOnEditCommit(event -> {
+            PitchMapData pitchData = event.getRowValue();
+            String oldSuffix = event.getOldValue();
+            String newSuffix = event.getNewValue();
+            model.recordAction(
+                    () -> pitchData.suffixProperty().set(newSuffix),
+                    () -> pitchData.suffixProperty().set(oldSuffix));
+            pitchData.suffixProperty().set(newSuffix);
+        });
         table.getColumns().setAll(ImmutableList.of(pitchCol, suffixCol));
 
         // Populate with pitch data.
@@ -55,9 +66,26 @@ public class PitchEditor {
     }
 
     public void setSelected(String suffix) {
-        for (PitchMapData data : table.getSelectionModel().getSelectedItems()) {
-            data.suffixProperty().set(suffix);
-        }
+        List<String> oldSuffixes = table.getSelectionModel().getSelectedItems().stream()
+                .map(PitchMapData::getSuffix).collect(Collectors.toList());
+        List<PitchMapData> selected =
+                ImmutableList.copyOf(table.getSelectionModel().getSelectedItems());
+        Runnable redoAction = () -> {
+            for (PitchMapData data : selected) {
+                data.suffixProperty().set(suffix);
+            }
+        };
+        Runnable undoAction = () -> {
+            for (int i = 0; i < selected.size(); i++) {
+                selected.get(i).suffixProperty().set(oldSuffixes.get(i));
+            }
+        };
+        model.recordAction(redoAction, undoAction);
+        redoAction.run();
+    }
+
+    public void selectAll() {
+        table.getSelectionModel().selectAll();
     }
 
     private class EditableCell<T> extends TableCell<PitchMapData, T> {

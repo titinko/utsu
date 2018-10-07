@@ -1,3 +1,8 @@
+.status-bar {
+	-fx-background-color: lightgray, whitesmoke;
+    -fx-background-insets: 0, 1 0 0 1;
+}
+
 .start-bar, .playback-bar, .end-bar {
 	-fx-stroke-width: 2;
 }
@@ -10,6 +15,18 @@
 	-fx-stroke: cornflowerblue;
 }
 
+.add-note-box {
+	-fx-fill: transparent;
+	-fx-stroke: cornflowerblue;
+	-fx-stroke-width: 3;
+}
+
+.select-box {
+	-fx-fill: transparent;
+	-fx-stroke: crimson;
+	-fx-stroke-width: 2;
+}
+
 .track-cell.white-key {
     -fx-background-color: lightgray, white;
     -fx-background-insets: 0, 0 1 1 0;
@@ -17,6 +34,11 @@
 
 .track-cell.black-key {
 	-fx-background-color: lightgray, whitesmoke;
+	-fx-background-insets: 0, 0 1 1 0;
+}
+
+.track-cell.gray-key {
+	-fx-background-color: lightgray, darkgray;
 	-fx-background-insets: 0, 0 1 1 0;
 }
 
@@ -40,6 +62,16 @@
 	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
 }
 
+.track-cell.gray-key.measure-start {
+	-fx-background-color: lightskyblue, lightgray, darkgray;
+	-fx-background-insets: 0, 0 0 0 1, 0 1 1 1;
+}
+
+.track-cell.gray-key.measure-end {
+	-fx-background-color: lightskyblue, lightgray, darkgray;
+	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
+}
+
 .track-note.valid.not-highlighted {
     -fx-fill: skyblue;
     -fx-stroke: dodgerblue;
@@ -50,14 +82,9 @@
     -fx-stroke: skyblue;
 }
 
-.track-note.invalid.not-highlighted {
+.track-note.invalid {
     -fx-fill: gray;
     -fx-stroke: darkslategray;
-}
-
-.track-note.invalid.highlighted {
-    -fx-fill: lightgray;
-    -fx-stroke: silver;
 }
 
 .note-overlap {
@@ -129,7 +156,6 @@
 	-fx-stroke: darkgray;
 	-fx-text-fill: dimgray;
 	-fx-stroke-width: 2;
-	
 }
 
 .consonant {
@@ -150,6 +176,10 @@
 .overlap {
 	-fx-stroke: steelblue;
 	-fx-text-fill: steelblue;
+}
+
+.offset.selected, .cutoff.selected, .consonant.selected, .preutterance.selected, .overlap.selected {
+	-fx-stroke-width: 4px;
 }
 
 .piano-black-key {

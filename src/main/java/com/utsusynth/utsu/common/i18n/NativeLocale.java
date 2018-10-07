@@ -4,20 +4,21 @@ import java.util.Locale;
 
 /** A locale with toString overridden as the localized name of that locale. */
 public class NativeLocale {
-	private final Locale locale;
-	private final String localizedName;
+    private final Locale locale;
+    private final String localizedName;
 
-	public NativeLocale(Locale locale) {
-		this.locale = locale;
-		this.localizedName = locale.getDisplayLanguage(locale);
-	}
+    public NativeLocale(Locale locale) {
+        this.locale = locale;
+        this.localizedName = locale.getDisplayLanguage(locale)
+                + (locale.getCountry().isEmpty() ? "" : " (" + locale.getCountry() + ")");
+    }
 
-	Locale getLocale() {
-		return locale;
-	}
+    Locale getLocale() {
+        return locale;
+    }
 
-	@Override
-	public String toString() {
-		return localizedName;
-	}
+    @Override
+    public String toString() {
+        return localizedName;
+    }
 }

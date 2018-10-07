@@ -1,15 +1,21 @@
 package com.utsusynth.utsu.view.song;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.TreeSet;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.view.song.note.Note;
+import javafx.animation.Animation.Status;
 import javafx.animation.Interpolator;
 import javafx.animation.TranslateTransition;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
 import javafx.scene.shape.Line;
 import javafx.util.Duration;
@@ -21,7 +27,8 @@ public class PlaybackBarManager {
     private static final int totalHeight = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
 
     private final Scaler scaler;
-    private final HashSet<Note> highlighted;
+    private final TreeSet<Note> highlighted;
+    private final BooleanProperty isAnythingHighlighted;
     private final TranslateTransition playback;
 
     private Line startBar;
@@ -31,7 +38,8 @@ public class PlaybackBarManager {
     @Inject
     public PlaybackBarManager(Scaler scaler) {
         this.scaler = scaler;
-        highlighted = new HashSet<>();
+        highlighted = new TreeSet<>();
+        isAnythingHighlighted = new SimpleBooleanProperty(false);
         playback = new TranslateTransition();
         clear();
     }
@@ -40,58 +48,116 @@ public class PlaybackBarManager {
         return bars;
     }
 
-    // Sends the playback bar across the part of the song that plays.
-    void startPlayback(Duration duration, double tempo) {
+    /**
+     * Sends the playback bar across the part of the song that plays.
+     * 
+     * @return A double binding of the playback bar's current x-value.
+     */
+    DoubleProperty startPlayback(Duration duration, RegionBounds playRegion) {
         if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             // Create a playback bar.
-            double barX = bars.getChildren().contains(startBar) ? startBar.getTranslateX() : 0;
+            double barX = scaler.scalePos(playRegion.getMinMs());
             Line playBar = new Line(barX, 0, barX, scaler.scaleY(totalHeight));
             playBar.getStyleClass().addAll("playback-bar");
             bars.getChildren().add(playBar);
 
             // Move the playback bar as the song plays.
             playback.stop();
-            playback.setDuration(duration);
             playback.setNode(playBar);
-            double numBeats = tempo * duration.toMinutes();
-            playback.setByX(numBeats * scaler.scaleX(Quantizer.COL_WIDTH));
+            playback.setDuration(duration);
+            playback.setToX(scaler.scaleX(playRegion.getMaxMs() - playRegion.getMinMs()));
             playback.setInterpolator(Interpolator.LINEAR);
-            playback.setOnFinished(action -> {
-                bars.getChildren().remove(playBar);
+            playback.statusProperty().addListener((obs, oldStatus, newStatus) -> {
+                if (newStatus == Status.STOPPED) {
+                    bars.getChildren().remove(playBar);
+                }
             });
             playback.play();
+            return playBar.translateXProperty();
+        }
+        // Return null if no playback bar created.
+        return null;
+    }
+
+    void pausePlayback() {
+        playback.pause(); // Does nothing if animation not playing.
+    }
+
+    void resumePlayback() {
+        if (playback.getStatus() == Status.PAUSED) {
+            playback.play(); // Does nothing if animation not paused.
         }
     }
 
-    void highlightTo(Note highlightToMe, Collection<Note> allNotes) {
-        RegionBounds noteBounds = highlightToMe.getBounds();
-        RegionBounds addRegion;
+    // Removes the playback bar.
+    void stopPlayback() {
+        playback.stop();
+    }
+
+    /** Adds a specific note to highlighted set and adjust playback bars. */
+    void highlightNote(Note highlightMe) {
+        highlighted.add(highlightMe);
+        isAnythingHighlighted.set(true);
+        highlightMe.setHighlighted(true);
+    }
+
+    /** Highlight an exact region and any notes within that region. */
+    void highlightRegion(RegionBounds region, Collection<Note> allNotes) {
+        clearHighlights();
+        if (region.equals(RegionBounds.INVALID)) {
+            return;
+        }
+
+        // Add start and stop bars to the track at the correct location.
+        bars.getChildren().addAll(startBar, endBar);
+        startBar.setTranslateX(scaler.scalePos(region.getMinMs()));
+        endBar.setTranslateX(scaler.scalePos(region.getMaxMs()));
+
+        // Highlight all notes within the add region.
+        for (Note note : allNotes) {
+            if (region.intersects(note.getValidBounds())) {
+                // These operations are idempotent.
+                highlighted.add(note);
+                note.setHighlighted(true);
+            }
+        }
+        isAnythingHighlighted.set(!highlighted.isEmpty());
+    }
+
+    /** Highlights all notes and places playback bars at their edges. */
+    void highlightAll(Collection<Note> allNotes) {
+        clearHighlights();
+        if (allNotes.isEmpty()) {
+            return;
+        }
+
+        for (Note note : allNotes) {
+            highlighted.add(note);
+            note.setHighlighted(true);
+        }
+        isAnythingHighlighted.set(!highlighted.isEmpty());
+
+        // Add start and stop bars to the track at the correct location.
+        bars.getChildren().addAll(startBar, endBar);
+        startBar.setTranslateX(scaler.scalePos(highlighted.first().getValidBounds().getMinMs()));
+        endBar.setTranslateX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()));
+    }
+
+    /** Aligns playback bar to reflect actual highlighted notes. */
+    void realign() {
         if (highlighted.isEmpty()) {
-            // Add region is defined only by the note.
-            addRegion = noteBounds;
-            // Add start and stop bars to the track.
+            clearHighlights();
+        } else {
+            // Add start and stop bars to the track if necessary.
             if (!bars.getChildren().contains(startBar)) {
                 bars.getChildren().add(startBar);
             }
             if (!bars.getChildren().contains(endBar)) {
                 bars.getChildren().add(endBar);
             }
-        } else {
-            int startBarX = (int) Math.round(scaler.unscaleX(startBar.getTranslateX()));
-            int endBarX = (int) Math.round(scaler.unscaleX(endBar.getTranslateX()));
-            addRegion = new RegionBounds(startBarX, endBarX).mergeWith(noteBounds);
-        }
-        // Move startBar and endBar to the right locations.
-        startBar.setTranslateX(scaler.scaleX(addRegion.getMinMs()));
-        endBar.setTranslateX(scaler.scaleX(addRegion.getMaxMs()));
-
-        // Highlight all notes within the add region.
-        for (Note note : allNotes) {
-            if (addRegion.intersects(note.getBounds())) {
-                // These operations are idempotent.
-                highlighted.add(note);
-                note.setHighlighted(true);
-            }
+            startBar.setTranslateX(
+                    scaler.scalePos(highlighted.first().getValidBounds().getMinMs()));
+            endBar.setTranslateX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()));
         }
     }
 
@@ -103,8 +169,10 @@ public class PlaybackBarManager {
         // Recreate start and end bars, as scale might have changed.
         startBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
         startBar.getStyleClass().add("start-bar");
+        startBar.setMouseTransparent(true);
         endBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
         endBar.getStyleClass().add("end-bar");
+        endBar.setMouseTransparent(true);
     }
 
     void clearHighlights() {
@@ -112,24 +180,51 @@ public class PlaybackBarManager {
             note.setHighlighted(false);
         }
         highlighted.clear();
+        isAnythingHighlighted.set(false);
         bars.getChildren().removeAll(startBar, endBar);
+    }
+
+    void setCursor(int positionMs) {
+        clearHighlights();
+        bars.getChildren().add(startBar);
+        startBar.setTranslateX(scaler.scalePos(positionMs));
+    }
+
+    int getCursorPosition() {
+        if (bars.getChildren().contains(startBar)) {
+            return Math.max(0, RoundUtils.round(scaler.unscalePos(startBar.getTranslateX())));
+        }
+        return 0;
+    }
+
+    RegionBounds getPlayableRegion() {
+        int endPosition = Integer.MAX_VALUE;
+        if (bars.getChildren().contains(endBar)) {
+            endPosition = RoundUtils.round(scaler.unscalePos(endBar.getTranslateX()));
+        }
+        return new RegionBounds(getCursorPosition(), endPosition);
+    }
+
+    RegionBounds getSelectedRegion() {
+        if (highlighted.isEmpty()) {
+            return RegionBounds.INVALID;
+        }
+        return highlighted.first().getValidBounds().mergeWith(highlighted.last().getValidBounds());
     }
 
     boolean isExclusivelyHighlighted(Note note) {
         return highlighted.size() == 1 && highlighted.contains(note);
     }
 
-    RegionBounds getRegionBounds() {
-        int startBarX = (int) Math.round(scaler.unscaleX(startBar.getTranslateX()));
-        int endBarX = (int) Math.round(scaler.unscaleX(endBar.getTranslateX()));
-        if (bars.getChildren().contains(startBar) && bars.getChildren().contains(endBar)) {
-            return new RegionBounds(startBarX, endBarX);
-        } else if (bars.getChildren().contains(startBar)) {
-            return new RegionBounds(startBarX, Integer.MAX_VALUE);
-        } else if (bars.getChildren().contains(endBar)) {
-            return new RegionBounds(0, endBarX);
-        } else {
-            return RegionBounds.WHOLE_SONG;
-        }
+    boolean isHighlighted(Note note) {
+        return highlighted.contains(note);
+    }
+
+    BooleanProperty isAnythingHighlightedProperty() {
+        return isAnythingHighlighted;
+    }
+
+    ImmutableList<Note> getHighlightedNotes() {
+        return ImmutableList.copyOf(highlighted);
     }
 }

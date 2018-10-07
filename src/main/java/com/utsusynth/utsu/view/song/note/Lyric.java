@@ -28,6 +28,11 @@ public class Lyric {
         this.textField.setOnAction((event) -> {
             closeTextFieldIfNeeded();
         });
+        this.textField.focusedProperty().addListener(event -> {
+            if (!this.textField.isFocused()) {
+                closeTextFieldIfNeeded();
+            }
+        });
 
         // Initialize with text active.
         activeNode = new Group();
@@ -71,11 +76,6 @@ public class Lyric {
         this.trackNote.adjustColumnSpan();
     }
 
-    void openTextElement() {
-        this.activeNode.getChildren().clear();
-        this.activeNode.getChildren().add(this.text);
-    }
-
     void openTextField() {
         this.activeNode.getChildren().clear();
         this.activeNode.getChildren().add(this.textField);
@@ -83,13 +83,18 @@ public class Lyric {
         this.textField.selectAll();
     }
 
+    boolean isTextFieldOpen() {
+        return this.activeNode.getChildren().contains(this.textField);
+    }
+
     void closeTextFieldIfNeeded() {
-        if (this.activeNode.getChildren().contains(this.textField)) {
+        if (isTextFieldOpen()) {
             this.activeNode.getChildren().clear();
             this.activeNode.getChildren().add(this.text);
+            String oldLyric = this.lyric;
             String newLyric = textField.getText();
             setVisibleLyric(newLyric);
-            this.trackNote.setSongLyric(newLyric);
+            this.trackNote.replaceSongLyric(oldLyric, newLyric);
         }
     }
 

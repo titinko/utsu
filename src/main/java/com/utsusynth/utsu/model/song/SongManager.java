@@ -2,12 +2,12 @@ package com.utsusynth.utsu.model.song;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import com.google.common.io.Files;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 
 /**
  * Manages all songs in use by Utsu. This class is a singleton to ensure the same song does not open
@@ -19,6 +19,8 @@ public class SongManager {
     private final Map<File, Song> songs;
     private final File tempDir;
 
+    private int untitledCounter;
+
     public SongManager() {
         tempDir = Files.createTempDir();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -29,6 +31,7 @@ public class SongManager {
             }
         }));
         songs = new HashMap<>();
+        untitledCounter = 1;
     }
 
     public boolean hasSong(File location) {
@@ -41,20 +44,27 @@ public class SongManager {
         return songs.get(normalized);
     }
 
+    /**
+     * Writes a new song into this location, replacing any old songs.
+     */
     public void setSong(File location, Song song) {
         File normalized = normalize(location);
         songs.put(normalized, song);
     }
 
     public File addSong(Song song) {
-        File tempLocation = normalize(new File(tempDir, "song" + new Date().getTime()));
+        File tempLocation = normalize(new File(tempDir, "Untitled_" + untitledCounter++));
         songs.put(tempLocation, song);
         return tempLocation;
     }
 
-    public void moveSong(File oldLocation, File newLocation) {
+    public void moveSong(File oldLocation, File newLocation) throws FileAlreadyOpenException {
         File normalizedOld = normalize(oldLocation);
         File normalizedNew = normalize(newLocation);
+        if (songs.containsKey(normalizedNew)) {
+            // No two tabs should point at the same file, to prevent headaches.
+            throw new FileAlreadyOpenException();
+        }
 
         Song songToMove = songs.get(normalizedOld);
         songs.remove(normalizedOld);
@@ -70,7 +80,7 @@ public class SongManager {
         try {
             return rawFile.getCanonicalFile();
         } catch (IOException e) {
-            // TODO: Handle this
+            // TODO: Handle this.
             errorLogger.logError(e);
         }
         // Return raw file if it cannot be normalized.

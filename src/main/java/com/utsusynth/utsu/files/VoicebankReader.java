@@ -29,7 +29,8 @@ public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
     private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
-    private static final Pattern PITCH_PATTERN = Pattern.compile("([a-gA-G]#?[1-7])\\s+(\\S.*)");
+    private static final Pattern PITCH_PATTERN =
+            Pattern.compile("([a-gA-G]#?[1-7])\\t\\S*\\t(\\S.*)");
 
     private final File defaultVoicePath;
     private final File lyricConversionPath;
@@ -65,17 +66,23 @@ public class VoicebankReader {
         builder.setPathToVoicebank(pathToVoicebank);
         System.out.println("Parsed voicebank as " + pathToVoicebank);
 
-        // Parse character data.
+        // Parse character data in English or Japanese.
         String characterData =
                 readConfigFile(pathToVoicebank.toPath().resolve("character.txt").toFile());
         for (String rawLine : characterData.split("\n")) {
             String line = rawLine.trim();
             if (line.startsWith("name=")) {
                 builder.setName(line.substring("name=".length()));
+            } else if (line.startsWith("名前：")) {
+                builder.setName(line.substring("名前：".length()));
             } else if (line.startsWith("author=")) {
                 builder.setAuthor(line.substring("author=".length()));
+            } else if (line.startsWith("CV：")) {
+                builder.setAuthor(line.substring("CV：".length()));
             } else if (line.startsWith("image=")) {
                 builder.setImageName(line.substring("image=".length()));
+            } else if (line.startsWith("画像：")) {
+                builder.setImageName(line.substring("画像：".length()));
             }
         }
 
@@ -109,7 +116,6 @@ public class VoicebankReader {
 
         // Parse pitch map in arbitrary order, if present.
         for (String pitchMapName : ImmutableSet.of("prefixmap", "prefix.map")) {
-            // For some reason, "prefix.map" is a list of pitch suffixes.
             parsePitchMap(pathToVoicebank.toPath().resolve(pitchMapName).toFile(), builder);
         }
 
@@ -131,6 +137,10 @@ public class VoicebankReader {
             if (matcher.find()) {
                 String fileName = matcher.group(1); // Assuming this is a .wav file
                 String lyricName = matcher.group(2);
+                if (lyricName.isEmpty()) {
+                    // If no alias provided, use the file name as an adhoc alias.
+                    lyricName = fileName.substring(0, fileName.length() - 4);
+                }
                 String[] configValues = line.substring(matcher.end()).split(",");
                 if (configValues.length != 5 || fileName == null || lyricName == null) {
                     System.out.println("Received unexpected results while parsing oto.ini");
@@ -173,7 +183,7 @@ public class VoicebankReader {
     }
 
     private String readConfigFile(File file) {
-        if (!file.canRead()) {
+        if (!file.canRead() || !file.isFile()) {
             // This is often okay.
             return "";
         }

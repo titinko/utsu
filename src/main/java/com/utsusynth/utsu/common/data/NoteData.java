@@ -13,18 +13,20 @@ public class NoteData {
     private final String lyric;
 
     // Optional fields.
+    private final Optional<String> trueLyric;
     private final Optional<EnvelopeData> envelope;
     private final Optional<PitchbendData> pitchbend;
-    private final Optional<NoteConfigData> config;
+    private final Optional<NoteConfigData> configData;
 
     public NoteData(int position, int duration, String pitch, String lyric) {
         this.position = position;
         this.duration = duration;
         this.pitch = pitch;
         this.lyric = lyric;
+        this.trueLyric = Optional.absent();
         this.envelope = Optional.absent();
         this.pitchbend = Optional.absent();
-        this.config = Optional.absent();
+        this.configData = Optional.absent();
     }
 
     public NoteData(
@@ -32,16 +34,18 @@ public class NoteData {
             int duration,
             String pitch,
             String lyric,
+            Optional<String> trueLyric,
             Optional<EnvelopeData> envelope,
             Optional<PitchbendData> pitchbend,
-            Optional<NoteConfigData> config) {
+            Optional<NoteConfigData> configData) {
         this.position = position;
         this.duration = duration;
         this.pitch = pitch;
         this.lyric = lyric;
+        this.trueLyric = trueLyric;
         this.envelope = envelope;
         this.pitchbend = pitchbend;
-        this.config = config;
+        this.configData = configData;
     }
 
     public NoteData(int position, int duration, String pitch, String lyric, EnvelopeData envelope) {
@@ -49,9 +53,10 @@ public class NoteData {
         this.duration = duration;
         this.pitch = pitch;
         this.lyric = lyric;
+        this.trueLyric = Optional.absent();
         this.envelope = Optional.of(envelope);
         this.pitchbend = Optional.absent();
-        this.config = Optional.absent();
+        this.configData = Optional.absent();
     }
 
     public NoteData(
@@ -64,9 +69,10 @@ public class NoteData {
         this.duration = duration;
         this.pitch = pitch;
         this.lyric = lyric;
+        this.trueLyric = Optional.absent();
         this.envelope = Optional.absent();
         this.pitchbend = Optional.of(pitchbend);
-        this.config = Optional.absent();
+        this.configData = Optional.absent();
     }
 
     public int getPosition() {
@@ -85,6 +91,10 @@ public class NoteData {
         return this.lyric;
     }
 
+    public Optional<String> getTrueLyric() {
+        return this.trueLyric;
+    }
+
     public Optional<EnvelopeData> getEnvelope() {
         return this.envelope;
     }
@@ -93,7 +103,7 @@ public class NoteData {
         return this.pitchbend;
     }
 
-    public Optional<NoteConfigData> getConfig() {
-        return this.config;
+    public Optional<NoteConfigData> getConfigData() {
+        return this.configData;
     }
 }

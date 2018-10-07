@@ -1,9 +1,9 @@
 package com.utsusynth.utsu.view.song;
 
 import com.google.inject.Inject;
-import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;

@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.BorderPane?>
@@ -25,22 +28,42 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="saveItem" disable="true" mnemonicParsing="false" onAction="#saveFile" text="Save" />
                   <MenuItem fx:id="saveAsItem" mnemonicParsing="false" onAction="#saveFileAs" text="Save As..." />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="exportToWavItem" mnemonicParsing="false" onAction="#exportToWav" text="Export WAV File..." />
             </items>
           </Menu>
           <Menu fx:id="editMenu" mnemonicParsing="false" text="Edit">
             <items>
-              <MenuItem mnemonicParsing="false" text="TODO" />
+                  <MenuItem fx:id="undoItem" mnemonicParsing="false" onAction="#undo" text="Undo" />
+                  <MenuItem fx:id="redoItem" mnemonicParsing="false" onAction="#redo" text="Redo" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="cutItem" mnemonicParsing="false" onAction="#cut" text="Cut" />
+                  <MenuItem fx:id="copyItem" mnemonicParsing="false" onAction="#copy" text="Copy" />
+                  <MenuItem fx:id="pasteItem" mnemonicParsing="false" onAction="#paste" text="Paste" />
+                  <MenuItem fx:id="deleteItem" mnemonicParsing="false" onAction="#delete" text="Delete" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+              <MenuItem fx:id="selectAllItem" mnemonicParsing="false" onAction="#selectAll" text="Select All" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="notePropertiesItem" mnemonicParsing="false" onAction="#openNoteProperties" text="Note Properties" />
             </items>
           </Menu>
             <Menu fx:id="viewMenu" mnemonicParsing="false" text="View">
               <items>
-                <MenuItem fx:id="zoomInItem" mnemonicParsing="false" onAction="#zoomIn" text="Zoom In" />
-                  <MenuItem fx:id="zoomOutItem" mnemonicParsing="false" onAction="#zoomOut" text="Zoom Out" />
+                <MenuItem fx:id="zoomInHorizontallyItem" mnemonicParsing="false" onAction="#zoomInH" text="Zoom In Horizontally" />
+                  <MenuItem fx:id="zoomOutHorizontallyItem" mnemonicParsing="false" onAction="#zoomOutH" text="Zoom Out Horizontally" />
+                  <MenuItem fx:id="zoomInVerticallyItem" mnemonicParsing="false" onAction="#zoomInV" text="Zoom In Vertically" />
+                  <MenuItem fx:id="zoomOutVerticallyItem" mnemonicParsing="false" onAction="#zoomOutV" text="Zoom Out Vertically" />
               </items>
             </Menu>
             <Menu fx:id="projectMenu" mnemonicParsing="false" text="Project">
               <items>
                 <MenuItem fx:id="propertiesItem" mnemonicParsing="false" onAction="#openProperties" text="Properties" />
+              </items>
+            </Menu>
+            <Menu fx:id="pluginsMenu" mnemonicParsing="false" text="Plugins" visible="false">
+              <items>
+                <MenuItem fx:id="openPluginItem" mnemonicParsing="false" onAction="#openPlugin" text="Open Plugin..." />
+                  <Menu fx:id="recentPluginsMenu" disable="true" mnemonicParsing="false" text="Recent Plugins" />
               </items>
             </Menu>
           <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
@@ -54,4 +77,20 @@
    <center>
       <TabPane fx:id="tabs" tabClosingPolicy="ALL_TABS" BorderPane.alignment="CENTER" />
    </center>
+   <bottom>
+      <BorderPane styleClass="status-bar" BorderPane.alignment="CENTER">
+         <left>
+            <Label fx:id="statusLabel">
+               <BorderPane.margin>
+                  <Insets bottom="3.0" left="3.0" right="3.0" top="3.5" />
+               </BorderPane.margin></Label>
+         </left>
+         <right>
+            <ProgressBar fx:id="loadingBar" prefWidth="150.0" progress="0.0" visible="false">
+               <BorderPane.margin>
+                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.5" />
+               </BorderPane.margin></ProgressBar>
+         </right>
+      </BorderPane>
+   </bottom>
 </BorderPane>

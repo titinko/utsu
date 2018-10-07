@@ -52,8 +52,8 @@ public class ModelModule extends AbstractModule {
     @Singleton
     private VoicebankReader provideVoicebankReader(Provider<Voicebank> voicebankProvider) {
         return new VoicebankReader(
-                new File("./assets/voice/Iona_Beta/"),
-                new File("./assets/config/lyric_conversions.txt"),
+                new File("assets/voice/Iona_Beta/"),
+                new File("assets/config/lyric_conversions.txt"),
                 voicebankProvider);
     }
 }

@@ -3,8 +3,8 @@ package com.utsusynth.utsu.files;
 import java.util.regex.Pattern;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.Note;
+import com.utsusynth.utsu.model.song.Song;
 
 /**
  * Reads a song from a Unicode UST 2.0 file.
@@ -62,23 +62,27 @@ public class Ust20Reader {
         boolean outsideMainTrack = false;
         for (int i = noteStart; i < lines.length; i++) {
             String line = lines[i].trim();
-            if (line.startsWith("Delta=")) {
+            if (line.startsWith("Delta=") && !line.equals("Delta=")) {
                 note.setDelta(Integer.parseInt(line.substring("Delta=".length())));
-            } else if (line.startsWith("Duration=")) {
+            } else if (line.startsWith("Duration=") && !line.equals("Duration=")) {
                 note.setDuration(Integer.parseInt(line.substring("Duration=".length())));
-            } else if (line.startsWith("Length=")) {
+            } else if (line.startsWith("Length=") && !line.equals("Length=")) {
                 note.setLength(Integer.parseInt(line.substring("Length=".length())));
             } else if (line.startsWith("Lyric=")) {
                 note.setLyric(line.substring("Lyric=".length()));
-            } else if (line.startsWith("NoteNum=")) {
+            } else if (line.startsWith("NoteNum=") && !line.equals("NoteNum=")) {
                 note.setNoteNum(Integer.parseInt(line.substring("NoteNum=".length())));
-            } else if (line.startsWith("Velocity=")) {
+            } else if (line.startsWith("PreUtterance=") && !line.equals("PreUtterance=")) {
+                note.setPreutter(Double.parseDouble(line.substring("PreUtterance=".length())));
+            } else if (line.startsWith("VoiceOverlap=") && !line.equals("VoiceOverlap=")) {
+                note.setOverlap(Double.parseDouble(line.substring("VoiceOverlap=".length())));
+            } else if (line.startsWith("Velocity=") && !line.equals("Velocity=")) {
                 note.setVelocity(Double.parseDouble(line.substring("Velocity=".length())));
-            } else if (line.startsWith("StartPoint=")) {
+            } else if (line.startsWith("StartPoint=") && !line.equals("StartPoint=")) {
                 note.setStartPoint(Double.parseDouble(line.substring("StartPoint=".length())));
-            } else if (line.startsWith("Intensity=")) {
+            } else if (line.startsWith("Intensity=") && !line.equals("Intensity=")) {
                 note.setIntensity(Integer.parseInt(line.substring("Intensity=".length())));
-            } else if (line.startsWith("Modulation=")) {
+            } else if (line.startsWith("Modulation=") && !line.equals("Modulation=")) {
                 note.setModulation(Integer.parseInt(line.substring("Modulation=".length())));
             } else if (line.startsWith("Flags=")) {
                 note.setNoteFlags(line.substring("Flags=".length()));
@@ -129,7 +133,7 @@ public class Ust20Reader {
         for (int i = settingStart; i < lines.length; i++) {
             String line = lines[i].trim();
             if (line.startsWith("Tempo=")) {
-                builder.setTempo(Double.parseDouble(line.substring(6)));
+                builder.setTempo(Double.parseDouble(line.substring("Tempo=".length())));
             } else if (line.startsWith("ProjectName=")) {
                 builder.setProjectName(line.substring("ProjectName=".length()));
             } else if (line.startsWith("OutFile=")) {

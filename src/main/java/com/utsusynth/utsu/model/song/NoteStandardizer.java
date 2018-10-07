@@ -1,8 +1,8 @@
 package com.utsusynth.utsu.model.song;
 
 import com.google.common.base.Optional;
-import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 
@@ -10,11 +10,7 @@ import com.utsusynth.utsu.model.voicebank.Voicebank;
 public class NoteStandardizer {
 
     // This function should be called in the order: last note -> first note
-    void standardize(
-            Optional<Note> prev,
-            Note note,
-            Optional<Note> next,
-            Voicebank voicebank) {
+    void standardize(Optional<Note> prev, Note note, Optional<Note> next, Voicebank voicebank) {
         double realPreutter = 0;
         double realDuration = note.getDuration();
         double realOverlap = 0;
@@ -29,9 +25,13 @@ public class NoteStandardizer {
         if (config.isPresent()) {
             trueLyric = config.get().getTrueLyric();
 
-            // Cap the preutterance at start of prev note or start of track.
-            realPreutter = Math.min(config.get().getPreutterance(), note.getDelta());
-            realOverlap = config.get().getOverlap();
+            // Cap the real preutterance at start of prev note.
+            // Note preutter and overlap can override those in the config.
+            double preutter = note.getPreutter().isPresent() ? note.getPreutter().get()
+                    : config.get().getPreutterance();
+            realPreutter = prev.isPresent() ? Math.min(preutter, note.getDelta()) : preutter;
+            realOverlap = note.getOverlap().isPresent() ? note.getOverlap().get()
+                    : config.get().getOverlap();
 
             // Check correction factor.
             if (prev.isPresent()) {
@@ -48,6 +48,9 @@ public class NoteStandardizer {
 
             // Case where there is an adjacent next node.
             if (next.isPresent() && areNotesTouching(note, trueLyric, next.get(), voicebank)) {
+                if (next.get().getFadeIn() > realDuration) {
+                    next.get().setFadeIn(realDuration); // Shrink next note's fade in if necessary.
+                }
                 note.setFadeOut(next.get().getFadeIn());
             } else {
                 note.setFadeOut(Math.min(35, realDuration)); // Default fade out.
@@ -57,7 +60,7 @@ public class NoteStandardizer {
             double[] envWidths = note.getEnvelope().getWidths();
             double envLength = realOverlap + envWidths[1] + envWidths[2] + envWidths[4];
             if (envLength > realDuration - envWidths[3]) {
-                double shrinkFactor = (realDuration - envWidths[3]) / envLength;
+                double shrinkFactor = Math.abs(realDuration - envWidths[3]) / envLength;
                 String[] fullEnvelope = note.getFullEnvelope();
                 realOverlap *= shrinkFactor;
                 fullEnvelope[1] = Double.toString(envWidths[1] * shrinkFactor);

@@ -1,9 +1,12 @@
 package com.utsusynth.utsu.model.song;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 
 /**
  * Represents one note in a song. This is primarily a data storage class, so it can be instantiated
@@ -16,6 +19,8 @@ public class Note {
     private int length; // In ms, corresponds with 125 bpm tempo.
     private String lyric;
     private int noteNum; // Encapsulates both key and note.
+    private double preutter; // Optional, use lyric preutter if not set.
+    private double overlap; // Optional, use note overlap if not set.
     private double velocity;
     private double startPoint;
     private int intensity;
@@ -44,6 +49,8 @@ public class Note {
         this.length = -1; // Must be set in builder.
         this.lyric = ""; // Must be set in builder.
         this.noteNum = -1; // Must be set in builder.
+        this.preutter = -1; // Should be ignored if not explicitly set.
+        this.overlap = -1; // Should be ignored if not explicitly set.
         this.velocity = 100;
         this.startPoint = 0;
         this.intensity = 100;
@@ -117,7 +124,40 @@ public class Note {
     }
 
     public int getNoteNum() {
+        if (this.noteNum < 0) {
+            throw new IllegalStateException("Note num was not set!");
+        }
         return this.noteNum;
+    }
+
+    public void setPreutter(double preutter) {
+        this.preutter = preutter;
+    }
+
+    public void clearPreutter() {
+        this.preutter = -1;
+    }
+
+    public Optional<Double> getPreutter() {
+        if (preutter >= 0) {
+            return Optional.of(preutter);
+        }
+        return Optional.absent();
+    }
+
+    public void setOverlap(double overlap) {
+        this.overlap = overlap;
+    }
+
+    public void clearOverlap() {
+        this.overlap = -1;
+    }
+
+    public Optional<Double> getOverlap() {
+        if (overlap >= 0) {
+            return Optional.of(overlap);
+        }
+        return Optional.absent();
     }
 
     public void setVelocity(double velocity) {
@@ -160,6 +200,44 @@ public class Note {
         return this.noteFlags;
     }
 
+    public NoteUpdateData getUpdateData(int curPosition) {
+        return new NoteUpdateData(
+                curPosition,
+                this.trueLyric,
+                getEnvelope(),
+                getPitchbends(),
+                getConfigData());
+    }
+
+    public NoteConfigData getConfigData() {
+        return new NoteConfigData(
+                getPreutter(),
+                getOverlap(),
+                this.velocity,
+                this.startPoint,
+                this.intensity,
+                this.modulation,
+                this.noteFlags);
+    }
+
+    public void setConfigData(NoteConfigData configData) {
+        if (configData.getPreutter().isPresent()) {
+            this.preutter = configData.getPreutter().get();
+        } else {
+            clearPreutter();
+        }
+        if (configData.getOverlap().isPresent()) {
+            this.overlap = configData.getOverlap().get();
+        } else {
+            clearOverlap();
+        }
+        this.velocity = configData.getConsonantVelocity();
+        this.startPoint = configData.getStartPoint();
+        this.intensity = configData.getIntensity();
+        this.modulation = configData.getModulation();
+        this.noteFlags = configData.getNoteFlags();
+    }
+
     public PitchbendData getPitchbends() {
         return new PitchbendData(pbs, pbw, pby, pbm, vibrato);
     }
@@ -175,13 +253,7 @@ public class Note {
     public void setPBS(String[] pbsValues) {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbsValues) {
-            double toAdd;
-            try {
-                toAdd = Double.parseDouble(value);
-            } catch (Exception e) {
-                toAdd = 0;
-            }
-            builder.add(toAdd);
+            builder.add(safeParseDouble(value, 0));
         }
         pbs = builder.build();
     }
@@ -193,13 +265,7 @@ public class Note {
     public void setPBW(String[] pbwValues) {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbwValues) {
-            double toAdd;
-            try {
-                toAdd = Double.parseDouble(value);
-            } catch (Exception e) {
-                toAdd = 0;
-            }
-            builder.add(toAdd);
+            builder.add(safeParseDouble(value, 1));
         }
         pbw = builder.build();
     }
@@ -211,13 +277,7 @@ public class Note {
     public void setPBY(String[] pbyValues) {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbyValues) {
-            double toAdd;
-            try {
-                toAdd = Double.parseDouble(value);
-            } catch (Exception e) {
-                toAdd = 0;
-            }
-            builder.add(toAdd);
+            builder.add(safeParseDouble(value, 0));
         }
         pby = builder.build();
     }
@@ -236,29 +296,26 @@ public class Note {
 
     public void setEnvelope(String[] envelopeValues) {
         // Parse ust envelope values.
-        if (envelopeValues.length > 0) {
-            envelopeWidth[0] = Double.parseDouble(envelopeValues[0]); // p1
-            envelopeWidth[1] = Double.parseDouble(envelopeValues[1]); // p2
-            envelopeWidth[2] = Double.parseDouble(envelopeValues[2]); // p3
-            envelopeHeight[0] = Double.parseDouble(envelopeValues[3]); // v1
-            envelopeHeight[1] = Double.parseDouble(envelopeValues[4]); // v2
-            envelopeHeight[2] = Double.parseDouble(envelopeValues[5]); // v3
+        if (envelopeValues.length > 5) {
+            envelopeWidth[0] = safeParseDouble(envelopeValues[0], envelopeWidth[0]); // p1
+            envelopeWidth[1] = safeParseDouble(envelopeValues[1], envelopeWidth[1]); // p2
+            envelopeWidth[2] = safeParseDouble(envelopeValues[2], envelopeWidth[2]); // p3
+            envelopeHeight[0] = safeParseDouble(envelopeValues[3], envelopeHeight[0]); // v1
+            envelopeHeight[1] = safeParseDouble(envelopeValues[4], envelopeHeight[1]); // v2
+            envelopeHeight[2] = safeParseDouble(envelopeValues[5], envelopeHeight[2]); // v3
         }
         if (envelopeValues.length > 6) {
-            envelopeHeight[3] = Double.parseDouble(envelopeValues[6]); // v4
+            envelopeHeight[3] = safeParseDouble(envelopeValues[6], envelopeHeight[3]); // v4
         }
-        if (envelopeValues.length > 7) {
-            try {
-                // Sometimes this number is set to weird values.
-                envelopeOverlap = Double.parseDouble(envelopeValues[7]); // overlap
-            } catch (Exception e) {
-                envelopeOverlap = 0;
+        if (envelopeValues.length > 8) {
+            if (!envelopeValues[7].equals("%")) {
+                envelopeOverlap = safeParseDouble(envelopeValues[7], envelopeOverlap); // useless
             }
-            envelopeWidth[3] = Double.parseDouble(envelopeValues[8]); // p4
+            envelopeWidth[3] = safeParseDouble(envelopeValues[8], envelopeWidth[3]); // p4
         }
-        if (envelopeValues.length > 9) {
-            envelopeWidth[4] = Double.parseDouble(envelopeValues[9]); // p5
-            envelopeHeight[4] = Double.parseDouble(envelopeValues[10]); // v5
+        if (envelopeValues.length > 10) {
+            envelopeWidth[4] = safeParseDouble(envelopeValues[9], envelopeWidth[4]); // p5
+            envelopeHeight[4] = safeParseDouble(envelopeValues[10], envelopeHeight[4]); // v5
         }
 
         // Try to catch an envelope that's V2/V3 crossfaded.
@@ -290,6 +347,22 @@ public class Note {
         return envelope;
     }
 
+    public double[] getRawFullEnvelope() {
+        double[] envelope = new double[11];
+        envelope[0] = envelopeWidth[0]; // p1
+        envelope[1] = envelopeWidth[1]; // p2
+        envelope[2] = envelopeWidth[2]; // p3
+        envelope[3] = envelopeHeight[0]; // v1
+        envelope[4] = envelopeHeight[1]; // v2
+        envelope[5] = envelopeHeight[2]; // v3
+        envelope[6] = envelopeHeight[3]; // v4
+        envelope[7] = envelopeOverlap; // overlap
+        envelope[8] = envelopeWidth[3]; // p4
+        envelope[9] = envelopeWidth[4]; // p5
+        envelope[10] = envelopeHeight[4]; // v5
+        return envelope;
+    }
+
     public void setEnvelope(EnvelopeData envelopeData) {
         // Ignore the envPreutter and envLength received from the view.
         envelopeWidth = envelopeData.getWidths();
@@ -308,6 +381,10 @@ public class Note {
         envelopeWidth[0] = newFadeIn;
     }
 
+    public double getFadeOut() {
+        return envelopeWidth[3];
+    }
+
     public void setFadeOut(double newFadeOut) {
         envelopeWidth[3] = newFadeOut;
     }
@@ -316,7 +393,7 @@ public class Note {
         for (int i = 0; i < 10; i++) {
             // Leave all unfilled vibrato values as the defaults.
             if (vibratoValues.length > i) {
-                vibrato[i] = Integer.parseInt(vibratoValues[i]);
+                vibrato[i] = RoundUtils.round(safeParseDouble(vibratoValues[i], 0));
             }
         }
     }
@@ -361,20 +438,45 @@ public class Note {
         this.trueLyric = trueLyric;
     }
 
-    public NoteConfigData getConfigData() {
-        return new NoteConfigData(
-                trueLyric,
-                velocity,
-                startPoint,
-                intensity,
-                modulation,
-                noteFlags);
+    private static double safeParseDouble(String fromMe, double fallback) {
+        try {
+            return Double.parseDouble(fromMe);
+        } catch (Exception e) {
+            System.out.println("Warning: failed to parse double from " + fromMe);
+            return fallback;
+        }
     }
 
-    @Override
-    public String toString() {
-        // Crappy string representation of a Note object.
-        return delta + " " + duration + " " + length + " " + lyric + " " + noteNum + " " + velocity
-                + " " + startPoint + " " + intensity + " " + modulation + " " + noteFlags;
+    /**
+     * Validates that the given note has all required values populated.
+     *
+     * @throw IllegalStateException if the note is invalid.
+     */
+    public void validate() {
+        if (this.delta < 0) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid Note: Delta was negative or unset: %s", this.delta));
+        }
+        if (this.duration < 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Invalid Note: Duration was negative or unset: %s",
+                            this.duration));
+        }
+        if (this.length < 0) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid Note: Length was negative or unset: %s", this.length));
+        }
+        if (this.lyric.isEmpty()) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid Note: Lyric was empty or unset: %s", this.lyric));
+        }
+        if (this.noteNum < 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Invalid Note: Note number was negative or unset: %s",
+                            this.noteNum));
+        }
+        // TODO: Validate vibrato.
     }
 }

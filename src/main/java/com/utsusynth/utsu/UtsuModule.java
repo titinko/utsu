@@ -7,11 +7,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.utsusynth.utsu.common.UndoService;
+import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.engine.FrqGenerator;
@@ -23,7 +24,7 @@ public class UtsuModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(UndoService.class).asEagerSingleton();
+        bind(StatusBar.class).asEagerSingleton();
     }
 
     @Provides
@@ -37,16 +38,36 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private Localizer provideLocalizer() {
-        NativeLocale defaultLocale = new NativeLocale(new Locale("en"));
-        ImmutableList<NativeLocale> allLocales =
-                ImmutableList.of(defaultLocale, new NativeLocale(new Locale("ja")));
-        return new Localizer(defaultLocale, allLocales);
+    private IconManager provideIconManager() {
+        return new IconManager(
+                new File("assets/icons/Rewind.png"),
+                new File("assets/icons/RewindPressed.png"),
+                new File("assets/icons/Play.png"),
+                new File("assets/icons/PlayPressed.png"),
+                new File("assets/icons/Pause.png"),
+                new File("assets/icons/PausePressed.png"),
+                new File("assets/icons/Stop.png"),
+                new File("assets/icons/StopPressed.png"));
     }
 
     @Provides
     @Singleton
-    private Engine provideEngine(Resampler resampler, Wavtool wavtool) {
+    private Localizer provideLocalizer() {
+        NativeLocale defaultLocale = new NativeLocale(new Locale("en"));
+        ImmutableList<NativeLocale> allLocales = ImmutableList.of(
+                defaultLocale,
+                new NativeLocale(new Locale("ja")),
+                new NativeLocale(new Locale("es")),
+                new NativeLocale(new Locale("it")),
+                new NativeLocale(new Locale("in")),
+                new NativeLocale(new Locale("zh", "CN")),
+                new NativeLocale(new Locale("zh", "TW")),
+                new NativeLocale(new Locale("pt", "BR")));
+        return new Localizer(defaultLocale, allLocales);
+    }
+
+    @Provides
+    private Engine provideEngine(Resampler resampler, Wavtool wavtool, StatusBar statusBar) {
         String os = System.getProperty("os.name").toLowerCase();
         String resamplerPath;
         String wavtoolPath;
@@ -62,7 +83,13 @@ public class UtsuModule extends AbstractModule {
         }
         File resamplerFile = new File(resamplerPath);
         File wavtoolFile = new File(wavtoolPath);
-        return new Engine(resampler, wavtool, resamplerFile, wavtoolFile);
+        return new Engine(
+                resampler,
+                wavtool,
+                statusBar,
+                /* threadPoolSize= */ 10,
+                resamplerFile,
+                wavtoolFile);
     }
 
     @Provides
@@ -83,12 +110,12 @@ public class UtsuModule extends AbstractModule {
     @Provides
     @Singleton
     private Quantizer provideQuantizer() {
-        return new Quantizer(1);
+        return new Quantizer(4);
     }
 
     @Provides
     @Singleton
     private Scaler provideScaler() {
-        return new Scaler(0.2, 1.0);
+        return new Scaler(2, 0);
     }
 }

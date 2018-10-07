@@ -118,7 +118,11 @@ public class NoteList implements Iterable<Note> {
         }
 
         public Optional<Note> getLatestNote() {
-            return tail.isPresent() ? Optional.of(tail.get().getNote()) : Optional.absent();
+            // Search for an existing non-rest note.
+            if (noteList.head.isPresent() && tail.isPresent()) {
+                return Optional.of(tail.get().getNote());
+            }
+            return Optional.absent();
         }
 
         public int getLatestDelta() {
@@ -143,8 +147,7 @@ public class NoteList implements Iterable<Note> {
      * @return The node that was added.
      * @throws NoteAlreadyExistsException
      */
-    NoteNode insertNote(Note noteToInsert, int deltaToInsert)
-            throws NoteAlreadyExistsException {
+    NoteNode insertNote(Note noteToInsert, int deltaToInsert) throws NoteAlreadyExistsException {
         NoteNode inserted;
         if (!head.isPresent()) {
             this.head = Optional.of(new NoteNode(noteToInsert));
@@ -161,24 +164,35 @@ public class NoteList implements Iterable<Note> {
     }
 
     /**
+     * Adds a note to the note list, starting search at a specific node.
+     */
+    NoteNode insertNote(Note noteToInsert, int deltaToInsert, NoteNode startNode, int startDelta)
+            throws NoteAlreadyExistsException {
+        NoteNode inserted = startNode.insertNote(noteToInsert, deltaToInsert, startDelta);
+        nodeMap.put(deltaToInsert, inserted);
+        return inserted;
+    }
+
+    /**
      * Removes a note from the note list.
      * 
      * @param deltaToRemove
      * @return The node that was removed.
      */
     NoteNode removeNote(int deltaToRemove) {
-        NoteNode removed;
+        NoteNode toRemove;
         if (!head.isPresent()) {
             // TODO: Throw an error here.
             return null;
         } else if (head.get().getNote().getDelta() == deltaToRemove) {
-            removed = this.head.get();
+            toRemove = this.head.get();
             this.head = this.head.get().removeFirstNote();
         } else {
-            removed = head.get().removeNote(deltaToRemove, 0);
+            toRemove = nodeMap.get(deltaToRemove);
+            toRemove.removeNote();
         }
         nodeMap.remove(deltaToRemove);
-        return removed;
+        return toRemove;
     }
 
     /**
@@ -190,6 +204,15 @@ public class NoteList implements Iterable<Note> {
     NoteNode getNote(int deltaOfNote) {
         // TODO: Handle case where note not found at that delta.
         return nodeMap.get(deltaOfNote);
+    }
+
+    /**
+     * Returns the total number of notes in the note list.
+     * 
+     * @return number of notes
+     */
+    int getSize() {
+        return nodeMap.size();
     }
 
     Builder toBuilder() {

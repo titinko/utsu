@@ -1,13 +1,13 @@
 package com.utsusynth.utsu.view.song.note;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.common.PitchUtils;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.view.song.note.portamento.CurveFactory;
+import com.utsusynth.utsu.common.utils.PitchUtils;
+import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
@@ -18,17 +18,13 @@ public class NoteFactory {
     private final Provider<Lyric> lyricProvider;
 
     @Inject
-    public NoteFactory(
-            Scaler scaler,
-            Quantizer quantizer,
-            Provider<Lyric> lyricProvider,
-            CurveFactory curveFactory) {
+    public NoteFactory(Scaler scaler, Quantizer quantizer, Provider<Lyric> lyricProvider) {
         this.scaler = scaler;
         this.quantizer = quantizer;
         this.lyricProvider = lyricProvider;
     }
 
-    public Note createNote(NoteData note, NoteCallback callback) {
+    public Note createNote(NoteData note, NoteCallback callback, BooleanProperty vibratoEditor) {
         int absStart = note.getPosition();
         int absDuration = note.getDuration();
         Rectangle rect = new Rectangle();
@@ -51,29 +47,46 @@ public class NoteFactory {
         layout.setAlignment(Pos.CENTER_LEFT);
         layout.setTranslateY(
                 scaler.scaleY(PitchUtils.pitchToRowNum(note.getPitch()) * Quantizer.ROW_HEIGHT));
-        layout.setTranslateX(scaler.scaleX(absStart));
+        layout.setTranslateX(scaler.scalePos(absStart));
 
         Lyric lyric = lyricProvider.get();
-        Vibrato vibrato;
-        if (note.getPitchbend().isPresent()) {
-            vibrato = new Vibrato(Optional.of(note.getPitchbend().get().getVibrato()));
-        } else {
-            vibrato = new Vibrato(Optional.absent());
-        }
-
-        Note trackNote =
-                new Note(rect, edge, overlap, lyric, vibrato, layout, callback, quantizer, scaler);
+        Note trackNote = new Note(
+                rect,
+                edge,
+                overlap,
+                lyric,
+                layout,
+                callback,
+                vibratoEditor,
+                quantizer,
+                scaler);
         lyric.setVisibleLyric(note.getLyric());
-        if (note.getConfig().isPresent()) {
-            lyric.setVisibleAlias(note.getConfig().get().getTrueLyric());
+        if (note.getTrueLyric().isPresent()) {
+            lyric.setVisibleAlias(note.getTrueLyric().get());
         }
 
+        // Set backup data if applicable.
+        if (note.getEnvelope().isPresent() && note.getPitchbend().isPresent()
+                && note.getConfigData().isPresent()) {
+            trackNote.setBackupData(
+                    new NoteUpdateData(
+                            note.getPosition(),
+                            note.getLyric(),
+                            note.getEnvelope().get(),
+                            note.getPitchbend().get(),
+                            note.getConfigData().get()));
+        }
         return trackNote;
     }
 
-    public Note createDefaultNote(int row, int column, NoteCallback callback) {
+    public Note createDefaultNote(
+            int row,
+            int positionMs,
+            int durationMs,
+            NoteCallback callback,
+            BooleanProperty vibratoEditor) {
         Rectangle note = new Rectangle();
-        note.setWidth(scaler.scaleX(Quantizer.COL_WIDTH) - 1);
+        note.setWidth(scaler.scaleX(durationMs) - 1);
         note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
         note.getStyleClass().addAll("track-note", "invalid", "not-highlighted");
 
@@ -91,13 +104,19 @@ public class NoteFactory {
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
         layout.setTranslateY(scaler.scaleY(row * Quantizer.ROW_HEIGHT));
-        layout.setTranslateX(scaler.scaleX(column * Quantizer.COL_WIDTH));
+        layout.setTranslateX(scaler.scalePos(positionMs));
 
         Lyric lyric = lyricProvider.get();
-        Vibrato vibrato = new Vibrato(Optional.absent());
-
-        Note trackNote =
-                new Note(note, edge, overlap, lyric, vibrato, layout, callback, quantizer, scaler);
+        Note trackNote = new Note(
+                note,
+                edge,
+                overlap,
+                lyric,
+                layout,
+                callback,
+                vibratoEditor,
+                quantizer,
+                scaler);
         lyric.registerLyric();
 
         return trackNote;

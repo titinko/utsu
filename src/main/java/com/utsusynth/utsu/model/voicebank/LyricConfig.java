@@ -10,7 +10,7 @@ import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
  */
 public class LyricConfig implements Comparable<LyricConfig> {
     private final File pathToFile; // example: /Library/Iona.utau/C3/de.wav
-    private final String fileName; // example: C3/de.wqv
+    private final String fileName; // example: C3/de.wav
     private final String trueLyric; // example: de
     private double offset; // Time in wav file before note starts, in ms.
     private double consonant; // Time in wav file before consonant ends, in ms.
@@ -27,8 +27,10 @@ public class LyricConfig implements Comparable<LyricConfig> {
         this(
                 pathToVoicebank,
                 trueLyric,
-                pathToFile.getAbsolutePath()
-                        .substring(pathToVoicebank.getAbsolutePath().length() + 1),
+                pathToFile.toPath().toAbsolutePath().subpath(
+                        // Get part of pathToFile not in pathToVoicebank.
+                        pathToVoicebank.toPath().toAbsolutePath().getNameCount(),
+                        pathToFile.toPath().toAbsolutePath().getNameCount()).toString(),
                 Double.parseDouble(configValues[0]),
                 Double.parseDouble(configValues[1]),
                 Double.parseDouble(configValues[2]),
@@ -90,7 +92,7 @@ public class LyricConfig implements Comparable<LyricConfig> {
                 pathToFile,
                 trueLyric,
                 fileName,
-                hasFrq ? FrqStatus.VALID : FrqStatus.INVALID,
+                hasFrq ? FrqStatus.VALID.toString() : FrqStatus.INVALID.toString(),
                 offset,
                 consonant,
                 cutoff,
