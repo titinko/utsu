@@ -2,6 +2,7 @@ package com.utsusynth.utsu.controller;
 
 import java.io.File;
 import java.util.ResourceBundle;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -33,6 +34,7 @@ public class SongPropertiesController implements Localizable {
     private Engine engine;
     private File resamplerPath;
     private File wavtoolPath;
+    private Optional<File> instrumentalPath;
     private Runnable onSongChange; // Call when applying properties.
 
     @FXML // fx:id="root"
@@ -74,6 +76,12 @@ public class SongPropertiesController implements Localizable {
     @FXML // fx:id="voicebankName"
     private TextField voicebankName; // Value injected by FXMLLoader
 
+    @FXML // fx:id="instrumentalLabel"
+    private Label instrumentalLabel; // Value injected by FXMLLoader
+
+    @FXML // fx:id="instrumentalName"
+    private TextField instrumentalName; // Value injected by FXMLLoader
+
     @FXML // fx:id="tempoLabel"
     private Label tempoLabel;
 
@@ -110,6 +118,7 @@ public class SongPropertiesController implements Localizable {
         resamplerPath = engine.getResamplerPath();
         wavtoolPath = engine.getWavtoolPath();
         voicebankContainer.setVoicebank(songContainer.get().getVoiceDir());
+        instrumentalPath = songContainer.get().getInstrumental();
 
         // Set text boxes.
         projectNameTF.setText(songContainer.get().getProjectName());
@@ -118,6 +127,7 @@ public class SongPropertiesController implements Localizable {
         resamplerName.setText(resamplerPath.getName());
         wavtoolName.setText(wavtoolPath.getName());
         voicebankName.setText(voicebankContainer.get().getName());
+        instrumentalName.setText(instrumentalPath.or(new File("")).getName());
 
         // Setup tempo slider.
         tempoSlider.valueProperty().addListener((event) -> {
@@ -136,6 +146,7 @@ public class SongPropertiesController implements Localizable {
         resamplerLabel.setText(bundle.getString("properties.resampler"));
         wavtoolLabel.setText(bundle.getString("properties.wavtool"));
         voicebankLabel.setText(bundle.getString("properties.voicebank"));
+        instrumentalLabel.setText(bundle.getString("properties.instrumental"));
         tempoLabel.setText(bundle.getString("properties.tempo"));
         applyButton.setText(bundle.getString("general.apply"));
         cancelButton.setText(bundle.getString("general.cancel"));
@@ -182,8 +193,20 @@ public class SongPropertiesController implements Localizable {
                 String name = voicebankContainer.get().getName();
                 Platform.runLater(() -> voicebankName.setText(name));
             }).run();
-            voicebankContainer.setVoicebank(file);
-            voicebankName.setText(voicebankContainer.get().getName());
+        }
+    }
+
+    @FXML
+    void changeInstrumental(ActionEvent event) {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Select sound file");
+        fc.getExtensionFilters().addAll(
+                new ExtensionFilter("Sound files", "*.wav", "*.mp3"),
+                new ExtensionFilter("All Files", "*.*"));
+        File file = fc.showOpenDialog(null);
+        if (file != null) {
+            instrumentalPath = Optional.of(file);
+            instrumentalName.setText(file.getName());
         }
     }
 
@@ -195,7 +218,8 @@ public class SongPropertiesController implements Localizable {
                             .setOutputFile(new File(outputFileTF.getText()))
                             .setFlags(flagsTF.getText())
                             .setVoiceDirectory(voicebankContainer.getLocation())
-                            .setTempo(RoundUtils.round(tempoSlider.getValue())).build());
+                            .setTempo(RoundUtils.round(tempoSlider.getValue()))
+                            .setInstrumental(instrumentalPath).build());
             engine.setResamplerPath(resamplerPath);
             engine.setWavtoolPath(wavtoolPath);
             onSongChange.run();

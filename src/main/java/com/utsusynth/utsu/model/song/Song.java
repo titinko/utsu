@@ -34,6 +34,7 @@ public class Song {
     private File outputFile;
     private String flags;
     private boolean mode2 = true;
+    private Optional<File> instrumental; // Not yet written to UST.
 
     // Set to a value after rendering song, INVALID whenever song changes.
     private RegionBounds lastRenderedRegion = RegionBounds.INVALID;
@@ -88,6 +89,11 @@ public class Song {
             return this;
         }
 
+        public Builder setInstrumental(Optional<File> instrumental) {
+            newSong.instrumental = instrumental;
+            return this;
+        }
+
         public Builder addNote(Note note) {
             Optional<Note> prevNote = noteListBuilder.getLatestNote();
 
@@ -134,6 +140,7 @@ public class Song {
         this.tempo = 125.0;
         this.projectName = "(no title)";
         this.flags = "";
+        this.instrumental = Optional.absent();
     }
 
     public Builder toBuilder() {
@@ -142,7 +149,8 @@ public class Song {
         return new Builder(
                 new Song(this.voicebank, this.standardizer, this.noteList, this.pitchbends))
                         .setTempo(this.tempo).setProjectName(this.projectName)
-                        .setOutputFile(this.outputFile).setFlags(this.flags).setMode2(this.mode2);
+                        .setOutputFile(this.outputFile).setFlags(this.flags).setMode2(this.mode2)
+                        .setInstrumental(this.instrumental);
     }
 
     /**
@@ -362,6 +370,7 @@ public class Song {
         return Optional.absent();
     }
 
+    // Can be changed without converting song to a builder and back.
     public void setRendered(RegionBounds region) {
         this.lastRenderedRegion = region;
     }
@@ -404,6 +413,10 @@ public class Song {
 
     public boolean getMode2() {
         return mode2;
+    }
+
+    public Optional<File> getInstrumental() {
+        return instrumental;
     }
 
     public int getNumNotes() {
