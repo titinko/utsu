@@ -35,6 +35,7 @@ public class Engine {
 
     private final Resampler resampler;
     private final Wavtool wavtool;
+    private final File tempDir;
     private final StatusBar statusBar;
     private final int threadPoolSize;
     private File resamplerPath;
@@ -55,6 +56,16 @@ public class Engine {
         this.threadPoolSize = threadPoolSize;
         this.resamplerPath = resamplerPath;
         this.wavtoolPath = wavtoolPath;
+
+        // Create temporary directory for rendering.
+        tempDir = Files.createTempDir();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                FileUtils.deleteDirectory(tempDir);
+            } catch (IOException e) {
+                errorLogger.logError(e);
+            }
+        }));
     }
 
     public File getResamplerPath() {
@@ -142,17 +153,10 @@ public class Engine {
     }
 
     private Optional<File> render(Song song, RegionBounds bounds) {
-        // Create temporary directory for rendering.
-        File tempDir = Files.createTempDir();
         File renderedSilence = new File(tempDir, "rendered_silence.wav");
+        // TODO: Return old final song if it has not been invalidated.
         File finalSong = new File(tempDir, "final_song.wav");
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                FileUtils.deleteDirectory(tempDir);
-            } catch (IOException e) {
-                errorLogger.logError(e);
-            }
-        }));
+        finalSong.delete(); // Delete any existing rendered song.
 
         // Set up a thread pool for asynchronous rendering.
         ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
