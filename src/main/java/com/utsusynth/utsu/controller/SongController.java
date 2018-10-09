@@ -628,10 +628,10 @@ public class SongController implements EditorController, Localizable {
 
     /** Called whenever a Song is changed. */
     private void onSongChange() {
-        if (callback == null) {
-            return;
+        song.get().setRendered(RegionBounds.INVALID); // Invalidate rendered song cache.
+        if (callback != null) {
+            callback.markChanged(true);
         }
-        callback.markChanged(true);
         if (song.hasPermanentLocation()) {
             menuItemManager.enableSave();
         } else {

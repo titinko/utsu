@@ -35,6 +35,9 @@ public class Song {
     private String flags;
     private boolean mode2 = true;
 
+    // Set to a value after rendering song, INVALID whenever song changes.
+    private RegionBounds lastRenderedRegion = RegionBounds.INVALID;
+
     // Notes. (Anything marked with [#0000]-[#9999], [#TRACKEND] marks the end of these)
     private NoteList noteList;
 
@@ -357,6 +360,14 @@ public class Song {
             return Optional.of(currentPos - curNode.getNote().getDelta());
         }
         return Optional.absent();
+    }
+
+    public void setRendered(RegionBounds region) {
+        this.lastRenderedRegion = region;
+    }
+
+    public RegionBounds getLastRenderedRegion() {
+        return lastRenderedRegion;
     }
 
     public String getProjectName() {

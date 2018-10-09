@@ -153,10 +153,13 @@ public class Engine {
     }
 
     private Optional<File> render(Song song, RegionBounds bounds) {
-        File renderedSilence = new File(tempDir, "rendered_silence.wav");
-        // TODO: Return old final song if it has not been invalidated.
         File finalSong = new File(tempDir, "final_song.wav");
+        if (finalSong.exists() && bounds.equals(song.getLastRenderedRegion())) {
+            // Return old final song if it has not been invalidated.
+            return Optional.of(finalSong);
+        }
         finalSong.delete(); // Delete any existing rendered song.
+        File renderedSilence = new File(tempDir, "rendered_silence.wav");
 
         // Set up a thread pool for asynchronous rendering.
         ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
@@ -298,8 +301,9 @@ public class Engine {
             }
         }
         Platform.runLater(() -> statusBar.setProgress(1.0)); // Mark task as complete.
-        executor.shutdown(); // Shut down thread pool.
+        executor.shutdown(); // Shut down thread pool
 
+        song.setRendered(bounds); // Cache region that was played.
         return Optional.of(finalSong);
     }
 
