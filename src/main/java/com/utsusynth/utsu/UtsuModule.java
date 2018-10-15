@@ -60,6 +60,7 @@ public class UtsuModule extends AbstractModule {
                 new NativeLocale(new Locale("es")),
                 new NativeLocale(new Locale("it")),
                 new NativeLocale(new Locale("in")),
+                new NativeLocale(new Locale("fr", "FR")),
                 new NativeLocale(new Locale("zh", "CN")),
                 new NativeLocale(new Locale("zh", "TW")),
                 new NativeLocale(new Locale("pt", "BR")));
