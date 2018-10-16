@@ -20,7 +20,7 @@ First, you'll need to make sure your computer runs Java.  You can download the l
 ![Here's what the download page should look like.](images/java_screenshot.png)
 You'll need Java 8, not Java 7 or Java 9, and you'll want a JRE, not a JDK.  
 
-NOTE FOR LINUX USERS: You'll need either to download openjdk-8-jre and openjfx (both available in the ubuntu repositories, the names can be different for other distributions) either to download [Oracle Java](https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-get-on-ubuntu-16-04) 
+NOTE FOR LINUX USERS: You'll need to either download openjdk-8-jre and openjfx (both available in the ubuntu repositories, the names can be different for other distributions) or download [Oracle Java](https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-get-on-ubuntu-16-04) 
 
 Next, download the Utsu executable as a ZIP from the [releases page](https://github.com/titinko/utsu/releases).
 
