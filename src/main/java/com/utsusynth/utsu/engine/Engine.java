@@ -24,6 +24,7 @@ import com.utsusynth.utsu.model.voicebank.Voicebank;
 import javafx.application.Platform;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaPlayer.Status;
 import javafx.util.Duration;
 
 public class Engine {
@@ -41,7 +42,8 @@ public class Engine {
     private File resamplerPath;
     private File wavtoolPath;
 
-    private MediaPlayer mediaPlayer; // Used for audio playback;
+    private MediaPlayer instrumentalPlayer; // Used for background music.
+    private MediaPlayer mediaPlayer; // Used for audio playback.
 
     public Engine(
             Resampler resampler,
@@ -110,11 +112,23 @@ public class Engine {
         stopPlayback(); // Clear existing playback, if present.
         Optional<File> finalSong = render(song, bounds);
         if (finalSong.isPresent()) {
+            // Play instrumental, if present.
+            if (song.getInstrumental().isPresent()) {
+                Media instrumental = new Media(song.getInstrumental().get().toURI().toString());
+                System.out.println(instrumental.getSource());
+                instrumentalPlayer = new MediaPlayer(instrumental);
+                instrumentalPlayer.play();
+            }
             Media media = new Media(finalSong.get().toURI().toString());
             mediaPlayer = new MediaPlayer(media);
             mediaPlayer.setOnReady(() -> startCallback.apply(media.getDuration()));
             mediaPlayer.setOnEndOfMedia(() -> mediaPlayer.stop());
-            mediaPlayer.setOnStopped(() -> endCallback.run());
+            mediaPlayer.setOnStopped(() -> {
+                endCallback.run();
+                if (instrumentalPlayer != null) {
+                    instrumentalPlayer.stop();
+                }
+            });
             mediaPlayer.play();
         }
         return finalSong.isPresent();
@@ -124,11 +138,17 @@ public class Engine {
         if (mediaPlayer != null) {
             mediaPlayer.pause();
         }
+        if (instrumentalPlayer != null && instrumentalPlayer.getStatus().equals(Status.PLAYING)) {
+            instrumentalPlayer.pause();
+        }
     }
 
     public void resumePlayback() {
         if (mediaPlayer != null) {
             mediaPlayer.play();
+        }
+        if (instrumentalPlayer != null && instrumentalPlayer.getStatus().equals(Status.PAUSED)) {
+            instrumentalPlayer.play();
         }
     }
 
