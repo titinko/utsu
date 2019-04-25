@@ -346,6 +346,8 @@ public class SongController implements EditorController, Localizable {
 
     @Override
     public void closeEditor() {
+        // Stop any ongoing playback.
+        engine.stopPlayback();
         // Remove this song from local memory.
         song.removeSong();
     }
