@@ -105,7 +105,7 @@
               <outputDirectory>${basedir}/target/assets</outputDirectory>
               <resources>
                 <resource>
-                  <directory>assets/assets</directory>
+                  <directory>assets</directory>
                 </resource>
               </resources>
             </configuration>
