@@ -41,6 +41,7 @@ public class Engine {
     private final int threadPoolSize;
     private File resamplerPath;
     private File wavtoolPath;
+    private File lastRenderedFile = null;
 
     private MediaPlayer instrumentalPlayer; // Used for background music.
     private MediaPlayer mediaPlayer; // Used for audio playback.
@@ -173,12 +174,11 @@ public class Engine {
     }
 
     private Optional<File> render(Song song, RegionBounds bounds) {
-        File finalSong = new File(tempDir, "final_song.wav");
-        if (finalSong.exists() && bounds.equals(song.getLastRenderedRegion())) {
+        if (lastRenderedFile != null && lastRenderedFile.exists() && bounds.equals(song.getLastRenderedRegion())) {
             // Return old final song if it has not been invalidated.
-            return Optional.of(finalSong);
+            return Optional.of(lastRenderedFile);
         }
-        finalSong.delete(); // Delete any existing rendered song.
+
         File renderedSilence = new File(tempDir, "rendered_silence.wav");
 
         // Set up a thread pool for asynchronous rendering.
@@ -189,9 +189,19 @@ public class Engine {
         if (!notes.hasNext()) {
             return Optional.absent();
         }
+        
         int totalDelta = notes.getCurDelta(); // Absolute position of current note.
         Voicebank voicebank = song.getVoicebank();
-        boolean isFirstNote = true;
+        boolean isFirstNote = true;        
+        final File finalSong; // Is the final keyword causing file locking??
+
+        try {
+            finalSong = File.createTempFile("utsu-", ".wav");
+            finalSong.deleteOnExit(); // Required??
+        } catch (IOException ioe) {
+            return Optional.absent();
+        }
+
         while (notes.hasNext()) {
             Note note = notes.next();
             totalDelta += note.getDelta(); // Unique for every note in a single sequence.
@@ -271,6 +281,7 @@ public class Engine {
             futures.add(executor.submit(() -> {
                 // Re-samples lyric and puts result into renderedNote file.
                 File renderedNote = new File(tempDir, "rendered_note" + curTotalDelta + ".wav");
+                renderedNote.deleteOnExit();
                 resampler.resample(
                         resamplerPath,
                         note,
@@ -312,18 +323,27 @@ public class Engine {
         // When resampler finishes, run wavtool on notes in sequential order.
         for (int i = 0; i < futures.size(); i++) {
             try {
-                double curProgress = i * 1.0 / futures.size();
-                Platform.runLater(() -> statusBar.setProgress(curProgress));
+                if (statusBar != null) {
+                // If this is being used as a pure engine, this is not supported
+                    double curProgress = i * 1.0 / futures.size();
+                    Platform.runLater(() -> statusBar.setProgress(curProgress));
+                }
                 futures.get(i).get().run();
             } catch (InterruptedException | ExecutionException e) {
                 errorLogger.logError(e);
                 return Optional.absent();
             }
         }
-        Platform.runLater(() -> statusBar.setProgress(1.0)); // Mark task as complete.
+
+        if (statusBar != null) {
+            // If this is being used as a pure engine, this is not supported
+            Platform.runLater(() -> statusBar.setProgress(1.0)); // Mark task as complete.
+        }
+
         executor.shutdown(); // Shut down thread pool
 
         song.setRendered(bounds); // Cache region that was played.
+        lastRenderedFile = finalSong; // Save this for next time
         return Optional.of(finalSong);
     }
 
