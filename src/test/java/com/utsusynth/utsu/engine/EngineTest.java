@@ -4,25 +4,15 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import com.google.inject.Provider;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.files.VoicebankReader;
 import com.utsusynth.utsu.model.song.NoteList;
 import com.utsusynth.utsu.model.song.NoteStandardizer;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.pitch.PitchCurve;
 import com.utsusynth.utsu.model.song.pitch.portamento.PortamentoFactory;
-import com.utsusynth.utsu.model.voicebank.DisjointLyricSet;
-import com.utsusynth.utsu.model.voicebank.LyricConfigMap;
-import com.utsusynth.utsu.model.voicebank.PitchMap;
-import com.utsusynth.utsu.model.voicebank.Voicebank;
-import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
-import com.utsusynth.utsu.model.voicebank.VoicebankManager;
 
 import org.junit.Test;
 
@@ -54,7 +44,7 @@ public class EngineTest {
         engine.renderWav(song, output);
 
         long originalLength = output.length();
-        assertTrue(originalLength > 500 * 1024);
+        assertTrue("Rendered wav file is too short", originalLength > 500 * 1024);
 
         // Does it get confused if we edit the song and render again?
         ArrayList<NoteData> moreNotes = new ArrayList<>();
@@ -69,8 +59,8 @@ public class EngineTest {
         long newLength = output2.length();
 
         // Has the engine produced sensible output?
-        assertTrue(newLength > originalLength);
-        assertTrue(newLength < 1.5 * originalLength);
+        assertTrue("Edited song has not changed the wav file", newLength > originalLength);
+        assertTrue("Edited song wav file is too long", newLength < 1.5 * originalLength);
     }
 
     private Engine createEngine(ExternalProcessRunner runner) {
@@ -104,43 +94,8 @@ public class EngineTest {
                 wavtoolFile);
     }
 
-    private FrqGenerator createFrqGenerator(ExternalProcessRunner runner) {
-
-        String os = System.getProperty("os.name").toLowerCase();
-        String frqGeneratorPath;
-
-        if (os.contains("win")) {
-            frqGeneratorPath = "assets/win64/frq0003gen.exe";
-        } else if (os.contains("mac")) {
-            frqGeneratorPath = "assets/Mac/frq0003gen";
-        } else {
-            frqGeneratorPath = "assets/linux64/frq0003gen";
-        }
-
-        return new FrqGenerator(runner, new File(frqGeneratorPath), 256);
-    }
-
-    private VoicebankContainer createVoicebankContainer(ExternalProcessRunner runner) {
-
-        LyricConfigMap lyricConfigs = new LyricConfigMap();
-        PitchMap pitchMap = new PitchMap();
-        DisjointLyricSet conversionSet = new DisjointLyricSet();
-        Set<File> soundFiles = new HashSet<>();
-        FrqGenerator frqGenerator = createFrqGenerator(runner);
-
-        Provider<Voicebank> voicebankProvider = () -> new Voicebank(lyricConfigs, pitchMap, conversionSet, soundFiles, frqGenerator);
-
-        File defaultVoicePath = new File("assets/voice/Iona_Beta");
-        File lyricConversionPath = new File("assets/config/lyric_conversions.txt");
-
-        VoicebankReader voicebankReader = new VoicebankReader(defaultVoicePath, lyricConversionPath, voicebankProvider);
-        VoicebankManager voicebankManager = new VoicebankManager();
-
-        return new VoicebankContainer(voicebankManager, voicebankReader);
-    }
-
     private Song createSong(ExternalProcessRunner runner) {
-        return new Song(createVoicebankContainer(runner),
+        return new Song(EngineHelper.createVoicebankContainer(runner, EngineHelper.DEFAULT_VOICE_PATH),
                 new NoteStandardizer(),
                 new NoteList(),
                 new PitchCurve(new PortamentoFactory()));
