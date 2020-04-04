@@ -4,32 +4,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.io.FilenameFilter;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
-import com.google.inject.Provider;
-import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
-import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.engine.EngineHelper;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
-import com.utsusynth.utsu.files.VoicebankReader;
-import com.utsusynth.utsu.model.song.NoteList;
-import com.utsusynth.utsu.model.song.NoteStandardizer;
-import com.utsusynth.utsu.model.song.Song;
-import com.utsusynth.utsu.model.song.pitch.PitchCurve;
-import com.utsusynth.utsu.model.song.pitch.portamento.PortamentoFactory;
-import com.utsusynth.utsu.model.voicebank.DisjointLyricSet;
-import com.utsusynth.utsu.model.voicebank.LyricConfigMap;
-import com.utsusynth.utsu.model.voicebank.PitchMap;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
-import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
-import com.utsusynth.utsu.model.voicebank.VoicebankManager;
 
 import org.junit.Test;
 
@@ -38,6 +22,38 @@ public class VoicebankReaderTest {
     @Test
     public void testVoiceBank() {
         testVoiceBank(EngineHelper.DEFAULT_VOICE_PATH);
+    }
+
+    @Test
+    public void testExtraVoiceBanks() {
+        File voiceDir = new File("src/test/resources/voice");
+        if (!voiceDir.exists()) return;
+
+        testVoiceBankDir(voiceDir);
+    }
+
+    private void testVoiceBankDir(File path) {
+
+        // Recurse through child directories
+        String[] directories = path.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File current, String name) {
+                return new File(current, name).isDirectory();
+            }
+        });
+
+        if (directories != null & directories.length > 0) {
+            // Run this for each child directory
+            for (String dir : directories) {
+                testVoiceBankDir(new File(path.getPath() + "/" + dir));
+            }
+        }
+
+        // Finally, see if this is a voice bank
+        File otoFile = new File(path + "/oto.ini");
+        if (otoFile.exists()) {
+            testVoiceBank(path.toString());
+        }
     }
 
     private void testVoiceBank(String voicePath) {
@@ -51,6 +67,7 @@ public class VoicebankReaderTest {
         // Load a voice bank
         Voicebank bank = reader.loadVoicebankFromDirectory(new File(voicePath));
         assertTrue("Voicebank is null", bank != null);
+        System.out.println("Testing voice bank: " + bank.getDescription());
 
         // Check pitch maps
         Iterator<PitchMapData> pitchDataIterator = bank.getPitchData();

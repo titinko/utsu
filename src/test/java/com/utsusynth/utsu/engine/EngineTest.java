@@ -103,7 +103,7 @@ public class EngineTest {
 
     private File createOutputFile(int index) {
 
-        File output = new File("src/test/output/engine-test-" + index + ".wav");
+        File output = new File("src/test/resources/engine-test-" + index + ".wav");
         File dir = output.getParentFile();
         output.deleteOnExit();
         
