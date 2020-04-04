@@ -36,16 +36,20 @@ import org.junit.Test;
 public class VoicebankReaderTest {
 
     @Test
-    public void TestVoiceBank() {
+    public void testVoiceBank() {
+        testVoiceBank(EngineHelper.DEFAULT_VOICE_PATH);
+    }
+
+    private void testVoiceBank(String voicePath) {
 
         ExternalProcessRunner runner = new ExternalProcessRunner();
 
         // Create a reader
-        VoicebankReader reader = EngineHelper.createVoicebankReader(runner, EngineHelper.DEFAULT_VOICE_PATH);
+        VoicebankReader reader = EngineHelper.createVoicebankReader(runner, voicePath);
         assertTrue("VoicebankReader is null", reader != null);
 
         // Load a voice bank
-        Voicebank bank = reader.loadVoicebankFromDirectory(new File(EngineHelper.DEFAULT_VOICE_PATH));
+        Voicebank bank = reader.loadVoicebankFromDirectory(new File(voicePath));
         assertTrue("Voicebank is null", bank != null);
 
         // Check pitch maps
@@ -64,17 +68,21 @@ public class VoicebankReaderTest {
 
         // Check config data state
         Set<String> categories = bank.getCategories();
+        assertTrue("Too few categories defined", categories.size() > 0);
+
         int lyricDataCount = 0;
         String validFrqStatus = FrqStatus.VALID.toString();
+        boolean shouldTestFrq = !EngineHelper.DEFAULT_VOICE_PATH.equalsIgnoreCase(voicePath);
 
         for (String category : categories) {
 
             Iterator<LyricConfigData> lyricDataIterator = bank.getLyricData(category);
 
-            // Beware - this is destructive!
-            bank.generateFrqs(lyricDataIterator);
-
-            lyricDataIterator = bank.getLyricData(category);
+            if (shouldTestFrq) {
+                // Beware - this is destructive!
+                bank.generateFrqs(lyricDataIterator);
+                lyricDataIterator = bank.getLyricData(category);
+            }
 
             while (lyricDataIterator.hasNext()) {
                 lyricDataCount++;
