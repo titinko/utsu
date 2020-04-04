@@ -67,7 +67,10 @@ public class VoicebankReaderTest {
         // Load a voice bank
         Voicebank bank = reader.loadVoicebankFromDirectory(new File(voicePath));
         assertTrue("Voicebank is null", bank != null);
-        System.out.println("Testing voice bank: " + bank.getDescription());
+        String voiceName = bank.getDescription();
+        if (voiceName == null || voiceName.length() == 0) voiceName = new File(voicePath).getName();
+
+        System.out.println("Testing voice bank: " + voiceName);
 
         // Check pitch maps
         Iterator<PitchMapData> pitchDataIterator = bank.getPitchData();
@@ -89,21 +92,19 @@ public class VoicebankReaderTest {
 
         int lyricDataCount = 0;
         String validFrqStatus = FrqStatus.VALID.toString();
-        boolean shouldTestFrq = !EngineHelper.DEFAULT_VOICE_PATH.equalsIgnoreCase(voicePath);
 
         for (String category : categories) {
 
             Iterator<LyricConfigData> lyricDataIterator = bank.getLyricData(category);
 
-            if (shouldTestFrq) {
-                // Beware - this is destructive!
-                bank.generateFrqs(lyricDataIterator);
-                lyricDataIterator = bank.getLyricData(category);
-            }
-
             while (lyricDataIterator.hasNext()) {
                 lyricDataCount++;
                 LyricConfigData lyricData = lyricDataIterator.next();
+
+                // Make sure the voice file mapping is correct
+                File voiceFile = new File(voicePath + "/" + lyricData.getFileName());
+                assertTrue("Missing voice file for " + lyricData.getLyric(), voiceFile.exists());
+
                 String dataStatus = lyricData.frqStatusProperty().get();
                 assertTrue("LyricConfigData status is " + dataStatus, validFrqStatus.equals(dataStatus));
             }
