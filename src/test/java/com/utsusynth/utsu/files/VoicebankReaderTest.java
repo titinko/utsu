@@ -84,6 +84,9 @@ public class VoicebankReaderTest {
 
         System.out.println("Testing voice bank: " + voiceName);
 
+        assertTrue("Missing name", bank.getName().length() > 0);
+        assertTrue("Missing image", bank.getImageName().length() > 0);
+
         // Check pitch maps
         Iterator<PitchMapData> pitchDataIterator = bank.getPitchData();
         int pitchCount = 0;
