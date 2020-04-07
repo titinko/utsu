@@ -256,9 +256,7 @@ public class Voicebank {
     }
 
     private boolean generateFrq(File wavFile) {
-        String wavName = wavFile.getName();
-        String frqName = wavName.substring(0, wavName.length() - 4) + "_wav.frq";
-        File frqFile = wavFile.getParentFile().toPath().resolve(frqName).toFile();
+        File frqFile = LyricConfig.getFrqFile(wavFile);
         frqGenerator.genFrqFile(wavFile, frqFile);
         if (frqFile.canRead()) {
             soundFiles.remove(frqFile); // Removes existing frq file, if present.
@@ -283,6 +281,13 @@ public class Voicebank {
             } else {
                 data.setFrqStatus(FrqStatus.INVALID);
             }
+        }
+    }
+
+    public void createFrq(File wavFile) {
+        File frqFile = LyricConfig.getFrqFile(wavFile);
+        if (!frqFile.exists()) {
+            generateFrq(wavFile);
         }
     }
 

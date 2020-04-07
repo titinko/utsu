@@ -79,6 +79,21 @@ public class LyricConfig implements Comparable<LyricConfig> {
         return pathToFile;
     }
 
+    public static File getFrqFile(File parent, String wavName) {
+        File wavFile = getWavFile(parent, wavName);
+        return getFrqFile(wavFile);
+    }
+
+    public static File getFrqFile(File wavFile) {
+        String wavName = wavFile.getName();
+        String frqName = wavName.substring(0, wavName.length() - 4) + "_wav.frq";
+        return wavFile.getParentFile().toPath().resolve(frqName).toFile();
+    }
+
+    public static File getWavFile(File parent, String wavName) {
+        return parent.toPath().resolve(wavName).toFile();
+    }
+
     public String getFilename() {
         return fileName;
     }

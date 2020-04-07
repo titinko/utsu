@@ -14,16 +14,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.io.FileUtils;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
+
+import org.apache.commons.io.FileUtils;
 
 public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
@@ -51,7 +54,9 @@ public class VoicebankReader {
     }
 
     public Voicebank loadVoicebankFromDirectory(File sourceDir) {
-        Voicebank.Builder builder = voicebankProvider.get().toBuilder();
+
+        Voicebank bank = voicebankProvider.get();
+        Voicebank.Builder builder = bank.toBuilder();
 
         File pathToVoicebank;
         if (!sourceDir.exists()) {
@@ -102,7 +107,7 @@ public class VoicebankReader {
                             for (String otoName : ImmutableSet.of("oto.ini", "oto_ini.txt")) {
                                 if (path.endsWith(otoName)) {
                                     Path pathToFile = path.toFile().getParentFile().toPath();
-                                    parseOtoIni(pathToVoicebank, pathToFile, otoName, builder);
+                                    parseOtoIni(pathToVoicebank, pathToFile, otoName, builder, bank);
                                     break;
                                 }
                             }
@@ -129,14 +134,27 @@ public class VoicebankReader {
             File pathToVoicebank,
             Path pathToOtoFile,
             String otoFile,
-            Voicebank.Builder builder) {
+            Voicebank.Builder builder,
+            Voicebank bank) {
+
         String otoData = readConfigFile(pathToOtoFile.resolve(otoFile).toFile());
+        ArrayList<String> missingWavFiles = new ArrayList<>();
+
         for (String rawLine : otoData.split("\n")) {
             String line = rawLine.trim();
             Matcher matcher = LYRIC_PATTERN.matcher(line);
             if (matcher.find()) {
                 String fileName = matcher.group(1); // Assuming this is a .wav file
                 String lyricName = matcher.group(2);
+
+                File lyricFile = LyricConfig.getWavFile(pathToVoicebank, fileName);
+
+                // Ignore missing wav files and don't make them available
+                if (!lyricFile.exists()) {
+                    missingWavFiles.add(lyricFile.getName());
+                    continue;
+                }
+
                 if (lyricName.isEmpty()) {
                     // If no alias provided, use the file name as an adhoc alias.
                     lyricName = fileName.substring(0, fileName.length() - 4);
@@ -147,15 +165,24 @@ public class VoicebankReader {
                     continue;
                 }
                 // Search for a frq file.
-                String frqName = fileName.substring(0, fileName.length() - 4) + "_wav.frq";
-                File frqFile = pathToOtoFile.resolve(frqName).toFile();
+                File frqFile = LyricConfig.getFrqFile(lyricFile);
+                if (!frqFile.exists()) {
+                    bank.createFrq(lyricFile);
+                }
+
                 builder.addLyric(
                         new LyricConfig(
                                 pathToVoicebank,
-                                pathToOtoFile.resolve(fileName).toFile(),
+                                lyricFile,
                                 lyricName,
                                 configValues),
                         frqFile.canRead());
+            }
+        }
+
+        if (missingWavFiles.size() > 0) {
+            for (String f : missingWavFiles) {
+                System.out.println("Cound not find: " + f);
             }
         }
     }

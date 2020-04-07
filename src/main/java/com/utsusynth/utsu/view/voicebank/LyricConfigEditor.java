@@ -8,6 +8,8 @@ import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.files.SoundFileReader;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Side;
@@ -348,10 +350,9 @@ public class LyricConfigEditor {
         double msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
 
         // Populate frequency chart data.
-        String wavName = wavFile.getName();
-        String frqName = wavFile.getName().substring(0, wavName.length() - 4) + "_wav.frq";
-        File frqFile = wavFile.getParentFile().toPath().resolve(frqName).toFile();
+        File frqFile = LyricConfig.getFrqFile(wavFile);
         Optional<FrequencyData> frqData = soundFileReader.loadFrqData(frqFile);
+
         // Don't bother populating frq data if there is no wav data.
         if (wavData.isPresent() && frqData.isPresent()) {
             frqSamples.clear();

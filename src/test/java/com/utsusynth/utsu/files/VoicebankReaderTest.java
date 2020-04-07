@@ -51,8 +51,20 @@ public class VoicebankReaderTest {
 
         // Finally, see if this is a voice bank
         File otoFile = new File(path + "/oto.ini");
+
         if (otoFile.exists()) {
-            testVoiceBank(path.toString());
+
+            // Make sure it also has wav files
+            String[] wavFiles = path.list(new FilenameFilter() {
+                @Override
+                public boolean accept(File current, String name) {
+                    return name.endsWith(".wav");
+                }
+            });
+
+            if (wavFiles != null && wavFiles.length > 0) {
+                testVoiceBank(path.toString());
+            }
         }
     }
 
@@ -106,7 +118,7 @@ public class VoicebankReaderTest {
                 assertTrue("Missing voice file for " + lyricData.getLyric(), voiceFile.exists());
 
                 String dataStatus = lyricData.frqStatusProperty().get();
-                assertTrue("LyricConfigData status is " + dataStatus, validFrqStatus.equals(dataStatus));
+                assertTrue("LyricConfigData status is " + dataStatus + ": " + lyricData.getLyric(), validFrqStatus.equals(dataStatus));
             }
         }
 
