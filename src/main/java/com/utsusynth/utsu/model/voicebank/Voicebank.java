@@ -31,6 +31,8 @@ public class Voicebank {
     private String author; // Example: "Lethe"
     private String description; // Contents of readme.txt
     private String imageName; // Example: "img.bmp"
+    private String sampleName;
+    private CharacterData parentData;
 
     public class Builder {
         private final Voicebank newVoicebank;
@@ -61,6 +63,48 @@ public class Voicebank {
 
         public Builder setImageName(String imageName) {
             newVoicebank.imageName = imageName;
+            return this;
+        }
+
+        public Builder setSampleName(String sampleName) {
+            newVoicebank.sampleName = sampleName;
+            return this;
+        }
+
+        public Builder setParent(CharacterData parentData) {
+            newVoicebank.parentData = parentData;
+            return this;
+        }
+
+        public Builder addCharacterData(CharacterData data, CharacterData parentData) {
+
+            newVoicebank.pathToVoicebank = data.getPathToVoicebank();
+            newVoicebank.author = data.getAuthor();
+            newVoicebank.description = data.getDescription();
+            newVoicebank.imageName = data.getImageName();
+            newVoicebank.name = data.getName();
+            newVoicebank.sampleName = data.getSampleName();
+            newVoicebank.parentData = parentData;
+
+            if (parentData != null) {
+
+                if (newVoicebank.description.length() == 0) {
+                    newVoicebank.description = parentData.getDescription();
+                }
+
+                if (newVoicebank.author.length() == 0) {
+                    newVoicebank.author = parentData.getAuthor();
+                }
+
+                if (newVoicebank.imageName.length() == 0 && parentData.getImageName().length() > 0) {
+                    newVoicebank.imageName = "../" + parentData.getImageName();
+                }
+
+                if (newVoicebank.sampleName.length() == 0 && parentData.getSampleName().length() > 0) {
+                    newVoicebank.sampleName = "../" + parentData.getSampleName();
+                }
+            }
+
             return this;
         }
 
@@ -108,6 +152,8 @@ public class Voicebank {
         this.author = "";
         this.description = "";
         this.imageName = "";
+        this.sampleName = "";
+        this.parentData = null;
     }
 
     public Builder toBuilder() {
@@ -121,7 +167,8 @@ public class Voicebank {
                         this.soundFiles,
                         this.frqGenerator)).setPathToVoicebank(this.pathToVoicebank)
                                 .setName(this.name).setAuthor(this.author)
-                                .setDescription(this.description).setImageName(this.imageName);
+                                .setDescription(this.description).setImageName(this.imageName)
+                                .setSampleName(this.sampleName);
     }
 
     /**
@@ -303,12 +350,24 @@ public class Voicebank {
         return imageName;
     }
 
+    public String getSampleName() {
+        return sampleName;
+    }
+
     public String getImagePath() {
         return new File(pathToVoicebank, imageName).getAbsolutePath();
     }
 
+    public String getSamplePath() {
+        return new File(pathToVoicebank, sampleName).getAbsolutePath();
+    }
+
     public String getDescription() {
         return description;
+    }
+
+    public CharacterData getParent() {
+        return parentData;
     }
 
     @Override

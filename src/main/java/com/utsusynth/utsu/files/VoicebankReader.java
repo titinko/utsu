@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.files;
 
+import java.io.CharConversionException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -23,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.model.voicebank.CharacterData;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 
@@ -71,29 +73,15 @@ public class VoicebankReader {
         builder.setPathToVoicebank(pathToVoicebank);
         System.out.println("Parsed voicebank as " + pathToVoicebank);
 
-        // Parse character data in English or Japanese.
-        String characterData =
-                readConfigFile(pathToVoicebank.toPath().resolve("character.txt").toFile());
-        for (String rawLine : characterData.split("\n")) {
-            String line = rawLine.trim();
-            if (line.startsWith("name=")) {
-                builder.setName(line.substring("name=".length()));
-            } else if (line.startsWith("名前：")) {
-                builder.setName(line.substring("名前：".length()));
-            } else if (line.startsWith("author=")) {
-                builder.setAuthor(line.substring("author=".length()));
-            } else if (line.startsWith("CV：")) {
-                builder.setAuthor(line.substring("CV：".length()));
-            } else if (line.startsWith("image=")) {
-                builder.setImageName(line.substring("image=".length()));
-            } else if (line.startsWith("画像：")) {
-                builder.setImageName(line.substring("画像：".length()));
-            }
+        CharacterData characterData = readCharacterData(pathToVoicebank);
+        CharacterData parentData = readCharacterData(pathToVoicebank.getParentFile());
+
+        if (characterData == null) {
+            // There may be no character data in the path
+            characterData = new CharacterData(pathToVoicebank);
         }
 
-        // Parse description.
-        File readmeFile = pathToVoicebank.toPath().resolve("readme.txt").toFile();
-        builder.setDescription(readConfigFile(readmeFile));
+        builder.addCharacterData(characterData, parentData);
 
         // Parse all oto_ini.txt and oto.ini files in arbitrary order.
         try {
@@ -128,6 +116,54 @@ public class VoicebankReader {
         readLyricConversionsFromFile(builder);
 
         return builder.build();
+    }
+
+    private CharacterData readCharacterData(File pathToVoicebank) {
+
+        File characterFile = pathToVoicebank.toPath().resolve("character.txt").toFile();
+        File readmeFile = pathToVoicebank.toPath().resolve("readme.txt").toFile();
+
+        if (!characterFile.exists() && !readmeFile.exists()) {
+            return null;
+        }        
+
+        CharacterData data = new CharacterData(pathToVoicebank);
+
+        if (characterFile.exists()) {
+
+            // Parse character data in English or Japanese.
+            String characterData = readConfigFile(characterFile);
+
+            for (String rawLine : characterData.split("\n")) {
+
+                String line = rawLine.trim();
+
+                if (line.startsWith("name=")) {
+                    data.setName(line.substring("name=".length()));
+                } else if (line.startsWith("名前：")) {
+                    data.setName(line.substring("名前：".length()));
+                } else if (line.startsWith("author=")) {
+                    data.setAuthor(line.substring("author=".length()));
+                } else if (line.startsWith("CV：")) {
+                    data.setAuthor(line.substring("CV：".length()));
+                } else if (line.startsWith("image=")) {
+                    data.setImageName(line.substring("image=".length()));
+                } else if (line.startsWith("画像：")) {
+                    data.setImageName(line.substring("画像：".length()));
+                } else if (line.startsWith("sample=")) {
+                    data.setSampleName(line.substring("sample=".length()));
+                }
+            }
+        }
+
+        if (readmeFile.exists()) {
+            String readme = readConfigFile(readmeFile);
+            if (readme != null && readme.length() > data.getDescription().length()) {
+                data.setDescription(readme);
+            }
+        }
+
+        return data;
     }
 
     private void parseOtoIni(
@@ -181,9 +217,7 @@ public class VoicebankReader {
         }
 
         if (missingWavFiles.size() > 0) {
-            for (String f : missingWavFiles) {
-                System.out.println("Cound not find: " + f);
-            }
+            System.out.println("Cound not find: " + String.join(", ", missingWavFiles));
         }
     }
 
