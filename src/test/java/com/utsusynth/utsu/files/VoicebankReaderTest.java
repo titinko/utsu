@@ -4,7 +4,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -21,7 +21,7 @@ public class VoicebankReaderTest {
 
     @Test
     public void testVoiceBank() {
-        testVoiceBank(EngineHelper.DEFAULT_VOICE_PATH);
+        testVoiceBank(new File(EngineHelper.DEFAULT_VOICE_PATH));
     }
 
     @Test
@@ -29,46 +29,11 @@ public class VoicebankReaderTest {
         File voiceDir = new File("src/test/resources/voice");
         if (!voiceDir.exists()) return;
 
-        testVoiceBankDir(voiceDir);
+        ArrayList<File> voicebankDirs = new VoicebankFileManager().getVoiceBankDirs(voiceDir);
+        voicebankDirs.forEach(d -> testVoiceBank(d));
     }
 
-    private void testVoiceBankDir(File path) {
-
-        // Recurse through child directories
-        String[] directories = path.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File current, String name) {
-                return new File(current, name).isDirectory();
-            }
-        });
-
-        if (directories != null & directories.length > 0) {
-            // Run this for each child directory
-            for (String dir : directories) {
-                testVoiceBankDir(new File(path.getPath() + "/" + dir));
-            }
-        }
-
-        // Finally, see if this is a voice bank
-        File otoFile = new File(path + "/oto.ini");
-
-        if (otoFile.exists()) {
-
-            // Make sure it also has wav files
-            String[] wavFiles = path.list(new FilenameFilter() {
-                @Override
-                public boolean accept(File current, String name) {
-                    return name.endsWith(".wav");
-                }
-            });
-
-            if (wavFiles != null && wavFiles.length > 0) {
-                testVoiceBank(path.toString());
-            }
-        }
-    }
-
-    private void testVoiceBank(String voicePath) {
+    private void testVoiceBank(File voicePath) {
 
         ExternalProcessRunner runner = new ExternalProcessRunner();
 
@@ -77,10 +42,10 @@ public class VoicebankReaderTest {
         assertTrue("VoicebankReader is null", reader != null);
 
         // Load a voice bank
-        Voicebank bank = reader.loadVoicebankFromDirectory(new File(voicePath));
+        Voicebank bank = reader.loadVoicebankFromDirectory(voicePath);
         assertTrue("Voicebank is null", bank != null);
         String voiceName = bank.getDescription();
-        if (voiceName == null || voiceName.length() == 0) voiceName = new File(voicePath).getName();
+        if (voiceName == null || voiceName.length() == 0) voiceName = voicePath.getName();
 
         System.out.println("Testing voice bank: " + voiceName);
 

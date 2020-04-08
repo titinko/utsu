@@ -4,15 +4,21 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.*;
 
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.files.VoicebankFileManager;
+import com.utsusynth.utsu.files.VoicebankReader;
 import com.utsusynth.utsu.model.song.NoteList;
 import com.utsusynth.utsu.model.song.NoteStandardizer;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.pitch.PitchCurve;
 import com.utsusynth.utsu.model.song.pitch.portamento.PortamentoFactory;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
+import com.utsusynth.utsu.model.voicebank.Voicebank;
 
 import org.junit.Test;
 
@@ -25,15 +31,36 @@ public class EngineTest {
 
     @Test
     public void testEngineCreation() {
+        testEngineCreation(new File(EngineHelper.DEFAULT_VOICE_PATH));
+    }
+
+    @Test
+    public void testExtraEngineCreation() {
+        File voiceDir = new File("src/test/resources/voice");
+        if (!voiceDir.exists()) return;
+
+        ArrayList<File> voicebankDirs = new VoicebankFileManager().getVoiceBankDirs(voiceDir);
+        voicebankDirs.forEach(d -> testEngineCreation(d));
+    }
+
+    private void testEngineCreation(File voicePath) {
 
         ExternalProcessRunner runner = new ExternalProcessRunner();
-        Song song = createSong(runner);
+        Song song = createSong(runner, voicePath);
+
+        VoicebankReader reader = EngineHelper.createVoicebankReader(runner, voicePath);
+        Voicebank bank = reader.loadVoicebankFromDirectory(voicePath);
+
+        Iterator<LyricConfig> lyricIterator = bank.getLyricConfigs("Main");
+        ArrayList<LyricConfig> lyricConfig = new ArrayList<>();
+
+        while (lyricIterator.hasNext()) lyricConfig.add(lyricIterator.next());
 
         // Trivial song data
         List<NoteData> notes = new ArrayList<>();
-        notes.add(new NoteData(0, 600, "A4", "わ"));
-        notes.add(new NoteData(600, 1200, "G4", "た"));
-        notes.add(new NoteData(1200, 1800, "F#4", "し"));
+        notes.add(new NoteData(0, 600, "A4", lyricConfig.get(0).getTrueLyric()));
+        notes.add(new NoteData(600, 1200, "G4", lyricConfig.get(1).getTrueLyric()));
+        notes.add(new NoteData(1200, 1800, "F#4", lyricConfig.get(2).getTrueLyric()));
 
         song.addNotes(notes);
         
@@ -48,7 +75,7 @@ public class EngineTest {
 
         // Does it get confused if we edit the song and render again?
         ArrayList<NoteData> moreNotes = new ArrayList<>();
-        moreNotes.add(new NoteData(1800, 2400, "E4", "も"));
+        moreNotes.add(new NoteData(1800, 2400, "E4", lyricConfig.get(3).getTrueLyric()));
         song.addNotes(moreNotes);
 
         // Must do this, otherwise it won't render!
@@ -94,8 +121,8 @@ public class EngineTest {
                 wavtoolFile);
     }
 
-    private Song createSong(ExternalProcessRunner runner) {
-        return new Song(EngineHelper.createVoicebankContainer(runner, EngineHelper.DEFAULT_VOICE_PATH),
+    private Song createSong(ExternalProcessRunner runner, File voicePath) {
+        return new Song(EngineHelper.createVoicebankContainer(runner, voicePath),
                 new NoteStandardizer(),
                 new NoteList(),
                 new PitchCurve(new PortamentoFactory()));

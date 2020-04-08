@@ -17,7 +17,7 @@ public class EngineHelper {
 
     public static final String DEFAULT_VOICE_PATH = "assets/voice/Iona_Beta";
 
-    public static VoicebankReader createVoicebankReader(ExternalProcessRunner runner, String voicePath) {
+    public static VoicebankReader createVoicebankReader(ExternalProcessRunner runner, File voicePath) {
 
         LyricConfigMap lyricConfigs = new LyricConfigMap();
         PitchMap pitchMap = new PitchMap();
@@ -27,10 +27,9 @@ public class EngineHelper {
 
         Provider<Voicebank> voicebankProvider = () -> new Voicebank(lyricConfigs, pitchMap, conversionSet, soundFiles, frqGenerator);
 
-        File defaultVoicePath = new File(voicePath);
         File lyricConversionPath = new File("assets/config/lyric_conversions.txt");
 
-        VoicebankReader voicebankReader = new VoicebankReader(defaultVoicePath, lyricConversionPath, voicebankProvider);
+        VoicebankReader voicebankReader = new VoicebankReader(voicePath, lyricConversionPath, voicebankProvider);
         
         return voicebankReader;
     }
@@ -51,10 +50,10 @@ public class EngineHelper {
         return new FrqGenerator(runner, new File(frqGeneratorPath), 256);
     }
     
-    public static VoicebankContainer createVoicebankContainer(ExternalProcessRunner runner, String voicePath) {
+    public static VoicebankContainer createVoicebankContainer(ExternalProcessRunner runner, File voicePath) {
 
         VoicebankReader voicebankReader = createVoicebankReader(runner, voicePath);
-        VoicebankManager voicebankManager = new VoicebankManager();
+        VoicebankManager voicebankManager = new VoicebankManager(voicebankReader);
 
         return new VoicebankContainer(voicebankManager, voicebankReader);
     }    
