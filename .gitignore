@@ -12,3 +12,4 @@ target/
 /nbactions.xml
 *~
 /src/test/resources/voice/
+/cache/

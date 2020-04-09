@@ -280,16 +280,18 @@ public class Engine {
             final boolean isLastNote = !notes.peekNext().isPresent();
             futures.add(executor.submit(() -> {
                 // Re-samples lyric and puts result into renderedNote file.
-                File renderedNote = new File(tempDir, "rendered_note" + curTotalDelta + ".wav");
-                renderedNote.deleteOnExit();
-                resampler.resample(
+                
+                File defaultOutputFile = new File(tempDir, "rendered_note" + curTotalDelta + ".wav");
+                
+                File renderedNote = resampler.resample(
                         resamplerPath,
                         note,
                         adjustedLength,
                         curConfig,
-                        renderedNote,
+                        defaultOutputFile,
                         pitchString,
                         song);
+
                 Runnable useWavtool = () -> {
                     // Append rendered note to output file using wavtool.
                     wavtool.addNewNote(
@@ -359,9 +361,9 @@ public class Engine {
         }
         double trueDuration = duration * (125.0 / song.getTempo());
         futures.add(executor.submit(() -> {
-            resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
+            File silence = resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
             Runnable useWavtool = () -> {
-                wavtool.addSilence(wavtoolPath, trueDuration, renderedNote, finalSong, false);
+                wavtool.addSilence(wavtoolPath, trueDuration, silence, finalSong, false);
             };
             return useWavtool;
         }));
@@ -377,9 +379,9 @@ public class Engine {
         // The final note must be passed to the wavtool.
         double trueDuration = Math.max(duration, 0) * (125.0 / song.getTempo());
         futures.add(executor.submit(() -> {
-            resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
+            File silence = resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
             Runnable useWavtool = () -> {
-                wavtool.addSilence(wavtoolPath, trueDuration, renderedNote, finalSong, true);
+                wavtool.addSilence(wavtoolPath, trueDuration, silence, finalSong, true);
             };
             return useWavtool;
         }));
