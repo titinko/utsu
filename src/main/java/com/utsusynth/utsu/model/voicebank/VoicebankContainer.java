@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.model.voicebank;
 
 import java.io.File;
+
 import com.google.inject.Inject;
 import com.utsusynth.utsu.files.VoicebankReader;
 

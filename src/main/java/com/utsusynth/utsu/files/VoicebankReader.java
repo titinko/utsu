@@ -1,6 +1,5 @@
 package com.utsusynth.utsu.files;
 
-import java.io.CharConversionException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
