@@ -1,7 +1,9 @@
 package com.utsusynth.utsu.engine;
 
 import java.io.File;
+
 import com.google.inject.Inject;
+import com.utsusynth.utsu.files.FileNameMapper;
 
 public class FrqGenerator {
     private final ExternalProcessRunner runner;
@@ -16,9 +18,13 @@ public class FrqGenerator {
     }
 
     public void genFrqFile(File input, File output) {
+
+        FileNameMapper fileUtils = FileNameMapper.getInstance();
+        String inputFilePath = fileUtils.getOSName(input.getAbsolutePath());
+
         runner.runProcess(
                 frqGeneratorPath.getAbsolutePath(),
-                input.getAbsolutePath(),
+                inputFilePath,
                 output.getAbsolutePath(),
                 Integer.toString(samplesPerFrq));
     }

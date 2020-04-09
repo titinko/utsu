@@ -1,8 +1,10 @@
 package com.utsusynth.utsu.engine;
 
 import java.io.File;
+
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.files.FileNameMapper;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
@@ -25,7 +27,9 @@ public class Resampler {
             File outputFile,
             String pitchString,
             Song song) {
-        String inputFilePath = config.getPathToFile().getAbsolutePath();
+
+        FileNameMapper fileUtils = FileNameMapper.getInstance();
+        String inputFilePath = fileUtils.getOSName(config.getPathToFile().getAbsolutePath());
         String outputFilePath = outputFile.getAbsolutePath();
         String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
         String consonantVelocity = Double.toString(note.getVelocity() * (song.getTempo() / 125));
