@@ -118,7 +118,8 @@ public class EngineTest {
                 /* statusBar= */ null,
                 /* threadPoolSize= */ 10,
                 resamplerFile,
-                wavtoolFile);
+                wavtoolFile,
+                runner);
     }
 
     private Song createSong(ExternalProcessRunner runner, File voicePath) {

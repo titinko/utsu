@@ -2,8 +2,9 @@ package com.utsusynth.utsu.engine;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -11,6 +12,7 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
+import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
@@ -39,6 +41,7 @@ public class Engine {
     private final File tempDir;
     private final StatusBar statusBar;
     private final int threadPoolSize;
+    private final ExternalProcessRunner runner;
     private File resamplerPath;
     private File wavtoolPath;
     private File lastRenderedFile = null;
@@ -46,19 +49,22 @@ public class Engine {
     private MediaPlayer instrumentalPlayer; // Used for background music.
     private MediaPlayer mediaPlayer; // Used for audio playback.
 
+    @Inject
     public Engine(
             Resampler resampler,
             Wavtool wavtool,
             StatusBar statusBar,
             int threadPoolSize,
             File resamplerPath,
-            File wavtoolPath) {
+            File wavtoolPath,
+            ExternalProcessRunner runner) {
         this.resampler = resampler;
         this.wavtool = wavtool;
         this.statusBar = statusBar;
         this.threadPoolSize = threadPoolSize;
         this.resamplerPath = resamplerPath;
         this.wavtoolPath = wavtoolPath;
+        this.runner = runner;
 
         // Create temporary directory for rendering.
         tempDir = Files.createTempDir();
@@ -183,7 +189,7 @@ public class Engine {
 
         // Set up a thread pool for asynchronous rendering.
         ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
-        ArrayList<Future<Runnable>> futures = new ArrayList<>();
+        ArrayList<Future<Callable<String>>> futures = new ArrayList<>();
 
         NoteIterator notes = song.getNoteIterator(bounds);
         if (!notes.hasNext()) {
@@ -194,10 +200,16 @@ public class Engine {
         Voicebank voicebank = song.getVoicebank();
         boolean isFirstNote = true;        
         final File finalSong; // Is the final keyword causing file locking??
+        File wavtoolScript;
 
         try {
             finalSong = File.createTempFile("utsu-", ".wav");
             finalSong.deleteOnExit(); // Required??
+
+            String os = System.getProperty("os.name").toLowerCase();
+            String scriptExtension = os.contains("win") ? ".cmd" : ".sh";    
+            wavtoolScript = File.createTempFile("utsu-", scriptExtension);
+            wavtoolScript.deleteOnExit();
         } catch (IOException ioe) {
             return Optional.absent();
         }
@@ -292,9 +304,9 @@ public class Engine {
                         pitchString,
                         song);
 
-                Runnable useWavtool = () -> {
+                Callable<String> useWavtool = () -> {
                     // Append rendered note to output file using wavtool.
-                    wavtool.addNewNote(
+                    return wavtool.getNewNoteScript(
                             wavtoolPath,
                             song,
                             note,
@@ -322,6 +334,8 @@ public class Engine {
             }
         }
 
+        StringBuffer script = new StringBuffer(futures.size());
+
         // When resampler finishes, run wavtool on notes in sequential order.
         for (int i = 0; i < futures.size(); i++) {
             try {
@@ -330,11 +344,23 @@ public class Engine {
                     double curProgress = i * 1.0 / futures.size();
                     Platform.runLater(() -> statusBar.setProgress(curProgress));
                 }
-                futures.get(i).get().run();
-            } catch (InterruptedException | ExecutionException e) {
+
+                String line = futures.get(i).get().call();
+                if (line != null && line.length() > 0) {
+                    script.append(String.format("%s%n", line));
+                }
+            } catch (Exception e) {
                 errorLogger.logError(e);
                 return Optional.absent();
             }
+        }
+
+        try {
+            FileUtils.writeStringToFile(wavtoolScript, script.toString(), StandardCharsets.UTF_8);
+            runner.runProcess(wavtoolScript.getAbsolutePath());
+        } catch (IOException e) {
+            System.out.println("Error running wavtool script: " + e.getMessage());
+            return Optional.absent();
         }
 
         if (statusBar != null) {
@@ -355,16 +381,14 @@ public class Engine {
             File renderedNote,
             File finalSong,
             ExecutorService executor,
-            ArrayList<Future<Runnable>> futures) {
+            ArrayList<Future<Callable<String>>> futures) {
         if (duration <= 0.0) {
             return;
         }
         double trueDuration = duration * (125.0 / song.getTempo());
         futures.add(executor.submit(() -> {
             File silence = resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
-            Runnable useWavtool = () -> {
-                wavtool.addSilence(wavtoolPath, trueDuration, silence, finalSong, false);
-            };
+            Callable<String> useWavtool = () -> wavtool.getSilenceScript(wavtoolPath, trueDuration, silence, finalSong, false);
             return useWavtool;
         }));
     }
@@ -375,14 +399,12 @@ public class Engine {
             File renderedNote,
             File finalSong,
             ExecutorService executor,
-            ArrayList<Future<Runnable>> futures) {
+            ArrayList<Future<Callable<String>>> futures) {
         // The final note must be passed to the wavtool.
         double trueDuration = Math.max(duration, 0) * (125.0 / song.getTempo());
         futures.add(executor.submit(() -> {
             File silence = resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
-            Runnable useWavtool = () -> {
-                wavtool.addSilence(wavtoolPath, trueDuration, silence, finalSong, true);
-            };
+            Callable<String> useWavtool = () -> wavtool.getSilenceScript(wavtoolPath, trueDuration, silence, finalSong, true);
             return useWavtool;
         }));
     }

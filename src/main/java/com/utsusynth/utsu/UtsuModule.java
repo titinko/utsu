@@ -68,7 +68,7 @@ public class UtsuModule extends AbstractModule {
     }
 
     @Provides
-    private Engine provideEngine(Resampler resampler, Wavtool wavtool, StatusBar statusBar) {
+    private Engine provideEngine(Resampler resampler, Wavtool wavtool, StatusBar statusBar, ExternalProcessRunner runner) {
         String os = System.getProperty("os.name").toLowerCase();
         String resamplerPath;
         String wavtoolPath;
@@ -90,7 +90,8 @@ public class UtsuModule extends AbstractModule {
                 statusBar,
                 /* threadPoolSize= */ 10,
                 resamplerFile,
-                wavtoolFile);
+                wavtoolFile,
+                runner);
     }
 
     @Provides
