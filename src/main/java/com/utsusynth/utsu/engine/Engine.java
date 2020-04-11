@@ -203,13 +203,12 @@ public class Engine {
         File wavtoolScript;
 
         try {
+            // The final rendering goes to this file
             finalSong = File.createTempFile("utsu-", ".wav");
             finalSong.deleteOnExit(); // Required??
 
-            String os = System.getProperty("os.name").toLowerCase();
-            String scriptExtension = os.contains("win") ? ".cmd" : ".sh";    
-            wavtoolScript = File.createTempFile("utsu-", scriptExtension);
-            wavtoolScript.deleteOnExit();
+            // Create a batch script to run all wavtool calls
+            wavtoolScript = getWavtoolScriptFile();
         } catch (IOException ioe) {
             return Optional.absent();
         }
@@ -336,7 +335,7 @@ public class Engine {
 
         StringBuffer script = new StringBuffer(futures.size());
 
-        // When resampler finishes, run wavtool on notes in sequential order.
+        // When resampler finishes, get a line for our wavtool script
         for (int i = 0; i < futures.size(); i++) {
             try {
                 if (statusBar != null) {
@@ -345,6 +344,7 @@ public class Engine {
                     Platform.runLater(() -> statusBar.setProgress(curProgress));
                 }
 
+                // Each operation may return a line to add to the wavtool script
                 String line = futures.get(i).get().call();
                 if (line != null && line.length() > 0) {
                     script.append(String.format("%s%n", line));
@@ -356,10 +356,15 @@ public class Engine {
         }
 
         try {
-            FileUtils.writeStringToFile(wavtoolScript, script.toString(), StandardCharsets.UTF_8);
-            runner.runProcess(wavtoolScript.getAbsolutePath());
+            String scriptLines = script.toString();
+
+            if (scriptLines.length() > 0) {
+                // Take the generated script, write it to the FS, then run it
+                FileUtils.writeStringToFile(wavtoolScript, scriptLines, StandardCharsets.UTF_8);
+                runner.runProcess(wavtoolScript.getAbsolutePath());
+            }
         } catch (IOException e) {
-            System.out.println("Error running wavtool script: " + e.getMessage());
+            errorLogger.logError(e);
             return Optional.absent();
         }
 
@@ -373,6 +378,18 @@ public class Engine {
         song.setRendered(bounds); // Cache region that was played.
         lastRenderedFile = finalSong; // Save this for next time
         return Optional.of(finalSong);
+    }
+
+    private File getWavtoolScriptFile() throws IOException {
+
+        // Create a file to hold our wavtool script
+        String os = System.getProperty("os.name").toLowerCase();
+        String scriptExtension = os.contains("win") ? ".cmd" : ".sh";
+
+        File wavtoolScript = File.createTempFile("utsu-", scriptExtension);
+        wavtoolScript.deleteOnExit();
+
+        return wavtoolScript;
     }
 
     private void addSilence(

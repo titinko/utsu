@@ -91,7 +91,6 @@ public class Resampler {
         return resampleWithCache(args, outputFile);
     }
 
-
     private File resampleWithCache(String[] args, File outputFile) {
 
         File cacheFile;
