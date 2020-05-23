@@ -26,7 +26,7 @@ Next, download the Utsu executable as a ZIP from the [releases page](https://git
 
 Unzip the downloaded file and you should see a JAR file and an assets folder.  Confirm that the assets folder and the Utsu file are in the same parent folder, and double-click the JAR file to start Utsu.  If the program doesn't run properly the first time, try closing and double-clicking the JAR file again.  If it still doesn't work, you can try running it from the terminal:
 > cd /path/to/jarfile<br>
-> java -jar utsu-0.1-jfx.jar
+> java -jar utsu-0.4-jfx.jar
 
 Downloading the JAR file is much more space-efficient than using the installer, if you're worried about that kind of thing.
 
