@@ -1,8 +1,8 @@
 package com.utsusynth.utsu.controller;
 
+import java.util.Optional;
 import java.util.ResourceBundle;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
@@ -328,7 +328,7 @@ public class NotePropertiesController implements Localizable {
             Optional<Double> newPreutter = oldPreutter;
             if (!preutterSlider.isDisabled() && notes.size() == 1) {
                 if (closeEnough(lyricPreutter(note), preutterSlider.getValue())) {
-                    newPreutter = Optional.absent();
+                    newPreutter = Optional.empty();
                 } else {
                     newPreutter = Optional.of(preutterSlider.getValue());
                 }
@@ -337,7 +337,7 @@ public class NotePropertiesController implements Localizable {
             Optional<Double> newOverlap = oldOverlap;
             if (!overlapSlider.isDisabled() && notes.size() == 1) {
                 if (closeEnough(lyricOverlap(note), overlapSlider.getValue())) {
-                    newOverlap = Optional.absent();
+                    newOverlap = Optional.empty();
                 } else {
                     newOverlap = Optional.of(overlapSlider.getValue());
                 }

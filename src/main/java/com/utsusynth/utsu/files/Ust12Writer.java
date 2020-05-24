@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.files;
 
 import java.io.PrintStream;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.utils.RoundUtils;

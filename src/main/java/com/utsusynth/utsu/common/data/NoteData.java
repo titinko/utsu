@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.common.data;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 /**
  * Note data meant to pass information about a note from frontend to backend and vice versa. Not
@@ -23,10 +23,10 @@ public class NoteData {
         this.duration = duration;
         this.pitch = pitch;
         this.lyric = lyric;
-        this.trueLyric = Optional.absent();
-        this.envelope = Optional.absent();
-        this.pitchbend = Optional.absent();
-        this.configData = Optional.absent();
+        this.trueLyric = Optional.empty();
+        this.envelope = Optional.empty();
+        this.pitchbend = Optional.empty();
+        this.configData = Optional.empty();
     }
 
     public NoteData(
@@ -53,10 +53,10 @@ public class NoteData {
         this.duration = duration;
         this.pitch = pitch;
         this.lyric = lyric;
-        this.trueLyric = Optional.absent();
+        this.trueLyric = Optional.empty();
         this.envelope = Optional.of(envelope);
-        this.pitchbend = Optional.absent();
-        this.configData = Optional.absent();
+        this.pitchbend = Optional.empty();
+        this.configData = Optional.empty();
     }
 
     public NoteData(
@@ -69,10 +69,10 @@ public class NoteData {
         this.duration = duration;
         this.pitch = pitch;
         this.lyric = lyric;
-        this.trueLyric = Optional.absent();
-        this.envelope = Optional.absent();
+        this.trueLyric = Optional.empty();
+        this.envelope = Optional.empty();
         this.pitchbend = Optional.of(pitchbend);
-        this.configData = Optional.absent();
+        this.configData = Optional.empty();
     }
 
     public int getPosition() {

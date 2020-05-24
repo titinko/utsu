@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.common.data;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class PitchbendData {

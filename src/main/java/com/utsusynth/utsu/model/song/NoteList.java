@@ -2,7 +2,7 @@ package com.utsusynth.utsu.model.song;
 
 import java.util.HashMap;
 import java.util.Map;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
@@ -23,7 +23,7 @@ public class NoteList implements Iterable<Note> {
 
         private Builder(NoteList noteList) {
             this.noteList = noteList;
-            this.tail = Optional.absent();
+            this.tail = Optional.empty();
             this.totalDelta = 0;
             this.overrideDelta = 0;
         }
@@ -122,7 +122,7 @@ public class NoteList implements Iterable<Note> {
             if (noteList.head.isPresent() && tail.isPresent()) {
                 return Optional.of(tail.get().getNote());
             }
-            return Optional.absent();
+            return Optional.empty();
         }
 
         public int getLatestDelta() {
@@ -135,7 +135,7 @@ public class NoteList implements Iterable<Note> {
     }
 
     public NoteList() {
-        this.head = Optional.absent();
+        this.head = Optional.empty();
         this.nodeMap = new HashMap<>();
     }
 

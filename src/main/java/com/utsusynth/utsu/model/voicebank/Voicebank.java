@@ -3,11 +3,11 @@ package com.utsusynth.utsu.model.voicebank;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
@@ -160,7 +160,7 @@ public class Voicebank {
             return Optional.of(matches.first());
         }
 
-        return Optional.absent();
+        return Optional.empty();
     }
 
     // Finds the vowel sound of a lyric by converting to ASCII and taking the last character.

@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.util.Optional;
 import javax.sound.sampled.AudioFormat.Encoding;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import org.apache.commons.io.FileUtils;
-import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
@@ -24,7 +24,7 @@ public class SoundFileReader {
     public Optional<FrequencyData> loadFrqData(File frqFile) {
         if (!frqFile.canRead()) {
             System.out.println("Warning: frq file not found: " + frqFile.getAbsolutePath());
-            return Optional.absent();
+            return Optional.empty();
         }
         try {
             // Parse header values.
@@ -34,7 +34,7 @@ public class SoundFileReader {
             buffer.get(charBuf);
             if (!"FREQ0003".equals(new String(charBuf))) {
                 System.out.println("Error: used loadFrqData on a non-frq file.");
-                return Optional.absent();
+                return Optional.empty();
             }
             int samplesPerFrq = buffer.getInt(); // Number of samples per frequency value.
             double average = buffer.getDouble(); // Average F0 (pitch) of the sound.
@@ -55,25 +55,25 @@ public class SoundFileReader {
         } catch (IOException e) {
             // TODO: Handle this.
             errorLogger.logError(e);
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 
     public Optional<WavData> loadWavData(File wavFile) {
         if (!wavFile.canRead()) {
             System.out.println("Error: wav file not found!");
-            return Optional.absent();
+            return Optional.empty();
         }
         try (AudioInputStream input = AudioSystem.getAudioInputStream(wavFile)) {
             int numFrames = (int) input.getFrameLength();
             double lengthMs = numFrames / input.getFormat().getFrameRate() * 1000;
             if (input.getFormat().getSampleSizeInBits() != 16) {
                 System.out.println("Error: Does not support sample sizes other than 16 bit.");
-                return Optional.absent();
+                return Optional.empty();
             }
             if (input.getFormat().getEncoding() != Encoding.PCM_SIGNED) {
                 System.out.println("Error: Does not support encodings other than PCM_SIGNED.");
-                return Optional.absent();
+                return Optional.empty();
             }
 
             // Create a buffer to read 16-bit samples.
@@ -81,7 +81,7 @@ public class SoundFileReader {
             int bytesRead = input.read(bytes);
             if (bytesRead < bytes.length) {
                 System.out.println("Error: Could not read entire wav file.");
-                return Optional.absent();
+                return Optional.empty();
             }
             ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
             byteBuffer.order(
@@ -106,7 +106,7 @@ public class SoundFileReader {
         } catch (IOException | UnsupportedAudioFileException e) {
             // TODO: Handle this.
             errorLogger.logError(e);
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 }

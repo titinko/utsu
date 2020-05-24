@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.view.voicebank;
 
 import java.io.File;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.FrequencyData;
@@ -49,7 +49,7 @@ public class LyricConfigEditor {
         this.soundFileReader = soundFileReader;
 
         // Initialize with dummy data.
-        configData = Optional.absent();
+        configData = Optional.empty();
         background = new GridPane();
         chart = new LineChart<>(new NumberAxis(), new NumberAxis());
         chart.setOpacity(0);

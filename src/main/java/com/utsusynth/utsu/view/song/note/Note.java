@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
@@ -372,9 +372,9 @@ public class Note implements Comparable<Note> {
     }
 
     public NoteData getNoteData() {
-        Optional<EnvelopeData> envelopeData = Optional.absent();
-        Optional<PitchbendData> pitchbendData = Optional.absent();
-        Optional<NoteConfigData> configData = Optional.absent();
+        Optional<EnvelopeData> envelopeData = Optional.empty();
+        Optional<PitchbendData> pitchbendData = Optional.empty();
+        Optional<NoteConfigData> configData = Optional.empty();
         if (backupData != null) {
             envelopeData = Optional.of(backupData.getEnvelope());
             pitchbendData = Optional.of(backupData.getPitchbend());
@@ -385,7 +385,7 @@ public class Note implements Comparable<Note> {
                 getDurationMs(),
                 PitchUtils.rowNumToPitch(getRow()),
                 lyric.getLyric(),
-                Optional.absent(),
+                Optional.empty(),
                 envelopeData,
                 pitchbendData,
                 configData);

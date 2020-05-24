@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import com.google.common.base.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
@@ -140,7 +140,7 @@ public class Song {
         this.tempo = 125.0;
         this.projectName = "(no title)";
         this.flags = "";
-        this.instrumental = Optional.absent();
+        this.instrumental = Optional.empty();
     }
 
     public Builder toBuilder() {
@@ -156,7 +156,7 @@ public class Song {
     /**
      * Adds a note or notes to the song object.
      * 
-     * @param toAdd In-order list of notes to add.
+     * @param notesToAdd In-order list of notes to add.
      * @throws NoteAlreadyExistsException
      */
     public void addNotes(List<NoteData> notesToAdd) {
@@ -238,8 +238,8 @@ public class Song {
             }
         }
 
-        Optional<NoteUpdateData> prevNote = Optional.absent();
-        Optional<NoteUpdateData> nextNote = Optional.absent();
+        Optional<NoteUpdateData> prevNote = Optional.empty();
+        Optional<NoteUpdateData> nextNote = Optional.empty();
         // If no neighbors were detected, skip this step.
         if (lastNeighbor >= firstNeighbor) {
             Note firstNote = noteList.getNote(firstNeighbor).getNote();
@@ -279,14 +279,14 @@ public class Song {
 
     public MutateResponse standardizeNotes(int firstPosition, int lastPosition) {
         LinkedList<NoteUpdateData> updatedNotes = new LinkedList<>();
-        Optional<NoteUpdateData> prevNeighbor = Optional.absent();
-        Optional<NoteUpdateData> nextNeighbor = Optional.absent();
+        Optional<NoteUpdateData> prevNeighbor = Optional.empty();
+        Optional<NoteUpdateData> nextNeighbor = Optional.empty();
 
         NoteNode startNode = this.noteList.getNote(lastPosition);
         if (startNode == null) {
             // TODO: Handle this better.
             System.out.println("Could not find last note when standardizing notes!");
-            return new MutateResponse(updatedNotes, Optional.absent(), Optional.absent());
+            return new MutateResponse(updatedNotes, Optional.empty(), Optional.empty());
         }
 
         // Include the next neighbor of the last note, if present.
@@ -359,7 +359,7 @@ public class Song {
         if (curNode != null && curNode.getNext().isPresent()) {
             return Optional.of(currentPos + curNode.getNote().getLength());
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public Optional<Integer> getPrevNote(int currentPos) {
@@ -367,7 +367,7 @@ public class Song {
         if (curNode != null && curNode.getPrev().isPresent()) {
             return Optional.of(currentPos - curNode.getNote().getDelta());
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     // Can be changed without converting song to a builder and back.

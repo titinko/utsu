@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.model.song.pitch;
 
 import java.util.HashMap;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.PitchbendData;

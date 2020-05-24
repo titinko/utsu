@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.view.song.note.pitch;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.scene.Group;

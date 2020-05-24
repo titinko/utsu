@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.model.song.pitch;
 
 import java.util.HashMap;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.utsusynth.utsu.model.song.pitch.portamento.Portamento;
 
 class Pitchbend implements PitchMutation {
@@ -22,7 +22,7 @@ class Pitchbend implements PitchMutation {
 
     private Pitchbend() {
         portamento = new HashMap<>();
-        vibrato = Optional.absent();
+        vibrato = Optional.empty();
     }
 
     void addPortamento(int noteStartMs, Portamento portamento) {
@@ -46,7 +46,7 @@ class Pitchbend implements PitchMutation {
                 maxKey = key;
             }
         }
-        return Optional.fromNullable(portamento.get(maxKey));
+        return Optional.ofNullable(portamento.get(maxKey));
     }
 
     void addVibrato(Vibrato vibrato) {
@@ -60,7 +60,7 @@ class Pitchbend implements PitchMutation {
 
     /** Remove a pitchbend's vibrato. Idempotent. */
     void removeVibrato() {
-        this.vibrato = Optional.absent();
+        this.vibrato = Optional.empty();
     }
 
     boolean isEmpty() {

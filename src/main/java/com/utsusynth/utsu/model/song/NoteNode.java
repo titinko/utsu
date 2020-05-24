@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.model.song;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 
@@ -14,8 +14,8 @@ public class NoteNode {
 
     NoteNode(Note note) {
         this.note = note;
-        this.prev = Optional.absent();
-        this.next = Optional.absent();
+        this.prev = Optional.empty();
+        this.next = Optional.empty();
     }
 
     public Note getNote() {
@@ -133,10 +133,10 @@ public class NoteNode {
         if (this.next.isPresent()) {
             NoteNode nextNode = this.next.get();
             nextNode.note.setDelta(this.note.getDelta() + nextNode.note.getDelta());
-            nextNode.prev = Optional.absent();
+            nextNode.prev = Optional.empty();
             return Optional.of(nextNode);
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**
@@ -157,7 +157,7 @@ public class NoteNode {
             // Deleting the final node.
             NoteNode prevNode = this.prev.get();
             prevNode.note.safeSetLength(prevNode.note.getDuration());
-            prevNode.next = Optional.absent();
+            prevNode.next = Optional.empty();
         } else if (this.next.isPresent()) {
             // TODO: Throw error.
             System.out.println("ERROR: Tried to delete first node from inside SongNode!");
@@ -174,7 +174,7 @@ public class NoteNode {
     }
 
     private static Optional<Note> getOptionalNote(Optional<NoteNode> fromNode) {
-        Optional<Note> maybeNote = Optional.absent();
+        Optional<Note> maybeNote = Optional.empty();
         if (fromNode.isPresent()) {
             maybeNote = Optional.of(fromNode.get().getNote());
         }

@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.common.data;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class MutateResponse {
     private final Iterable<NoteUpdateData> notes;

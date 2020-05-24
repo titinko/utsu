@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.common.data;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class EnvelopeData {
     private final Optional<Double> envPreutter;
@@ -10,8 +10,8 @@ public class EnvelopeData {
 
     public EnvelopeData(double[] envWidths, double[] envHeights) {
         // TODO: Add more parameter checking here, don't just assume the inputs make sense.
-        this.envPreutter = Optional.absent();
-        this.envLength = Optional.absent();
+        this.envPreutter = Optional.empty();
+        this.envLength = Optional.empty();
         this.widths = envWidths;
         this.heights = envHeights;
     }

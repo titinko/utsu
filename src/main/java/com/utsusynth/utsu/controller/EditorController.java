@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.controller;
 
 import java.io.File;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import javafx.scene.input.KeyEvent;
 

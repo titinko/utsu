@@ -7,9 +7,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.Optional;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.io.Files;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
@@ -187,7 +187,7 @@ public class Engine {
 
         NoteIterator notes = song.getNoteIterator(bounds);
         if (!notes.hasNext()) {
-            return Optional.absent();
+            return Optional.empty();
         }
         
         int totalDelta = notes.getCurDelta(); // Absolute position of current note.
@@ -199,7 +199,7 @@ public class Engine {
             finalSong = File.createTempFile("utsu-", ".wav");
             finalSong.deleteOnExit(); // Required??
         } catch (IOException ioe) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
         while (notes.hasNext()) {
@@ -207,7 +207,7 @@ public class Engine {
             totalDelta += note.getDelta(); // Unique for every note in a single sequence.
 
             // Get lyric config.
-            Optional<LyricConfig> config = Optional.absent();
+            Optional<LyricConfig> config = Optional.empty();
             if (!note.getTrueLyric().isEmpty()) {
                 config = voicebank.getLyricConfig(note.getTrueLyric());
             }
@@ -223,7 +223,7 @@ public class Engine {
 
             // Find preutterance of current and next notes.
             double preutter = note.getRealPreutter();
-            Optional<Double> nextPreutter = Optional.absent();
+            Optional<Double> nextPreutter = Optional.empty();
             if (notes.peekNext().isPresent()) {
                 nextPreutter = Optional.of(notes.peekNext().get().getRealPreutter());
             }
@@ -328,7 +328,7 @@ public class Engine {
                 futures.get(i).get().run();
             } catch (InterruptedException | ExecutionException e) {
                 errorLogger.logError(e);
-                return Optional.absent();
+                return Optional.empty();
             }
         }
         Platform.runLater(() -> statusBar.setProgress(1.0)); // Mark task as complete.

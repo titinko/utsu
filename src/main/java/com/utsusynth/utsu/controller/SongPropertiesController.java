@@ -1,8 +1,8 @@
 package com.utsusynth.utsu.controller;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.ResourceBundle;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -127,7 +127,7 @@ public class SongPropertiesController implements Localizable {
         resamplerName.setText(resamplerPath.getName());
         wavtoolName.setText(wavtoolPath.getName());
         voicebankName.setText(voicebankContainer.get().getName());
-        instrumentalName.setText(instrumentalPath.or(new File("")).getName());
+        instrumentalName.setText(instrumentalPath.orElse(new File("")).getName());
 
         // Setup tempo slider.
         tempoSlider.valueProperty().addListener((event) -> {

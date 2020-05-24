@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.model.song;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
@@ -142,7 +142,7 @@ public class Note {
         if (preutter >= 0) {
             return Optional.of(preutter);
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public void setOverlap(double overlap) {
@@ -157,7 +157,7 @@ public class Note {
         if (overlap >= 0) {
             return Optional.of(overlap);
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public void setVelocity(double velocity) {

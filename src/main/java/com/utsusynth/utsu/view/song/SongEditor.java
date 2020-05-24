@@ -3,9 +3,9 @@ package com.utsusynth.utsu.view.song;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -460,7 +460,7 @@ public class SongEditor {
         if (!highlightedNotes.isEmpty()) {
             return Optional.of(highlightedNotes.get(0).getAbsPositionMs());
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public void focusOnNote(int position) {

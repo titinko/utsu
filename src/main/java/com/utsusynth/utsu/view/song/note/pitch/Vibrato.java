@@ -3,7 +3,7 @@ package com.utsusynth.utsu.view.song.note.pitch;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Function;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import javafx.beans.binding.DoubleExpression;
@@ -63,7 +63,7 @@ public class Vibrato {
         vibratoPath.setMouseTransparent(true);
         redrawVibrato();
 
-        editor = Optional.absent();
+        editor = Optional.empty();
         editorGroup = new Group();
         // editorGroup.setOnMouseExited(event -> editorGroup.getScene().setCursor(Cursor.DEFAULT));
         redrawEditor();
@@ -88,7 +88,7 @@ public class Vibrato {
     public Optional<int[]> getVibrato() {
         // Return absent if vibrato cannot render properly.
         if (vibrato.length != 10 || vibrato[1] == 0) {
-            return Optional.absent();
+            return Optional.empty();
         }
         for (int value : vibrato) {
             if (value != 0) {
@@ -96,7 +96,7 @@ public class Vibrato {
             }
         }
         // Return absent if all vibrato values are 0.
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public void addDefaultVibrato() {
@@ -227,7 +227,7 @@ public class Vibrato {
             editor = Optional.of(new Editor());
             editorGroup.getChildren().setAll(editor.get().render());
         } else {
-            editor = Optional.absent();
+            editor = Optional.empty();
             editorGroup.getChildren().clear();
         }
     }

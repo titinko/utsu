@@ -13,11 +13,11 @@ import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.RegionBounds;
@@ -486,7 +486,7 @@ public class SongController implements EditorController, Localizable {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
                 statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
-                return Optional.absent();
+                return Optional.empty();
             }
             new Thread(() -> {
                 try {
@@ -533,7 +533,7 @@ public class SongController implements EditorController, Localizable {
             }).start();
             return Optional.of(file.getName());
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
@@ -565,7 +565,7 @@ public class SongController implements EditorController, Localizable {
                     errorLogger.logError(e);
                 }
             }).start();
-            return Optional.absent();
+            return Optional.empty();
         } else {
             // Default to "Save As" if no permanent location found.
             return saveAs();
@@ -595,7 +595,7 @@ public class SongController implements EditorController, Localizable {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
                 statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
-                return Optional.absent();
+                return Optional.empty();
             }
             ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
             String charset = chosenFormat.getDescription().contains("Shift JIS") ? "SJIS" : "UTF-8";
@@ -625,7 +625,7 @@ public class SongController implements EditorController, Localizable {
             // File name may have changed, so just return new file name.
             return Optional.of(file.getName());
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /** Called whenever a Song is changed. */
@@ -876,7 +876,7 @@ public class SongController implements EditorController, Localizable {
             invokePlugin(file);
             return Optional.of(file);
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.model.song;
 
 import java.util.Iterator;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.utsusynth.utsu.common.RegionBounds;
 
 /**
@@ -17,7 +17,7 @@ public class NoteIterator implements Iterator<Note> {
 
     NoteIterator(Optional<NoteNode> startNode, RegionBounds bounds) {
         this.bounds = bounds;
-        this.prevNode = Optional.absent();
+        this.prevNode = Optional.empty();
         this.curNode = startNode;
         this.curIndex = 0;
         this.curDelta = 0;
@@ -56,7 +56,7 @@ public class NoteIterator implements Iterator<Note> {
             int futureDelta = curDelta + curNode.get().getNote().getDelta();
             int futureDuration = curNode.get().getNote().getDuration();
             if (!bounds.intersects(futureDelta, futureDelta + futureDuration)) {
-                curNode = Optional.absent();
+                curNode = Optional.empty();
             }
         }
 
@@ -74,7 +74,7 @@ public class NoteIterator implements Iterator<Note> {
     /** Look at the previous node without proceeding in iterator. */
     public Optional<Note> peekPrev() {
         if (!prevNode.isPresent() || !prevNode.get().getPrev().isPresent()) {
-            return Optional.absent();
+            return Optional.empty();
         } else {
             return Optional.of(prevNode.get().getPrev().get().getNote());
         }
@@ -83,7 +83,7 @@ public class NoteIterator implements Iterator<Note> {
     /** Look at the next node without proceeding in iterator. */
     public Optional<Note> peekNext() {
         if (!curNode.isPresent()) {
-            return Optional.absent();
+            return Optional.empty();
         } else {
             return Optional.of(curNode.get().getNote());
         }
