@@ -1,1 +1,1 @@
-Please leave this asset folder in the same directory as the Utsu JAR executable.
+Contains the default resampler, wavtool and voicebank.  Currently supports 64-bit versions of Mac, Windows, and Linux.
