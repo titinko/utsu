@@ -1,9 +1,8 @@
 package com.utsusynth.utsu;
 
-import java.io.File;
-import java.io.InputStream;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.utsusynth.utsu.controller.UtsuController;
 import com.utsusynth.utsu.model.ModelModule;
 import com.utsusynth.utsu.view.ViewModule;
@@ -17,27 +16,31 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+import java.io.File;
+import java.io.InputStream;
+
 /**
  * UTAU-ish Thingy with Some Updates (UTSU)
  */
 public class UtsuApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Warn users if they're using the wrong working directory.
-        if (!new File("./assets").exists()) {
-            System.out.println("Current working directory: " + System.getProperty("user.dir"));
-            System.out.println("Please cd to JAR file's parent directory before running Utsu.");
+        // Set up Guice.
+        Injector injector =
+                Guice.createInjector(new UtsuModule(), new ModelModule(), new ViewModule());
+
+        // Return an error if assets folder can't be found.
+        File assetPath = injector.getInstance(Key.get(File.class, UtsuModule.AssetPath.class));
+        if (!assetPath.exists()) {
+            System.out.println("Error: assets directory not found.");
+            System.out.println("Please cd to the parent directory of the assets folder.");
             primaryStage.show();
             primaryStage.close();
             return;
         }
 
-        // Set up Guice.
-        Injector injector =
-                Guice.createInjector(new UtsuModule(), new ModelModule(), new ViewModule());
-        FXMLLoader loader = injector.getInstance(FXMLLoader.class);
-
         // Construct scene.
+        FXMLLoader loader = injector.getInstance(FXMLLoader.class);
         InputStream fxml = getClass().getResourceAsStream("/fxml/UtsuScene.fxml");
         BorderPane pane = loader.load(fxml);
         Scene scene = new Scene(pane);
@@ -48,7 +51,7 @@ public class UtsuApp extends Application {
         primaryStage.setTitle("Utsu");
         primaryStage.show();
 
-        UtsuController controller = (UtsuController) loader.getController();
+        UtsuController controller = loader.getController();
 
         // Set up an event that runs every time a non-text-input key is pressed.
         primaryStage.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {

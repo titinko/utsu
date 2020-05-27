@@ -1,26 +1,33 @@
 package com.utsusynth.utsu;
 
-import java.io.File;
-import java.util.Locale;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import com.google.inject.*;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.common.IconManager;
-import com.utsusynth.utsu.engine.Engine;
-import com.utsusynth.utsu.engine.ExternalProcessRunner;
-import com.utsusynth.utsu.engine.FrqGenerator;
-import com.utsusynth.utsu.engine.Resampler;
-import com.utsusynth.utsu.engine.Wavtool;
+import com.utsusynth.utsu.engine.*;
+import com.utsusynth.utsu.files.VoicebankReader;
+import com.utsusynth.utsu.model.voicebank.Voicebank;
 import javafx.fxml.FXMLLoader;
 
+import java.io.File;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.Locale;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+
 public class UtsuModule extends AbstractModule {
+    @BindingAnnotation
+    @Target({PARAMETER, METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface AssetPath {
+    }
 
     @Override
     protected void configure() {
@@ -37,17 +44,33 @@ public class UtsuModule extends AbstractModule {
     }
 
     @Provides
+    @AssetPath
+    private File provideAssetPath() {
+        if (new File("./assets").exists()) {
+            return new File("./assets");
+        }
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return new File("/Program Files/Utsu/app/assets");
+        } else if (os.contains("mac")) {
+            return new File("/Applications/Utsu.app/Contents/app/assets");
+        } else {
+            return new File("/opt/Utsu/app/assets");
+        }
+    }
+
+    @Provides
     @Singleton
-    private IconManager provideIconManager() {
+    private IconManager provideIconManager(@AssetPath File assetPath) {
         return new IconManager(
-                new File("assets/icons/Rewind.png"),
-                new File("assets/icons/RewindPressed.png"),
-                new File("assets/icons/Play.png"),
-                new File("assets/icons/PlayPressed.png"),
-                new File("assets/icons/Pause.png"),
-                new File("assets/icons/PausePressed.png"),
-                new File("assets/icons/Stop.png"),
-                new File("assets/icons/StopPressed.png"));
+                new File(assetPath, "icons/Rewind.png"),
+                new File(assetPath, "icons/RewindPressed.png"),
+                new File(assetPath, "icons/Play.png"),
+                new File(assetPath, "icons/PlayPressed.png"),
+                new File(assetPath, "icons/Pause.png"),
+                new File(assetPath, "icons/PausePressed.png"),
+                new File(assetPath, "icons/Stop.png"),
+                new File(assetPath, "icons/StopPressed.png"));
     }
 
     @Provides
@@ -68,44 +91,42 @@ public class UtsuModule extends AbstractModule {
     }
 
     @Provides
-    private Engine provideEngine(Resampler resampler, Wavtool wavtool, StatusBar statusBar) {
+    private Engine provideEngine(Resampler resampler, Wavtool wavtool, StatusBar statusBar, @AssetPath File assetPath) {
         String os = System.getProperty("os.name").toLowerCase();
-        String resamplerPath;
-        String wavtoolPath;
+        File resamplerPath;
+        File wavtoolPath;
         if (os.contains("win")) {
-            resamplerPath = "assets/win64/macres.exe";
-            wavtoolPath = "assets/win64/wavtool-yawu.exe";
+            resamplerPath = new File(assetPath, "win64/macres.exe");
+            wavtoolPath = new File(assetPath, "win64/wavtool-yawu.exe");
         } else if (os.contains("mac")) {
-            resamplerPath = "assets/Mac/macres";
-            wavtoolPath = "assets/Mac/wavtool-yawu";
+            resamplerPath = new File(assetPath, "Mac/macres");
+            wavtoolPath = new File(assetPath, "Mac/wavtool-yawu");
         } else {
-            resamplerPath = "assets/linux64/macres";
-            wavtoolPath = "assets/linux64/wavtool-yawu";
+            resamplerPath = new File(assetPath, "linux64/macres");
+            wavtoolPath = new File(assetPath, "linux64/wavtool-yawu");
         }
-        File resamplerFile = new File(resamplerPath);
-        File wavtoolFile = new File(wavtoolPath);
         return new Engine(
                 resampler,
                 wavtool,
                 statusBar,
                 /* threadPoolSize= */ 10,
-                resamplerFile,
-                wavtoolFile);
+                resamplerPath,
+                wavtoolPath);
     }
 
     @Provides
     @Singleton
-    private FrqGenerator provideFrqGenerator(ExternalProcessRunner runner) {
+    private FrqGenerator provideFrqGenerator(ExternalProcessRunner runner, @AssetPath File assetPath) {
         String os = System.getProperty("os.name").toLowerCase();
-        String frqGeneratorPath;
+        File frqGeneratorPath;
         if (os.contains("win")) {
-            frqGeneratorPath = "assets/win64/frq0003gen.exe";
+            frqGeneratorPath = new File(assetPath, "win64/frq0003gen.exe");
         } else if (os.contains("mac")) {
-            frqGeneratorPath = "assets/Mac/frq0003gen";
+            frqGeneratorPath = new File(assetPath, "Mac/frq0003gen");
         } else {
-            frqGeneratorPath = "assets/linux64/frq0003gen";
+            frqGeneratorPath = new File(assetPath, "linux64/frq0003gen");
         }
-        return new FrqGenerator(runner, new File(frqGeneratorPath), 256);
+        return new FrqGenerator(runner, frqGeneratorPath, 256);
     }
 
     @Provides
@@ -118,5 +139,14 @@ public class UtsuModule extends AbstractModule {
     @Singleton
     private Scaler provideScaler() {
         return new Scaler(2, 0);
+    }
+
+    @Provides
+    @Singleton
+    private VoicebankReader provideVoicebankReader(Provider<Voicebank> voicebankProvider, @AssetPath File assetPath) {
+        return new VoicebankReader(
+                new File(assetPath, "voice/Iona_Beta/"),
+                new File(assetPath, "config/lyric_conversions.txt"),
+                voicebankProvider);
     }
 }

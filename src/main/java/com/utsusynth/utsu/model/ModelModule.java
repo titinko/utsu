@@ -1,13 +1,9 @@
 package com.utsusynth.utsu.model;
 
-import java.io.File;
 import java.util.HashSet;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.utsusynth.utsu.engine.FrqGenerator;
-import com.utsusynth.utsu.files.VoicebankReader;
 import com.utsusynth.utsu.model.song.NoteList;
 import com.utsusynth.utsu.model.song.NoteStandardizer;
 import com.utsusynth.utsu.model.song.Song;
@@ -46,14 +42,5 @@ public class ModelModule extends AbstractModule {
             DisjointLyricSet conversionSet,
             FrqGenerator frqGen) {
         return new Voicebank(configMap, pitchMap, conversionSet, new HashSet<>(), frqGen);
-    }
-
-    @Provides
-    @Singleton
-    private VoicebankReader provideVoicebankReader(Provider<Voicebank> voicebankProvider) {
-        return new VoicebankReader(
-                new File("assets/voice/Iona_Beta/"),
-                new File("assets/config/lyric_conversions.txt"),
-                voicebankProvider);
     }
 }
