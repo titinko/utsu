@@ -19,22 +19,22 @@ public class IconManager {
     private final Image stopImagePressed;
 
     public IconManager(
-            File rewindPath,
-            File rewindPathPressed,
-            File playPath,
-            File playPathPressed,
-            File pausePath,
-            File pausePathPressed,
-            File stopPath,
-            File stopPathPressed) {
-        this.rewindImage = new Image("file:" + rewindPath.getAbsolutePath());
-        this.rewindImagePressed = new Image("file:" + rewindPathPressed.getAbsolutePath());
-        this.playImage = new Image("file:" + playPath.getAbsolutePath());
-        this.playImagePressed = new Image("file:" + playPathPressed.getAbsolutePath());
-        this.pauseImage = new Image("file:" + pausePath.getAbsolutePath());
-        this.pauseImagePressed = new Image("file:" + pausePathPressed.getAbsolutePath());
-        this.stopImage = new Image("file:" + stopPath.getAbsolutePath());
-        this.stopImagePressed = new Image("file:" + stopPathPressed.getAbsolutePath());
+            String rewindPath,
+            String rewindPathPressed,
+            String playPath,
+            String playPathPressed,
+            String pausePath,
+            String pausePathPressed,
+            String stopPath,
+            String stopPathPressed) {
+        this.rewindImage = new Image(getClass().getResourceAsStream(rewindPath));
+        this.rewindImagePressed = new Image(getClass().getResourceAsStream(rewindPathPressed));
+        this.playImage = new Image(getClass().getResourceAsStream(playPath));
+        this.playImagePressed = new Image(getClass().getResourceAsStream(playPathPressed));
+        this.pauseImage = new Image(getClass().getResourceAsStream(pausePath));
+        this.pauseImagePressed = new Image(getClass().getResourceAsStream(pausePathPressed));
+        this.stopImage = new Image(getClass().getResourceAsStream(stopPath));
+        this.stopImagePressed = new Image(getClass().getResourceAsStream(stopPathPressed));
     }
 
     public Image getImage(IconType type) {

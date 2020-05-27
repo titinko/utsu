@@ -63,14 +63,14 @@ public class UtsuModule extends AbstractModule {
     @Singleton
     private IconManager provideIconManager(@AssetPath File assetPath) {
         return new IconManager(
-                new File(assetPath, "icons/Rewind.png"),
-                new File(assetPath, "icons/RewindPressed.png"),
-                new File(assetPath, "icons/Play.png"),
-                new File(assetPath, "icons/PlayPressed.png"),
-                new File(assetPath, "icons/Pause.png"),
-                new File(assetPath, "icons/PausePressed.png"),
-                new File(assetPath, "icons/Stop.png"),
-                new File(assetPath, "icons/StopPressed.png"));
+                "/icons/Rewind.png",
+                "/icons/RewindPressed.png",
+                "/icons/Play.png",
+                "/icons/PlayPressed.png",
+                "/icons/Pause.png",
+                "/icons/PausePressed.png",
+                "/icons/Stop.png",
+                "/icons/StopPressed.png");
     }
 
     @Provides
