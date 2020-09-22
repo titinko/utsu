@@ -50,7 +50,8 @@ public class ExternalProcessRunner {
                 String line = null;
                 try {
                     while ((line = input.readLine()) != null) {
-                        System.out.println(line);
+                        // Unncomment this line to see output from resampler/wavtool.
+                        // System.out.println(line);
                     }
                 } catch (IOException e) {
                     errorLogger.logError(e);
