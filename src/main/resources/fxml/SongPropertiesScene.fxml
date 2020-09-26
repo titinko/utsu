@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongPropertiesController">
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongPropertiesController">
    <bottom>
       <ButtonBar prefHeight="40.0" BorderPane.alignment="CENTER">
         <buttons>
@@ -57,11 +57,15 @@
             <TextField fx:id="wavtoolName" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="4" />
             <TextField fx:id="voicebankName" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="5" />
             <TextField fx:id="instrumentalName" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-            <Label fx:id="curTempo" text="125" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
             <Button mnemonicParsing="false" onAction="#changeWavtool" text="Change..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
             <Button mnemonicParsing="false" onAction="#changeResampler" text="Change..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
             <Button mnemonicParsing="false" onAction="#changeVoicebank" text="Change..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
             <Button mnemonicParsing="false" onAction="#changeInstrumental" text="Change..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+            <TextField fx:id="curTempo" text="125" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="7">
+               <GridPane.margin>
+                  <Insets left="10.0" right="10.0" />
+               </GridPane.margin>
+            </TextField>
          </children>
          <padding>
             <Insets top="5.0" />

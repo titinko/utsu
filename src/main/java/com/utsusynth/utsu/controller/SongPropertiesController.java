@@ -1,8 +1,5 @@
 package com.utsusynth.utsu.controller;
 
-import java.io.File;
-import java.util.Optional;
-import java.util.ResourceBundle;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -22,6 +19,10 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+
+import java.io.File;
+import java.util.Optional;
+import java.util.ResourceBundle;
 
 /**
  * 'SongPropertiesScene.fxml' Controller Class
@@ -89,7 +90,7 @@ public class SongPropertiesController implements Localizable {
     private Slider tempoSlider; // Value injected by FXMLLoader
 
     @FXML // fx:id="curTempo"
-    private Label curTempo; // Value injected by FXMLLoader
+    private TextField curTempo; // Value injected by FXMLLoader
 
     @FXML // fx:id="applyButton"
     private Button applyButton; // Value injected by FXMLLoader
@@ -135,7 +136,20 @@ public class SongPropertiesController implements Localizable {
             tempoSlider.setValue(sliderValue);
             curTempo.setText(Integer.toString(sliderValue));
         });
+        curTempo.focusedProperty().addListener((event) -> {
+            if (!curTempo.isFocused()) {
+                try {
+                    double boundedTempo = Math.max(
+                            Math.min(tempoSlider.getMax(), Double.parseDouble(curTempo.getText())),
+                            tempoSlider.getMin());
+                    tempoSlider.setValue(boundedTempo);
+                } catch (NullPointerException | NumberFormatException e) {
+                    curTempo.setText(Integer.toString(RoundUtils.round(tempoSlider.getValue())));
+                }
+            }
+        });
         tempoSlider.setValue(songContainer.get().getTempo());
+        curTempo.setText(Integer.toString(RoundUtils.round(tempoSlider.getValue())));
     }
 
     @Override

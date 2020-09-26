@@ -26,7 +26,7 @@ public class NoteStandardizer {
             trueLyric = config.get().getTrueLyric();
 
             // Note preutter and overlap can override those in the config.
-            double preutter = note.getPreutter().isPresent() ? note.getPreutter().get()
+            realPreutter = note.getPreutter().isPresent() ? note.getPreutter().get()
                     : config.get().getPreutterance();
             realOverlap = note.getOverlap().isPresent() ? note.getOverlap().get()
                     : config.get().getOverlap();
