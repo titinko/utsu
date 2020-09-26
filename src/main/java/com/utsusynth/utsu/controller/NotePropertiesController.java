@@ -50,7 +50,7 @@ public class NotePropertiesController implements Localizable {
     private Slider consonantVelocitySlider; // Value injected by FXMLLoader
 
     @FXML // fx:id="curConsonantVelocity"
-    private Label curConsonantVelocity; // Value injected by FXMLLoader
+    private TextField curConsonantVelocity; // Value injected by FXMLLoader
 
     @FXML // fx:id="preutterLabel"
     private Label preutterLabel; // Value injected by FXMLLoader
@@ -59,7 +59,7 @@ public class NotePropertiesController implements Localizable {
     private Slider preutterSlider; // Value injected by FXMLLoader
 
     @FXML // fx:id="curPreutter"
-    private Label curPreutter; // Value injected by FXMLLoader
+    private TextField curPreutter; // Value injected by FXMLLoader
 
     @FXML // fx:id="overlapLabel"
     private Label overlapLabel; // Value injected by FXMLLoader
@@ -68,7 +68,7 @@ public class NotePropertiesController implements Localizable {
     private Slider overlapSlider; // Value injected by FXMLLoader
 
     @FXML // fx:id="curOverlap"
-    private Label curOverlap; // Value injected by FXMLLoader
+    private TextField curOverlap; // Value injected by FXMLLoader
 
     @FXML // fx:id="startPointLabel"
     private Label startPointLabel;
@@ -77,7 +77,7 @@ public class NotePropertiesController implements Localizable {
     private Slider startPointSlider; // Value injected by FXMLLoader
 
     @FXML // fx:id="curStartPoint"
-    private Label curStartPoint; // Value injected by FXMLLoader
+    private TextField curStartPoint; // Value injected by FXMLLoader
 
     @FXML // fx:id="intensityLabel"
     private Label intensityLabel; // Value injected by FXMLLoader
@@ -86,7 +86,7 @@ public class NotePropertiesController implements Localizable {
     private Slider intensitySlider; // Value injected by FXMLLoader
 
     @FXML // fx:id="curIntensity"
-    private Label curIntensity; // Value injected by FXMLLoader
+    private TextField curIntensity; // Value injected by FXMLLoader
 
     @FXML // fx:id="modulationLabel"
     private Label modulationLabel; // Value injected by FXMLLoader
@@ -95,7 +95,7 @@ public class NotePropertiesController implements Localizable {
     private Slider modulationSlider; // Value injected by FXMLLoader
 
     @FXML // fx:id ="curModulation"
-    private Label curModulation; // Value injected by FXMLLoader
+    private TextField curModulation; // Value injected by FXMLLoader
 
     @FXML // fx:id="flagsLabel"
     private Label flagsLabel; // Value injected by FXMLLoader
@@ -122,46 +122,58 @@ public class NotePropertiesController implements Localizable {
         // Set up localization.
         localizer.localize(this);
 
-        // Setup consonant velocity slider.
-        consonantVelocitySlider.valueProperty().addListener((event) -> {
-            double sliderValue = consonantVelocitySlider.getValue();
-            curConsonantVelocity.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
-        });
+        // Setup sliders that allow decimal points.
+        initializeDoubleSlider(consonantVelocitySlider, curConsonantVelocity);
+        initializeDoubleSlider(preutterSlider, curPreutter);
+        initializeDoubleSlider(overlapSlider, curOverlap);
+        initializeDoubleSlider(startPointSlider, curStartPoint);
 
-        // Setup preutter slider.
-        preutterSlider.valueProperty().addListener((event) -> {
-            double sliderValue = preutterSlider.getValue();
-            curPreutter.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
-        });
-
-        // Setup overlap slider.
-        overlapSlider.valueProperty().addListener((event) -> {
-            double sliderValue = overlapSlider.getValue();
-            curOverlap.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
-        });
-
-        // Setup startPoint slider.
-        startPointSlider.valueProperty().addListener((event) -> {
-            double sliderValue = startPointSlider.getValue();
-            curStartPoint.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
-        });
-
-        // Setup intensity slider.
-        intensitySlider.valueProperty().addListener((event) -> {
-            int sliderValue = RoundUtils.round(intensitySlider.getValue());
-            intensitySlider.setValue(sliderValue);
-            curIntensity.setText(Integer.toString(sliderValue));
-        });
-
-        // Setup modulation slider.
-        modulationSlider.valueProperty().addListener((event) -> {
-            int sliderValue = RoundUtils.round(modulationSlider.getValue());
-            modulationSlider.setValue(sliderValue);
-            curModulation.setText(Integer.toString(sliderValue));
-        });
+        // Setup sliders that don't allow decimal points.
+        initializeIntSlider(intensitySlider, curIntensity);
+        initializeIntSlider(modulationSlider, curModulation);
 
         flagsTF.setOnMouseClicked(
                 event -> flagsTF.setStyle("-fx-control-inner-background: white;"));
+    }
+
+    void initializeDoubleSlider(Slider slider, TextField textField) {
+        slider.valueProperty().addListener((event) -> {
+            double sliderValue = slider.getValue();
+            textField.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
+        });
+        textField.focusedProperty().addListener((event) -> {
+            if (!textField.isFocused() && !textField.getText().equals("n/a")) {
+                try {
+                    double boundedValue = Math.max(
+                            Math.min(slider.getMax(), Double.parseDouble(textField.getText())),
+                            slider.getMin());
+                    slider.setValue(boundedValue);
+                } catch (NullPointerException | NumberFormatException e) {
+                    textField.setText(RoundUtils.roundDecimal(slider.getValue(), "#.#"));
+                }
+            }
+        });
+    }
+
+    void initializeIntSlider(Slider slider, TextField textField) {
+        // Setup modulation slider.
+        slider.valueProperty().addListener((event) -> {
+            int sliderValue = RoundUtils.round(slider.getValue());
+            slider.setValue(sliderValue);
+            textField.setText(Integer.toString(sliderValue));
+        });
+        textField.focusedProperty().addListener((event) -> {
+            if (!textField.isFocused() && !textField.getText().equals("n/a")) {
+                try {
+                    double boundedValue = Math.max(
+                            Math.min(slider.getMax(), Double.parseDouble(textField.getText())),
+                            slider.getMin());
+                    slider.setValue(boundedValue);
+                } catch (NullPointerException | NumberFormatException e) {
+                    textField.setText(Integer.toString(RoundUtils.round(slider.getValue())));
+                }
+            }
+        });
     }
 
     /* Initializes properties panel with a SongEditor with the song to edit. */
@@ -226,8 +238,10 @@ public class NotePropertiesController implements Localizable {
             overlapSlider.setValue(overlap);
         } else {
             preutterSlider.setDisable(true);
+            curPreutter.setDisable(true);
             curPreutter.setText("");
             overlapSlider.setDisable(true);
+            curOverlap.setDisable(true);
             curOverlap.setText("");
         }
         if (allValuesEqual(note -> note.getStartPoint())) {
@@ -390,13 +404,19 @@ public class NotePropertiesController implements Localizable {
     @FXML
     void restoreDefaults(ActionEvent event) {
         consonantVelocitySlider.setValue(100);
+        curConsonantVelocity.setText("100.0");
         if (notes.size() == 1) {
             preutterSlider.setValue(lyricPreutter(notes.get(0)));
+            curPreutter.setText(Double.toString(lyricPreutter(notes.get(0))));
             overlapSlider.setValue(lyricOverlap(notes.get(0)));
+            curOverlap.setText(Double.toString(lyricOverlap(notes.get(0))));
         }
         startPointSlider.setValue(0);
+        curStartPoint.setText("0.0");
         intensitySlider.setValue(100);
+        curIntensity.setText("100");
         modulationSlider.setValue(0);
+        curModulation.setText("0");
         flagsTF.setText("");
     }
 

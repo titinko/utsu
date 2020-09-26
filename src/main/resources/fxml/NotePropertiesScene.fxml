@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.NotePropertiesController">
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.NotePropertiesController">
    <bottom>
       <ButtonBar prefHeight="40.0" BorderPane.alignment="CENTER">
         <buttons>
@@ -31,7 +31,7 @@
         <columnConstraints>
           <ColumnConstraints hgrow="ALWAYS" minWidth="-Infinity" prefWidth="90.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="-Infinity" prefWidth="60.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="-Infinity" prefWidth="65.0" />
         </columnConstraints>
         <rowConstraints>
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="35.0" vgrow="SOMETIMES" />
@@ -56,11 +56,26 @@
             <Slider fx:id="overlapSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
             <Slider fx:id="preutterSlider" blockIncrement="0.1" majorTickUnit="200.0" min="-100.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
             <Slider fx:id="consonantVelocitySlider" blockIncrement="0.1" max="300.0" min="10.0" minorTickCount="25" snapToTicks="true" value="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Label fx:id="curConsonantVelocity" text="100.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
-            <Label fx:id="curPreutter" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
-            <Label fx:id="curOverlap" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-            <Label fx:id="curStartPoint" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
-            <Label fx:id="curIntensity" text="100" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+            <TextField fx:id="curConsonantVelocity" text="100.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2">
+               <GridPane.margin>
+                  <Insets left="5.0" right="5.0" />
+               </GridPane.margin></TextField>
+            <TextField fx:id="curPreutter" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3">
+               <GridPane.margin>
+                  <Insets left="5.0" right="5.0" />
+               </GridPane.margin></TextField>
+            <TextField fx:id="curOverlap" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4">
+               <GridPane.margin>
+                  <Insets left="5.0" right="5.0" />
+               </GridPane.margin></TextField>
+            <TextField fx:id="curStartPoint" text="0.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5">
+               <GridPane.margin>
+                  <Insets left="5.0" right="5.0" />
+               </GridPane.margin></TextField>
+            <TextField fx:id="curIntensity" text="100" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6">
+               <GridPane.margin>
+                  <Insets left="5.0" right="5.0" />
+               </GridPane.margin></TextField>
             <Separator GridPane.columnSpan="2147483647" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets left="5.0" right="5.0" />
@@ -77,7 +92,10 @@
             <TextField fx:id="flagsTF" GridPane.columnIndex="1" GridPane.rowIndex="8" />
             <Label fx:id="modulationLabel" text="Modulation" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
             <Slider fx:id="modulationSlider" blockIncrement="1.0" majorTickUnit="100.0" max="200.0" minorTickCount="25" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-            <Label fx:id="curModulation" layoutX="276.0" layoutY="209.0" text="0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
+            <TextField fx:id="curModulation" layoutX="276.0" layoutY="209.0" text="0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="7">
+               <GridPane.margin>
+                  <Insets left="5.0" right="5.0" />
+               </GridPane.margin></TextField>
          </children>
          <padding>
             <Insets top="5.0" />
