@@ -342,7 +342,7 @@ public class UtsuController implements Localizable {
                 editors.get(tabId).closeEditor();
                 editors.remove(tabId);
             });
-            EditorController editor = (EditorController) loader.getController();
+            EditorController editor = loader.getController();
             editors.put(tab.getId(), editor);
             editor.openEditor(new EditorCallback() {
                 @Override

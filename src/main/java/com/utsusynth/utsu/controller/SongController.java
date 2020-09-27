@@ -1,22 +1,5 @@
 package com.utsusynth.utsu.controller;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.MalformedInputException;
-import java.nio.charset.UnmappableCharacterException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.Set;
-import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -52,7 +35,10 @@ import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -72,6 +58,12 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.apache.commons.io.FileUtils;
+
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.charset.*;
+import java.util.*;
 
 /**
  * 'SongScene.fxml' Controller Class
@@ -432,7 +424,9 @@ public class SongController implements EditorController, Localizable {
         }
     }
 
-    /** Quickly sets an icon to a different image, then changes it back. */
+    /**
+     * Quickly sets an icon to a different image, then changes it back.
+     */
     private void flickerImage(ImageView icon, Image flickerImage) {
         Image defaultImage = icon.getImage();
         icon.setImage(flickerImage);
@@ -446,7 +440,9 @@ public class SongController implements EditorController, Localizable {
         briefPause.play();
     }
 
-    /** Returns region contained within scroll pane. */
+    /**
+     * Returns region contained within scroll pane.
+     */
     private RegionBounds scrollPaneRegion() {
         double trackWidth = songEditor.getWidthX();
         double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
@@ -628,7 +624,9 @@ public class SongController implements EditorController, Localizable {
         return Optional.empty();
     }
 
-    /** Called whenever a Song is changed. */
+    /**
+     * Called whenever a Song is changed.
+     */
     private void onSongChange() {
         song.get().setRendered(RegionBounds.INVALID); // Invalidate rendered song cache.
         if (callback != null) {
@@ -641,7 +639,9 @@ public class SongController implements EditorController, Localizable {
         }
     }
 
-    /** Allows users to alter properties of individual notes and note regions. */
+    /**
+     * Allows users to alter properties of individual notes and note regions.
+     */
     private void openNotePropertiesEditor(RegionBounds regionBounds) {
         // Open note properties modal.
         InputStream fxml = getClass().getResourceAsStream("/fxml/NotePropertiesScene.fxml");
@@ -725,13 +725,32 @@ public class SongController implements EditorController, Localizable {
             DoubleProperty playbackX = songEditor.startPlayback(regionToPlay, duration);
             if (playbackX != null) {
                 // Implements autoscroll to follow playback bar.
-                playbackX.addListener(event -> {
+                InvalidationListener autoscrollListener = event -> {
                     int newPositionMs = regionToPlay.getMinMs()
                             + RoundUtils.round(scaler.unscaleX(playbackX.get()));
                     if (!scrollPaneRegion().contains(newPositionMs)) {
                         scrollToPosition(newPositionMs);
                     }
-                });
+                };
+                playbackX.addListener(autoscrollListener);
+                // Disables autoscroll if the user jiggles the scroll bar.
+                ChangeListener<Number> disableAutoScroll = new ChangeListener<>() {
+                    @Override
+                    public void changed(
+                            ObservableValue<? extends Number> observable,
+                            Number oldValue,
+                            Number newValue) {
+                        double pixelsTravelled = scrollPaneCenter.getWidth() *
+                                Math.abs(newValue.doubleValue() - oldValue.doubleValue());
+                        if (pixelsTravelled < 10) {
+                            playbackX.removeListener(autoscrollListener);
+                            // These listeners remove themselves when user touches the scrollbar,
+                            // but there's a chance they could pile up before then.
+                            scrollPaneCenter.hvalueProperty().removeListener(this);
+                        }
+                    }
+                };
+                scrollPaneCenter.hvalueProperty().addListener(disableAutoScroll);
             }
             return null;
         };
