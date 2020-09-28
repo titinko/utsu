@@ -1,13 +1,14 @@
 package com.utsusynth.utsu.model.song;
 
+import com.google.common.io.Files;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.io.FileUtils;
-import com.google.common.io.Files;
-import com.utsusynth.utsu.common.exception.ErrorLogger;
-import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 
 /**
  * Manages all songs in use by Utsu. This class is a singleton to ensure the same song does not open
@@ -63,7 +64,7 @@ public class SongManager {
         File normalizedNew = normalize(newLocation);
         if (songs.containsKey(normalizedNew)) {
             // No two tabs should point at the same file, to prevent headaches.
-            throw new FileAlreadyOpenException();
+            throw new FileAlreadyOpenException(normalizedNew);
         }
 
         Song songToMove = songs.get(normalizedOld);

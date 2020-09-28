@@ -2,6 +2,8 @@ package com.utsusynth.utsu.controller;
 
 import java.io.File;
 import java.util.Optional;
+
+import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import javafx.scene.input.KeyEvent;
 
@@ -15,7 +17,7 @@ interface EditorController {
 
     void refreshView();
 
-    String getFileName();
+    File getOpenFile();
 
     MenuItemManager getMenuItems();
 
@@ -32,7 +34,7 @@ interface EditorController {
      * 
      * @return What to name the tab, or nothing if open was canceled.
      */
-    Optional<String> open();
+    Optional<String> open() throws FileAlreadyOpenException;
 
     /**
      * Saves a tab to a pre-existing file/directory.

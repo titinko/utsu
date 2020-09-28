@@ -9,6 +9,7 @@ import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
@@ -283,13 +284,11 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public void closeEditor() {
         // Remove this voicebank from memory, forcing songs using it to reload.
-        voicebank.removeVoicebank();
+        voicebank.removeVoicebankForEdit();
     }
 
     @Override
-    public String getFileName() {
-        return voicebank.getLocation().getName();
-    }
+    public File getOpenFile() { return voicebank.getLocation(); }
 
     @Override
     public MenuItemManager getMenuItems() {
@@ -308,15 +307,15 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
-    public Optional<String> open() {
+    public Optional<String> open() throws FileAlreadyOpenException {
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle("Select Voicebank Directory");
         File file = dc.showDialog(null);
         if (file != null) {
             statusBar.setStatus("Loading " + file.getName() + "...");
+            voicebank.setVoicebankForEdit(file);
             new Thread(() -> {
                 try {
-                    voicebank.setVoicebank(file);
                     undoService.clearActions();
                     voicebank.get(); // Loads voicebank from file if necessary.
                     Platform.runLater(() -> {

@@ -345,8 +345,8 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
-    public String getFileName() {
-        return song.getLocation().getName();
+    public File getOpenFile() {
+        return song.getLocation();
     }
 
     @Override
@@ -469,7 +469,7 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
-    public Optional<String> open() {
+    public Optional<String> open() throws FileAlreadyOpenException {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         fc.getExtensionFilters().addAll(
@@ -478,12 +478,7 @@ public class SongController implements EditorController, Localizable {
         File file = fc.showOpenDialog(null);
         if (file != null) {
             statusBar.setStatus("Opening " + file.getName() + "...");
-            try {
-                song.setLocation(file);
-            } catch (FileAlreadyOpenException e) {
-                statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
-                return Optional.empty();
-            }
+            song.setLocation(file);
             new Thread(() -> {
                 try {
                     String saveFormat; // Format to save this song in the future.

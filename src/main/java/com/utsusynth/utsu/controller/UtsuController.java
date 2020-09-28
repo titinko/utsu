@@ -16,6 +16,7 @@ import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.dialog.SaveWarningDialog;
 import com.utsusynth.utsu.common.dialog.SaveWarningDialog.Decision;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -276,7 +277,7 @@ public class UtsuController implements Localizable {
     }
 
     private boolean onCloseTab(Tab tab) {
-        String fileName = editors.get(tab.getId()).getFileName();
+        String fileName = editors.get(tab.getId()).getOpenFile().getName();
         if (fileName.length() < tab.getText().length()) {
             // If tab has unsaved changes, confirm close.
             Stage parent = (Stage) tabs.getScene().getWindow();
@@ -361,7 +362,7 @@ public class UtsuController implements Localizable {
                 }
             });
             editor.refreshView();
-            tab.setText(editor.getFileName()); // Uses file name for tab name.
+            tab.setText(editor.getOpenFile().getName()); // Uses file name for tab name.
 
             // Add and select new tab.
             tabs.getTabs().add(tab);
@@ -377,18 +378,46 @@ public class UtsuController implements Localizable {
     @FXML
     void openSong(ActionEvent event) {
         Tab newTab = createEditor(EditorType.SONG);
-        Optional<String> songName = editors.get(newTab.getId()).open();
-        if (songName.isPresent()) {
-            newTab.setText(songName.get());
+        try {
+            Optional<String> songName = editors.get(newTab.getId()).open();
+            if (songName.isPresent()) {
+                newTab.setText(songName.get());
+            }
+        } catch (FileAlreadyOpenException e) {
+            statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
+            // Navigate to the tab this song is open in.
+            for (Tab tab : tabs.getTabs()) {
+                String tabId = tab.getId();
+                if (editors.get(tabId).getOpenFile().equals(e.getAlreadyOpenFile())) {
+                    tabs.getSelectionModel().select(tab);
+                    // Manually close this tab.
+                    newTab.getOnClosed().handle(null);
+                    tabs.getTabs().remove(newTab);
+                    break;
+                }
+            }
         }
     }
 
     @FXML
     void openVoicebank(ActionEvent event) {
         Tab newTab = createEditor(EditorType.VOICEBANK);
-        Optional<String> voicebankName = editors.get(newTab.getId()).open();
-        if (voicebankName.isPresent()) {
-            newTab.setText(voicebankName.get());
+        try {
+            Optional<String> voicebankName = editors.get(newTab.getId()).open();
+            voicebankName.ifPresent(newTab::setText);
+        } catch (FileAlreadyOpenException e) {
+            statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
+            // Navigate to the tab voicebank is open in.
+            for (Tab tab : tabs.getTabs()) {
+                String tabId = tab.getId();
+                if (editors.get(tabId).getOpenFile().equals(e.getAlreadyOpenFile())) {
+                    tabs.getSelectionModel().select(tab);
+                    // Manually close this tab.
+                    newTab.getOnClosed().handle(null);
+                    tabs.getTabs().remove(newTab);
+                    break;
+                }
+            }
         }
     }
 

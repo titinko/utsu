@@ -118,7 +118,7 @@ public class SongPropertiesController implements Localizable {
         // Set values to save.
         resamplerPath = engine.getResamplerPath();
         wavtoolPath = engine.getWavtoolPath();
-        voicebankContainer.setVoicebank(songContainer.get().getVoiceDir());
+        voicebankContainer.setVoicebankForSong(songContainer.get().getVoiceDir());
         instrumentalPath = songContainer.get().getInstrumental();
 
         // Set text boxes.
@@ -203,7 +203,7 @@ public class SongPropertiesController implements Localizable {
         File file = dc.showDialog(null);
         if (file != null) {
             new Thread(() -> {
-                voicebankContainer.setVoicebank(file);
+                voicebankContainer.setVoicebankForSong(file);
                 String name = voicebankContainer.get().getName();
                 Platform.runLater(() -> voicebankName.setText(name));
             }).run();

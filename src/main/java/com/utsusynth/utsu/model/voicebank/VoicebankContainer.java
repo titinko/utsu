@@ -1,10 +1,14 @@
 package com.utsusynth.utsu.model.voicebank;
 
-import java.io.File;
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.files.VoicebankReader;
 
-/** Manages a single voicebank and its save settings. */
+import java.io.File;
+
+/**
+ * Manages a single voicebank and its save settings.
+ */
 public class VoicebankContainer {
     private File location;
 
@@ -15,7 +19,7 @@ public class VoicebankContainer {
     public VoicebankContainer(VoicebankManager voicebankManager, VoicebankReader voicebankReader) {
         this.voicebankManager = voicebankManager;
         this.voicebankReader = voicebankReader;
-        setVoicebank(voicebankReader.getDefaultPath()); // Start with default voicebank.
+        setVoicebankForSong(voicebankReader.getDefaultPath()); // Start with default voicebank.
     }
 
     public Voicebank get() {
@@ -33,11 +37,19 @@ public class VoicebankContainer {
         voicebankManager.setVoicebank(location, newVoicebank);
     }
 
-    public void setVoicebank(File newLocation) {
+    public void setVoicebankForSong(File newLocation) {
         location = newLocation;
     }
 
-    public void removeVoicebank() {
+    public void setVoicebankForEdit(File newLocation) throws FileAlreadyOpenException {
+        location = newLocation;
+        voicebankManager.openVoicebankForEdit(location);
+    }
+
+    /**
+     * Should only be called by voicebank editor.
+     */
+    public void removeVoicebankForEdit() {
         voicebankManager.removeVoicebank(location);
     }
 
