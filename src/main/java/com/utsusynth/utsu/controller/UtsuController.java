@@ -382,6 +382,8 @@ public class UtsuController implements Localizable {
             Optional<String> songName = editors.get(newTab.getId()).open();
             if (songName.isPresent()) {
                 newTab.setText(songName.get());
+            } else {
+                closeTab(newTab);
             }
         } catch (FileAlreadyOpenException e) {
             statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
@@ -390,9 +392,7 @@ public class UtsuController implements Localizable {
                 String tabId = tab.getId();
                 if (editors.get(tabId).getOpenFile().equals(e.getAlreadyOpenFile())) {
                     tabs.getSelectionModel().select(tab);
-                    // Manually close this tab.
-                    newTab.getOnClosed().handle(null);
-                    tabs.getTabs().remove(newTab);
+                    closeTab(newTab);
                     break;
                 }
             }
@@ -404,7 +404,11 @@ public class UtsuController implements Localizable {
         Tab newTab = createEditor(EditorType.VOICEBANK);
         try {
             Optional<String> voicebankName = editors.get(newTab.getId()).open();
-            voicebankName.ifPresent(newTab::setText);
+            if (voicebankName.isPresent()) {
+                newTab.setText(voicebankName.get());
+            } else {
+                closeTab(newTab);
+            }
         } catch (FileAlreadyOpenException e) {
             statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
             // Navigate to the tab voicebank is open in.
@@ -412,13 +416,17 @@ public class UtsuController implements Localizable {
                 String tabId = tab.getId();
                 if (editors.get(tabId).getOpenFile().equals(e.getAlreadyOpenFile())) {
                     tabs.getSelectionModel().select(tab);
-                    // Manually close this tab.
-                    newTab.getOnClosed().handle(null);
-                    tabs.getTabs().remove(newTab);
+                    closeTab(newTab);
                     break;
                 }
             }
         }
+    }
+
+    private void closeTab(Tab tab) {
+        // Close a tab through code instead of user action.
+        tab.getOnClosed().handle(null);
+        tabs.getTabs().remove(tab);
     }
 
     @FXML
