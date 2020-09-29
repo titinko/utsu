@@ -43,9 +43,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -90,6 +88,7 @@ public class SongController implements EditorController, Localizable {
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
     private final IconManager iconManager;
+    private ContextMenu iconContextMenu;
     private final ExternalProcessRunner processRunner;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
@@ -230,6 +229,19 @@ public class SongController implements EditorController, Localizable {
                 songEditor.selectivelyShowRegion(hvalue, margin);
             }
         });
+
+        // Context menu for voicebank icon.
+        ContextMenu iconContextMenu = new ContextMenu();
+        MenuItem openVoicebankItem = new MenuItem("Open Voicebank");
+        openVoicebankItem.setOnAction(event -> {
+            callback.openVoicebank(song.get().getVoiceDir());
+            iconContextMenu.hide();
+        });
+        iconContextMenu.getItems().add(openVoicebankItem);
+        voicebankImage.setOnContextMenuRequested((event -> {
+            iconContextMenu.hide();
+            iconContextMenu.show(voicebankImage, event.getScreenX(), event.getScreenY());
+        }));
 
         quantizeChoiceBox
                 .setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32", "1/64"));
@@ -477,54 +489,59 @@ public class SongController implements EditorController, Localizable {
                 new ExtensionFilter("All files", "*.*"));
         File file = fc.showOpenDialog(null);
         if (file != null) {
-            statusBar.setStatus("Opening " + file.getName() + "...");
-            song.setLocation(file);
-            new Thread(() -> {
-                try {
-                    String saveFormat; // Format to save this song in the future.
-                    String charset = "UTF-8";
-                    CharsetDecoder utf8Decoder = Charset.forName("UTF-8").newDecoder()
-                            .onMalformedInput(CodingErrorAction.REPORT)
-                            .onUnmappableCharacter(CodingErrorAction.REPORT);
-                    try {
-                        utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
-                    } catch (MalformedInputException | UnmappableCharacterException e) {
-                        charset = "SJIS";
-                    }
-                    String content = FileUtils.readFileToString(file, charset);
-                    if (content.contains("UST Version1.2")) {
-                        song.setSong(ust12Reader.loadSong(content));
-                        saveFormat = "UST 1.2 (Shift JIS)";
-                    } else if (content.contains("UST Version2.0")) {
-                        song.setSong(ust20Reader.loadSong(content));
-                        saveFormat =
-                                "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
-                    } else {
-                        // If no version found, assume UST 1.2 for now.
-                        song.setSong(ust12Reader.loadSong(content));
-                        saveFormat = "UST 1.2 (Shift JIS)";
-                    }
-                    undoService.clearActions();
-                    song.setSaveFormat(saveFormat);
-                    Platform.runLater(() -> {
-                        refreshView();
-                        callback.markChanged(false);
-                        menuItemManager.disableSave();
-                        statusBar.setStatus("Opened " + file.getName());
-                        // Do scrolling after a short pause for viewport to establish itself.
-                        PauseTransition briefPause = new PauseTransition(Duration.millis(10));
-                        briefPause.setOnFinished(event -> scrollToPosition(0));
-                        briefPause.play();
-                    });
-                } catch (Exception e) {
-                    Platform.runLater(
-                            () -> statusBar.setStatus("Error: Unable to open " + file.getName()));
-                    errorLogger.logError(e);
-                }
-            }).start();
+            open(file);
             return Optional.of(file.getName());
         }
         return Optional.empty();
+    }
+
+    @Override
+    public void open(File file) throws FileAlreadyOpenException {
+        song.setLocation(file);
+        statusBar.setStatus("Opening " + file.getName() + "...");
+        new Thread(() -> {
+            try {
+                String saveFormat; // Format to save this song in the future.
+                String charset = "UTF-8";
+                CharsetDecoder utf8Decoder = StandardCharsets.UTF_8.newDecoder()
+                        .onMalformedInput(CodingErrorAction.REPORT)
+                        .onUnmappableCharacter(CodingErrorAction.REPORT);
+                try {
+                    utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
+                } catch (MalformedInputException | UnmappableCharacterException e) {
+                    charset = "SJIS";
+                }
+                String content = FileUtils.readFileToString(file, charset);
+                if (content.contains("UST Version1.2")) {
+                    song.setSong(ust12Reader.loadSong(content));
+                    saveFormat = "UST 1.2 (Shift JIS)";
+                } else if (content.contains("UST Version2.0")) {
+                    song.setSong(ust20Reader.loadSong(content));
+                    saveFormat =
+                            "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
+                } else {
+                    // If no version found, assume UST 1.2 for now.
+                    song.setSong(ust12Reader.loadSong(content));
+                    saveFormat = "UST 1.2 (Shift JIS)";
+                }
+                undoService.clearActions();
+                song.setSaveFormat(saveFormat);
+                Platform.runLater(() -> {
+                    refreshView();
+                    callback.markChanged(false);
+                    menuItemManager.disableSave();
+                    statusBar.setStatus("Opened " + file.getName());
+                    // Do scrolling after a short pause for viewport to establish itself.
+                    PauseTransition briefPause = new PauseTransition(Duration.millis(10));
+                    briefPause.setOnFinished(event -> scrollToPosition(0));
+                    briefPause.play();
+                });
+            } catch (Exception e) {
+                Platform.runLater(
+                        () -> statusBar.setStatus("Error: Unable to open " + file.getName()));
+                errorLogger.logError(e);
+            }
+        }).start();
     }
 
     @Override

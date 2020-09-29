@@ -1,15 +1,5 @@
 package com.utsusynth.utsu.controller;
 
-import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
-import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ResourceBundle;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.StatusBar;
@@ -23,17 +13,20 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+
+import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
+import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
 
 /**
  * 'UtsuScene.fxml' Controller Class
@@ -239,7 +232,7 @@ public class UtsuController implements Localizable {
     /**
      * Called whenever a key is pressed, excluding text input. Can override default key press
      * behaviors. Accelerators should be used instead when overrides are not needed.
-     * 
+     *
      * @return true if an override behavior for this key was found, false otherwise
      */
     public boolean onKeyPressed(KeyEvent keyEvent) {
@@ -264,7 +257,7 @@ public class UtsuController implements Localizable {
 
     /**
      * Called whenever Utsu is closed.
-     * 
+     *
      * @return true if window should be closed, false otherwise
      */
     public boolean onCloseWindow() {
@@ -360,6 +353,17 @@ public class UtsuController implements Localizable {
                         }
                     }
                 }
+
+                @Override
+                public void openVoicebank(File location) {
+                    Tab newTab = createEditor(EditorType.VOICEBANK);
+                    try {
+                        editors.get(newTab.getId()).open(location);
+                    } catch (FileAlreadyOpenException e) {
+                        switchToExistingFile(e.getAlreadyOpenFile());
+                        closeTab(newTab);
+                    }
+                }
             });
             editor.refreshView();
             tab.setText(editor.getOpenFile().getName()); // Uses file name for tab name.
@@ -387,15 +391,8 @@ public class UtsuController implements Localizable {
             }
         } catch (FileAlreadyOpenException e) {
             statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
-            // Navigate to the tab this song is open in.
-            for (Tab tab : tabs.getTabs()) {
-                String tabId = tab.getId();
-                if (editors.get(tabId).getOpenFile().equals(e.getAlreadyOpenFile())) {
-                    tabs.getSelectionModel().select(tab);
-                    closeTab(newTab);
-                    break;
-                }
-            }
+            switchToExistingFile(e.getAlreadyOpenFile());
+            closeTab(newTab);
         }
     }
 
@@ -411,14 +408,20 @@ public class UtsuController implements Localizable {
             }
         } catch (FileAlreadyOpenException e) {
             statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
-            // Navigate to the tab voicebank is open in.
-            for (Tab tab : tabs.getTabs()) {
-                String tabId = tab.getId();
-                if (editors.get(tabId).getOpenFile().equals(e.getAlreadyOpenFile())) {
-                    tabs.getSelectionModel().select(tab);
-                    closeTab(newTab);
-                    break;
-                }
+            switchToExistingFile(e.getAlreadyOpenFile());
+            closeTab(newTab);
+        }
+    }
+
+    /**
+     * If a tab is already open to this file, switch to that tab.
+     */
+    private void switchToExistingFile(File existingFile) {
+        for (Tab tab : tabs.getTabs()) {
+            String tabId = tab.getId();
+            if (editors.get(tabId).getOpenFile().equals(existingFile)) {
+                tabs.getSelectionModel().select(tab);
+                break;
             }
         }
     }

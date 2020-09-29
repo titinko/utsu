@@ -1,9 +1,5 @@
 package com.utsusynth.utsu.controller;
 
-import java.io.File;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.ResourceBundle;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.LyricConfigData;
@@ -16,23 +12,14 @@ import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.files.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
-import com.utsusynth.utsu.view.voicebank.LyricConfigCallback;
-import com.utsusynth.utsu.view.voicebank.LyricConfigEditor;
-import com.utsusynth.utsu.view.voicebank.PitchCallback;
-import com.utsusynth.utsu.view.voicebank.PitchEditor;
-import com.utsusynth.utsu.view.voicebank.VoicebankCallback;
-import com.utsusynth.utsu.view.voicebank.VoicebankEditor;
+import com.utsusynth.utsu.view.voicebank.*;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -46,6 +33,11 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.DirectoryChooser;
 
+import java.io.File;
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.ResourceBundle;
+
 /**
  * 'VoicebankScene.fxml' Controller Class
  */
@@ -54,6 +46,7 @@ public class VoicebankController implements EditorController, Localizable {
 
     // User session data goes here.
     private EditorCallback callback;
+    private boolean openForEdit = false;
 
     // Helper classes go here.
     private final VoicebankContainer voicebank;
@@ -284,11 +277,16 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public void closeEditor() {
         // Remove this voicebank from memory, forcing songs using it to reload.
-        voicebank.removeVoicebankForEdit();
+        if (openForEdit) {
+            voicebank.removeVoicebankForEdit();
+        }
+        openForEdit = false;
     }
 
     @Override
-    public File getOpenFile() { return voicebank.getLocation(); }
+    public File getOpenFile() {
+        return voicebank.getLocation();
+    }
 
     @Override
     public MenuItemManager getMenuItems() {
@@ -312,28 +310,34 @@ public class VoicebankController implements EditorController, Localizable {
         dc.setTitle("Select Voicebank Directory");
         File file = dc.showDialog(null);
         if (file != null) {
-            statusBar.setStatus("Loading " + file.getName() + "...");
-            voicebank.setVoicebankForEdit(file);
-            new Thread(() -> {
-                try {
-                    undoService.clearActions();
-                    voicebank.get(); // Loads voicebank from file if necessary.
-                    Platform.runLater(() -> {
-                        // UI thread.
-                        refreshView();
-                        callback.markChanged(false);
-                        menuItemManager.disableSave();
-                        statusBar.setStatus("Loaded voicebank: " + file.getName());
-                    });
-                } catch (Exception e) {
-                    Platform.runLater(
-                            () -> statusBar.setStatus(
-                                    "Error: Unable to load voicebank: " + file.getName()));
-                }
-            }).start();
+            open(file);
             return Optional.of(file.getName());
         }
         return Optional.empty();
+    }
+
+    @Override
+    public void open(File file) throws FileAlreadyOpenException {
+        voicebank.setVoicebankForEdit(file);
+        openForEdit = true;
+        statusBar.setStatus("Loading " + file.getName() + "...");
+        new Thread(() -> {
+            try {
+                undoService.clearActions();
+                voicebank.get(); // Loads voicebank from file if necessary.
+                Platform.runLater(() -> {
+                    // UI thread.
+                    refreshView();
+                    callback.markChanged(false);
+                    menuItemManager.disableSave();
+                    statusBar.setStatus("Loaded voicebank: " + file.getName());
+                });
+            } catch (Exception e) {
+                Platform.runLater(
+                        () -> statusBar.setStatus(
+                                "Error: Unable to load voicebank: " + file.getName()));
+            }
+        }).start();
     }
 
     @Override
@@ -413,7 +417,9 @@ public class VoicebankController implements EditorController, Localizable {
         onVoicebankChange();
     }
 
-    /** Called whenever voicebank is changed. */
+    /**
+     * Called whenever voicebank is changed.
+     */
     private void onVoicebankChange() {
         if (callback == null) {
             return;
