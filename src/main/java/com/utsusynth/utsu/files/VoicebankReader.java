@@ -3,11 +3,7 @@ package com.utsusynth.utsu.files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.MalformedInputException;
-import java.nio.charset.UnmappableCharacterException;
+import java.nio.charset.*;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -188,16 +184,17 @@ public class VoicebankReader {
             return "";
         }
         try {
+            byte[] bytes = FileUtils.readFileToByteArray(file);
             String charset = "UTF-8";
             CharsetDecoder utf8Decoder =
-                    Charset.forName("UTF-8").newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                    StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
                             .onUnmappableCharacter(CodingErrorAction.REPORT);
             try {
-                utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
-            } catch (MalformedInputException | UnmappableCharacterException e) {
+                utf8Decoder.decode(ByteBuffer.wrap(bytes));
+            } catch (CharacterCodingException e) {
                 charset = "SJIS";
             }
-            return FileUtils.readFileToString(file, charset);
+            return new String(bytes, charset);
         } catch (IOException e) {
             // TODO Handle this.
             errorLogger.logError(e);
