@@ -33,13 +33,30 @@ public class NoteStandardizer {
 
             // Check correction factor.
             if (prev.isPresent()) {
-                double maxLength = note.getDelta() - (prev.get().getDuration() / 2);
+                double maxLength = note.getDelta() - (prev.get().getDuration() / 2.0);
+                // The original correction factor code.
                 if (realPreutter - realOverlap > maxLength) {
                     double correctionFactor = maxLength / (realPreutter - realOverlap);
                     double oldPreutter = realPreutter;
                     realPreutter *= correctionFactor;
                     realOverlap *= correctionFactor;
-                    autoStartPoint = oldPreutter - realPreutter;
+                    autoStartPoint += oldPreutter - realPreutter;
+                }
+                // Added through trial and error to remove timing issues.
+                if (realPreutter > maxLength) {
+                    double correctionFactor = maxLength / realPreutter;
+                    double oldPreutter = realPreutter;
+                    realPreutter *= correctionFactor;
+                    realOverlap *= correctionFactor;
+                    autoStartPoint += oldPreutter - realPreutter;
+                }
+                // Added through trial and error to remove timing issues.
+                if (realOverlap > maxLength) {
+                    double correctionFactor = maxLength / realOverlap;
+                    double oldPreutter = realPreutter;
+                    realPreutter *= correctionFactor;
+                    realOverlap *= correctionFactor;
+                    autoStartPoint += oldPreutter - realPreutter;
                 }
             }
             realDuration = getAdjustedLength(voicebank, note, trueLyric, realPreutter, next);
