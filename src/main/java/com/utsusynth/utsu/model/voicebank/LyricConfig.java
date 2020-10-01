@@ -1,16 +1,20 @@
 package com.utsusynth.utsu.model.voicebank;
 
-import java.io.File;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
+
+import java.io.File;
 
 /**
  * Internal representation of the configuration of a single lyric in a voicebank. Parsed from an
  * oto.ini or oto_ini.txt file.
  */
 public class LyricConfig implements Comparable<LyricConfig> {
+    public static final String MAIN_CATEGORY = "Main";
+
     private final File pathToFile; // example: /Library/Iona.utau/C3/de.wav
     private final String fileName; // example: C3/de.wav
+    private final String category; // example: C3
     private final String trueLyric; // example: de
     private double offset; // Time in wav file before note starts, in ms.
     private double consonant; // Time in wav file before consonant ends, in ms.
@@ -18,7 +22,9 @@ public class LyricConfig implements Comparable<LyricConfig> {
     private double preutterance; // Number of ms that go before note officially starts.
     private double overlap; // Number of ms that overlap with previous note.
 
-    /** Used when reading from file. */
+    /**
+     * Used when reading from file.
+     */
     public LyricConfig(
             File pathToVoicebank,
             File pathToFile,
@@ -38,7 +44,9 @@ public class LyricConfig implements Comparable<LyricConfig> {
                 Double.parseDouble(configValues[4]));
     }
 
-    /** Used when converting LyricConfigData into a LyricConfig. */
+    /**
+     * Used when converting LyricConfigData into a LyricConfig.
+     */
     public LyricConfig(
             File pathToVoicebank,
             String trueLyric,
@@ -46,6 +54,7 @@ public class LyricConfig implements Comparable<LyricConfig> {
             double... configValues) {
         assert (configValues.length == 5);
         this.pathToFile = pathToVoicebank.toPath().resolve(fileName).toFile();
+        this.category = getCategory(fileName);
         this.fileName = fileName;
         this.trueLyric = trueLyric;
         this.offset = configValues[0];
@@ -83,13 +92,26 @@ public class LyricConfig implements Comparable<LyricConfig> {
         return fileName;
     }
 
+    public String getCategory() {
+        return category;
+    }
+
     public String getTrueLyric() {
         return trueLyric;
+    }
+
+    private static String getCategory(String fileName) {
+        String category = new File(fileName).getParent();
+        if (category == null) {
+            category = MAIN_CATEGORY;
+        }
+        return category;
     }
 
     LyricConfigData getData(boolean hasFrq) {
         return new LyricConfigData(
                 pathToFile,
+                category,
                 trueLyric,
                 fileName,
                 hasFrq ? FrqStatus.VALID.toString() : FrqStatus.INVALID.toString(),

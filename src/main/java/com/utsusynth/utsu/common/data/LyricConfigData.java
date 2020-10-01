@@ -1,23 +1,21 @@
 package com.utsusynth.utsu.common.data;
 
+import com.google.common.collect.ImmutableList;
+import javafx.beans.property.*;
+
 import java.io.File;
 import java.util.List;
-import com.google.common.collect.ImmutableList;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 
-/** Data about a lyric config, meant to be used in a TableView. */
+/**
+ * Data about a lyric config, meant to be used in a TableView.
+ */
 public class LyricConfigData {
     public enum FrqStatus {
         INVALID, LOADING, VALID
     }
 
     private final File pathToFile;
+    private final String category; // Category for nested voicebanks, defaults to "Main"
     private final StringProperty lyric;
     private final StringProperty fileName;
     private final StringProperty frqStatus;
@@ -30,6 +28,7 @@ public class LyricConfigData {
 
     public LyricConfigData(
             File pathToFile,
+            String category,
             String lyric,
             String fileName,
             String frqStatus,
@@ -39,6 +38,7 @@ public class LyricConfigData {
             double preutter,
             double overlap) {
         this.pathToFile = pathToFile;
+        this.category = category;
         this.lyric = new SimpleStringProperty(lyric);
         this.fileName = new SimpleStringProperty(fileName);
         this.frqStatus = new SimpleStringProperty(frqStatus.toString());
@@ -52,6 +52,10 @@ public class LyricConfigData {
 
     public File getPathToFile() {
         return pathToFile;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public String getLyric() {
@@ -103,11 +107,13 @@ public class LyricConfigData {
     }
 
     public double[] getConfigValues() {
-        return new double[] {offset.get(), consonant.get(), cutoff.get(), preutter.get(),
+        return new double[]{offset.get(), consonant.get(), cutoff.get(), preutter.get(),
                 overlap.get()};
     }
 
-    /** Quick setter for config values using the same format as getConfigValues. */
+    /**
+     * Quick setter for config values using the same format as getConfigValues.
+     */
     public void setConfigValues(double[] configValues) {
         if (configValues.length != 5) {
             return;
@@ -119,7 +125,9 @@ public class LyricConfigData {
         overlap.set(configValues[4]);
     }
 
-    /** Returns any properties that can mutate without changing lyric save/display location. */
+    /**
+     * Returns any properties that can mutate without changing lyric save/display location.
+     */
     public List<Property<?>> mutableProperties() {
         return ImmutableList.of(offset, consonant, cutoff, preutter, overlap);
     }
@@ -127,6 +135,7 @@ public class LyricConfigData {
     public LyricConfigData deepCopy() {
         return new LyricConfigData(
                 pathToFile,
+                category,
                 lyric.get(),
                 fileName.get(),
                 frqStatus.get(),

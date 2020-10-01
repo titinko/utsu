@@ -1,18 +1,14 @@
 package com.utsusynth.utsu.model.voicebank;
 
-import java.io.File;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.engine.FrqGenerator;
+
+import java.io.File;
+import java.util.*;
 
 /**
  * In-code representation of a voice bank. Compatible with oto.ini files. TODO: Support oto_ini.txt
@@ -120,8 +116,8 @@ public class Voicebank {
                         this.conversionSet,
                         this.soundFiles,
                         this.frqGenerator)).setPathToVoicebank(this.pathToVoicebank)
-                                .setName(this.name).setAuthor(this.author)
-                                .setDescription(this.description).setImageName(this.imageName);
+                .setName(this.name).setAuthor(this.author)
+                .setDescription(this.description).setImageName(this.imageName);
     }
 
     /**
@@ -193,7 +189,7 @@ public class Voicebank {
     /**
      * Gets iterator of lyric config data sets to print to the frontend.
      */
-    public Iterator<LyricConfigData> getLyricData(String category) {
+    public Iterator<LyricConfigData> getAllLyricData(String category) {
         Iterator<LyricConfig> configIterator = lyricConfigs.getConfigs(category);
         return new Iterator<LyricConfigData>() {
             @Override
@@ -210,6 +206,15 @@ public class Voicebank {
                 return null;
             }
         };
+    }
+
+    public Optional<LyricConfigData> getLyricData(String trueLyric) {
+        Optional<LyricConfig> config = getLyricConfig("", trueLyric, "");
+        if (config.isPresent()) {
+            return Optional.of(
+                    config.get().getData(soundFiles.contains(config.get().getPathToFile())));
+        }
+        return Optional.empty();
     }
 
     public boolean addLyricData(LyricConfigData data) {

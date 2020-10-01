@@ -80,9 +80,17 @@ interface EditorController {
 
     void selectAll();
 
+    void openProperties();
+
+    /**
+     * Song only. Opens config for a note.
+     */
     void openNoteProperties();
 
-    void openProperties();
+    /**
+     * Voicebank only. Highlights config for a lyric.
+     */
+    void showLyricConfig(String trueLyric);
 
     /**
      * Opens a legacy UTAU plugin. Returns the file of the plugin opened, if any.

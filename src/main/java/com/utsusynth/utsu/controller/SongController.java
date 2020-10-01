@@ -206,6 +206,18 @@ public class SongController implements EditorController, Localizable {
             public void openNoteProperties(RegionBounds regionBounds) {
                 openNotePropertiesEditor(regionBounds);
             }
+
+            @Override
+            public void openLyricConfig(int position) {
+                NoteData noteData = song.get().getNote(position);
+                Optional<String> trueLyric = noteData.getTrueLyric();
+                if (trueLyric.isEmpty() || trueLyric.get().isEmpty()) {
+                    String displayLyric = noteData.getLyric();
+                    statusBar.setStatus("Error: no lyric config for \"" + displayLyric + "\"");
+                    return;
+                }
+                callback.openVoicebank(song.get().getVoiceDir(), trueLyric.get());
+            }
         });
         anchorCenter.widthProperty().addListener((obs, oldWidthNum, newWidthNum) -> {
             // Scrollbar should still be at its old location.
@@ -233,10 +245,7 @@ public class SongController implements EditorController, Localizable {
         // Context menu for voicebank icon.
         ContextMenu iconContextMenu = new ContextMenu();
         MenuItem openVoicebankItem = new MenuItem("Open Voicebank");
-        openVoicebankItem.setOnAction(event -> {
-            callback.openVoicebank(song.get().getVoiceDir());
-            iconContextMenu.hide();
-        });
+        openVoicebankItem.setOnAction(event -> callback.openVoicebank(song.get().getVoiceDir()));
         iconContextMenu.getItems().add(openVoicebankItem);
         voicebankImage.setOnContextMenuRequested((event -> {
             iconContextMenu.hide();
@@ -247,16 +256,22 @@ public class SongController implements EditorController, Localizable {
                 .setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32", "1/64"));
         quantizeChoiceBox.setOnAction((action) -> {
             String quantization = quantizeChoiceBox.getValue();
-            if (quantization.equals("1/4")) {
-                quantizer.changeQuant(quantizer.getQuant(), 1);
-            } else if (quantization.equals("1/8")) {
-                quantizer.changeQuant(quantizer.getQuant(), 2);
-            } else if (quantization.equals("1/16")) {
-                quantizer.changeQuant(quantizer.getQuant(), 4);
-            } else if (quantization.equals("1/32")) {
-                quantizer.changeQuant(quantizer.getQuant(), 8);
-            } else if (quantization.equals("1/64")) {
-                quantizer.changeQuant(quantizer.getQuant(), 16);
+            switch (quantization) {
+                case "1/4":
+                    quantizer.changeQuant(quantizer.getQuant(), 1);
+                    break;
+                case "1/8":
+                    quantizer.changeQuant(quantizer.getQuant(), 2);
+                    break;
+                case "1/16":
+                    quantizer.changeQuant(quantizer.getQuant(), 4);
+                    break;
+                case "1/32":
+                    quantizer.changeQuant(quantizer.getQuant(), 8);
+                    break;
+                case "1/64":
+                    quantizer.changeQuant(quantizer.getQuant(), 16);
+                    break;
             }
         });
         quantizeChoiceBox.setValue("1/16");
@@ -892,6 +907,11 @@ public class SongController implements EditorController, Localizable {
         if (!songEditor.getSelectedTrack().equals(RegionBounds.INVALID)) {
             openNotePropertiesEditor(songEditor.getSelectedTrack());
         }
+    }
+
+    @Override
+    public void showLyricConfig(String trueLyric) {
+        // Lyric configs can only be shown on voicebank editor.
     }
 
     @Override

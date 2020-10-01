@@ -11,7 +11,7 @@ public class Lyric {
     private String lyric;
     private String alias; // Defaults to empty string if there is no alias.
     private LyricCallback trackNote;
-    private Group activeNode;
+    private final Group activeNode;
 
     private final Label text;
     private final TextField textField;

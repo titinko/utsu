@@ -111,6 +111,8 @@ public class Note implements Comparable<Note> {
         });
         CheckMenuItem vibratoEditorMenuItem = new CheckMenuItem("Vibrato Editor");
         vibratoEditorMenuItem.selectedProperty().bindBidirectional(vibratoEditor);
+        MenuItem lyricConfigItem = new MenuItem("Open Lyric Config");
+        lyricConfigItem.setOnAction(action -> track.openLyricConfig(this));
         MenuItem notePropertiesItem = new MenuItem("Note Properties");
         notePropertiesItem.setOnAction(action -> track.openNoteProperties(this));
         contextMenu.getItems().addAll(
@@ -120,6 +122,8 @@ public class Note implements Comparable<Note> {
                 new SeparatorMenuItem(),
                 vibratoMenuItem,
                 vibratoEditorMenuItem,
+                new SeparatorMenuItem(),
+                lyricConfigItem,
                 new SeparatorMenuItem(),
                 notePropertiesItem);
         layout.setOnContextMenuRequested(event -> {

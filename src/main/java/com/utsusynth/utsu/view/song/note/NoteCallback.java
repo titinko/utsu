@@ -39,4 +39,6 @@ public interface NoteCallback {
     void setHasVibrato(int position, boolean hasVibrato);
 
     void openNoteProperties(Note note);
+
+    void openLyricConfig(Note note);
 }

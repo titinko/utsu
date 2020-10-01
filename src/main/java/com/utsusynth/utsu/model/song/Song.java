@@ -1,11 +1,5 @@
 package com.utsusynth.utsu.model.song;
 
-import java.io.File;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
@@ -16,6 +10,9 @@ import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.model.song.pitch.PitchCurve;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
+
+import java.io.File;
+import java.util.*;
 
 /**
  * In-code representation of a song. Compatible with UST versions 1.2 and 2.0.
@@ -148,14 +145,14 @@ public class Song {
         // The old Song's noteList and pitchbends objects are used in the new Song.
         return new Builder(
                 new Song(this.voicebank, this.standardizer, this.noteList, this.pitchbends))
-                        .setTempo(this.tempo).setProjectName(this.projectName)
-                        .setOutputFile(this.outputFile).setFlags(this.flags).setMode2(this.mode2)
-                        .setInstrumental(this.instrumental);
+                .setTempo(this.tempo).setProjectName(this.projectName)
+                .setOutputFile(this.outputFile).setFlags(this.flags).setMode2(this.mode2)
+                .setInstrumental(this.instrumental);
     }
 
     /**
      * Adds a note or notes to the song object.
-     * 
+     *
      * @param notesToAdd In-order list of notes to add.
      * @throws NoteAlreadyExistsException
      */
@@ -198,7 +195,9 @@ public class Song {
         }
     }
 
-    /** Removes all notes at the specified positions from the song object. */
+    /**
+     * Removes all notes at the specified positions from the song object.
+     */
     public MutateResponse removeNotes(Set<Integer> positions) {
         if (positions.isEmpty()) {
             System.out.println("Error: Remove notes called on empty collection!");
@@ -251,7 +250,9 @@ public class Song {
         return new MutateResponse(removedNotes, prevNote, nextNote);
     }
 
-    /** Modifies a note in-place without changing its lyric, position, or duration. */
+    /**
+     * Modifies a note in-place without changing its lyric, position, or duration.
+     */
     public NoteUpdateData modifyNote(NoteData toModify) {
         int positionMs = toModify.getPosition();
         NoteNode node = this.noteList.getNote(positionMs);
@@ -352,6 +353,18 @@ public class Song {
                             Optional.of(note.getConfigData())));
         }
         return notes;
+    }
+
+    public NoteData getNote(int position) {
+        Note note = noteList.getNote(position).getNote();
+        return new NoteData(position,
+                note.getDuration(),
+                PitchUtils.noteNumToPitch(note.getNoteNum()),
+                note.getLyric(),
+                Optional.of(note.getTrueLyric()),
+                Optional.of(note.getEnvelope()),
+                Optional.of(note.getPitchbends()),
+                Optional.of(note.getConfigData()));
     }
 
     public Optional<Integer> getNextNote(int currentPos) {

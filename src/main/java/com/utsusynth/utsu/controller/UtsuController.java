@@ -10,6 +10,7 @@ import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +20,7 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
@@ -359,10 +361,23 @@ public class UtsuController implements Localizable {
                     Tab newTab = createEditor(EditorType.VOICEBANK);
                     try {
                         editors.get(newTab.getId()).open(location);
+                        newTab.setText(location.getName());
                     } catch (FileAlreadyOpenException e) {
                         switchToExistingFile(e.getAlreadyOpenFile());
                         closeTab(newTab);
                     }
+                }
+
+                @Override
+                public void openVoicebank(File location, String trueLyric) {
+                    this.openVoicebank(location);
+                    Tab curTab = tabs.getSelectionModel().getSelectedItem();
+
+                    // Highlight lyric after a short pause for viewport to establish itself.
+                    PauseTransition briefPause = new PauseTransition(Duration.millis(10));
+                    briefPause.setOnFinished(event ->
+                            editors.get(curTab.getId()).showLyricConfig(trueLyric));
+                    briefPause.play();
                 }
             });
             editor.refreshView();

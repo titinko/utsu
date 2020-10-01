@@ -1,20 +1,10 @@
 package com.utsusynth.utsu.view.song;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
-import com.utsusynth.utsu.common.data.EnvelopeData;
-import com.utsusynth.utsu.common.data.MutateResponse;
-import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.NoteUpdateData;
-import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.data.*;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -39,6 +29,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SongEditor {
     private final PlaybackBarManager playbackManager;
@@ -97,12 +90,16 @@ public class SongEditor {
         editorContextMenu.getItems().addAll(pasteItem, separator, selectAllItem, deselectItem);
     }
 
-    /** Initialize track with data from the controller. Not song-specific. */
+    /**
+     * Initialize track with data from the controller. Not song-specific.
+     */
     public void initialize(SongCallback callback) {
         this.model = callback;
     }
 
-    /** Initialize track with data for a specific song. */
+    /**
+     * Initialize track with data for a specific song.
+     */
     public HBox createNewTrack(List<NoteData> notes) {
         clearTrack();
         if (notes.isEmpty()) {
@@ -172,7 +169,9 @@ public class SongEditor {
         return selection;
     }
 
-    /** Start the playback bar animation. It will end on its own. */
+    /**
+     * Start the playback bar animation. It will end on its own.
+     */
     public DoubleProperty startPlayback(RegionBounds rendered, Duration duration) {
         int firstPosition = noteMap.getFirstPosition(rendered);
         int lastPosition = noteMap.getLastPosition(rendered);
@@ -186,17 +185,23 @@ public class SongEditor {
         return null;
     }
 
-    /** Attempts to pause. Does nothing if there is no ongoing playback. */
+    /**
+     * Attempts to pause. Does nothing if there is no ongoing playback.
+     */
     public void pausePlayback() {
         playbackManager.pausePlayback();
     }
 
-    /** Attempts to resume. Does nothing if there is no ongoing paused playback. */
+    /**
+     * Attempts to resume. Does nothing if there is no ongoing paused playback.
+     */
     public void resumePlayback() {
         playbackManager.resumePlayback();
     }
 
-    /** Manually stop any ongoing playback bar animation. Idempotent. */
+    /**
+     * Manually stop any ongoing playback bar animation. Idempotent.
+     */
     public void stopPlayback() {
         playbackManager.stopPlayback();
     }
@@ -664,7 +669,7 @@ public class SongEditor {
                     int noteRow = note.getRow();
                     if (note.getValidBounds().intersects(horizontalBounds)
                             && Math.abs(endRow - noteRow) + Math.abs(noteRow - startRow) == Math
-                                    .abs(endRow - startRow)) {
+                            .abs(endRow - startRow)) {
                         playbackManager.highlightNote(note);
                     }
                 }
@@ -824,6 +829,11 @@ public class SongEditor {
                 // Open on current note if current note is not highlighted.
                 model.openNoteProperties(note.getValidBounds());
             }
+        }
+
+        @Override
+        public void openLyricConfig(Note note) {
+            model.openLyricConfig(note.getAbsPositionMs());
         }
     };
 

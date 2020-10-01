@@ -1,8 +1,5 @@
 package com.utsusynth.utsu.view.voicebank;
 
-import java.io.File;
-import java.util.Iterator;
-import java.util.Set;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.LyricConfigData;
@@ -11,17 +8,8 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.control.*;
 import javafx.scene.control.TabPane.TabClosingPolicy;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -29,11 +17,20 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
 import javafx.util.StringConverter;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 public class VoicebankEditor {
+    private final Map<String, TableView<LyricConfigData>> tables = new HashMap<>();
     private TabPane tabPane;
     private VoicebankCallback model;
 
-    /** Initialize editor with data from the controller. */
+    /**
+     * Initialize editor with data from the controller.
+     */
     public void initialize(VoicebankCallback callback) {
         this.model = callback;
     }
@@ -46,7 +43,7 @@ public class VoicebankEditor {
 
         if (categories.size() == 1) {
             String category = categories.iterator().next();
-            return newTable(model.getLyricData(category));
+            return newTable(category, model.getLyricData(category));
         }
 
         // Create tabs to open other categories.
@@ -56,7 +53,7 @@ public class VoicebankEditor {
                 if (tab.isSelected()) {
                     // Generate new tab if not already present.
                     if (tab.getContent() == null) {
-                        tab.setContent(newTable(model.getLyricData(category)));
+                        tab.setContent(newTable(category, model.getLyricData(category)));
                     }
                 }
             });
@@ -65,7 +62,29 @@ public class VoicebankEditor {
         return tabPane;
     }
 
-    private ScrollPane newTable(Iterator<LyricConfigData> lyricIterator) {
+    public void selectLyric(String category, String lyric) {
+        // Navigate to appropriate tab if necessary.
+        for (Tab tab : tabPane.getTabs()) {
+            if (tab.getText().equals(category)) {
+                tabPane.getSelectionModel().select(tab);
+                break;
+            }
+        }
+        // Highlight matching lyric if present.
+        if (!tables.containsKey(category)) {
+            return;
+        }
+        TableView<LyricConfigData> table = tables.get(category);
+        table.getItems().forEach(lyricData -> {
+            if (lyricData.getLyric().equals(lyric)) {
+                table.getSelectionModel().select(lyricData);
+                table.scrollTo(lyricData);
+                model.displayLyric(lyricData);
+            }
+        });
+    }
+
+    private ScrollPane newTable(String category, Iterator<LyricConfigData> lyricIterator) {
         ScrollPane scrollPane = new ScrollPane();
         // TODO: Add css for this.
         scrollPane.setFitToHeight(true);
@@ -77,6 +96,7 @@ public class VoicebankEditor {
         // Create table.
         ObservableList<LyricConfigData> lyrics = FXCollections.observableArrayList();
         TableView<LyricConfigData> table = new TableView<>(lyrics);
+        tables.put(category, table);
         scrollPane.setContent(table);
         table.setEditable(true);
 
@@ -141,15 +161,15 @@ public class VoicebankEditor {
         fileCol.setCellValueFactory(data -> data.getValue().fileNameProperty());
         TableColumn<LyricConfigData, String> frqStatusCol = createFrqStatusCol(lyrics);
         TableColumn<LyricConfigData, Double> offsetCol =
-                createNumberCol("Offset", config -> config.offsetProperty());
+                createNumberCol("Offset", LyricConfigData::offsetProperty);
         TableColumn<LyricConfigData, Double> consonantCol =
-                createNumberCol("Consonant", config -> config.consonantProperty());
+                createNumberCol("Consonant", LyricConfigData::consonantProperty);
         TableColumn<LyricConfigData, Double> cutoffCol =
-                createNumberCol("Cutoff", config -> config.cutoffProperty());
+                createNumberCol("Cutoff", LyricConfigData::cutoffProperty);
         TableColumn<LyricConfigData, Double> preutterCol =
-                createNumberCol("Preutter", config -> config.preutterProperty());
+                createNumberCol("Preutter", LyricConfigData::preutterProperty);
         TableColumn<LyricConfigData, Double> overlapCol =
-                createNumberCol("Overlap", config -> config.overlapProperty());
+                createNumberCol("Overlap", LyricConfigData::overlapProperty);
         table.getColumns().setAll(
                 ImmutableList.of(
                         lyricCol,
@@ -261,6 +281,7 @@ public class VoicebankEditor {
 
     private void clear() {
         // Remove current lyric configs.
+        tables.clear();
         tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         HBox.setHgrow(tabPane, Priority.ALWAYS);

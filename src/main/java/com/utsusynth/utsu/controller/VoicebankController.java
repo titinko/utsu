@@ -128,7 +128,7 @@ public class VoicebankController implements EditorController, Localizable {
         voiceEditor.initialize(new VoicebankCallback() {
             @Override
             public Iterator<LyricConfigData> getLyricData(String category) {
-                return voicebank.get().getLyricData(category);
+                return voicebank.get().getAllLyricData(category);
             }
 
             @Override
@@ -408,6 +408,13 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public void openNoteProperties() {
         // Note properties do not apply to voicebanks.
+    }
+
+    @Override
+    public void showLyricConfig(String trueLyric) {
+        Optional<LyricConfigData> maybeLyricData = voicebank.get().getLyricData(trueLyric);
+        maybeLyricData.ifPresent(lyricData ->
+                voiceEditor.selectLyric(lyricData.getCategory(), lyricData.getLyric()));
     }
 
     @FXML

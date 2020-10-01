@@ -1,14 +1,6 @@
 package com.utsusynth.utsu.model.voicebank;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * A map of lyric to LyricConfig where the values can be retrieved at any time in sorted order.
@@ -45,7 +37,7 @@ public class LyricConfigMap {
 
     /**
      * Adds a lyric config if configMap doesn't have a config for that lyric already.
-     * 
+     *
      * @return whether a config was added.
      */
     public boolean addConfig(LyricConfig config) {
@@ -54,7 +46,7 @@ public class LyricConfigMap {
         }
 
         // Add category if it doesn't already exist.
-        String category = getCategory(config);
+        String category = config.getCategory();
         if (!configSets.containsKey(category)) {
             configSets.put(category, new TreeSet<>());
         }
@@ -69,14 +61,14 @@ public class LyricConfigMap {
     public void setConfig(LyricConfig config) {
         if (configMap.containsKey(config.getTrueLyric())) {
             LyricConfig oldConfig = configMap.get(config.getTrueLyric());
-            String oldCategory = getCategory(oldConfig);
+            String oldCategory = oldConfig.getCategory();
             if (configSets.containsKey(oldCategory)) {
                 configSets.get(oldCategory).remove(oldConfig);
             }
         }
 
         // Add category if it doesn't already exist.
-        String category = getCategory(config);
+        String category = config.getCategory();
         if (!configSets.containsKey(category)) {
             configSets.put(category, new TreeSet<>());
         }
@@ -87,19 +79,11 @@ public class LyricConfigMap {
     public void removeConfig(String lyric) {
         if (configMap.containsKey(lyric)) {
             LyricConfig toRemove = configMap.get(lyric);
-            String category = getCategory(toRemove);
+            String category = toRemove.getCategory();
             if (configSets.containsKey(category)) {
                 configSets.get(category).remove(toRemove);
             }
         }
         configMap.remove(lyric);
-    }
-
-    private static String getCategory(LyricConfig config) {
-        String category = new File(config.getFilename()).getParent();
-        if (category == null) {
-            category = MAIN_CATEGORY;
-        }
-        return category;
     }
 }
