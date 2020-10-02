@@ -15,9 +15,7 @@ import com.utsusynth.utsu.view.song.note.NoteCallback;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.*;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -494,6 +492,7 @@ public class SongEditor {
     }
 
     public void selectivelyShowRegion(double centerPercent, double margin) {
+        System.out.println("Selectively show region");
         int measureWidthMs = 4 * Quantizer.COL_WIDTH;
         int marginMeasures = ((int) (margin / Math.round(scaler.scaleX(measureWidthMs)))) + 3;
         int centerMeasure = RoundUtils.round((numMeasures) * centerPercent) - 1; // Pre-roll.
@@ -502,6 +501,7 @@ public class SongEditor {
         int clampedEndMeasure =
                 Math.min(Math.max(centerMeasure + marginMeasures, 0), numMeasures - 1);
         // Use measures to we don't have to redraw the visible region too much.
+        showMeasures(clampedStartMeasure, clampedEndMeasure + 1);
         noteMap.setVisibleRegion(
                 new RegionBounds(
                         clampedStartMeasure * measureWidthMs,
@@ -521,6 +521,20 @@ public class SongEditor {
         setNumMeasures(4);
     }
 
+    private void showMeasures(int startMeasure, int endMeasure) {
+        int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH));
+        int startX = measureWidth * startMeasure;
+        int endX = measureWidth * endMeasure;
+        measures.getChildren().forEach(child -> {
+            int measureX = RoundUtils.round(child.getLayoutX());
+            child.setVisible(measureX >= startX && measureX <= endX);
+        });
+        dynamics.getChildren().forEach(child -> {
+            int dynamicsX = RoundUtils.round(child.getLayoutX());
+            child.setVisible(dynamicsX >= startX && dynamicsX <= endX);
+        });
+    }
+
     private void setNumMeasures(int newNumMeasures) {
         if (newNumMeasures < 0) {
             return;
@@ -535,13 +549,11 @@ public class SongEditor {
             int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH));
             int maxWidth = measureWidth * (newNumMeasures + 1); // Include pre-roll.
             // Remove measures.
-            measures.getChildren().removeIf((child) -> {
-                return RoundUtils.round(child.getLayoutX()) >= maxWidth;
-            });
+            measures.getChildren().removeIf(
+                    child -> RoundUtils.round(child.getLayoutX()) >= maxWidth);
             // Remove dynamics columns.
-            dynamics.getChildren().removeIf((child) -> {
-                return RoundUtils.round(child.getLayoutX()) >= maxWidth;
-            });
+            dynamics.getChildren().removeIf(
+                    child -> RoundUtils.round(child.getLayoutX()) >= maxWidth);
             numMeasures = newNumMeasures;
         }
     }
