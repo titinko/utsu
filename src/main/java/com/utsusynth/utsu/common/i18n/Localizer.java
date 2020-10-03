@@ -18,6 +18,10 @@ public class Localizer {
         this.bundle = ResourceBundle.getBundle("messages.messages", locale.getLocale());
     }
 
+    /**
+     * Should be used to translate permanent UI elements. Calling this method will register the
+     * element to be re-translated if the Locale changes.
+     */
     public void localize(Localizable target) {
         if (targets.contains(target)) {
             // TODO: Handle this, or just ignore it. I'm not a cop.
@@ -33,6 +37,13 @@ public class Localizer {
         for (Localizable target : targets) {
             target.localize(this.bundle);
         }
+    }
+
+    /**
+     * This method should be used to translate ephemeral UI elements like context menus.
+     */
+    public String getMessage(String key) {
+        return bundle.getString(key);
     }
 
     public NativeLocale getCurrentLocale() {

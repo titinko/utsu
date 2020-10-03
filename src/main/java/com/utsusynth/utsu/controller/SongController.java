@@ -251,6 +251,14 @@ public class SongController implements EditorController, Localizable {
             iconContextMenu.hide();
             iconContextMenu.show(voicebankImage, event.getScreenX(), event.getScreenY());
         }));
+        Runnable localizeIconContextMenu = () -> {
+            openVoicebankItem.setText(localizer.getMessage("song.openCurrentVoicebank"));
+        };
+        voicebankImage.setOnContextMenuRequested((event -> {
+            iconContextMenu.hide();
+            localizeIconContextMenu.run();
+            iconContextMenu.show(voicebankImage, event.getScreenX(), event.getScreenY());
+        }));
 
         quantizeChoiceBox
                 .setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32", "1/64"));
