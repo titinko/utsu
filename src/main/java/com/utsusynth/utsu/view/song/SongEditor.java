@@ -492,7 +492,6 @@ public class SongEditor {
     }
 
     public void selectivelyShowRegion(double centerPercent, double margin) {
-        System.out.println("Selectively show region");
         int measureWidthMs = 4 * Quantizer.COL_WIDTH;
         int marginMeasures = ((int) (margin / Math.round(scaler.scaleX(measureWidthMs)))) + 3;
         int centerMeasure = RoundUtils.round((numMeasures) * centerPercent) - 1; // Pre-roll.

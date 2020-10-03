@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.common.dialog;
 
+import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
@@ -20,10 +21,12 @@ public class SaveWarningDialog implements Localizable {
     }
 
     private final Localizer localizer;
+    private final Label displayMessage;
     private final Button saveButton;
     private final Button closeWithoutSavingButton;
     private final Button cancelButton;
 
+    private String fileName;
     private Decision decision;
 
     @Inject
@@ -32,6 +35,7 @@ public class SaveWarningDialog implements Localizable {
         decision = Decision.CANCEL;
 
         // Initialize values that need to be localized.
+        displayMessage = new Label();
         saveButton = new Button();
         saveButton.setDefaultButton(true);
         closeWithoutSavingButton = new Button();
@@ -41,18 +45,20 @@ public class SaveWarningDialog implements Localizable {
 
     @Override
     public void localize(ResourceBundle bundle) {
-        // TODO Localize all text rather than just the buttons.
+        if (fileName != null) {
+            displayMessage.setText(
+                    MessageFormat.format(bundle.getString("dialog.saveWarning"), fileName));
+        }
         saveButton.setText(bundle.getString("general.save"));
         closeWithoutSavingButton.setText(bundle.getString("dialog.closeWithoutSaving"));
         cancelButton.setText(bundle.getString("general.cancel"));
     }
 
     public Decision popup(Stage parent, String fileName) {
+        this.fileName = fileName;
         localizer.localize(this);
 
         Stage dialog = new Stage();
-        dialog.setTitle("Confirmation");
-        Label displayLabel = new Label("Do you want to save your changes to " + fileName + "?");
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(parent);
 
@@ -62,7 +68,7 @@ public class SaveWarningDialog implements Localizable {
         HBox dialogHBox = new HBox(10);
         dialogHBox.setAlignment(Pos.CENTER_RIGHT);
 
-        dialogVBox.getChildren().addAll(displayLabel, dialogHBox);
+        dialogVBox.getChildren().addAll(displayMessage, dialogHBox);
         dialogHBox.getChildren().add(closeWithoutSavingButton);
         HBox.setMargin(closeWithoutSavingButton, new Insets(0, 15, 0, 0));
         dialogHBox.getChildren().add(cancelButton);
