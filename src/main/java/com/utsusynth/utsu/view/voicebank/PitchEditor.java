@@ -2,9 +2,12 @@ package com.utsusynth.utsu.view.voicebank;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.PitchMapData;
+import com.utsusynth.utsu.common.i18n.Localizable;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.SelectionMode;
@@ -15,9 +18,18 @@ import javafx.scene.control.TextField;
 import javafx.scene.text.Font;
 import javafx.util.StringConverter;
 
-public class PitchEditor {
+import javax.inject.Inject;
+
+public class PitchEditor implements Localizable {
+    private final Localizer localizer;
+
     private TableView<PitchMapData> table;
     private PitchCallback model;
+
+    @Inject
+    public PitchEditor(Localizer localizer) {
+        this.localizer = localizer;
+    }
 
     /** Initialize editor with data from the controller. */
     public void initialize(PitchCallback callback) {
@@ -62,6 +74,7 @@ public class PitchEditor {
             });
         }
 
+        localizer.localize(this);
         return table;
     }
 
@@ -86,6 +99,14 @@ public class PitchEditor {
 
     public void selectAll() {
         table.getSelectionModel().selectAll();
+    }
+
+    @Override
+    public void localize(ResourceBundle bundle) {
+        if (table != null) {
+            table.getColumns().get(0).setText(bundle.getString("voice.pitch"));
+            table.getColumns().get(1).setText(bundle.getString("voice.suffix"));
+        }
     }
 
     private class EditableCell<T> extends TableCell<PitchMapData, T> {
