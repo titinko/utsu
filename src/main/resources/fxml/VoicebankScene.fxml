@@ -102,7 +102,7 @@
                   </AnchorPane>
                   <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
                     <tabs>
-                      <Tab text="Description">
+                      <Tab fx:id="descriptionTab" text="Description">
                         <content>
                           <ScrollPane fitToHeight="true" fitToWidth="true" minViewportHeight="0.0" minViewportWidth="300">
                                  <content>
@@ -111,7 +111,7 @@
                               </ScrollPane>
                         </content>
                       </Tab>
-                      <Tab text="Pitch">
+                      <Tab fx:id="pitchTab" text="Pitch">
                         <content>
                               <HBox>
                                  <children>

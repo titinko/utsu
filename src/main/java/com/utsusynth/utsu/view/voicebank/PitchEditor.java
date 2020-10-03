@@ -141,7 +141,7 @@ public class PitchEditor {
         }
     }
 
-    private final StringConverter<String> stringToString = new StringConverter<String>() {
+    private final StringConverter<String> stringToString = new StringConverter<>() {
         @Override
         public String toString(String object) {
             return object == null ? "" : object;

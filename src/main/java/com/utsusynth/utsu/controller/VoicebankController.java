@@ -222,6 +222,10 @@ public class VoicebankController implements EditorController, Localizable {
     private Label nameLabel; // Value injected by FXMLLoader
     @FXML // fx:id="authorLabel"
     private Label authorLabel; // Value injected by FXMLLoader
+    @FXML // fx:id="descriptionTab"
+    private Tab descriptionTab; // Value injected by FXMLLoader
+    @FXML // fx:id="pitchTab"
+    private Tab pitchTab; // Value injected by FXMLLoader
     @FXML // fx:id="applySuffixButton"
     private Button applySuffixButton; // Value injected by FXMLLoader
     @FXML // fx:id="offsetLabel"
@@ -239,7 +243,15 @@ public class VoicebankController implements EditorController, Localizable {
     public void localize(ResourceBundle bundle) {
         nameLabel.setText(bundle.getString("voice.name"));
         authorLabel.setText(bundle.getString("voice.author"));
+        descriptionTab.setText(bundle.getString("voice.description"));
+        descriptionTextArea.setPromptText(bundle.getString("voice.descriptionPrompt"));
+        pitchTab.setText(bundle.getString("voice.pitch"));
         applySuffixButton.setText(bundle.getString("general.apply"));
+        offsetLabel.setText(bundle.getString("voice.offset"));
+        cutoffLabel.setText(bundle.getString("voice.cutoff"));
+        consonantLabel.setText(bundle.getString("voice.consonant"));
+        preutteranceLabel.setText(bundle.getString("voice.preutterance"));
+        overlapLabel.setText(bundle.getString("voice.overlap"));
     }
 
     @Override
