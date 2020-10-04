@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.song.note.pitch.portamento;
 import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
@@ -25,6 +26,7 @@ public class Portamento {
     private final Group group;
     private final PitchbendCallback callback;
     private final CurveFactory curveFactory;
+    private final Localizer localizer;
     private final Scaler scaler;
 
     // Temporary cache values.
@@ -36,10 +38,12 @@ public class Portamento {
             ArrayList<Curve> curves,
             PitchbendCallback callback,
             CurveFactory factory,
+            Localizer localizer,
             Scaler scaler) {
         this.noteStartMs = noteStartMs;
         this.callback = callback;
         this.curveFactory = factory;
+        this.localizer = localizer;
         this.scaler = scaler;
         this.squares = new ArrayList<>();
         // Add control points.
@@ -208,6 +212,15 @@ public class Portamento {
         curveType.getItems().addAll(sCurve, jCurve, rCurve, straightCurve);
 
         contextMenu.getItems().addAll(addControlPoint, removeControlPoint, curveType);
+        contextMenu.setOnShowing(event -> {
+            addControlPoint.setText(localizer.getMessage("song.note.addControlPoint"));
+            removeControlPoint.setText(localizer.getMessage("song.note.removeControlPoint"));
+            curveType.setText(localizer.getMessage("song.note.curveType"));
+            sCurve.setText(localizer.getMessage("song.note.sCurve"));
+            jCurve.setText(localizer.getMessage("song.note.jCurve"));
+            rCurve.setText(localizer.getMessage("song.note.rCurve"));
+            straightCurve.setText(localizer.getMessage("song.note.straightCurve"));
+        });
         return contextMenu;
     }
 

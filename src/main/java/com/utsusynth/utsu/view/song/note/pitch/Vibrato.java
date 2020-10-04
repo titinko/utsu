@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Function;
 import java.util.Optional;
+
+import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import javafx.beans.binding.DoubleExpression;
@@ -47,6 +49,7 @@ public class Vibrato {
             int noteEndMs,
             double noteY,
             PitchbendCallback callback,
+            Localizer localizer,
             Scaler scaler,
             int[] startVibrato,
             BooleanProperty showEditor) {
@@ -77,6 +80,8 @@ public class Vibrato {
         CheckMenuItem vibratoEditorMenuItem = new CheckMenuItem("Vibrato Editor");
         vibratoEditorMenuItem.selectedProperty().bindBidirectional(showEditor);
         ContextMenu menu = new ContextMenu(vibratoEditorMenuItem);
+        menu.setOnShowing(event ->
+                vibratoEditorMenuItem.setText(localizer.getMessage("song.note.vibratoEditor")));
         editorGroup.setOnContextMenuRequested(
                 event -> menu.show(editorGroup, event.getScreenX(), event.getScreenY()));
     }

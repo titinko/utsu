@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
@@ -15,11 +16,13 @@ import javafx.beans.property.BooleanProperty;
 
 public class PitchbendFactory {
     private final CurveFactory curveFactory;
+    private final Localizer localizer;
     private final Scaler scaler;
 
     @Inject
-    public PitchbendFactory(CurveFactory curveFactory, Scaler scaler) {
+    public PitchbendFactory(CurveFactory curveFactory, Localizer localizer, Scaler scaler) {
         this.curveFactory = curveFactory;
+        this.localizer = localizer;
         this.scaler = scaler;
     }
 
@@ -67,7 +70,8 @@ public class PitchbendFactory {
                             scaler.scaleY(curY),
                             type));
         }
-        return new Portamento(note.getAbsPositionMs(), pitchCurves, callback, curveFactory, scaler);
+        return new Portamento(
+                note.getAbsPositionMs(), pitchCurves, callback, curveFactory, localizer, scaler);
     }
 
     private Vibrato createVibrato(
@@ -80,6 +84,7 @@ public class PitchbendFactory {
                 note.getAbsPositionMs() + note.getDurationMs(),
                 scaler.scaleY((note.getRow() + .5) * Quantizer.ROW_HEIGHT),
                 callback,
+                localizer,
                 scaler,
                 pitchbend.getVibrato(),
                 vibratoEditor);
