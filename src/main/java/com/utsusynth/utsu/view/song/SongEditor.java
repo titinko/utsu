@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.*;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
@@ -37,6 +38,7 @@ public class SongEditor {
     private final SongClipboard clipboard;
     private final NoteFactory noteFactory;
     private final NoteMap noteMap;
+    private final Localizer localizer;
     private final Quantizer quantizer;
     private final Scaler scaler;
 
@@ -64,12 +66,14 @@ public class SongEditor {
             SongClipboard clipboard,
             NoteFactory trackNoteFactory,
             NoteMap noteMap,
+            Localizer localizer,
             Quantizer quantizer,
             Scaler scaler) {
         this.playbackManager = playbackManager;
         this.clipboard = clipboard;
         this.noteFactory = trackNoteFactory;
         this.noteMap = noteMap;
+        this.localizer = localizer;
         this.quantizer = quantizer;
         this.scaler = scaler;
 
@@ -83,9 +87,14 @@ public class SongEditor {
         SeparatorMenuItem separator = new SeparatorMenuItem();
         MenuItem selectAllItem = new MenuItem("Select All");
         selectAllItem.setOnAction(event -> selectAll());
-        MenuItem deselectItem = new MenuItem("Deselect");
+        MenuItem deselectItem = new MenuItem("Clear Selection");
         deselectItem.setOnAction(event -> playbackManager.clearHighlights());
         editorContextMenu.getItems().addAll(pasteItem, separator, selectAllItem, deselectItem);
+        editorContextMenu.setOnShowing(event -> {
+            pasteItem.setText(localizer.getMessage("menu.edit.paste"));
+            selectAllItem.setText(localizer.getMessage("menu.edit.selectAll"));
+            deselectItem.setText(localizer.getMessage("menu.edit.clearSelection"));
+        });
     }
 
     /**

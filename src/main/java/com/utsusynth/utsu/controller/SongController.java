@@ -247,16 +247,11 @@ public class SongController implements EditorController, Localizable {
         MenuItem openVoicebankItem = new MenuItem("Open Voicebank");
         openVoicebankItem.setOnAction(event -> callback.openVoicebank(song.get().getVoiceDir()));
         iconContextMenu.getItems().add(openVoicebankItem);
-        voicebankImage.setOnContextMenuRequested((event -> {
-            iconContextMenu.hide();
-            iconContextMenu.show(voicebankImage, event.getScreenX(), event.getScreenY());
-        }));
-        Runnable localizeIconContextMenu = () -> {
+        iconContextMenu.setOnShowing(event -> {
             openVoicebankItem.setText(localizer.getMessage("song.openCurrentVoicebank"));
-        };
+        });
         voicebankImage.setOnContextMenuRequested((event -> {
             iconContextMenu.hide();
-            localizeIconContextMenu.run();
             iconContextMenu.show(voicebankImage, event.getScreenX(), event.getScreenY());
         }));
 
