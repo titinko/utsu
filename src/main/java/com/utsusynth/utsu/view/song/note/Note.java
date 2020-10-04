@@ -7,6 +7,7 @@ import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
@@ -54,6 +55,7 @@ public class Note implements Comparable<Note> {
             StackPane layout,
             NoteCallback callback,
             BooleanProperty vibratoEditor,
+            Localizer localizer,
             Quantizer quantizer,
             Scaler scaler) {
         this.note = note;
@@ -126,6 +128,15 @@ public class Note implements Comparable<Note> {
                 lyricConfigItem,
                 new SeparatorMenuItem(),
                 notePropertiesItem);
+        contextMenu.setOnShowing(event -> {
+            cutMenuItem.setText(localizer.getMessage("menu.edit.cut"));
+            copyMenuItem.setText(localizer.getMessage("menu.edit.copy"));
+            deleteMenuItem.setText(localizer.getMessage("menu.edit.delete"));
+            vibratoMenuItem.setText(localizer.getMessage("song.note.vibrato"));
+            vibratoEditorMenuItem.setText(localizer.getMessage("song.note.vibratoEditor"));
+            lyricConfigItem.setText(localizer.getMessage("song.note.openLyricConfig"));
+            notePropertiesItem.setText(localizer.getMessage("menu.edit.noteProperties"));
+        });
         layout.setOnContextMenuRequested(event -> {
             contextMenu.hide();
             contextMenu.show(layout, event.getScreenX(), event.getScreenY());

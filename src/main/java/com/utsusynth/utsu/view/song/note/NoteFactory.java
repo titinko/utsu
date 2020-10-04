@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
@@ -13,12 +14,18 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
 public class NoteFactory {
+    private final Localizer localizer;
     private final Scaler scaler;
     private final Quantizer quantizer;
     private final Provider<Lyric> lyricProvider;
 
     @Inject
-    public NoteFactory(Scaler scaler, Quantizer quantizer, Provider<Lyric> lyricProvider) {
+    public NoteFactory(
+            Localizer localizer,
+            Scaler scaler,
+            Quantizer quantizer,
+            Provider<Lyric> lyricProvider) {
+        this.localizer = localizer;
         this.scaler = scaler;
         this.quantizer = quantizer;
         this.lyricProvider = lyricProvider;
@@ -58,6 +65,7 @@ public class NoteFactory {
                 layout,
                 callback,
                 vibratoEditor,
+                localizer,
                 quantizer,
                 scaler);
         lyric.setVisibleLyric(note.getLyric());
@@ -115,6 +123,7 @@ public class NoteFactory {
                 layout,
                 callback,
                 vibratoEditor,
+                localizer,
                 quantizer,
                 scaler);
         lyric.registerLyric();

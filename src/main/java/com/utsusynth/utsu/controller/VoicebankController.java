@@ -243,9 +243,9 @@ public class VoicebankController implements EditorController, Localizable {
     public void localize(ResourceBundle bundle) {
         nameLabel.setText(bundle.getString("voice.name"));
         authorLabel.setText(bundle.getString("voice.author"));
-        descriptionTab.setText(bundle.getString("voice.description"));
+        descriptionTab.setText(bundle.getString("voice.descriptionTab"));
         descriptionTextArea.setPromptText(bundle.getString("voice.descriptionPrompt"));
-        pitchTab.setText(bundle.getString("voice.pitch"));
+        pitchTab.setText(bundle.getString("voice.pitchTab"));
         applySuffixButton.setText(bundle.getString("general.apply"));
         offsetLabel.setText(bundle.getString("voice.offset"));
         cutoffLabel.setText(bundle.getString("voice.cutoff"));
