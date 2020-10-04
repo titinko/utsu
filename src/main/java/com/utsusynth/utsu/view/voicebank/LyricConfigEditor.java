@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.WavData;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.SoundFileReader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,6 +34,7 @@ public class LyricConfigEditor {
     private static MediaPlayer mediaPlayer; // Used for audio playback.
 
     private final SoundFileReader soundFileReader;
+    private final Localizer localizer;
 
     private Optional<LyricConfigData> configData;
     private LyricConfigCallback model;
@@ -45,8 +47,9 @@ public class LyricConfigEditor {
     private double[] cachedConfig;
 
     @Inject
-    public LyricConfigEditor(SoundFileReader soundFileReader) {
+    public LyricConfigEditor(SoundFileReader soundFileReader, Localizer localizer) {
         this.soundFileReader = soundFileReader;
+        this.localizer = localizer;
 
         // Initialize with dummy data.
         configData = Optional.empty();
@@ -111,6 +114,7 @@ public class LyricConfigEditor {
             playSound();
         });
         ContextMenu contextMenu = new ContextMenu(playItem);
+        contextMenu.setOnShowing(event -> playItem.setText(localizer.getMessage("song.play")));
         background.setOnContextMenuRequested(event -> {
             contextMenu.show(background, event.getScreenX(), event.getScreenY());
         });

@@ -25,6 +25,7 @@ public class Localizer {
     public void localize(Localizable target) {
         if (targets.contains(target)) {
             // TODO: Handle this, or just ignore it. I'm not a cop.
+            target.localize(this.bundle);
             return;
         }
         targets.add(target);

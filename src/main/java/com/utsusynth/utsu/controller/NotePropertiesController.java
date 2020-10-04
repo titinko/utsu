@@ -315,8 +315,8 @@ public class NotePropertiesController implements Localizable {
     @Override
     public void localize(ResourceBundle bundle) {
         consonantVelocityLabel.setText(bundle.getString("properties.consonantVelocity"));
-        preutterLabel.setText(bundle.getString("properties.preutterance"));
-        overlapLabel.setText(bundle.getString("properties.overlap"));
+        preutterLabel.setText(bundle.getString("voice.preutteranceShort"));
+        overlapLabel.setText(bundle.getString("voice.overlap"));
         startPointLabel.setText(bundle.getString("properties.startPoint"));
         intensityLabel.setText(bundle.getString("properties.intensity"));
         modulationLabel.setText(bundle.getString("properties.modulation"));

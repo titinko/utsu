@@ -4,6 +4,8 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
+import com.utsusynth.utsu.common.i18n.Localizable;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
@@ -17,16 +19,21 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
 import javafx.util.StringConverter;
 
+import javax.inject.Inject;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public class VoicebankEditor {
+public class VoicebankEditor implements Localizable {
+    private final Localizer localizer;
     private final Map<String, TableView<LyricConfigData>> tables = new HashMap<>();
+
     private TabPane tabPane;
     private VoicebankCallback model;
+
+    @Inject
+    public VoicebankEditor(Localizer localizer) {
+        this.localizer = localizer;
+    }
 
     /**
      * Initialize editor with data from the controller.
@@ -43,7 +50,9 @@ public class VoicebankEditor {
 
         if (categories.size() == 1) {
             String category = categories.iterator().next();
-            return newTable(category, model.getLyricData(category));
+            ScrollPane table = newTable(category, model.getLyricData(category));
+            localizer.localize(this);
+            return table;
         }
 
         // Create tabs to open other categories.
@@ -59,6 +68,7 @@ public class VoicebankEditor {
             });
             tabPane.getTabs().add(tab);
         }
+        localizer.localize(this);
         return tabPane;
     }
 
@@ -138,9 +148,15 @@ public class VoicebankEditor {
                 });
             });
             contextMenu.getItems().addAll(addAliasItem, genFrqItem, deleteItem);
+            Runnable localizeRowContextMenu = () -> {
+                addAliasItem.setText(localizer.getMessage("voice.addAlias"));
+                genFrqItem.setText(localizer.getMessage("voice.generateFrqFile"));
+                deleteItem.setText(localizer.getMessage("menu.edit.delete"));
+            };
             row.setOnContextMenuRequested(event -> {
                 // Don't show context menu for empty rows.
                 if (row.getItem() != null) {
+                    localizeRowContextMenu.run();
                     contextMenu.show(row, event.getScreenX(), event.getScreenY());
                 }
             });
@@ -226,6 +242,10 @@ public class VoicebankEditor {
         MenuItem regenerateAllFrqItem = new MenuItem("Replace all .frq Files");
         regenerateAllFrqItem.setOnAction(event -> model.generateFrqFiles(lyrics.iterator()));
         contextMenu.getItems().addAll(generateAllFrqItem, regenerateAllFrqItem);
+        contextMenu.setOnShowing(event -> {
+            generateAllFrqItem.setText(localizer.getMessage("voice.generateMissingFrqFiles"));
+            regenerateAllFrqItem.setText(localizer.getMessage("voice.regenerateFrqFiles"));
+        });
         col.setContextMenu(contextMenu);
         return col;
     }
@@ -285,6 +305,20 @@ public class VoicebankEditor {
         tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         HBox.setHgrow(tabPane, Priority.ALWAYS);
+    }
+
+    @Override
+    public void localize(ResourceBundle bundle) {
+        for (TableView<LyricConfigData> table : tables.values()) {
+            table.getColumns().get(0).setText(bundle.getString("voice.lyric"));
+            table.getColumns().get(1).setText(bundle.getString("voice.lyricFile"));
+            table.getColumns().get(2).setText(bundle.getString("voice.frq"));
+            table.getColumns().get(3).setText(bundle.getString("voice.offset"));
+            table.getColumns().get(4).setText(bundle.getString("voice.consonant"));
+            table.getColumns().get(5).setText(bundle.getString("voice.cutoff"));
+            table.getColumns().get(6).setText(bundle.getString("voice.preutteranceShort"));
+            table.getColumns().get(7).setText(bundle.getString("voice.overlap"));
+        }
     }
 
     private class FrqStatusCell extends TableCell<LyricConfigData, String> {
