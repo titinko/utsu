@@ -1,8 +1,5 @@
 package com.utsusynth.utsu.controller;
 
-import java.text.MessageFormat;
-import java.util.Optional;
-import java.util.ResourceBundle;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -26,11 +23,17 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+import java.text.MessageFormat;
+import java.util.Optional;
+import java.util.ResourceBundle;
+
 /**
  * 'NotePropertiesScene.fxml' Controller Class
  */
 public class NotePropertiesController implements Localizable {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+    private static final String PLUS_MINUS_ZERO = "+/- 0"; // Resets value.
+    private static final String DIFFERENT_VALUES = "n/a"; // Makes no changes to value.
 
     private final Localizer localizer;
 
@@ -72,7 +75,7 @@ public class NotePropertiesController implements Localizable {
     private TextField curOverlap; // Value injected by FXMLLoader
 
     @FXML // fx:id="startPointLabel"
-    private Label startPointLabel;
+    private Label startPointLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="startPointSlider"
     private Slider startPointSlider; // Value injected by FXMLLoader
@@ -143,7 +146,7 @@ public class NotePropertiesController implements Localizable {
             textField.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
         });
         textField.focusedProperty().addListener((event) -> {
-            if (!textField.isFocused() && !textField.getText().equals("n/a")) {
+            if (!textField.isFocused() && !textField.getText().equals(DIFFERENT_VALUES)) {
                 try {
                     double boundedValue = Math.max(
                             Math.min(slider.getMax(), Double.parseDouble(textField.getText())),
@@ -164,7 +167,7 @@ public class NotePropertiesController implements Localizable {
             textField.setText(Integer.toString(sliderValue));
         });
         textField.focusedProperty().addListener((event) -> {
-            if (!textField.isFocused() && !textField.getText().equals("n/a")) {
+            if (!textField.isFocused() && !textField.getText().equals(DIFFERENT_VALUES)) {
                 try {
                     double boundedValue = Math.max(
                             Math.min(slider.getMax(), Double.parseDouble(textField.getText())),
@@ -223,7 +226,7 @@ public class NotePropertiesController implements Localizable {
         if (allValuesEqual(note -> note.getVelocity())) {
             consonantVelocitySlider.setValue(note1.getVelocity());
         } else {
-            curConsonantVelocity.setText("n/a");
+            curConsonantVelocity.setText(DIFFERENT_VALUES);
         }
         if (notes.size() == 1) {
             // Preutter and overlap.
@@ -240,25 +243,27 @@ public class NotePropertiesController implements Localizable {
         } else {
             preutterSlider.setDisable(true);
             curPreutter.setDisable(true);
-            curPreutter.setText("");
+            curPreutter.setText(allValuesEmpty(note -> note.getPreutter())
+                    ? PLUS_MINUS_ZERO : DIFFERENT_VALUES);
             overlapSlider.setDisable(true);
             curOverlap.setDisable(true);
-            curOverlap.setText("");
+            curOverlap.setText(allValuesEmpty(note -> note.getOverlap())
+                    ? PLUS_MINUS_ZERO : DIFFERENT_VALUES);
         }
         if (allValuesEqual(note -> note.getStartPoint())) {
             startPointSlider.setValue(note1.getStartPoint());
         } else {
-            curStartPoint.setText("n/a");
+            curStartPoint.setText(DIFFERENT_VALUES);
         }
         if (allValuesEqual(note -> (double) note.getIntensity())) {
             intensitySlider.setValue(note1.getIntensity());
         } else {
-            curIntensity.setText("n/a");
+            curIntensity.setText(DIFFERENT_VALUES);
         }
         if (allValuesEqual(note -> (double) note.getModulation())) {
             modulationSlider.setValue(note1.getModulation());
         } else {
-            curModulation.setText("n/a");
+            curModulation.setText(DIFFERENT_VALUES);
         }
         if (allFlagsEqual()) {
             flagsTF.setText(note1.getNoteFlags());
@@ -313,6 +318,18 @@ public class NotePropertiesController implements Localizable {
         return true;
     }
 
+    private boolean allValuesEmpty(Function<Note, Optional<Double>> fxn) {
+        if (notes.isEmpty()) {
+            return false;
+        }
+        for (Note note : notes) {
+            if (fxn.apply(note).isPresent()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public void localize(ResourceBundle bundle) {
         consonantVelocityLabel.setText(bundle.getString("properties.consonantVelocity"));
@@ -336,7 +353,7 @@ public class NotePropertiesController implements Localizable {
         for (Note note : notes) {
             double oldVelocity = note.getVelocity();
             double newVelocity = oldVelocity;
-            if (!consonantVelocityLabel.getText().equals("n/a")) {
+            if (!consonantVelocityLabel.getText().equals(DIFFERENT_VALUES)) {
                 newVelocity = consonantVelocitySlider.getValue();
             }
             Optional<Double> oldPreutter = note.getPreutter();
@@ -347,6 +364,8 @@ public class NotePropertiesController implements Localizable {
                 } else {
                     newPreutter = Optional.of(preutterSlider.getValue());
                 }
+            } else if (curPreutter.getText().equals(PLUS_MINUS_ZERO)) {
+                newPreutter = Optional.empty();
             }
             Optional<Double> oldOverlap = note.getOverlap();
             Optional<Double> newOverlap = oldOverlap;
@@ -356,20 +375,22 @@ public class NotePropertiesController implements Localizable {
                 } else {
                     newOverlap = Optional.of(overlapSlider.getValue());
                 }
+            } else if (curOverlap.getText().equals(PLUS_MINUS_ZERO)) {
+                newOverlap = Optional.empty();
             }
             double oldStartPoint = note.getStartPoint();
             double newStartPoint = oldStartPoint;
-            if (!startPointLabel.getText().equals("n/a")) {
+            if (!startPointLabel.getText().equals(DIFFERENT_VALUES)) {
                 newStartPoint = startPointSlider.getValue();
             }
             int oldIntensity = note.getIntensity();
             int newIntensity = oldIntensity;
-            if (!intensityLabel.getText().equals("n/a")) {
+            if (!intensityLabel.getText().equals(DIFFERENT_VALUES)) {
                 newIntensity = RoundUtils.round(intensitySlider.getValue());
             }
             int oldModulation = note.getModulation();
             int newModulation = oldModulation;
-            if (!modulationLabel.getText().equals("n/a")) {
+            if (!modulationLabel.getText().equals(DIFFERENT_VALUES)) {
                 newModulation = RoundUtils.round(modulationSlider.getValue());
             }
             String oldFlags = note.getNoteFlags();
@@ -411,6 +432,9 @@ public class NotePropertiesController implements Localizable {
             curPreutter.setText(Double.toString(lyricPreutter(notes.get(0))));
             overlapSlider.setValue(lyricOverlap(notes.get(0)));
             curOverlap.setText(Double.toString(lyricOverlap(notes.get(0))));
+        } else {
+            curPreutter.setText(PLUS_MINUS_ZERO);
+            curOverlap.setText(PLUS_MINUS_ZERO);
         }
         startPointSlider.setValue(0);
         curStartPoint.setText("0.0");

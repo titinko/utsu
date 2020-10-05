@@ -683,7 +683,7 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initModality(Modality.APPLICATION_MODAL);
             propertiesWindow.initOwner(currentStage);
             BorderPane notePropertiesPane = loader.load(fxml);
-            NotePropertiesController controller = (NotePropertiesController) loader.getController();
+            NotePropertiesController controller = loader.getController();
             controller.setData(song, regionBounds, (oldData, newData) -> {
                 Runnable redoAction = () -> {
                     NoteIterator notes = song.get().getNoteIterator(regionBounds);
