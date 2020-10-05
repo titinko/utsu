@@ -42,40 +42,49 @@ public class SongPropertiesController implements Localizable {
     private BorderPane root; // Value injected by FXMLLoader
 
     @FXML // fx:id="projectNameLabel"
-    private Label projectNameLabel;
+    private Label projectNameLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="projectNameTF"
-    private TextField projectNameTF;
+    private TextField projectNameTF; // Value injected by FXMLLoader
 
     @FXML // fx:id="outputFileLabel"
-    private Label outputFileLabel;
+    private Label outputFileLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="outputFileTF"
-    private TextField outputFileTF;
+    private TextField outputFileTF; // Value injected by FXMLLoader
 
     @FXML // fx:id="flagsLabel"
-    private Label flagsLabel;
+    private Label flagsLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="flagsTF"
-    private TextField flagsTF;
+    private TextField flagsTF; // Value injected by FXMLLoader
 
     @FXML // fx:id="resamplerLabel"
-    private Label resamplerLabel;
+    private Label resamplerLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="resamplerName"
     private TextField resamplerName; // Value injected by FXMLLoader
 
+    @FXML // fx:id="changeResamplerButton"
+    private Button changeResamplerButton; // Value injected by FXMLLoader
+
     @FXML // fx:id="wavtoolLabel"
-    private Label wavtoolLabel;
+    private Label wavtoolLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="wavtoolName"
     private TextField wavtoolName; // Value injected by FXMLLoader
 
+    @FXML // fx:id="changeWavtoolButton"
+    private Button changeWavtoolButton; // Value injected by FXMLLoader
+
     @FXML // fx:id="voicebankLabel"
-    private Label voicebankLabel;
+    private Label voicebankLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="voicebankName"
     private TextField voicebankName; // Value injected by FXMLLoader
+
+    @FXML // fx:id="changeVoicebankButton"
+    private Button changeVoicebankButton; // Value injected by FXMLLoader
 
     @FXML // fx:id="instrumentalLabel"
     private Label instrumentalLabel; // Value injected by FXMLLoader
@@ -83,8 +92,11 @@ public class SongPropertiesController implements Localizable {
     @FXML // fx:id="instrumentalName"
     private TextField instrumentalName; // Value injected by FXMLLoader
 
+    @FXML // fx:id="changeInstrumentalButton"
+    private Button changeInstrumentalButton; // Value injected by FXMLLoader
+
     @FXML // fx:id="tempoLabel"
-    private Label tempoLabel;
+    private Label tempoLabel; // Value injected by FXMLLoader
 
     @FXML // fx:id="tempoSlider"
     private Slider tempoSlider; // Value injected by FXMLLoader
@@ -162,6 +174,10 @@ public class SongPropertiesController implements Localizable {
         voicebankLabel.setText(bundle.getString("properties.voicebank"));
         instrumentalLabel.setText(bundle.getString("properties.instrumental"));
         tempoLabel.setText(bundle.getString("properties.tempo"));
+        changeResamplerButton.setText(bundle.getString("properties.change"));
+        changeWavtoolButton.setText(bundle.getString("properties.change"));
+        changeVoicebankButton.setText(bundle.getString("properties.change"));
+        changeInstrumentalButton.setText(bundle.getString("properties.change"));
         applyButton.setText(bundle.getString("general.apply"));
         cancelButton.setText(bundle.getString("general.cancel"));
     }

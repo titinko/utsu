@@ -679,7 +679,7 @@ public class SongController implements EditorController, Localizable {
         try {
             Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
             Stage propertiesWindow = new Stage();
-            propertiesWindow.setTitle("Note Properties");
+            propertiesWindow.setTitle(localizer.getMessage("menu.edit.noteProperties"));
             propertiesWindow.initModality(Modality.APPLICATION_MODAL);
             propertiesWindow.initOwner(currentStage);
             BorderPane notePropertiesPane = loader.load(fxml);
@@ -848,7 +848,7 @@ public class SongController implements EditorController, Localizable {
         try {
             Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
             Stage propertiesWindow = new Stage();
-            propertiesWindow.setTitle("Song Properties");
+            propertiesWindow.setTitle(localizer.getMessage("menu.project.properties"));
             propertiesWindow.initModality(Modality.APPLICATION_MODAL);
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);

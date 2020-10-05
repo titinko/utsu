@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.controller;
 
+import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import com.google.common.base.Function;
@@ -200,18 +201,18 @@ public class NotePropertiesController implements Localizable {
             return;
         }
 
-        // Set title.
+        // Set title. Depends on locale not changing while properties window is open.
         if (notes.size() == 1) {
             titleLabel.setText(
-                    String.format(
-                            "Note %d of %d (%s)",
+                    MessageFormat.format(
+                            localizer.getMessage("properties.noteXOfY"),
                             startIndex + 1,
                             songContainer.get().getNumNotes(),
                             notes.get(0).getLyric()));
         } else {
             titleLabel.setText(
-                    String.format(
-                            "Notes %d to %d of %d",
+                    MessageFormat.format(
+                            localizer.getMessage("properties.notesXToYOfZ"),
                             startIndex + 1,
                             endIndex + 1,
                             songContainer.get().getNumNotes()));
