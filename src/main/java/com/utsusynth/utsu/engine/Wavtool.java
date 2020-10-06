@@ -8,10 +8,15 @@ import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Wavtool {
     private final ExternalProcessRunner runner;
+    private double totalDuration = 0; // Total duration in ms, used to debug timing issues.
 
     @Inject
     Wavtool(ExternalProcessRunner runner) {
         this.runner = runner;
+    }
+
+    void startRender() {
+        totalDuration = 0;
     }
 
     void addNewNote(
@@ -57,14 +62,22 @@ public class Wavtool {
                 envelope[9], // p5
                 envelope[10], // v5
                 triggerSynthesis ? "LAST_NOTE" : ""); // Triggers final song processing.
+        totalDuration += (noteLength - boundedOverlap) * scaleFactor;
     }
 
     void addSilence(
             File wavtoolPath,
             double duration,
+            double expectedLength,
             File inputFile,
             File outputFile,
             boolean triggerSynthesis) {
+        // Check that current length matches expected length and report any discrepancies.
+        if (expectedLength > totalDuration && Math.abs(expectedLength - totalDuration) > 0.01) {
+                double timingCorrection = expectedLength - totalDuration;
+                duration += timingCorrection;
+                System.out.println("Corrected timing by " + timingCorrection + " ms.");
+        }
         String startPoint = "0.0";
         String noteLength = Double.toString(duration); // Tempo already applied.
         String[] envelope = new String[] {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
@@ -88,5 +101,6 @@ public class Wavtool {
                 envelope[9], // p5
                 envelope[10], // v5
                 triggerSynthesis ? "LAST_NOTE" : ""); // Triggers final song processing.
+        totalDuration += duration;
     }
 }

@@ -232,7 +232,7 @@ public class Engine {
             if (isFirstNote) {
                 if (notes.getCurDelta() - preutter > bounds.getMinMs()) {
                     double startDelta = notes.getCurDelta() - preutter - bounds.getMinMs();
-                    addSilence(startDelta, song, renderedSilence, finalSong, executor, futures);
+                    addSilence(startDelta, 0, song, renderedSilence, finalSong, executor, futures);
                 }
                 isFirstNote = false;
             }
@@ -243,6 +243,7 @@ public class Engine {
                 if (notes.peekNext().isPresent()) {
                     addSilence(
                             note.getLength() - notes.peekNext().get().getRealPreutter(),
+                            totalDelta,
                             song,
                             renderedSilence,
                             finalSong,
@@ -252,6 +253,7 @@ public class Engine {
                     // Case where the last note in the song is silent.
                     addFinalSilence(
                             note.getLength(),
+                            totalDelta,
                             song,
                             renderedSilence,
                             finalSong,
@@ -316,11 +318,19 @@ public class Engine {
                 } else {
                     silenceLength = note.getLength() - note.getDuration();
                 }
-                addSilence(silenceLength, song, renderedSilence, finalSong, executor, futures);
+                addSilence(
+                        silenceLength,
+                        totalDelta + note.getDuration(),
+                        song,
+                        renderedSilence,
+                        finalSong,
+                        executor,
+                        futures);
             }
         }
 
         // When resampler finishes, run wavtool on notes in sequential order.
+        wavtool.startRender();
         for (int i = 0; i < futures.size(); i++) {
             try {
                 double curProgress = i * 1.0 / futures.size();
@@ -341,6 +351,7 @@ public class Engine {
 
     private void addSilence(
             double duration,
+            double totalDelta,
             Song song,
             File renderedNote,
             File finalSong,
@@ -350,10 +361,12 @@ public class Engine {
             return;
         }
         double trueDuration = duration * (125.0 / song.getTempo());
+        double trueDelta = totalDelta * (125.0 / song.getTempo());
         futures.add(executor.submit(() -> {
             resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
             Runnable useWavtool = () -> {
-                wavtool.addSilence(wavtoolPath, trueDuration, renderedNote, finalSong, false);
+                wavtool.addSilence(
+                        wavtoolPath, trueDuration, trueDelta, renderedNote, finalSong, false);
             };
             return useWavtool;
         }));
@@ -361,6 +374,7 @@ public class Engine {
 
     private void addFinalSilence(
             double duration,
+            double totalDelta,
             Song song,
             File renderedNote,
             File finalSong,
@@ -368,10 +382,12 @@ public class Engine {
             ArrayList<Future<Runnable>> futures) {
         // The final note must be passed to the wavtool.
         double trueDuration = Math.max(duration, 0) * (125.0 / song.getTempo());
+        double trueDelta = totalDelta * (125.0 / song.getTempo());
         futures.add(executor.submit(() -> {
             resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
             Runnable useWavtool = () -> {
-                wavtool.addSilence(wavtoolPath, trueDuration, renderedNote, finalSong, true);
+                wavtool.addSilence(
+                        wavtoolPath, trueDuration, trueDelta, renderedNote, finalSong, true);
             };
             return useWavtool;
         }));
