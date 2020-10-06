@@ -259,7 +259,7 @@ public class Portamento {
             Curve line = curves.get(i);
             widths.add(scaler.unscaleX((line.getEndX() - line.getStartX())));
             if (i < curves.size() - 1) {
-                heights.add(scaler.unscaleY(endY - line.getEndY()) / Quantizer.ROW_HEIGHT * 10);
+                heights.add((endY - scaler.unscaleY(line.getEndY())) / Quantizer.ROW_HEIGHT * 10);
             }
             shapes.add(line.getType());
         }
