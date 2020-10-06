@@ -6,6 +6,7 @@ open module com.utsusynth.utsu {
     requires com.google.guice;
     requires org.apache.commons.io;
     requires jdk.charsets;
+    requires jdk.localedata;
 
     exports com.utsusynth.utsu;
 }
