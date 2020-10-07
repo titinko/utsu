@@ -39,6 +39,17 @@ public class UtsuApp extends Application {
             return;
         }
 
+        // Check for presence of settings path.
+        // TODO: Show a warning box to user if settings dir cannot be established.
+        File settingsPath = injector.getInstance(Key.get(File.class, UtsuModule.SettingsPath.class));
+        try {
+            if (!settingsPath.exists() && !settingsPath.mkdirs()) {
+                System.out.println("Error: Failed to create settings path.");
+            }
+        } catch (SecurityException e) {
+            System.out.println("Error: Insufficient permissions to create settings path.");
+        }
+
         // Construct scene.
         FXMLLoader loader = injector.getInstance(FXMLLoader.class);
         InputStream fxml = getClass().getResourceAsStream("/fxml/UtsuScene.fxml");

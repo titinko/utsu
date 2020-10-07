@@ -26,7 +26,19 @@ public class UtsuModule extends AbstractModule {
     @BindingAnnotation
     @Target({PARAMETER, METHOD})
     @Retention(RetentionPolicy.RUNTIME)
+    @interface Version {
+    }
+
+    @BindingAnnotation
+    @Target({PARAMETER, METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
     @interface AssetPath {
+    }
+
+    @BindingAnnotation
+    @Target({PARAMETER, METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface SettingsPath {
     }
 
     @Override
@@ -41,6 +53,19 @@ public class UtsuModule extends AbstractModule {
             return injector.getInstance(p);
         });
         return loader;
+    }
+
+    @Provides
+    @Version
+    private String provideVersion() {
+        return ("0.4.1");
+    }
+
+    @Provides
+    @SettingsPath
+    private File provideSettingsPath(@Version String curVersion) {
+        File homePath = new File(System.getProperty("user.home"));
+        return new File(homePath, ".utsu/" + curVersion);
     }
 
     @Provides
