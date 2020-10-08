@@ -1,6 +1,5 @@
 package com.utsusynth.utsu.controller.common;
 
-import java.io.File;
 import javafx.scene.image.Image;
 
 /** Singleton class, supplier of icon images loaded from the assets folder. */

@@ -3,18 +3,19 @@ package com.utsusynth.utsu.engine;
 import java.io.File;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Resampler {
-    private static final File SILENCE_PATH = new File("assets/silence.wav");
-
     private final ExternalProcessRunner runner;
+    private final AssetManager assetManager;
 
     @Inject
-    Resampler(ExternalProcessRunner runner) {
+    Resampler(ExternalProcessRunner runner, AssetManager assetManager) {
         this.runner = runner;
+        this.assetManager = assetManager;
     }
 
     void resample(
@@ -61,7 +62,7 @@ public class Resampler {
         String desiredLength = Double.toString(duration + 1);
         runner.runProcess(
                 resamplerPath.getAbsolutePath(),
-                SILENCE_PATH.getAbsolutePath(),
+                assetManager.getSilenceFile().getAbsolutePath(),
                 outputFile.getAbsolutePath(),
                 "C4",
                 "100",

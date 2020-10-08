@@ -9,6 +9,7 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.*;
+import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.VoicebankReader;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import javafx.fxml.FXMLLoader;
@@ -38,20 +39,19 @@ public class UtsuModule extends AbstractModule {
     @BindingAnnotation
     @Target({PARAMETER, METHOD})
     @Retention(RetentionPolicy.RUNTIME)
-    @interface SettingsPath {
+    public @interface SettingsPath {
     }
 
     @Override
     protected void configure() {
         bind(StatusBar.class).asEagerSingleton();
+        bind(AssetManager.class).asEagerSingleton();
     }
 
     @Provides
     private FXMLLoader provideFXMLLoader(final Injector injector) {
         FXMLLoader loader = new FXMLLoader();
-        loader.setControllerFactory(p -> {
-            return injector.getInstance(p);
-        });
+        loader.setControllerFactory(p -> injector.getInstance(p));
         return loader;
     }
 
@@ -86,7 +86,7 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private IconManager provideIconManager(@AssetPath File assetPath) {
+    private IconManager provideIconManager() {
         return new IconManager(
                 "/icons/Rewind.png",
                 "/icons/RewindPressed.png",
@@ -116,7 +116,8 @@ public class UtsuModule extends AbstractModule {
     }
 
     @Provides
-    private Engine provideEngine(Resampler resampler, Wavtool wavtool, StatusBar statusBar, @AssetPath File assetPath) {
+    private Engine provideEngine(
+            Resampler resampler, Wavtool wavtool, StatusBar statusBar, @AssetPath File assetPath) {
         String os = System.getProperty("os.name").toLowerCase();
         File resamplerPath;
         File wavtoolPath;
@@ -141,7 +142,8 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private FrqGenerator provideFrqGenerator(ExternalProcessRunner runner, @AssetPath File assetPath) {
+    private FrqGenerator provideFrqGenerator(
+            ExternalProcessRunner runner, @AssetPath File assetPath) {
         String os = System.getProperty("os.name").toLowerCase();
         File frqGeneratorPath;
         if (os.contains("win")) {

@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.utsusynth.utsu.controller.UtsuController;
+import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.model.ModelModule;
 import com.utsusynth.utsu.view.ViewModule;
 import javafx.application.Application;
@@ -17,6 +18,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -39,15 +41,19 @@ public class UtsuApp extends Application {
             return;
         }
 
-        // Check for presence of settings path.
-        // TODO: Show a warning box to user if settings dir cannot be established.
-        File settingsPath = injector.getInstance(Key.get(File.class, UtsuModule.SettingsPath.class));
+        // Copy assets into settings directory.
+        // TODO: Show a warning box to user if settings dir cannot be initialized.
+        AssetManager assetManager = injector.getInstance(AssetManager.class);
         try {
-            if (!settingsPath.exists() && !settingsPath.mkdirs()) {
-                System.out.println("Error: Failed to create settings path.");
-            }
+            assetManager.initialize();
         } catch (SecurityException e) {
-            System.out.println("Error: Insufficient permissions to create settings path.");
+            System.out.println("Error: Insufficient permissions to create settings directory.");
+            primaryStage.show();
+            primaryStage.close();
+        } catch (IOException e) {
+            System.out.println("Error: Could not copy assets into settings directory.");
+            primaryStage.show();
+            primaryStage.close();
         }
 
         // Construct scene.
