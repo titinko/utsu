@@ -31,27 +31,19 @@ public class UtsuApp extends Application {
         Injector injector =
                 Guice.createInjector(new UtsuModule(), new ModelModule(), new ViewModule());
 
-        // Return an error if assets folder can't be found.
-        File assetPath = injector.getInstance(Key.get(File.class, UtsuModule.AssetPath.class));
-        if (!assetPath.exists()) {
-            System.out.println("Error: assets directory not found.");
-            System.out.println("Please cd to the parent directory of the assets folder.");
-            primaryStage.show();
-            primaryStage.close();
-            return;
-        }
-
         // Copy assets into settings directory.
         // TODO: Show a warning box to user if settings dir cannot be initialized.
         AssetManager assetManager = injector.getInstance(AssetManager.class);
         try {
-            assetManager.initialize();
+            assetManager.initializeAssets();
         } catch (SecurityException e) {
             System.out.println("Error: Insufficient permissions to create settings directory.");
             primaryStage.show();
             primaryStage.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Error: Could not copy assets into settings directory.");
+            System.out.println(e.getMessage());
+            e.printStackTrace();
             primaryStage.show();
             primaryStage.close();
         }

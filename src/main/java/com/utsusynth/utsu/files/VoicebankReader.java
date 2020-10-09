@@ -15,11 +15,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
+
+import javax.inject.Inject;
 
 public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
@@ -32,11 +33,9 @@ public class VoicebankReader {
     private final AssetManager assetManager;
     private final Provider<Voicebank> voicebankProvider;
 
-    public VoicebankReader(
-            File defaultVoicePath,
-            AssetManager assetManager,
-            Provider<Voicebank> voicebankProvider) {
-        this.defaultVoicePath = defaultVoicePath;
+    @Inject
+    public VoicebankReader(AssetManager assetManager, Provider<Voicebank> voicebankProvider) {
+        this.defaultVoicePath = assetManager.getVoicePath();
         this.assetManager = assetManager;
         this.voicebankProvider = voicebankProvider;
     }

@@ -33,12 +33,6 @@ public class UtsuModule extends AbstractModule {
     @BindingAnnotation
     @Target({PARAMETER, METHOD})
     @Retention(RetentionPolicy.RUNTIME)
-    @interface AssetPath {
-    }
-
-    @BindingAnnotation
-    @Target({PARAMETER, METHOD})
-    @Retention(RetentionPolicy.RUNTIME)
     public @interface SettingsPath {
     }
 
@@ -46,6 +40,7 @@ public class UtsuModule extends AbstractModule {
     protected void configure() {
         bind(StatusBar.class).asEagerSingleton();
         bind(AssetManager.class).asEagerSingleton();
+        bind(VoicebankReader.class).asEagerSingleton();
     }
 
     @Provides
@@ -66,22 +61,6 @@ public class UtsuModule extends AbstractModule {
     private File provideSettingsPath(@Version String curVersion) {
         File homePath = new File(System.getProperty("user.home"));
         return new File(homePath, ".utsu/" + curVersion);
-    }
-
-    @Provides
-    @AssetPath
-    private File provideAssetPath() {
-        if (new File("./assets").exists()) {
-            return new File("./assets");
-        }
-        String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
-            return new File("/Program Files/Utsu/app/assets");
-        } else if (os.contains("mac")) {
-            return new File("/Applications/Utsu.app/Contents/app/assets");
-        } else {
-            return new File("/opt/Utsu/app/assets");
-        }
     }
 
     @Provides
@@ -143,17 +122,5 @@ public class UtsuModule extends AbstractModule {
     @Singleton
     private Scaler provideScaler() {
         return new Scaler(2, 0);
-    }
-
-    @Provides
-    @Singleton
-    private VoicebankReader provideVoicebankReader(
-            Provider<Voicebank> voicebankProvider,
-            AssetManager assetManager,
-            @AssetPath File assetPath) {
-        return new VoicebankReader(
-                new File(assetPath, "voice/Iona_Beta/"),
-                assetManager,
-                voicebankProvider);
     }
 }
