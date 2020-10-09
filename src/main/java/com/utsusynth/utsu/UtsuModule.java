@@ -117,43 +117,20 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     private Engine provideEngine(
-            Resampler resampler, Wavtool wavtool, StatusBar statusBar, @AssetPath File assetPath) {
-        String os = System.getProperty("os.name").toLowerCase();
-        File resamplerPath;
-        File wavtoolPath;
-        if (os.contains("win")) {
-            resamplerPath = new File(assetPath, "win64/macres.exe");
-            wavtoolPath = new File(assetPath, "win64/wavtool-yawu.exe");
-        } else if (os.contains("mac")) {
-            resamplerPath = new File(assetPath, "Mac/macres");
-            wavtoolPath = new File(assetPath, "Mac/wavtool-yawu");
-        } else {
-            resamplerPath = new File(assetPath, "linux64/macres");
-            wavtoolPath = new File(assetPath, "linux64/wavtool-yawu");
-        }
+            Resampler resampler, Wavtool wavtool, StatusBar statusBar, AssetManager assetManager) {
         return new Engine(
                 resampler,
                 wavtool,
                 statusBar,
                 /* threadPoolSize= */ 10,
-                resamplerPath,
-                wavtoolPath);
+                assetManager);
     }
 
     @Provides
     @Singleton
     private FrqGenerator provideFrqGenerator(
-            ExternalProcessRunner runner, @AssetPath File assetPath) {
-        String os = System.getProperty("os.name").toLowerCase();
-        File frqGeneratorPath;
-        if (os.contains("win")) {
-            frqGeneratorPath = new File(assetPath, "win64/frq0003gen.exe");
-        } else if (os.contains("mac")) {
-            frqGeneratorPath = new File(assetPath, "Mac/frq0003gen");
-        } else {
-            frqGeneratorPath = new File(assetPath, "linux64/frq0003gen");
-        }
-        return new FrqGenerator(runner, frqGeneratorPath, 256);
+            ExternalProcessRunner runner, AssetManager assetManager) {
+        return new FrqGenerator(runner, assetManager, 256);
     }
 
     @Provides
@@ -170,10 +147,13 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private VoicebankReader provideVoicebankReader(Provider<Voicebank> voicebankProvider, @AssetPath File assetPath) {
+    private VoicebankReader provideVoicebankReader(
+            Provider<Voicebank> voicebankProvider,
+            AssetManager assetManager,
+            @AssetPath File assetPath) {
         return new VoicebankReader(
                 new File(assetPath, "voice/Iona_Beta/"),
-                new File(assetPath, "config/lyric_conversions.txt"),
+                assetManager,
                 voicebankProvider);
     }
 }

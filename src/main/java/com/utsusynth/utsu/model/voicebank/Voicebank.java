@@ -191,7 +191,7 @@ public class Voicebank {
      */
     public Iterator<LyricConfigData> getAllLyricData(String category) {
         Iterator<LyricConfig> configIterator = lyricConfigs.getConfigs(category);
-        return new Iterator<LyricConfigData>() {
+        return new Iterator<>() {
             @Override
             public boolean hasNext() {
                 return configIterator.hasNext();
@@ -241,7 +241,7 @@ public class Voicebank {
 
     public Iterator<PitchMapData> getPitchData() {
         Iterator<String> pitchIterator = pitchMap.getOrderedPitches();
-        return new Iterator<PitchMapData>() {
+        return new Iterator<>() {
             @Override
             public boolean hasNext() {
                 return pitchIterator.hasNext();

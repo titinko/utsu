@@ -8,6 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.Optional;
+
+import com.utsusynth.utsu.files.AssetManager;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
 import com.google.common.io.Files;
@@ -51,14 +53,13 @@ public class Engine {
             Wavtool wavtool,
             StatusBar statusBar,
             int threadPoolSize,
-            File resamplerPath,
-            File wavtoolPath) {
+            AssetManager assetManager) {
         this.resampler = resampler;
         this.wavtool = wavtool;
         this.statusBar = statusBar;
         this.threadPoolSize = threadPoolSize;
-        this.resamplerPath = resamplerPath;
-        this.wavtoolPath = wavtoolPath;
+        this.resamplerPath = assetManager.getResamplerFile();
+        this.wavtoolPath = assetManager.getWavtoolFile();
 
         // Create temporary directory for rendering.
         tempDir = Files.createTempDir();

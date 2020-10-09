@@ -29,16 +29,15 @@ public class VoicebankReader {
             Pattern.compile("([a-gA-G]#?[1-7])\\t\\S*\\t(\\S.*)");
 
     private final File defaultVoicePath;
-    private final File lyricConversionPath;
+    private final AssetManager assetManager;
     private final Provider<Voicebank> voicebankProvider;
 
-    @Inject
     public VoicebankReader(
             File defaultVoicePath,
-            File lyricConversionPath,
+            AssetManager assetManager,
             Provider<Voicebank> voicebankProvider) {
         this.defaultVoicePath = defaultVoicePath;
-        this.lyricConversionPath = lyricConversionPath;
+        this.assetManager = assetManager;
         this.voicebankProvider = voicebankProvider;
     }
 
@@ -172,7 +171,7 @@ public class VoicebankReader {
 
     /* Gets disjoint set used for romaji-hiragana-katakana conversions. */
     private void readLyricConversionsFromFile(Voicebank.Builder builder) {
-        String conversionData = readConfigFile(lyricConversionPath);
+        String conversionData = readConfigFile(assetManager.getLyricConversionFile());
         for (String line : conversionData.split("\n")) {
             builder.addConversionGroup(line.trim().split(","));
         }
