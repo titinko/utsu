@@ -370,6 +370,8 @@ public class SongController implements EditorController, Localizable {
     public void closeEditor() {
         // Stop any ongoing playback.
         engine.stopPlayback();
+        // Clear any remaining cache files.
+        song.get().clearAllCacheValues();
         // Remove this song from local memory.
         song.removeSong();
     }

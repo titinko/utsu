@@ -160,10 +160,10 @@ public class NoteNode {
             prevNode.next = Optional.empty();
         } else if (this.next.isPresent()) {
             // TODO: Throw error.
-            System.out.println("ERROR: Tried to delete first node from inside SongNode!");
+            System.out.println("ERROR: Tried to delete first node from inside NoteNode!");
         } else {
             // TODO: Throw error.
-            System.out.println("ERROR: Tried to delete the only node from inside SongNode!");
+            System.out.println("ERROR: Tried to delete the only node from inside NoteNode!");
         }
     }
 

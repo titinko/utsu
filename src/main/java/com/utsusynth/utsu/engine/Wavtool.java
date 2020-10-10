@@ -8,15 +8,15 @@ import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Wavtool {
     private final ExternalProcessRunner runner;
-    private double totalDuration = 0; // Total duration in ms, used to debug timing issues.
+    private double totalDelta = 0; // Total duration in ms, used to debug timing issues.
 
     @Inject
     Wavtool(ExternalProcessRunner runner) {
         this.runner = runner;
     }
 
-    void startRender() {
-        totalDuration = 0;
+    void startRender(int startDelta) {
+        totalDelta = startDelta;
     }
 
     void addNewNote(
@@ -62,19 +62,19 @@ public class Wavtool {
                 envelope[9], // p5
                 envelope[10], // v5
                 triggerSynthesis ? "LAST_NOTE" : ""); // Triggers final song processing.
-        totalDuration += (noteLength - boundedOverlap) * scaleFactor;
+        totalDelta += (noteLength - boundedOverlap) * scaleFactor;
     }
 
     void addSilence(
             File wavtoolPath,
             double duration,
-            double expectedLength,
+            double expectedDelta,
             File inputFile,
             File outputFile,
             boolean triggerSynthesis) {
         // Check that current length matches expected length and report any discrepancies.
-        if (expectedLength > totalDuration && Math.abs(expectedLength - totalDuration) > 0.01) {
-                double timingCorrection = expectedLength - totalDuration;
+        if (expectedDelta > totalDelta && Math.abs(expectedDelta - totalDelta) > 0.01) {
+                double timingCorrection = expectedDelta - totalDelta;
                 duration += timingCorrection;
                 System.out.println("Corrected timing by " + timingCorrection + " ms.");
         }
@@ -101,6 +101,6 @@ public class Wavtool {
                 envelope[9], // p5
                 envelope[10], // v5
                 triggerSynthesis ? "LAST_NOTE" : ""); // Triggers final song processing.
-        totalDuration += duration;
+        totalDelta += duration;
     }
 }

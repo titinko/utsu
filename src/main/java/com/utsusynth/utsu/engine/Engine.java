@@ -39,7 +39,6 @@ public class Engine {
 
     private final Resampler resampler;
     private final Wavtool wavtool;
-    private final File tempDir;
     private final StatusBar statusBar;
     private final int threadPoolSize;
     private final CacheManager cacheManager;
@@ -63,16 +62,6 @@ public class Engine {
         this.cacheManager = cacheManager;
         this.resamplerPath = assetManager.getResamplerFile();
         this.wavtoolPath = assetManager.getWavtoolFile();
-
-        // Create temporary directory for rendering.
-        tempDir = Files.createTempDir();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                FileUtils.deleteDirectory(tempDir);
-            } catch (IOException e) {
-                errorLogger.logError(e);
-            }
-        }));
     }
 
     public File getResamplerPath() {
@@ -196,7 +185,8 @@ public class Engine {
         if (!notes.hasNext()) {
             return Optional.empty();
         }
-        
+
+        int startPosition = bounds.getMinMs();
         int totalDelta = notes.getCurDelta(); // Absolute position of current note.
         Voicebank voicebank = song.getVoicebank();
         boolean isFirstNote = true;        
@@ -231,8 +221,8 @@ public class Engine {
             // Possible silence before first note.
             if (isFirstNote) {
                 if (notes.getCurDelta() - preutter > bounds.getMinMs()) {
-                    double startDelta = notes.getCurDelta() - preutter - bounds.getMinMs();
-                    addSilence(startDelta, 0, song, finalSong, executor, futures);
+                    double firstNoteDelta = notes.getCurDelta() - preutter - bounds.getMinMs();
+                    addSilence(firstNoteDelta, 0, song, finalSong, executor, futures);
                 }
                 isFirstNote = false;
             }
@@ -273,23 +263,27 @@ public class Engine {
             String pitchString = song.getPitchString(firstStep, lastStep, note.getNoteNum());
 
             // Apply resampler in separate thread and schedule wavtool.
-            final int curTotalDelta = totalDelta;
             final LyricConfig curConfig = config.get();
             final boolean includeOverlap =
                     areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter));
             final boolean isLastNote = notes.peekNext().isEmpty();
             futures.add(executor.submit(() -> {
                 // Re-samples lyric and puts result into renderedNote file.
-                File renderedNote = new File(tempDir, "rendered_note" + curTotalDelta + ".wav");
-                renderedNote.deleteOnExit();
-                resampler.resample(
-                        resamplerPath,
-                        note,
-                        adjustedLength,
-                        curConfig,
-                        renderedNote,
-                        pitchString,
-                        song);
+                File renderedNote;
+                if (note.getCacheFile().isEmpty()) {
+                    renderedNote = cacheManager.createNoteCache();
+                    note.setCacheFile(Optional.of(renderedNote));
+                    resampler.resample(
+                            resamplerPath,
+                            note,
+                            adjustedLength,
+                            curConfig,
+                            renderedNote,
+                            pitchString,
+                            song);
+                } else {
+                    renderedNote = note.getCacheFile().get();
+                }
                 return () -> {
                     // Append rendered note to output file using wavtool.
                     wavtool.addNewNote(
@@ -326,7 +320,7 @@ public class Engine {
         }
 
         // When resampler finishes, run wavtool on notes in sequential order.
-        wavtool.startRender();
+        wavtool.startRender(startPosition);
         for (int i = 0; i < futures.size(); i++) {
             try {
                 double curProgress = i * 1.0 / futures.size();

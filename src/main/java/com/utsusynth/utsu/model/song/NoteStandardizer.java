@@ -1,19 +1,21 @@
 package com.utsusynth.utsu.model.song;
 
-import java.util.Optional;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 
-/** Standardizes a song note and prepares it for rendering. */
-public class NoteStandardizer {
+import java.util.Optional;
 
+/**
+ * Standardizes a song note and prepares it for rendering.
+ */
+public class NoteStandardizer {
     // This function should be called in the order: last note -> first note
     void standardize(Optional<Note> prev, Note note, Optional<Note> next, Voicebank voicebank) {
         double realPreutter = 0;
         double realDuration = note.getDuration();
-        double realOverlap = 0;
+        double realOverlap;
         double autoStartPoint = 0;
         String trueLyric = "";
 

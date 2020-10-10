@@ -149,11 +149,11 @@ public class Song {
         // Returns the builder of a new Song with this one's attributes.
         // The old Song's noteList and pitchbends objects are used in the new Song.
         return new Builder(new Song(
-                        this.voicebank,
-                        this.standardizer,
-                        this.cacheManager,
-                        this.noteList,
-                        this.pitchbends))
+                this.voicebank,
+                this.standardizer,
+                this.cacheManager,
+                this.noteList,
+                this.pitchbends))
                 .setTempo(this.tempo).setProjectName(this.projectName)
                 .setOutputFile(this.outputFile).setFlags(this.flags).setMode2(this.mode2)
                 .setInstrumental(this.instrumental);
@@ -219,6 +219,7 @@ public class Song {
         NoteNode curNode;
         for (int position : positions) {
             curNode = this.noteList.removeNote(position);
+            clearNoteCache(curNode.getNote());
             this.pitchbends.removePitchbends(
                     position,
                     curNode.getNote().getDuration(),
@@ -265,6 +266,7 @@ public class Song {
         int positionMs = toModify.getPosition();
         NoteNode node = this.noteList.getNote(positionMs);
         Note note = node.getNote();
+        clearNoteCache(note);
         if (toModify.getEnvelope().isPresent()) {
             note.setEnvelope(toModify.getEnvelope().get());
         }
@@ -286,6 +288,9 @@ public class Song {
         return note.getUpdateData(positionMs);
     }
 
+    /**
+     * Standardizes a set of notes.
+     */
     public MutateResponse standardizeNotes(int firstPosition, int lastPosition) {
         LinkedList<NoteUpdateData> updatedNotes = new LinkedList<>();
         Optional<NoteUpdateData> prevNeighbor = Optional.empty();
@@ -312,6 +317,7 @@ public class Song {
             Note note = curNode.get().getNote();
             // Standardize.
             curNode.get().standardize(standardizer, voicebank.get());
+            clearNoteCache(note);
             if (nextNeighbor.isEmpty() || curPosition < startPosition) {
                 updatedNotes.addFirst(note.getUpdateData(curPosition));
             }
@@ -337,9 +343,35 @@ public class Song {
         // Include the prev neighbor of the first note, if present. No need to change pitch.
         if (curNode.isPresent()) {
             curNode.get().standardize(standardizer, voicebank.get());
+            clearNoteCache(curNode.get().getNote());
             prevNeighbor = Optional.of(curNode.get().getNote().getUpdateData(curPosition));
         }
         return new MutateResponse(updatedNotes, prevNeighbor, nextNeighbor);
+    }
+
+    /**
+     * Only clears cache without making changes to the notes themselves.
+     */
+    public void clearNoteCache(int firstPosition, int lastPosition) {
+        int curPosition = firstPosition;
+        NoteNode startNode = this.noteList.getNote(firstPosition);
+        if (startNode == null) {
+            // TODO: Handle this better.
+            System.out.println("Could not find first note when clearing cache!");
+            return;
+        }
+
+        Optional<NoteNode> curNode = Optional.of(startNode);
+        while (curNode.isPresent()) {
+            Note note = curNode.get().getNote();
+            clearNoteCache(note);
+
+            curPosition += note.getLength();
+            if (curPosition > lastPosition) {
+                return;
+            }
+            curNode = curNode.get().getNext();
+        }
     }
 
     public LinkedList<NoteData> getNotes() {
@@ -391,6 +423,15 @@ public class Song {
         return Optional.empty();
     }
 
+    public void clearAllCacheValues() {
+        // Clear song cache.
+        clearCache();
+        // Clear all note caches.
+        for (Note note : noteList) {
+            clearNoteCache(note);
+        }
+    }
+
     // Can be changed without converting song to a builder and back.
     public void setCache(RegionBounds cacheRegion, File cacheFile) {
         clearCache();
@@ -410,6 +451,13 @@ public class Song {
 
     public Optional<File> getCacheFile() {
         return cacheFile;
+    }
+
+    private void clearNoteCache(Note note) {
+        if (note.getCacheFile().isPresent()) {
+            cacheManager.clearCache(note.getCacheFile().get());
+        }
+        note.setCacheFile(Optional.empty());
     }
 
     public String getProjectName() {

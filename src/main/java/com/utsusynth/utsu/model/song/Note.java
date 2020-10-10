@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.model.song;
 
+import java.io.File;
 import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.EnvelopeData;
@@ -36,11 +37,12 @@ public class Note {
     private int[] vibrato;
 
     // Values calculated in-program and not saved to any file.
-    // These are set in SongNoteStandardizer
+    // These are set in SongNoteStandardizer.
     private double realPreutter;
     private double realDuration;
     private double autoStartPoint; // This is added to the user-added startPoint.
     private String trueLyric; // Note's lyric after processing and formatting.
+    private Optional<File> cacheFile; // Result of applying resampler to this note.
 
     public Note() {
         // Set every required field to its default.
@@ -70,6 +72,7 @@ public class Note {
         this.realDuration = -1; // Should be ignored if not explicitly set.
         this.autoStartPoint = 0;
         this.trueLyric = ""; // Defaults to "" if no lyric is found.
+        this.cacheFile = Optional.empty();
     }
 
     public void setDelta(int delta) {
@@ -438,6 +441,14 @@ public class Note {
         this.trueLyric = trueLyric;
     }
 
+    public Optional<File> getCacheFile() {
+        return this.cacheFile;
+    }
+
+    public void setCacheFile(Optional<File> cacheFile) {
+        this.cacheFile = cacheFile;
+    }
+
     private static double safeParseDouble(String fromMe, double fallback) {
         try {
             return Double.parseDouble(fromMe);
@@ -450,7 +461,7 @@ public class Note {
     /**
      * Validates that the given note has all required values populated.
      *
-     * @throw IllegalStateException if the note is invalid.
+     * @throws IllegalStateException if the note is invalid.
      */
     public void validate() {
         if (this.delta < 0) {
