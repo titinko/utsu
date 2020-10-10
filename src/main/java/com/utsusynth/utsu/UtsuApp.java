@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.utsusynth.utsu.controller.UtsuController;
 import com.utsusynth.utsu.files.AssetManager;
+import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.model.ModelModule;
 import com.utsusynth.utsu.view.ViewModule;
 import javafx.application.Application;
@@ -31,17 +32,18 @@ public class UtsuApp extends Application {
         Injector injector =
                 Guice.createInjector(new UtsuModule(), new ModelModule(), new ViewModule());
 
-        // Copy assets into settings directory.
+        // Initialize settings directory.
         // TODO: Show a warning box to user if settings dir cannot be initialized.
         AssetManager assetManager = injector.getInstance(AssetManager.class);
+        CacheManager cacheManager = injector.getInstance(CacheManager.class);
         try {
-            assetManager.initializeAssets();
-        } catch (SecurityException e) {
-            System.out.println("Error: Insufficient permissions to create settings directory.");
-            primaryStage.show();
-            primaryStage.close();
+            if (!assetManager.initializeAssets() || !cacheManager.initializeCache()) {
+                System.out.println("Error: Could not initialize settings directory.");
+                primaryStage.show();
+                primaryStage.close();
+            }
         } catch (Exception e) {
-            System.out.println("Error: Could not copy assets into settings directory.");
+            System.out.println("Error: Could not initialize settings directory.");
             System.out.println(e.getMessage());
             e.printStackTrace();
             primaryStage.show();

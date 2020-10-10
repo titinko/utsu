@@ -1,0 +1,81 @@
+package com.utsusynth.utsu.files;
+
+import com.utsusynth.utsu.UtsuModule.SettingsPath;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
+
+import javax.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.UUID;
+
+public class CacheManager {
+    private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
+    private final File cachePath;
+
+    @Inject
+    public CacheManager(@SettingsPath File settingsPath) {
+        cachePath = new File(settingsPath, "cache");
+        clearAllCacheValues();
+    }
+
+    /**
+     * Should be called once when application loads.
+     */
+    public boolean initializeCache() {
+        if (!cachePath.exists() && !cachePath.mkdirs()) {
+            System.out.println("Error: Failed to create cache path.");
+            return false;
+        }
+        return true;
+    }
+
+    public File createRenderedCache() {
+        File renderedCache = new File(cachePath, UUID.randomUUID() + "_rendered.wav");
+        renderedCache.deleteOnExit();
+        return renderedCache;
+    }
+
+    public File createNoteCache() {
+        File noteCache = new File(cachePath, UUID.randomUUID() + "_note.wav");
+        noteCache.deleteOnExit();
+        return noteCache;
+    }
+
+    public File createSilenceCache() {
+        File silenceCache = new File(cachePath, UUID.randomUUID() + "_silence.wav");
+        silenceCache.deleteOnExit();
+        return silenceCache;
+    }
+
+    public void clearCache(File clearMe) {
+        if (clearMe.exists()) {
+            try {
+                Files.delete(clearMe.toPath());
+            } catch (IOException e) {
+                errorLogger.logError(e);
+            }
+        } else {
+            System.out.println("Tried to delete cache file that no longer exists.");
+        }
+    }
+
+    public void clearSilences() {
+        File[] silences = cachePath.listFiles((dir, name) -> name.endsWith("silence.wav"));
+        if (silences != null) {
+            for (File silence : silences) {
+                clearCache(silence);
+            }
+        }
+    }
+
+    public void clearAllCacheValues() {
+        File[] files = cachePath.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                clearCache(file);
+            }
+        }
+    }
+}

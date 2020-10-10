@@ -43,11 +43,11 @@ public class AssetManager {
     /**
      * Should be called once when application loads.
      */
-    public void initializeAssets() throws IOException, SecurityException, URISyntaxException {
+    public boolean initializeAssets() throws IOException, SecurityException, URISyntaxException {
         // Initialize sounds.
         if (!soundsPath.exists() && !soundsPath.mkdirs()) {
             System.out.println("Error: Failed to create sounds path.");
-            return;
+            return false;
         }
         copyFile(SOUNDS_SOURCE, soundsPath, "silence.wav");
         initializeVoicebank();
@@ -55,7 +55,7 @@ public class AssetManager {
         // Initialize executables.
         if (!executablesPath.exists() && !executablesPath.mkdirs()) {
             System.out.println("Error: Failed to create executables path.");
-            return;
+            return false;
         }
         copyFile(EXECUTABLES_SOURCE, executablesPath, "LICENSES");
         String os = System.getProperty("os.name").toLowerCase();
@@ -76,9 +76,10 @@ public class AssetManager {
         // Initialize configs.
         if (!configPath.exists() && !configPath.mkdirs()) {
             System.out.println("Error: Failed to create config path.");
-            return;
+            return false;
         }
         copyFile(CONFIG_SOURCE, configPath, "lyric_conversions.txt");
+        return true;
     }
 
     private void initializeVoicebank() throws URISyntaxException, IOException {

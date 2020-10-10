@@ -9,7 +9,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.Optional;
 
+import com.google.common.cache.Cache;
 import com.utsusynth.utsu.files.AssetManager;
+import com.utsusynth.utsu.files.CacheManager;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
 import com.google.common.io.Files;
@@ -41,6 +43,7 @@ public class Engine {
     private final File tempDir;
     private final StatusBar statusBar;
     private final int threadPoolSize;
+    private final CacheManager cacheManager;
     private File resamplerPath;
     private File wavtoolPath;
     private File lastRenderedFile = null;
@@ -53,11 +56,13 @@ public class Engine {
             Wavtool wavtool,
             StatusBar statusBar,
             int threadPoolSize,
+            CacheManager cacheManager,
             AssetManager assetManager) {
         this.resampler = resampler;
         this.wavtool = wavtool;
         this.statusBar = statusBar;
         this.threadPoolSize = threadPoolSize;
+        this.cacheManager = cacheManager;
         this.resamplerPath = assetManager.getResamplerFile();
         this.wavtoolPath = assetManager.getWavtoolFile();
 
@@ -180,8 +185,6 @@ public class Engine {
             return Optional.of(lastRenderedFile);
         }
 
-        File renderedSilence = new File(tempDir, "rendered_silence.wav");
-
         // Set up a thread pool for asynchronous rendering.
         ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
         ArrayList<Future<Runnable>> futures = new ArrayList<>();
@@ -233,7 +236,7 @@ public class Engine {
             if (isFirstNote) {
                 if (notes.getCurDelta() - preutter > bounds.getMinMs()) {
                     double startDelta = notes.getCurDelta() - preutter - bounds.getMinMs();
-                    addSilence(startDelta, 0, song, renderedSilence, finalSong, executor, futures);
+                    addSilence(startDelta, 0, song, finalSong, executor, futures);
                 }
                 isFirstNote = false;
             }
@@ -246,7 +249,6 @@ public class Engine {
                             note.getLength() - notes.peekNext().get().getRealPreutter(),
                             totalDelta,
                             song,
-                            renderedSilence,
                             finalSong,
                             executor,
                             futures);
@@ -256,7 +258,6 @@ public class Engine {
                             note.getLength(),
                             totalDelta,
                             song,
-                            renderedSilence,
                             finalSong,
                             executor,
                             futures);
@@ -323,7 +324,6 @@ public class Engine {
                         silenceLength,
                         totalDelta + note.getDuration(),
                         song,
-                        renderedSilence,
                         finalSong,
                         executor,
                         futures);
@@ -347,6 +347,7 @@ public class Engine {
 
         song.setRendered(bounds); // Cache region that was played.
         lastRenderedFile = finalSong; // Save this for next time
+        cacheManager.clearSilences(); // Clear all silence temp files.
         return Optional.of(finalSong);
     }
 
@@ -354,7 +355,6 @@ public class Engine {
             double duration,
             double totalDelta,
             Song song,
-            File renderedNote,
             File finalSong,
             ExecutorService executor,
             ArrayList<Future<Runnable>> futures) {
@@ -363,11 +363,12 @@ public class Engine {
         }
         double trueDuration = duration * (125.0 / song.getTempo());
         double trueDelta = totalDelta * (125.0 / song.getTempo());
+        File renderedSilence = cacheManager.createSilenceCache();
         futures.add(executor.submit(() -> {
-            resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
+            resampler.resampleSilence(resamplerPath, renderedSilence, trueDuration);
             Runnable useWavtool = () -> {
                 wavtool.addSilence(
-                        wavtoolPath, trueDuration, trueDelta, renderedNote, finalSong, false);
+                        wavtoolPath, trueDuration, trueDelta, renderedSilence, finalSong, false);
             };
             return useWavtool;
         }));
@@ -377,18 +378,18 @@ public class Engine {
             double duration,
             double totalDelta,
             Song song,
-            File renderedNote,
             File finalSong,
             ExecutorService executor,
             ArrayList<Future<Runnable>> futures) {
         // The final note must be passed to the wavtool.
         double trueDuration = Math.max(duration, 0) * (125.0 / song.getTempo());
         double trueDelta = totalDelta * (125.0 / song.getTempo());
+        File renderedSilence = cacheManager.createSilenceCache();
         futures.add(executor.submit(() -> {
-            resampler.resampleSilence(resamplerPath, renderedNote, trueDuration);
+            resampler.resampleSilence(resamplerPath, renderedSilence, trueDuration);
             Runnable useWavtool = () -> {
                 wavtool.addSilence(
-                        wavtoolPath, trueDuration, trueDelta, renderedNote, finalSong, true);
+                        wavtoolPath, trueDuration, trueDelta, renderedSilence, finalSong, true);
             };
             return useWavtool;
         }));

@@ -10,8 +10,8 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.*;
 import com.utsusynth.utsu.files.AssetManager;
+import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.VoicebankReader;
-import com.utsusynth.utsu.model.voicebank.Voicebank;
 import javafx.fxml.FXMLLoader;
 
 import java.io.File;
@@ -40,6 +40,7 @@ public class UtsuModule extends AbstractModule {
     protected void configure() {
         bind(StatusBar.class).asEagerSingleton();
         bind(AssetManager.class).asEagerSingleton();
+        bind(CacheManager.class).asEagerSingleton();
         bind(VoicebankReader.class).asEagerSingleton();
     }
 
@@ -96,12 +97,17 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     private Engine provideEngine(
-            Resampler resampler, Wavtool wavtool, StatusBar statusBar, AssetManager assetManager) {
+            Resampler resampler,
+            Wavtool wavtool,
+            StatusBar statusBar,
+            CacheManager cacheManager,
+            AssetManager assetManager) {
         return new Engine(
                 resampler,
                 wavtool,
                 statusBar,
                 /* threadPoolSize= */ 10,
+                cacheManager,
                 assetManager);
     }
 
