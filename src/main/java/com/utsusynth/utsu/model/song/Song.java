@@ -7,6 +7,7 @@ import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.model.song.pitch.PitchCurve;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
@@ -23,6 +24,7 @@ public class Song {
 
     private final VoicebankContainer voicebank;
     private final NoteStandardizer standardizer;
+    private final CacheManager cacheManager;
 
     // Settings. (Anything marked with [#SETTING])
     // TODO:Insert Time signatures here
@@ -33,8 +35,9 @@ public class Song {
     private boolean mode2 = true;
     private Optional<File> instrumental; // Not yet written to UST.
 
-    // Set to a value after rendering song, INVALID whenever song changes.
-    private RegionBounds lastRenderedRegion = RegionBounds.INVALID;
+    // Set to a value after rendering song, cleared whenever song changes.
+    private RegionBounds cacheRegion = RegionBounds.INVALID;
+    private Optional<File> cacheFile = Optional.empty();
 
     // Notes. (Anything marked with [#0000]-[#9999], [#TRACKEND] marks the end of these)
     private NoteList noteList;
@@ -127,10 +130,12 @@ public class Song {
     public Song(
             VoicebankContainer voicebankContainer,
             NoteStandardizer standardizer,
+            CacheManager cacheManager,
             NoteList songNoteList,
             PitchCurve pitchbends) {
         this.voicebank = voicebankContainer;
         this.standardizer = standardizer;
+        this.cacheManager = cacheManager;
         this.noteList = songNoteList;
         this.pitchbends = pitchbends;
         this.outputFile = new File("outputFile");
@@ -143,8 +148,12 @@ public class Song {
     public Builder toBuilder() {
         // Returns the builder of a new Song with this one's attributes.
         // The old Song's noteList and pitchbends objects are used in the new Song.
-        return new Builder(
-                new Song(this.voicebank, this.standardizer, this.noteList, this.pitchbends))
+        return new Builder(new Song(
+                        this.voicebank,
+                        this.standardizer,
+                        this.cacheManager,
+                        this.noteList,
+                        this.pitchbends))
                 .setTempo(this.tempo).setProjectName(this.projectName)
                 .setOutputFile(this.outputFile).setFlags(this.flags).setMode2(this.mode2)
                 .setInstrumental(this.instrumental);
@@ -154,7 +163,6 @@ public class Song {
      * Adds a note or notes to the song object.
      *
      * @param notesToAdd In-order list of notes to add.
-     * @throws NoteAlreadyExistsException
      */
     public void addNotes(List<NoteData> notesToAdd) {
         if (notesToAdd.isEmpty()) {
@@ -304,7 +312,7 @@ public class Song {
             Note note = curNode.get().getNote();
             // Standardize.
             curNode.get().standardize(standardizer, voicebank.get());
-            if (!nextNeighbor.isPresent() || curPosition < startPosition) {
+            if (nextNeighbor.isEmpty() || curPosition < startPosition) {
                 updatedNotes.addFirst(note.getUpdateData(curPosition));
             }
             // Pitch curve corrections.
@@ -384,12 +392,24 @@ public class Song {
     }
 
     // Can be changed without converting song to a builder and back.
-    public void setRendered(RegionBounds region) {
-        this.lastRenderedRegion = region;
+    public void setCache(RegionBounds cacheRegion, File cacheFile) {
+        clearCache();
+        this.cacheRegion = cacheRegion;
+        this.cacheFile = Optional.of(cacheFile);
     }
 
-    public RegionBounds getLastRenderedRegion() {
-        return lastRenderedRegion;
+    public void clearCache() {
+        cacheFile.ifPresent(cacheManager::clearCache);
+        cacheRegion = RegionBounds.INVALID;
+        cacheFile = Optional.empty();
+    }
+
+    public RegionBounds getCacheRegion() {
+        return cacheRegion;
+    }
+
+    public Optional<File> getCacheFile() {
+        return cacheFile;
     }
 
     public String getProjectName() {

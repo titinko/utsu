@@ -17,7 +17,6 @@ public class CacheManager {
     @Inject
     public CacheManager(@SettingsPath File settingsPath) {
         cachePath = new File(settingsPath, "cache");
-        clearAllCacheValues();
     }
 
     /**
@@ -28,6 +27,7 @@ public class CacheManager {
             System.out.println("Error: Failed to create cache path.");
             return false;
         }
+        clearAllCacheValues();
         return true;
     }
 

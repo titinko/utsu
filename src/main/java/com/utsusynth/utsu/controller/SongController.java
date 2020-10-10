@@ -658,7 +658,7 @@ public class SongController implements EditorController, Localizable {
      * Called whenever a Song is changed.
      */
     private void onSongChange() {
-        song.get().setRendered(RegionBounds.INVALID); // Invalidate rendered song cache.
+        song.get().clearCache(); // Invalidate rendered song cache.
         if (callback != null) {
             callback.markChanged(true);
         }

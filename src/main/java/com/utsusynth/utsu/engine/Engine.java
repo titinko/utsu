@@ -9,7 +9,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.Optional;
 
-import com.google.common.cache.Cache;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.CacheManager;
 import org.apache.commons.io.FileUtils;
@@ -46,7 +45,6 @@ public class Engine {
     private final CacheManager cacheManager;
     private File resamplerPath;
     private File wavtoolPath;
-    private File lastRenderedFile = null;
 
     private MediaPlayer instrumentalPlayer; // Used for background music.
     private MediaPlayer mediaPlayer; // Used for audio playback.
@@ -101,7 +99,11 @@ public class Engine {
     public boolean renderWav(Song song, File finalDestination) {
         Optional<File> finalSong = render(song, RegionBounds.WHOLE_SONG);
         if (finalSong.isPresent()) {
-            finalSong.get().renameTo(finalDestination);
+            try {
+                FileUtils.copyFile(finalSong.get(), finalDestination);
+            } catch (IOException e) {
+                errorLogger.logError(e);
+            }
         }
         return finalSong.isPresent();
     }
@@ -180,9 +182,10 @@ public class Engine {
     }
 
     private Optional<File> render(Song song, RegionBounds bounds) {
-        if (lastRenderedFile != null && lastRenderedFile.exists() && bounds.equals(song.getLastRenderedRegion())) {
-            // Return old final song if it has not been invalidated.
-            return Optional.of(lastRenderedFile);
+        if (bounds.equals(song.getCacheRegion())
+                && song.getCacheFile().isPresent()
+                && song.getCacheFile().get().exists()) {
+            return song.getCacheFile(); // Return cached render if it's still valid.
         }
 
         // Set up a thread pool for asynchronous rendering.
@@ -197,14 +200,7 @@ public class Engine {
         int totalDelta = notes.getCurDelta(); // Absolute position of current note.
         Voicebank voicebank = song.getVoicebank();
         boolean isFirstNote = true;        
-        final File finalSong; // Is the final keyword causing file locking??
-
-        try {
-            finalSong = File.createTempFile("utsu-", ".wav");
-            finalSong.deleteOnExit(); // Required??
-        } catch (IOException ioe) {
-            return Optional.empty();
-        }
+        final File finalSong = cacheManager.createRenderedCache();
 
         while (notes.hasNext()) {
             Note note = notes.next();
@@ -215,7 +211,7 @@ public class Engine {
             if (!note.getTrueLyric().isEmpty()) {
                 config = voicebank.getLyricConfig(note.getTrueLyric());
             }
-            if (!config.isPresent()) {
+            if (config.isEmpty()) {
                 // Make one last valiant effort to find the true lyric.
                 String prevLyric = getNearbyPrevLyric(notes.peekPrev());
                 String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
@@ -242,7 +238,7 @@ public class Engine {
             }
 
             // Add silence in place of note if lyric not found.
-            if (!config.isPresent()) {
+            if (config.isEmpty()) {
                 System.out.println("Could not find config for lyric: " + note.getLyric());
                 if (notes.peekNext().isPresent()) {
                     addSilence(
@@ -281,7 +277,7 @@ public class Engine {
             final LyricConfig curConfig = config.get();
             final boolean includeOverlap =
                     areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter));
-            final boolean isLastNote = !notes.peekNext().isPresent();
+            final boolean isLastNote = notes.peekNext().isEmpty();
             futures.add(executor.submit(() -> {
                 // Re-samples lyric and puts result into renderedNote file.
                 File renderedNote = new File(tempDir, "rendered_note" + curTotalDelta + ".wav");
@@ -294,7 +290,7 @@ public class Engine {
                         renderedNote,
                         pitchString,
                         song);
-                Runnable useWavtool = () -> {
+                return () -> {
                     // Append rendered note to output file using wavtool.
                     wavtool.addNewNote(
                             wavtoolPath,
@@ -307,7 +303,6 @@ public class Engine {
                             includeOverlap,
                             isLastNote);
                 };
-                return useWavtool;
             }));
 
             // Possible silence after each note.
@@ -345,8 +340,7 @@ public class Engine {
         Platform.runLater(() -> statusBar.setProgress(1.0)); // Mark task as complete.
         executor.shutdown(); // Shut down thread pool
 
-        song.setRendered(bounds); // Cache region that was played.
-        lastRenderedFile = finalSong; // Save this for next time
+        song.setCache(bounds, finalSong); // Cache region that was played.
         cacheManager.clearSilences(); // Clear all silence temp files.
         return Optional.of(finalSong);
     }
@@ -366,11 +360,10 @@ public class Engine {
         File renderedSilence = cacheManager.createSilenceCache();
         futures.add(executor.submit(() -> {
             resampler.resampleSilence(resamplerPath, renderedSilence, trueDuration);
-            Runnable useWavtool = () -> {
+            return () -> {
                 wavtool.addSilence(
                         wavtoolPath, trueDuration, trueDelta, renderedSilence, finalSong, false);
             };
-            return useWavtool;
         }));
     }
 
@@ -387,11 +380,10 @@ public class Engine {
         File renderedSilence = cacheManager.createSilenceCache();
         futures.add(executor.submit(() -> {
             resampler.resampleSilence(resamplerPath, renderedSilence, trueDuration);
-            Runnable useWavtool = () -> {
+            return () -> {
                 wavtool.addSilence(
                         wavtoolPath, trueDuration, trueDelta, renderedSilence, finalSong, true);
             };
-            return useWavtool;
         }));
     }
 
@@ -417,19 +409,16 @@ public class Engine {
             Optional<Note> note,
             Voicebank voicebank,
             Optional<Double> nextPreutter) {
-        if (!note.isPresent() || !nextPreutter.isPresent()) {
+        if (note.isEmpty() || nextPreutter.isEmpty()) {
             return false;
         }
 
         // Return false if current note cannot be rendered.
-        if (!voicebank.getLyricConfig(note.get().getTrueLyric()).isPresent()) {
+        if (voicebank.getLyricConfig(note.get().getTrueLyric()).isEmpty()) {
             return false;
         }
 
         double preutterance = Math.min(nextPreutter.get(), note.get().getLength());
-        if (preutterance + note.get().getDuration() < note.get().getLength()) {
-            return false;
-        }
-        return true;
+        return !(preutterance + note.get().getDuration() < note.get().getLength());
     }
 }

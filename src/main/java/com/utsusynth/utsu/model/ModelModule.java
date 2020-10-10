@@ -4,6 +4,7 @@ import java.util.HashSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.utsusynth.utsu.engine.FrqGenerator;
+import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.model.song.NoteList;
 import com.utsusynth.utsu.model.song.NoteStandardizer;
 import com.utsusynth.utsu.model.song.Song;
@@ -30,9 +31,10 @@ public class ModelModule extends AbstractModule {
     private Song provideEmptySong(
             VoicebankContainer voicebankContainer,
             NoteStandardizer noteStandardizer,
+            CacheManager cacheManager,
             NoteList noteList,
             PitchCurve pitchCurve) {
-        return new Song(voicebankContainer, noteStandardizer, noteList, pitchCurve);
+        return new Song(voicebankContainer, noteStandardizer, cacheManager, noteList, pitchCurve);
     }
 
     @Provides
