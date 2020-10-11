@@ -855,6 +855,19 @@ public class SongEditor {
         public void openLyricConfig(Note note) {
             model.openLyricConfig(note.getAbsPositionMs());
         }
+
+        @Override
+        public void clearCache(Note note) {
+            if (playbackManager.isHighlighted(note)) {
+                List<Note> highlightedNotes = playbackManager.getHighlightedNotes();
+                model.clearCache(
+                        highlightedNotes.get(0).getAbsPositionMs(),
+                        highlightedNotes.get(highlightedNotes.size() - 1).getAbsPositionMs());
+            } else {
+                // Clear current note's cache if current note is not highlighted.
+                model.clearCache(note.getAbsPositionMs(), note.getAbsPositionMs());
+            }
+        }
     };
 
     private EnvelopeCallback getEnvelopeCallback(final int positionMs) {

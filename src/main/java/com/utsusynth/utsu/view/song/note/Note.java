@@ -117,6 +117,8 @@ public class Note implements Comparable<Note> {
         lyricConfigItem.setOnAction(action -> track.openLyricConfig(this));
         MenuItem notePropertiesItem = new MenuItem("Note Properties");
         notePropertiesItem.setOnAction(action -> track.openNoteProperties(this));
+        MenuItem clearCacheItem = new MenuItem("Clear Cache");
+        clearCacheItem.setOnAction(action -> track.clearCache(this));
         contextMenu.getItems().addAll(
                 cutMenuItem,
                 copyMenuItem,
@@ -127,7 +129,9 @@ public class Note implements Comparable<Note> {
                 new SeparatorMenuItem(),
                 lyricConfigItem,
                 new SeparatorMenuItem(),
-                notePropertiesItem);
+                notePropertiesItem,
+                new SeparatorMenuItem(),
+                clearCacheItem);
         contextMenu.setOnShowing(event -> {
             cutMenuItem.setText(localizer.getMessage("menu.edit.cut"));
             copyMenuItem.setText(localizer.getMessage("menu.edit.copy"));
@@ -136,6 +140,7 @@ public class Note implements Comparable<Note> {
             vibratoEditorMenuItem.setText(localizer.getMessage("song.note.vibratoEditor"));
             lyricConfigItem.setText(localizer.getMessage("song.note.openLyricConfig"));
             notePropertiesItem.setText(localizer.getMessage("menu.edit.noteProperties"));
+            clearCacheItem.setText(localizer.getMessage("song.note.clearCache"));
         });
         layout.setOnContextMenuRequested(event -> {
             contextMenu.hide();

@@ -218,6 +218,12 @@ public class SongController implements EditorController, Localizable {
                 }
                 callback.openVoicebank(song.get().getVoiceDir(), trueLyric.get());
             }
+
+            @Override
+            public void clearCache(int firstPos, int lastPos) {
+                // Only clears cache without making changes, so does not trigger onSongChange.
+                song.get().clearNoteCache(firstPos, lastPos);
+            }
         });
         anchorCenter.widthProperty().addListener((obs, oldWidthNum, newWidthNum) -> {
             // Scrollbar should still be at its old location.
@@ -854,14 +860,18 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initModality(Modality.APPLICATION_MODAL);
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);
-            SongPropertiesController controller = (SongPropertiesController) loader.getController();
-            controller.setData(song, engine, () -> {
+            SongPropertiesController controller = loader.getController();
+            controller.setData(song, engine, resamplerChanged -> {
                 // Should only be called after song changes are applied.
+                if (resamplerChanged) {
+                    song.get().clearAllCacheValues();
+                }
                 Platform.runLater(() -> {
                     onSongChange();
                     refreshView();
                     statusBar.setStatus("Property changes applied.");
                 });
+                return null;
             });
             propertiesWindow.setScene(new Scene(propertiesPane));
             propertiesWindow.showAndWait();

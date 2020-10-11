@@ -46,4 +46,9 @@ public interface SongCallback {
      * Opens the lyric config for a particular note, if present.
      */
     void openLyricConfig(int position);
+
+    /**
+     * Clears cache for a section of notes.
+     */
+    void clearCache(int firstPosition, int lastPosition);
 }

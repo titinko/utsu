@@ -41,4 +41,6 @@ public interface NoteCallback {
     void openNoteProperties(Note note);
 
     void openLyricConfig(Note note);
+
+    void clearCache(Note note);
 }

@@ -148,6 +148,7 @@ public class Song {
     public Builder toBuilder() {
         // Returns the builder of a new Song with this one's attributes.
         // The old Song's noteList and pitchbends objects are used in the new Song.
+        clearCache(); // Changing a song means clearing its cache.
         return new Builder(new Song(
                 this.voicebank,
                 this.standardizer,

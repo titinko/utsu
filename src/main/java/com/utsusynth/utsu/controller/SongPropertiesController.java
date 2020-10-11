@@ -23,6 +23,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 
 /**
  * 'SongPropertiesScene.fxml' Controller Class
@@ -36,7 +37,7 @@ public class SongPropertiesController implements Localizable {
     private File resamplerPath;
     private File wavtoolPath;
     private Optional<File> instrumentalPath;
-    private Runnable onSongChange; // Call when applying properties.
+    private Function<Boolean, Void> onSongChange; // Call when applying properties.
 
     @FXML // fx:id="root"
     private BorderPane root; // Value injected by FXMLLoader
@@ -122,7 +123,7 @@ public class SongPropertiesController implements Localizable {
     }
 
     /* Initializes properties panel with a SongContainer with the song to edit. */
-    void setData(SongContainer songContainer, Engine engine, Runnable callback) {
+    void setData(SongContainer songContainer, Engine engine, Function<Boolean, Void> callback) {
         this.songContainer = songContainer;
         this.engine = engine;
         this.onSongChange = callback;
@@ -243,6 +244,7 @@ public class SongPropertiesController implements Localizable {
     @FXML
     void applyProperties(ActionEvent event) {
         new Thread(() -> {
+            boolean resamplerChanged = !engine.getResamplerPath().equals(resamplerPath);
             songContainer.setSong(
                     songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
                             .setOutputFile(new File(outputFileTF.getText()))
@@ -252,7 +254,7 @@ public class SongPropertiesController implements Localizable {
                             .setInstrumental(instrumentalPath).build());
             engine.setResamplerPath(resamplerPath);
             engine.setWavtoolPath(wavtoolPath);
-            onSongChange.run();
+            onSongChange.apply(resamplerChanged);
         }).start();
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
