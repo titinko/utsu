@@ -353,8 +353,10 @@ public class NotePropertiesController implements Localizable {
         for (Note note : notes) {
             double oldVelocity = note.getVelocity();
             double newVelocity = oldVelocity;
-            if (!consonantVelocityLabel.getText().equals(DIFFERENT_VALUES)) {
+            if (!curConsonantVelocity.getText().equals(DIFFERENT_VALUES)) {
                 newVelocity = consonantVelocitySlider.getValue();
+                System.out.println(consonantVelocityLabel.getText() + " vs " + DIFFERENT_VALUES);
+                System.out.println("Setting consonant velocity.");
             }
             Optional<Double> oldPreutter = note.getPreutter();
             Optional<Double> newPreutter = oldPreutter;
@@ -380,17 +382,17 @@ public class NotePropertiesController implements Localizable {
             }
             double oldStartPoint = note.getStartPoint();
             double newStartPoint = oldStartPoint;
-            if (!startPointLabel.getText().equals(DIFFERENT_VALUES)) {
+            if (!curStartPoint.getText().equals(DIFFERENT_VALUES)) {
                 newStartPoint = startPointSlider.getValue();
             }
             int oldIntensity = note.getIntensity();
             int newIntensity = oldIntensity;
-            if (!intensityLabel.getText().equals(DIFFERENT_VALUES)) {
+            if (!curIntensity.getText().equals(DIFFERENT_VALUES)) {
                 newIntensity = RoundUtils.round(intensitySlider.getValue());
             }
             int oldModulation = note.getModulation();
             int newModulation = oldModulation;
-            if (!modulationLabel.getText().equals(DIFFERENT_VALUES)) {
+            if (!curModulation.getText().equals(DIFFERENT_VALUES)) {
                 newModulation = RoundUtils.round(modulationSlider.getValue());
             }
             String oldFlags = note.getNoteFlags();
