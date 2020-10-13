@@ -2,7 +2,6 @@ package com.utsusynth.utsu;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.utsusynth.utsu.controller.UtsuController;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.CacheManager;
@@ -11,6 +10,8 @@ import com.utsusynth.utsu.view.ViewModule;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -18,8 +19,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -32,22 +31,26 @@ public class UtsuApp extends Application {
         Injector injector =
                 Guice.createInjector(new UtsuModule(), new ModelModule(), new ViewModule());
 
-        // Initialize settings directory.
-        // TODO: Show a warning box to user if settings dir cannot be initialized.
+        // Initialize settings directory. Show alert if directory can't be created.
         AssetManager assetManager = injector.getInstance(AssetManager.class);
         CacheManager cacheManager = injector.getInstance(CacheManager.class);
+        StringBuilder alertText = new StringBuilder();
         try {
             if (!assetManager.initializeAssets() || !cacheManager.initializeCache()) {
-                System.out.println("Error: Could not initialize settings directory.");
-                primaryStage.show();
-                primaryStage.close();
+                alertText.append("Could not initialize settings directory.");
             }
         } catch (Exception e) {
-            System.out.println("Error: Could not initialize settings directory.");
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            alertText.append("Could not initialize settings directory.\n" + e.getMessage() + "\n");
+            for (StackTraceElement element : e.getStackTrace()) {
+                alertText.append(element).append("\n");
+            }
+        }
+        if (alertText.length() > 0) {
+            Alert alert = new Alert(AlertType.ERROR, alertText.toString());
+            alert.showAndWait();
             primaryStage.show();
             primaryStage.close();
+            return;
         }
 
         // Construct scene.
