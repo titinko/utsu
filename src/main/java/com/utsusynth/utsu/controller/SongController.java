@@ -861,9 +861,9 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);
             SongPropertiesController controller = loader.getController();
-            controller.setData(song, engine, resamplerChanged -> {
+            controller.setData(song, engine, shouldClearCache -> {
                 // Should only be called after song changes are applied.
-                if (resamplerChanged) {
+                if (shouldClearCache) {
                     song.get().clearAllCacheValues();
                 }
                 Platform.runLater(() -> {

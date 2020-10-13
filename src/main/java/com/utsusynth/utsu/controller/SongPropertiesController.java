@@ -244,7 +244,8 @@ public class SongPropertiesController implements Localizable {
     @FXML
     void applyProperties(ActionEvent event) {
         new Thread(() -> {
-            boolean resamplerChanged = !engine.getResamplerPath().equals(resamplerPath);
+            boolean shouldClearCache = !engine.getResamplerPath().equals(resamplerPath)
+                    || !songContainer.get().getVoiceDir().equals(voicebankContainer.getLocation());
             songContainer.setSong(
                     songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
                             .setOutputFile(new File(outputFileTF.getText()))
@@ -255,7 +256,7 @@ public class SongPropertiesController implements Localizable {
                             .build());
             engine.setResamplerPath(resamplerPath);
             engine.setWavtoolPath(wavtoolPath);
-            onSongChange.apply(resamplerChanged);
+            onSongChange.apply(shouldClearCache);
         }).start();
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
