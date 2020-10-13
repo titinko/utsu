@@ -36,7 +36,7 @@ public class SongPropertiesController implements Localizable {
     private Engine engine;
     private File resamplerPath;
     private File wavtoolPath;
-    private Optional<File> instrumentalPath;
+    // private Optional<File> instrumentalPath;
     private Function<Boolean, Void> onSongChange; // Call when applying properties.
 
     @FXML // fx:id="root"
@@ -87,14 +87,14 @@ public class SongPropertiesController implements Localizable {
     @FXML // fx:id="changeVoicebankButton"
     private Button changeVoicebankButton; // Value injected by FXMLLoader
 
-    @FXML // fx:id="instrumentalLabel"
-    private Label instrumentalLabel; // Value injected by FXMLLoader
+    // @FXML // fx:id="instrumentalLabel"
+    // private Label instrumentalLabel; // Value injected by FXMLLoader
 
-    @FXML // fx:id="instrumentalName"
-    private TextField instrumentalName; // Value injected by FXMLLoader
+    // @FXML // fx:id="instrumentalName"
+    // private TextField instrumentalName; // Value injected by FXMLLoader
 
-    @FXML // fx:id="changeInstrumentalButton"
-    private Button changeInstrumentalButton; // Value injected by FXMLLoader
+    // @FXML // fx:id="changeInstrumentalButton"
+    // private Button changeInstrumentalButton; // Value injected by FXMLLoader
 
     @FXML // fx:id="tempoLabel"
     private Label tempoLabel; // Value injected by FXMLLoader
@@ -132,7 +132,7 @@ public class SongPropertiesController implements Localizable {
         resamplerPath = engine.getResamplerPath();
         wavtoolPath = engine.getWavtoolPath();
         voicebankContainer.setVoicebankForSong(songContainer.get().getVoiceDir());
-        instrumentalPath = songContainer.get().getInstrumental();
+        // instrumentalPath = songContainer.get().getInstrumental();
 
         // Set text boxes.
         projectNameTF.setText(songContainer.get().getProjectName());
@@ -141,7 +141,7 @@ public class SongPropertiesController implements Localizable {
         resamplerName.setText(resamplerPath.getName());
         wavtoolName.setText(wavtoolPath.getName());
         voicebankName.setText(voicebankContainer.get().getName());
-        instrumentalName.setText(instrumentalPath.orElse(new File("")).getName());
+        // instrumentalName.setText(instrumentalPath.orElse(new File("")).getName());
 
         // Setup tempo slider.
         tempoSlider.valueProperty().addListener((event) -> {
@@ -173,12 +173,12 @@ public class SongPropertiesController implements Localizable {
         resamplerLabel.setText(bundle.getString("properties.resampler"));
         wavtoolLabel.setText(bundle.getString("properties.wavtool"));
         voicebankLabel.setText(bundle.getString("properties.voicebank"));
-        instrumentalLabel.setText(bundle.getString("properties.instrumental"));
+        // instrumentalLabel.setText(bundle.getString("properties.instrumental"));
         tempoLabel.setText(bundle.getString("properties.tempo"));
         changeResamplerButton.setText(bundle.getString("properties.change"));
         changeWavtoolButton.setText(bundle.getString("properties.change"));
         changeVoicebankButton.setText(bundle.getString("properties.change"));
-        changeInstrumentalButton.setText(bundle.getString("properties.change"));
+        // changeInstrumentalButton.setText(bundle.getString("properties.change"));
         applyButton.setText(bundle.getString("general.apply"));
         cancelButton.setText(bundle.getString("general.cancel"));
     }
@@ -227,7 +227,7 @@ public class SongPropertiesController implements Localizable {
         }
     }
 
-    @FXML
+    /*@FXML
     void changeInstrumental(ActionEvent event) {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select sound file");
@@ -239,7 +239,7 @@ public class SongPropertiesController implements Localizable {
             instrumentalPath = Optional.of(file);
             instrumentalName.setText(file.getName());
         }
-    }
+    }*/
 
     @FXML
     void applyProperties(ActionEvent event) {
@@ -251,7 +251,8 @@ public class SongPropertiesController implements Localizable {
                             .setFlags(flagsTF.getText())
                             .setVoiceDirectory(voicebankContainer.getLocation())
                             .setTempo(RoundUtils.round(tempoSlider.getValue()))
-                            .setInstrumental(instrumentalPath).build());
+                            //.setInstrumental(instrumentalPath)
+                            .build());
             engine.setResamplerPath(resamplerPath);
             engine.setWavtoolPath(wavtoolPath);
             onSongChange.apply(resamplerChanged);
