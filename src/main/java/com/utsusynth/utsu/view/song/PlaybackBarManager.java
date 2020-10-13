@@ -27,7 +27,7 @@ public class PlaybackBarManager {
     private static final int totalHeight = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
 
     private final Scaler scaler;
-    private final TreeSet<Note> highlighted;
+    private final TreeSet<Note> highlighted; // All highlighted notes.
     private final BooleanProperty isAnythingHighlighted;
     private final TranslateTransition playback;
 
@@ -210,6 +210,26 @@ public class PlaybackBarManager {
             return RegionBounds.INVALID;
         }
         return highlighted.first().getValidBounds().mergeWith(highlighted.last().getValidBounds());
+    }
+
+    int getLowestRow() {
+        int lowest = 7 * PitchUtils.PITCHES.size() - 1;
+        for (Note note : highlighted) {
+            if (note.getRow() < lowest) {
+                lowest = note.getRow();
+            }
+        }
+        return lowest;
+    }
+
+    int getHighestRow() {
+        int highest = 0;
+        for (Note note : highlighted) {
+            if (note.getRow() > highest) {
+                highest = note.getRow();
+            }
+        }
+        return highest;
     }
 
     boolean isExclusivelyHighlighted(Note note) {

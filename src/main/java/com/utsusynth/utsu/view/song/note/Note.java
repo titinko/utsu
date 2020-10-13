@@ -212,8 +212,10 @@ public class Note implements Comparable<Note> {
                 int newRow = ((int) Math
                         .floor(scaler.unscaleY(event.getY()) * 1.0 / Quantizer.ROW_HEIGHT))
                         + oldRow;
-                // Check whether new row is in bounds.
-                if (!(newRow >= 0 && newRow < 7 * PitchUtils.PITCHES.size())) {
+                // Check whether new row is in bounds for every highlighted note.
+                int lowestNewRow = track.getLowestRow(thisNote) + (newRow - oldRow);
+                int highestNewRow = track.getHighestRow(thisNote) + (newRow - oldRow);
+                if (!(lowestNewRow >= 0 && highestNewRow < 7 * PitchUtils.PITCHES.size())) {
                     newRow = oldRow;
                 }
 
@@ -264,7 +266,7 @@ public class Note implements Comparable<Note> {
                 if (oldRow != newRow || oldQuant != newQuant) {
                     int oldPosition = oldQuant * (Quantizer.COL_WIDTH / curQuant);
                     int newPosition = newQuant * (Quantizer.COL_WIDTH / curQuant);
-                    this.track.moveNote(this, newPosition - oldPosition, newRow - oldRow);
+                    this.track.moveNote(thisNote, newPosition - oldPosition, newRow - oldRow);
                     hasMoved = true;
                 }
                 subMode = SubMode.DRAGGING;

@@ -822,6 +822,18 @@ public class SongEditor {
         }
 
         @Override
+        public int getLowestRow(Note note) {
+            return playbackManager.isHighlighted(note) ? playbackManager.getLowestRow()
+                    : note.getRow();
+        }
+
+        @Override
+        public int getHighestRow(Note note) {
+            return playbackManager.isHighlighted(note) ? playbackManager.getHighestRow()
+                    : note.getRow();
+        }
+
+        @Override
         public void recordAction(Runnable redoAction, Runnable undoAction) {
             model.recordAction(redoAction, undoAction);
         }

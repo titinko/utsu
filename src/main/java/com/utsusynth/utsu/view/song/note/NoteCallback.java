@@ -32,6 +32,12 @@ public interface NoteCallback {
     /** Catches all highlighted notes, if applicable. */
     RegionBounds getBounds(Note note);
 
+    /** Catches all highlighted notes, if applicable. */
+    int getLowestRow(Note note);
+
+    /** Catches all highlighted notes, if applicable. */
+    int getHighestRow(Note note);
+
     void recordAction(Runnable redoAction, Runnable undoAction);
 
     boolean hasVibrato(int position);
