@@ -60,9 +60,9 @@ public class AssetManager {
         copyFile(EXECUTABLES_SOURCE, executablesPath, "LICENSES");
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
-            copyExecFile(EXECUTABLES_SOURCE + "win64/", executablesPath, "macres");
-            copyExecFile(EXECUTABLES_SOURCE + "win64/", executablesPath, "wavtool-yawu");
-            copyExecFile(EXECUTABLES_SOURCE + "win64/", executablesPath, "frq0003gen");
+            copyExecFile(EXECUTABLES_SOURCE + "win64/", executablesPath, "macres.exe");
+            copyExecFile(EXECUTABLES_SOURCE + "win64/", executablesPath, "wavtool-yawu.exe");
+            copyExecFile(EXECUTABLES_SOURCE + "win64/", executablesPath, "frq0003gen.exe");
         } else if (os.contains("mac")) {
             copyExecFile(EXECUTABLES_SOURCE + "Mac/", executablesPath, "macres");
             copyExecFile(EXECUTABLES_SOURCE + "Mac/", executablesPath, "wavtool-yawu");
