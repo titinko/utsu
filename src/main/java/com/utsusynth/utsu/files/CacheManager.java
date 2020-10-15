@@ -49,15 +49,18 @@ public class CacheManager {
         return silenceCache;
     }
 
-    public void clearCache(File clearMe) {
+    public boolean clearCache(File clearMe) {
         if (clearMe.exists()) {
             try {
                 Files.delete(clearMe.toPath());
+                return true;
             } catch (IOException e) {
-                errorLogger.logError(e);
+                // This is expected if user tries to clear cache while file is in use.
+                return false;
             }
         } else {
             System.out.println("Tried to delete cache file that no longer exists.");
+            return false;
         }
     }
 

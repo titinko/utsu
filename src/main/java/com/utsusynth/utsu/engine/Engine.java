@@ -122,7 +122,9 @@ public class Engine {
             mediaPlayer.setOnReady(() -> startCallback.apply(media.getDuration()));
             mediaPlayer.setOnEndOfMedia(() -> mediaPlayer.stop());
             mediaPlayer.setOnStopped(() -> {
+                // Explicitly release media and garbage collect player.
                 mediaPlayer.dispose();
+                mediaPlayer = null;
                 endCallback.run();
                 if (instrumentalPlayer != null) {
                     instrumentalPlayer.stop();
