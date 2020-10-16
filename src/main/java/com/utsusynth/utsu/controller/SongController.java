@@ -353,6 +353,7 @@ public class SongController implements EditorController, Localizable {
             errorLogger.logWarning(e);
         }
 
+        anchorLeft.getChildren().clear();
         anchorLeft.getChildren().add(piano.initPiano());
 
         // Reloads current song.

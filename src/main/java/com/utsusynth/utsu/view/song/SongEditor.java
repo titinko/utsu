@@ -23,7 +23,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
@@ -38,7 +37,6 @@ public class SongEditor {
     private final SongClipboard clipboard;
     private final NoteFactory noteFactory;
     private final NoteMap noteMap;
-    private final Localizer localizer;
     private final Quantizer quantizer;
     private final Scaler scaler;
 
@@ -73,7 +71,6 @@ public class SongEditor {
         this.clipboard = clipboard;
         this.noteFactory = trackNoteFactory;
         this.noteMap = noteMap;
-        this.localizer = localizer;
         this.quantizer = quantizer;
         this.scaler = scaler;
 
@@ -567,16 +564,18 @@ public class SongEditor {
     }
 
     private void addMeasure(boolean enabled) {
-        GridPane newMeasure = new GridPane();
+        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH);
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT);
+
+        Pane newMeasure = new Pane();
+        newMeasure.setPrefSize(colWidth * 4, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
         int rowNum = 0;
         for (int octave = 7; octave > 0; octave--) {
             for (String pitch : PitchUtils.REVERSE_PITCHES) {
                 // Add row to track.
                 for (int colNum = 0; colNum < 4; colNum++) {
                     Pane newCell = new Pane();
-                    newCell.setPrefSize(
-                            Math.round(scaler.scaleX(Quantizer.COL_WIDTH)),
-                            Math.round(scaler.scaleY(Quantizer.ROW_HEIGHT)));
+                    newCell.setPrefSize(colWidth, rowHeight);
                     newCell.getStyleClass().add("track-cell");
                     if (enabled) {
                         newCell.getStyleClass()
@@ -589,7 +588,9 @@ public class SongEditor {
                     } else if (colNum == 3) {
                         newCell.getStyleClass().add("measure-end");
                     }
-                    newMeasure.add(newCell, colNum, rowNum);
+                    newCell.setTranslateX(colWidth * colNum);
+                    newCell.setTranslateY(rowHeight * rowNum);
+                    newMeasure.getChildren().add(newCell);
                 }
                 rowNum++;
             }
@@ -597,22 +598,28 @@ public class SongEditor {
         measures.getChildren().add(newMeasure);
 
         // Add new columns to dynamics.
-        GridPane newDynamics = new GridPane();
+        double dynamicsRowHeight = 50;
+        Pane newDynamics = new Pane();
+        newDynamics.setPrefSize(colWidth * 4, dynamicsRowHeight * 2);
         for (int colNum = 0; colNum < 4; colNum++) {
             AnchorPane topCell = new AnchorPane();
-            topCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
+            topCell.setPrefSize(colWidth, dynamicsRowHeight);
             topCell.getStyleClass().add("dynamics-top-cell");
             if (colNum == 0) {
                 topCell.getStyleClass().add("measure-start");
             }
-            newDynamics.add(topCell, colNum, 0);
+            topCell.setTranslateX(colWidth * colNum);
+
             AnchorPane bottomCell = new AnchorPane();
-            bottomCell.setPrefSize(scaler.scaleX(Quantizer.COL_WIDTH), 50);
+            bottomCell.setPrefSize(colWidth, dynamicsRowHeight);
             bottomCell.getStyleClass().add("dynamics-bottom-cell");
             if (colNum == 0) {
                 bottomCell.getStyleClass().add("measure-start");
             }
-            newDynamics.add(bottomCell, colNum, 1);
+            bottomCell.setTranslateX(colWidth * colNum);
+            bottomCell.setTranslateY(dynamicsRowHeight);
+
+            newDynamics.getChildren().addAll(topCell, bottomCell);
         }
         dynamics.getChildren().add(newDynamics);
 
@@ -622,7 +629,7 @@ public class SongEditor {
         }
     }
 
-    private void activateMeasure(GridPane measure) {
+    private void activateMeasure(Pane measure) {
         measure.setOnMouseReleased(event -> {
             selection.setVisible(false); // Remove selection box if present.
             int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();

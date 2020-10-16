@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongController">
+<BorderPane xmlns="http://javafx.com/javafx/15" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongController">
    <top>
       <AnchorPane BorderPane.alignment="CENTER">
          <children>
@@ -65,13 +65,10 @@
       <HBox minWidth="600.0" prefHeight="100.0" prefWidth="900.0" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
             <AnchorPane maxHeight="100.0" maxWidth="98.0" minWidth="98.0" />
-            <ScrollPane fx:id="scrollPaneBottom" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="600.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">
+            <ScrollPane fx:id="scrollPaneBottom" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="600.0" vbarPolicy="ALWAYS" vmax="0.0" HBox.hgrow="ALWAYS">
               <content>
                 <AnchorPane fx:id="anchorBottom" maxHeight="100.0" minHeight="100.0" />
               </content>
-               <HBox.margin>
-                  <Insets right="17.0" />
-               </HBox.margin>
             </ScrollPane>
          </children>
          <BorderPane.margin>

@@ -24,7 +24,7 @@ import javafx.util.Duration;
  * Keeps track of what notes are currently highlighted.
  */
 public class PlaybackBarManager {
-    private static final int totalHeight = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
+    private static final int TOTAL_HEIGHT = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
 
     private final Scaler scaler;
     private final TreeSet<Note> highlighted; // All highlighted notes.
@@ -57,7 +57,7 @@ public class PlaybackBarManager {
         if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             // Create a playback bar.
             double barX = scaler.scalePos(playRegion.getMinMs());
-            Line playBar = new Line(barX, 0, barX, scaler.scaleY(totalHeight));
+            Line playBar = new Line(barX, 0, barX, scaler.scaleY(TOTAL_HEIGHT));
             playBar.getStyleClass().addAll("playback-bar");
             bars.getChildren().add(playBar);
 
@@ -167,10 +167,10 @@ public class PlaybackBarManager {
         clearHighlights();
 
         // Recreate start and end bars, as scale might have changed.
-        startBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
+        startBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT));
         startBar.getStyleClass().add("start-bar");
         startBar.setMouseTransparent(true);
-        endBar = new Line(0, 0, 0, scaler.scaleY(totalHeight));
+        endBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT));
         endBar.getStyleClass().add("end-bar");
         endBar.setMouseTransparent(true);
     }
