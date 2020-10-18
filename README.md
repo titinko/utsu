@@ -6,37 +6,39 @@ Supported languages: English, Español, Français, 日本語, 中文, [Italiano]
 
 ## Installation instructions
 
-### The easy way--installers!
+### Windows
 
-The Mac installer can be found on the [releases page](https://github.com/titinko/utsu/releases).
+The Windows installer (64-bit MSI) can be found on the [releases page](https://github.com/titinko/utsu/releases).
 
-The Windows installer can be found on the [releases page](https://github.com/titinko/utsu/releases).
+### Mac
 
-### The reliable way--a JAR file
+The Mac installer (64-bit DMG) can be found on the [releases page](https://github.com/titinko/utsu/releases).
 
-For Mac, Windows, Linux:
-First, you'll need to make sure your computer runs Java.  You can download the latest Java engine [here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+### Linux
 
-![Here's what the download page should look like.](images/java_screenshot.png)
-You'll need Java 8, not Java 7 or Java 9, and you'll want a JRE, not a JDK.  
-
-NOTE FOR LINUX USERS: You'll need to either download openjdk-8-jre and openjfx (both available in the ubuntu repositories, the names can be different for other distributions) or download [Oracle Java](https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-get-on-ubuntu-16-04) 
-
-Next, download the Utsu executable as a ZIP from the [releases page](https://github.com/titinko/utsu/releases).
-
-Unzip the downloaded file and you should see a JAR file and an assets folder.  Confirm that the assets folder and the Utsu file are in the same parent folder, and double-click the JAR file to start Utsu.  If the program doesn't run properly the first time, try closing and double-clicking the JAR file again.  If it still doesn't work, you can try running it from the terminal:
-> cd /path/to/jarfile<br>
-> java -jar utsu-0.4-jfx.jar
-
-Downloading the JAR file is much more space-efficient than using the installer, if you're worried about that kind of thing.
+The Linux installer (64-bit DEB) can be found on the [releases page](https://github.com/titinko/utsu/releases).
 
 ## Building from source
 
-Please install Maven v. 4.0.0 or higher.
-Please ensure your Java version is 8 or higher.
-Navigate to the same directory as the pom.xml file and type:
-> mvn clean verify
+### Java
 
-in the command line.  You can look up various other Maven commands to test, deploy, etc.
+For best results, use [Oracle Java 14](https://www.oracle.com/java/technologies/javase/jdk14-archive-downloads.html).
+Open-jfx seems to be missing some of the packaging tools I use in my setup and Oracle Java 15 has a bug when creating
+Windows installers. The methods for downloading and installing Java vary depending on your operating system, but at the
+end you'll need the JAVA_HOME variable to be set on your machine for Utsu to build properly.
 
-See also https://github.com/titinko/utsu/wiki/Compiling for platform-specific compilation instructions.
+### Maven
+
+Download [Apache Maven](https://maven.apache.org/download.cgi) and install it using the instructions
+[here](https://maven.apache.org/install.html).
+
+### Running Utsu
+
+Popular IDEs such as Eclipse and IntelliJ will give you the option to create a new project by copying from a Git
+repository. You can also use the git command-line tool or even a Git GUI (there's one for Windows [here](https://gitforwindows.org/))
+to download the repository to a directory of your choice.
+
+To build and run Utsu, navigate to the same directory as the pom.xml file and type:
+> mvn javafx:run
+
+See https://github.com/titinko/utsu/wiki/Compiling for platform-specific compilation examples.
