@@ -4,17 +4,21 @@ import java.io.File;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.files.AssetManager;
+import com.utsusynth.utsu.files.FileNameFixer;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Resampler {
     private final ExternalProcessRunner runner;
+    private final FileNameFixer fileNameFixer;
     private final AssetManager assetManager;
 
     @Inject
-    Resampler(ExternalProcessRunner runner, AssetManager assetManager) {
+    Resampler(
+            ExternalProcessRunner runner, FileNameFixer fileNameFixer, AssetManager assetManager) {
         this.runner = runner;
+        this.fileNameFixer = fileNameFixer;
         this.assetManager = assetManager;
     }
 
@@ -26,7 +30,7 @@ public class Resampler {
             File outputFile,
             String pitchString,
             Song song) {
-        String inputFilePath = config.getPathToFile().getAbsolutePath();
+        String inputFilePath = fileNameFixer.getFixedName(config.getPathToFile().getAbsolutePath());
         String outputFilePath = outputFile.getAbsolutePath();
         String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
         String consonantVelocity = Double.toString(note.getVelocity() * (song.getTempo() / 125));

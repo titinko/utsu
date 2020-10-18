@@ -11,6 +11,7 @@ import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.*;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.CacheManager;
+import com.utsusynth.utsu.files.FileNameFixer;
 import com.utsusynth.utsu.files.VoicebankReader;
 import javafx.fxml.FXMLLoader;
 
@@ -41,6 +42,7 @@ public class UtsuModule extends AbstractModule {
         bind(StatusBar.class).asEagerSingleton();
         bind(AssetManager.class).asEagerSingleton();
         bind(CacheManager.class).asEagerSingleton();
+        bind(FileNameFixer.class).asEagerSingleton();
         bind(VoicebankReader.class).asEagerSingleton();
     }
 
@@ -114,8 +116,8 @@ public class UtsuModule extends AbstractModule {
     @Provides
     @Singleton
     private FrqGenerator provideFrqGenerator(
-            ExternalProcessRunner runner, AssetManager assetManager) {
-        return new FrqGenerator(runner, assetManager, 256);
+            ExternalProcessRunner runner, FileNameFixer fileNameFixer, AssetManager assetManager) {
+        return new FrqGenerator(runner, fileNameFixer, assetManager, 256);
     }
 
     @Provides
