@@ -765,10 +765,18 @@ public class SongController implements EditorController, Localizable {
             if (playbackX != null) {
                 // Implements autoscroll to follow playback bar.
                 InvalidationListener autoscrollListener = event -> {
-                    int newPositionMs = regionToPlay.getMinMs()
+                    RegionBounds scrollRegion = scrollPaneRegion();
+                    int newMs = regionToPlay.getMinMs()
                             + RoundUtils.round(scaler.unscaleX(playbackX.get()));
-                    if (!scrollPaneRegion().contains(newPositionMs)) {
-                        scrollToPosition(newPositionMs);
+                    // TODO: Let the user choose this mode in User Preferences.
+                    /*int halfWidth = RoundUtils.round(
+                            (scrollRegion.getMaxMs() - scrollRegion.getMinMs()) / 2.0);
+                    int scrollMid = scrollRegion.getMinMs() + halfWidth;
+                    if (!new RegionBounds(scrollMid - 10, scrollMid + 10).contains(newMs)) {
+                        scrollToPosition(newMs - halfWidth);
+                    }*/
+                    if (!scrollRegion.contains(newMs)) {
+                        scrollToPosition(newMs);
                     }
                 };
                 playbackX.addListener(autoscrollListener);
@@ -781,7 +789,7 @@ public class SongController implements EditorController, Localizable {
                             Number newValue) {
                         double pixelsTravelled = scrollPaneCenter.getWidth() *
                                 Math.abs(newValue.doubleValue() - oldValue.doubleValue());
-                        if (pixelsTravelled < 10) {
+                        if (pixelsTravelled < 5) {
                             playbackX.removeListener(autoscrollListener);
                             // These listeners remove themselves when user touches the scrollbar,
                             // but there's a chance they could pile up before then.

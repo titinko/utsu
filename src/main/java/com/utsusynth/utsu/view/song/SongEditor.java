@@ -183,8 +183,8 @@ public class SongEditor {
             int firstNoteStart = noteMap.getEnvelope(firstPosition).getStartMs();
             int renderStart = Math.min(firstNoteStart, rendered.getMinMs());
             int renderEnd = lastPosition + noteMap.getNote(lastPosition).getDurationMs();
-            return playbackManager
-                    .startPlayback(duration, new RegionBounds(renderStart, renderEnd));
+            return playbackManager.startPlayback(
+                    duration, new RegionBounds(renderStart, renderEnd));
         }
         return null;
     }

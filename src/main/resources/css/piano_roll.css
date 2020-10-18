@@ -11,6 +11,11 @@
 	-fx-stroke: crimson;
 }
 
+.playback-backing-bar {
+    -fx-stroke-width: 3;
+    -fx-stroke: transparent;
+}
+
 .end-bar {
 	-fx-stroke: cornflowerblue;
 }

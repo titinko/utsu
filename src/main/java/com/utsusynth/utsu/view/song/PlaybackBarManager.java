@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.song;
 
 import java.util.Collection;
 import java.util.TreeSet;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
@@ -16,7 +17,9 @@ import javafx.animation.TranslateTransition;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.CacheHint;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.shape.Line;
 import javafx.util.Duration;
 
@@ -50,7 +53,7 @@ public class PlaybackBarManager {
 
     /**
      * Sends the playback bar across the part of the song that plays.
-     * 
+     *
      * @return A double binding of the playback bar's current x-value.
      */
     DoubleProperty startPlayback(Duration duration, RegionBounds playRegion) {
@@ -58,22 +61,32 @@ public class PlaybackBarManager {
             // Create a playback bar.
             double barX = scaler.scalePos(playRegion.getMinMs());
             Line playBar = new Line(barX, 0, barX, scaler.scaleY(TOTAL_HEIGHT));
-            playBar.getStyleClass().addAll("playback-bar");
-            bars.getChildren().add(playBar);
+            playBar.getStyleClass().add("playback-bar");
+
+            // Add a backing bar to handle a Windows-specific optimization issue.
+            Node playBarNode;
+            if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                Line backingBar = new Line(barX, 0, barX, scaler.scaleY(TOTAL_HEIGHT));
+                backingBar.getStyleClass().add("playback-backing-bar");
+                playBarNode = new Group(playBar, backingBar);
+            } else {
+                playBarNode = playBar;
+            }
+            bars.getChildren().add(playBarNode);
 
             // Move the playback bar as the song plays.
             playback.stop();
-            playback.setNode(playBar);
+            playback.setNode(playBarNode);
             playback.setDuration(duration);
             playback.setToX(scaler.scaleX(playRegion.getMaxMs() - playRegion.getMinMs()));
             playback.setInterpolator(Interpolator.LINEAR);
             playback.statusProperty().addListener((obs, oldStatus, newStatus) -> {
                 if (newStatus == Status.STOPPED) {
-                    bars.getChildren().remove(playBar);
+                    bars.getChildren().remove(playBarNode);
                 }
             });
             playback.play();
-            return playBar.translateXProperty();
+            return playBarNode.translateXProperty();
         }
         // Return null if no playback bar created.
         return null;
@@ -94,14 +107,18 @@ public class PlaybackBarManager {
         playback.stop();
     }
 
-    /** Adds a specific note to highlighted set and adjust playback bars. */
+    /**
+     * Adds a specific note to highlighted set and adjust playback bars.
+     */
     void highlightNote(Note highlightMe) {
         highlighted.add(highlightMe);
         isAnythingHighlighted.set(true);
         highlightMe.setHighlighted(true);
     }
 
-    /** Highlight an exact region and any notes within that region. */
+    /**
+     * Highlight an exact region and any notes within that region.
+     */
     void highlightRegion(RegionBounds region, Collection<Note> allNotes) {
         clearHighlights();
         if (region.equals(RegionBounds.INVALID)) {
@@ -124,7 +141,9 @@ public class PlaybackBarManager {
         isAnythingHighlighted.set(!highlighted.isEmpty());
     }
 
-    /** Highlights all notes and places playback bars at their edges. */
+    /**
+     * Highlights all notes and places playback bars at their edges.
+     */
     void highlightAll(Collection<Note> allNotes) {
         clearHighlights();
         if (allNotes.isEmpty()) {
@@ -143,7 +162,9 @@ public class PlaybackBarManager {
         endBar.setTranslateX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()));
     }
 
-    /** Aligns playback bar to reflect actual highlighted notes. */
+    /**
+     * Aligns playback bar to reflect actual highlighted notes.
+     */
     void realign() {
         if (highlighted.isEmpty()) {
             clearHighlights();
