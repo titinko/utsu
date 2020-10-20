@@ -171,8 +171,8 @@ public class Voicebank {
     }
 
     private List<String> allCombinations(String prefix, String lyric, String suffix) {
-        // Exact lyric match is prioritized first.
-        return ImmutableList.of(lyric, lyric + suffix, prefix + lyric + suffix, prefix + lyric);
+        // Try to get the lyric with as much detail as possible.
+        return ImmutableList.of(prefix + lyric + suffix, lyric + suffix, prefix + lyric, lyric);
     }
 
     /**
