@@ -267,7 +267,12 @@ public class Song {
         int positionMs = toModify.getPosition();
         NoteNode node = this.noteList.getNote(positionMs);
         Note note = node.getNote();
+        // Need to clear previous note's cache in case a pitchbend change affects it.
         clearNoteCache(note);
+        if (node.getPrev().isPresent()) {
+            clearNoteCache(node.getPrev().get().getNote());
+        }
+        
         if (toModify.getEnvelope().isPresent()) {
             note.setEnvelope(toModify.getEnvelope().get());
         }

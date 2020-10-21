@@ -20,8 +20,8 @@ public class PitchCurve {
 
     @Inject
     public PitchCurve(PortamentoFactory portamentoFactory) {
-        this.pitchbends = new HashMap<Integer, Pitchbend>();
-        this.portamentoFactory = new PortamentoFactory();
+        this.pitchbends = new HashMap<>();
+        this.portamentoFactory = portamentoFactory;
     }
 
     /** Adds pitchbends for a single note. */
@@ -135,7 +135,7 @@ public class PitchCurve {
 
     /** Writes out pitchbends for a section into a format readable by resamplers. */
     public String renderPitchbends(int firstStep, int lastStep, int noteNum) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         double noteNumPitch = noteNum * 10; // In tenths. (1/10 of a semitone)
         double defaultPitch = 0; // In tenths. (1/10 of a semitone)
         for (int scanStep = firstStep; scanStep <= lastStep; scanStep++) {
@@ -158,7 +158,7 @@ public class PitchCurve {
                     realPitch += defaultPitch; // Vibrato modifies default pitch if no portamento.
                 }
                 int diff = (int) ((realPitch - noteNumPitch) * 10); // In cents.
-                result += convertTo12Bit(diff);
+                result.append(convertTo12Bit(diff));
 
                 // Set the default pitch to the one at the end of current portamento.
                 Optional<Portamento> portamento = pitchbends.get(step).getPortamento();
@@ -177,14 +177,14 @@ public class PitchCurve {
                     }
                 }
                 int diff = (int) ((defaultPitch - noteNumPitch) * 10); // In cents.
-                result += convertTo12Bit(diff);
+                result.append(convertTo12Bit(diff));
                 if (numEmpty > 1) {
-                    result += String.format("#%d#", numEmpty - 1);
+                    result.append(String.format("#%d#", numEmpty - 1));
                 }
                 step = emptyStep - 1; // Move step to the end of the empty stretch.
             }
         }
-        return result;
+        return result.toString();
     }
 
     /**
