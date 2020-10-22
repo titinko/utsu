@@ -34,8 +34,7 @@ public class Wavtool {
         double startPoint = note.getStartPoint() + note.getAutoStartPoint();
         String[] envelope = note.getFullEnvelope();
 
-        double overlap = Math.min(config.getOverlap(), note.getFadeIn());
-        double boundedOverlap = Math.max(0, Math.min(overlap, noteLength));
+        double boundedOverlap = Math.max(0, Math.min(note.getFadeIn(), noteLength));
         // Ignore overlap if current note doesn't touch previous one.
         if (!includeOverlap) {
             boundedOverlap = 0;

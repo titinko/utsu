@@ -37,24 +37,25 @@ public class NoteStandardizer {
             if (prev.isPresent()) {
                 double maxLength = note.getDelta() - (prev.get().getDuration() / 2.0);
                 // The original correction factor code.
-                if (realPreutter - realOverlap > maxLength) {
-                    double correctionFactor = maxLength / (realPreutter - realOverlap);
+                double comparator = (realPreutter - realOverlap) * 0.888;
+                if (comparator > maxLength) {
+                    double correctionFactor = maxLength / comparator;
                     double oldPreutter = realPreutter;
                     realPreutter *= correctionFactor;
                     realOverlap *= correctionFactor;
                     autoStartPoint += oldPreutter - realPreutter;
                 }
-                // Added through trial and error to remove timing issues.
-                if (realPreutter > maxLength) {
-                    double correctionFactor = maxLength / realPreutter;
+                // Added through trial and error to reduce timing issues.
+                if (realPreutter > note.getDelta()) {
+                    double correctionFactor = note.getDelta() / realPreutter;
                     double oldPreutter = realPreutter;
                     realPreutter *= correctionFactor;
                     realOverlap *= correctionFactor;
                     autoStartPoint += oldPreutter - realPreutter;
                 }
-                // Added through trial and error to remove timing issues.
-                if (realOverlap > maxLength) {
-                    double correctionFactor = maxLength / realOverlap;
+                // Added through trial and error to reduce timing issues.
+                if (realOverlap > note.getDelta()) {
+                    double correctionFactor = note.getDelta() / realOverlap;
                     double oldPreutter = realPreutter;
                     realPreutter *= correctionFactor;
                     realOverlap *= correctionFactor;

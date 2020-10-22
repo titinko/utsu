@@ -355,8 +355,6 @@ public class NotePropertiesController implements Localizable {
             double newVelocity = oldVelocity;
             if (!curConsonantVelocity.getText().equals(DIFFERENT_VALUES)) {
                 newVelocity = consonantVelocitySlider.getValue();
-                System.out.println(consonantVelocityLabel.getText() + " vs " + DIFFERENT_VALUES);
-                System.out.println("Setting consonant velocity.");
             }
             Optional<Double> oldPreutter = note.getPreutter();
             Optional<Double> newPreutter = oldPreutter;
