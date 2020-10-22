@@ -24,6 +24,7 @@ public class Wavtool {
             Song song,
             Note note,
             double noteLength,
+            double expectedDelta,
             File inputFile,
             File outputFile,
             boolean includeOverlap,
@@ -40,9 +41,19 @@ public class Wavtool {
         }
 
         double scaleFactor = 125 / song.getTempo();
+        double scaledExpectedDelta = expectedDelta * scaleFactor;
         double scaledNoteLength = noteLength * scaleFactor;
         double scaledOverlap = boundedOverlap * scaleFactor;
         double scaledStartPoint = startPoint * scaleFactor;
+
+        // Check that current length matches expected length and correct any discrepancies.
+        if (scaledExpectedDelta > totalDelta && Math.abs(scaledExpectedDelta - totalDelta) > 0.01) {
+            double timingCorrection = scaledExpectedDelta - totalDelta;
+            if (scaledOverlap > timingCorrection) {
+                scaledOverlap -= timingCorrection;
+                System.out.println("Corrected note timing by " + timingCorrection + " ms.");
+            }
+        }
 
         // Call wavtool to add new note onto the end of the output file.
         runner.runProcess(
@@ -66,6 +77,7 @@ public class Wavtool {
         totalDelta += scaledNoteLength - scaledOverlap;
     }
 
+    // Unlike in addNewNote, values are already scaled for tempo here.
     void addSilence(
             File wavtoolPath,
             double duration,

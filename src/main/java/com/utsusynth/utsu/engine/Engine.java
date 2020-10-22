@@ -198,7 +198,7 @@ public class Engine {
 
         while (notes.hasNext()) {
             Note note = notes.next();
-            totalDelta += note.getDelta(); // Unique for every note in a single sequence.
+            totalDelta += note.getDelta();
 
             // Get lyric config.
             Optional<LyricConfig> config = Optional.empty();
@@ -271,6 +271,7 @@ public class Engine {
             final boolean includeOverlap =
                     areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter));
             final boolean isLastNote = notes.peekNext().isEmpty();
+            final double expectedDelta = totalDelta - preutter;
             futures.add(executor.submit(() -> {
                 // Re-samples lyric and puts result into renderedNote file.
                 File renderedNote;
@@ -295,6 +296,7 @@ public class Engine {
                             song,
                             note,
                             adjustedLength,
+                            expectedDelta,
                             renderedNote,
                             finalSong,
                             includeOverlap,
