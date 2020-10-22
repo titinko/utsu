@@ -295,7 +295,6 @@ public class Engine {
                             song,
                             note,
                             adjustedLength,
-                            curConfig,
                             renderedNote,
                             finalSong,
                             includeOverlap,

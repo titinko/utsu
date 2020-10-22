@@ -30,14 +30,15 @@ public class Resampler {
             File outputFile,
             String pitchString,
             Song song) {
+        double scaleFactor = 125 / song.getTempo();
         String inputFilePath = fileNameFixer.getFixedName(config.getPathToFile().getAbsolutePath());
         String outputFilePath = outputFile.getAbsolutePath();
         String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
-        String consonantVelocity = Double.toString(note.getVelocity() * (song.getTempo() / 125));
+        String consonantVelocity = Double.toString(note.getVelocity() * scaleFactor);
         String flags = note.getNoteFlags().isEmpty() ? song.getFlags() : note.getNoteFlags();
         String offset = Double.toString(config.getOffset());
         double startPoint = note.getStartPoint() + note.getAutoStartPoint();
-        double scaledLength = noteLength * (125 / song.getTempo()) + startPoint + 1;
+        double scaledLength = (noteLength + startPoint + 1) * scaleFactor;
         double consonantLength = config.getConsonant(); // TODO: Cutoff?
         String cutoff = Double.toString(config.getCutoff());
         String intensity = Integer.toString(note.getIntensity());

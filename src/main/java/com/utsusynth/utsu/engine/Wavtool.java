@@ -24,7 +24,6 @@ public class Wavtool {
             Song song,
             Note note,
             double noteLength,
-            LyricConfig config,
             File inputFile,
             File outputFile,
             boolean includeOverlap,
@@ -41,14 +40,17 @@ public class Wavtool {
         }
 
         double scaleFactor = 125 / song.getTempo();
+        double scaledNoteLength = noteLength * scaleFactor;
+        double scaledOverlap = boundedOverlap * scaleFactor;
+        double scaledStartPoint = startPoint * scaleFactor;
 
         // Call wavtool to add new note onto the end of the output file.
         runner.runProcess(
                 wavtoolPath.getAbsolutePath(),
                 outputFilePath,
                 inputFilePath,
-                Double.toString(startPoint),
-                Double.toString(noteLength * scaleFactor),
+                Double.toString(scaledStartPoint),
+                Double.toString(scaledNoteLength),
                 envelope[0], // p1
                 envelope[1], // p2
                 envelope[2], // p3
@@ -56,12 +58,12 @@ public class Wavtool {
                 envelope[4], // v2
                 envelope[5], // v3
                 envelope[6], // v4
-                Double.toString(boundedOverlap * scaleFactor), // overlap
+                Double.toString(scaledOverlap), // overlap
                 envelope[8], // p4
                 envelope[9], // p5
                 envelope[10], // v5
                 triggerSynthesis ? "LAST_NOTE" : ""); // Triggers final song processing.
-        totalDelta += (noteLength - boundedOverlap) * scaleFactor;
+        totalDelta += scaledNoteLength - scaledOverlap;
     }
 
     void addSilence(
@@ -71,7 +73,7 @@ public class Wavtool {
             File inputFile,
             File outputFile,
             boolean triggerSynthesis) {
-        // Check that current length matches expected length and report any discrepancies.
+        // Check that current length matches expected length and correct any discrepancies.
         if (expectedDelta > totalDelta && Math.abs(expectedDelta - totalDelta) > 0.01) {
                 double timingCorrection = expectedDelta - totalDelta;
                 duration += timingCorrection;
