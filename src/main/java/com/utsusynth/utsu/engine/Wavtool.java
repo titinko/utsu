@@ -31,7 +31,7 @@ public class Wavtool {
             boolean triggerSynthesis) {
         String outputFilePath = outputFile.getAbsolutePath();
         String inputFilePath = inputFile.getAbsolutePath();
-        double startPoint = note.getStartPoint(); // TODO: Add auto start point.
+        double startPoint = note.getStartPoint() + note.getAutoStartPoint();
         String[] envelope = note.getFullEnvelope();
 
         double overlap = Math.min(config.getOverlap(), note.getFadeIn());

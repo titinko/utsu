@@ -42,7 +42,7 @@ public class Resampler {
         String cutoff = Double.toString(config.getCutoff());
         String intensity = Integer.toString(note.getIntensity());
         String modulation = Integer.toString(note.getModulation()); // TODO: Set this song-wide?
-        String tempo = "T" + Double.toString(song.getTempo()); // TODO: Override with note tempo.
+        String tempo = "T" + song.getTempo(); // TODO: Override with note tempo.
 
         // Call resampler.
         runner.runProcess(

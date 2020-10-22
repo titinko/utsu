@@ -272,7 +272,7 @@ public class Song {
         if (node.getPrev().isPresent()) {
             clearNoteCache(node.getPrev().get().getNote());
         }
-        
+
         if (toModify.getEnvelope().isPresent()) {
             note.setEnvelope(toModify.getEnvelope().get());
         }
