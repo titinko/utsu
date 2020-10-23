@@ -81,8 +81,7 @@ public class Portamento {
     }
 
     private void initializeControlPoint(Rectangle square) {
-        square.setStroke(Color.DARKSLATEBLUE);
-        square.setFill(Color.TRANSPARENT);
+        square.getStyleClass().add("pitchbend");
         square.setOnMouseEntered(event -> {
             square.getScene().setCursor(Cursor.HAND);
         });
@@ -242,7 +241,7 @@ public class Portamento {
             curveGroup.getChildren().add(newCurve.getElement());
             callback.modifySongPitchbend(oldData, getData());
         });
-        if (curves.get(curveIndex).getType() == curveType) {
+        if (curves.get(curveIndex).getType().equals(curveType)) {
             radioItem.setSelected(true);
         }
         return radioItem;

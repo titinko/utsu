@@ -1,0 +1,269 @@
+.root {
+    -fx-base: $[BASE];
+    -fx-accent: $[ACCENT];
+    -fx-focus-color: $[ACCENT];
+    -fx-faint-focus-color: transparent
+}
+
+.scroll-bar {
+    -fx-background-color: derive(-fx-base,45%)
+}
+
+.status-bar {
+	-fx-background-color: derive(-fx-color,-23%), derive(-fx-base,26.4%);
+    -fx-background-insets: 0, 1 0 0 0;
+}
+
+.start-bar, .playback-bar, .end-bar {
+	-fx-stroke-width: 2;
+}
+
+.playback-backing-bar {
+    -fx-stroke-width: 3;
+    -fx-stroke: transparent;
+}
+
+.start-bar {
+	-fx-stroke: $[START_BAR];
+}
+
+.end-bar {
+	-fx-stroke: $[END_BAR];
+}
+
+.playback-bar {
+	-fx-stroke: $[PLAYBACK_BAR];
+}
+
+.add-note-box {
+	-fx-fill: transparent;
+	-fx-stroke: $[ADD_NOTE_BOX_BORDER];
+	-fx-stroke-width: 3;
+}
+
+.select-box {
+	-fx-fill: transparent;
+	-fx-stroke: $[SELECT_BOX_BORDER];
+	-fx-stroke-width: 2;
+}
+
+.track-cell.white-key {
+    -fx-background-color: $[TRACK_BORDER_THIN], $[TRACK_CELL_LIGHT];
+    -fx-background-insets: 0, 0 1 1 0;
+}
+
+.track-cell.black-key {
+	-fx-background-color: $[TRACK_BORDER_THIN], $[TRACK_CELL_DARK];
+	-fx-background-insets: 0, 0 1 1 0;
+}
+
+.track-cell.gray-key {
+	-fx-background-color: $[TRACK_BORDER_THIN], $[TRACK_CELL_PREROLL];
+	-fx-background-insets: 0, 0 1 1 0;
+}
+
+.track-cell.white-key.measure-start {
+	-fx-background-color: $[TRACK_BORDER_THICK], $[TRACK_BORDER_THIN], $[TRACK_CELL_LIGHT];
+	-fx-background-insets: 0, 0 0 0 1, 0 1 1 1;
+}
+
+.track-cell.white-key.measure-end {
+	-fx-background-color: $[TRACK_BORDER_THICK], $[TRACK_BORDER_THIN], $[TRACK_CELL_LIGHT];
+	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
+}
+
+.track-cell.black-key.measure-start {
+	-fx-background-color: $[TRACK_BORDER_THICK], $[TRACK_BORDER_THIN], $[TRACK_CELL_DARK];
+	-fx-background-insets: 0, 0 0 0 1, 0 1 1 1;
+}
+
+.track-cell.black-key.measure-end {
+	-fx-background-color: $[TRACK_BORDER_THICK], $[TRACK_BORDER_THIN], $[TRACK_CELL_DARK];
+	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
+}
+
+.track-cell.gray-key.measure-start {
+	-fx-background-color: $[TRACK_BORDER_THICK], $[TRACK_BORDER_THIN], $[TRACK_CELL_PREROLL];
+	-fx-background-insets: 0, 0 0 0 1, 0 1 1 1;
+}
+
+.track-cell.gray-key.measure-end {
+	-fx-background-color: $[TRACK_BORDER_THICK], $[TRACK_BORDER_THIN], $[TRACK_CELL_PREROLL];
+	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
+}
+
+.track-note.valid.not-highlighted {
+    -fx-fill: $[NOTE];
+    -fx-stroke: $[NOTE_BORDER];
+}
+
+.track-note.valid.highlighted {
+    -fx-fill: $[HIGHLIGHTED];
+    -fx-stroke: $[HIGHLIGHTED_BORDER];
+}
+
+.track-note.invalid {
+    -fx-fill: $[INVALID_NOTE];
+    -fx-stroke: $[INVALID_NOTE_BORDER];
+}
+
+.track-note-text {
+    -fx-text-fill: $[NOTE_TEXT];
+}
+
+.note-overlap {
+	-fx-fill: $[INVALID_NOTE];
+	-fx-stroke: transparent;
+}
+
+.table-row-cell {
+	-fx-table-cell-border-color: $[TRACK_BORDER_THIN];
+}
+
+.table-row-cell:even {
+    -fx-background: $[TRACK_CELL_LIGHT];
+}
+
+.table-row-cell:odd {
+    -fx-background: $[TRACK_CELL_DARK];
+}
+
+.table-row-cell:selected {
+	-fx-background-color: $[HIGHLIGHTED_BORDER], $[HIGHLIGHTED];
+	-fx-background-insets: 0, 1 0 1 0;
+}
+
+.table-cell {
+	-fx-text-fill: $[LYRIC_CONFIG_TEXT];
+}
+
+.frq-cell {
+	-fx-background-insets: 0, 1 0 1 0;
+	-fx-alignment: center;
+}
+
+.frq-cell.valid {
+	-fx-background-color: transparent, $[FRQ_PRESENT];
+}
+
+.frq-cell.invalid {
+	-fx-background-color: transparent, $[FRQ_ABSENT];
+}
+
+.frq-cell.loading {
+	-fx-background-color: transparent, $[FRQ_LOADING];
+}
+
+.background.offset, .background.cutoff {
+	-fx-background-color: $[OFFSET_CUTOFF_FILL];
+}
+
+.background.consonant {
+	-fx-background-color: $[CONSONANT_FILL];
+}
+
+.background.vowel {
+	-fx-background-color: $[VOWEL_FILL];
+}
+
+.chart, .chart-content, .chart-plot-background {
+	-fx-background-color: transparent;
+	-fx-padding: 0px;
+}
+
+.chart-series-line {
+    -fx-stroke-width: 1px;
+    -fx-effect: null;
+}
+
+.default-color0.chart-series-line {
+	-fx-stroke: $[WAVEFORM_LINE];
+}
+
+.default-color1.chart-series-line {
+	-fx-stroke: $[FRQ_LINE];
+}
+
+.offset, .cutoff {
+	-fx-stroke: $[OFFSET_CUTOFF_LINE];
+	-fx-text-fill: $[OFFSET_CUTOFF_TEXT];
+	-fx-stroke-width: 2;
+}
+
+.consonant {
+	-fx-stroke: $[CONSONANT_LINE];
+	-fx-text-fill: $[CONSONANT_FILL];
+	-fx-stroke-width: 2;
+}
+
+.preutterance, .overlap {
+	-fx-stroke-width: 2.5;
+}
+
+.preutterance {
+	-fx-stroke: $[PREUTTER_LINE];
+	-fx-text-fill: $[PREUTTER_FILL];
+}
+
+.overlap {
+	-fx-stroke: $[OVERLAP_LINE];
+	-fx-text-fill: $[OVERLAP_FILL];
+}
+
+.offset.selected, .cutoff.selected, .consonant.selected, .preutterance.selected, .overlap.selected {
+	-fx-stroke-width: 4px;
+}
+
+.piano-black-key {
+	-fx-background-color: $[PIANO_BLACK_KEY];
+}
+
+.piano-black-key > Label {
+	-fx-text-fill: $[PIANO_BLACK_KEY_TEXT];
+}
+
+.piano-white-key {
+	-fx-background-color: $[PIANO_BLACK_KEY], $[PIANO_WHITE_KEY];
+	-fx-background-insets: 0, 0 0 1 0 ;
+}
+
+.piano-white-key > Label {
+	-fx-text-fill: $[PIANO_WHITE_KEY_TEXT];
+}
+
+.piano-no-border {
+	-fx-background-color: $[PIANO_WHITE_KEY];
+}
+
+.pitchbend {
+    -fx-stroke: $[PITCHBEND];
+    -fx-fill: transparent;
+}
+
+.envelope-circle {
+    -fx-fill: $[ENVELOPE];
+}
+
+.envelope-line {
+    -fx-stroke: $[ENVELOPE];
+}
+
+.dynamics-top-cell {
+	-fx-background-color: $[DYNAMICS_BORDER], $[DYNAMICS_CELL];
+	-fx-background-insets: 0, 0 1 1 0;
+}
+
+.dynamics-top-cell.measure-start {
+	-fx-background-color: $[DYNAMICS_BORDER], $[DYNAMICS_CELL];
+	-fx-background-insets: 0, 0 1 1 1;
+}
+
+.dynamics-bottom-cell {
+	-fx-background-color: $[DYNAMICS_BORDER], $[DYNAMICS_CELL];
+	-fx-background-insets: 0, 0 1 0 0;
+}
+
+.dynamics-bottom-cell.measure-start {
+	-fx-background-color: $[DYNAMICS_BORDER], $[DYNAMICS_CELL];
+	-fx-background-insets: 0, 0 1 0 1;
+}

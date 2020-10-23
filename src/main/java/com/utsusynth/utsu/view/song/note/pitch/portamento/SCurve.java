@@ -12,8 +12,7 @@ public class SCurve implements Curve {
     SCurve(double startX, double startY, double endX, double endY) {
         double halfX = (startX + endX) / 2;
         curve = new CubicCurve(startX, startY, halfX, startY, halfX, endY, endX, endY);
-        this.curve.setStroke(Color.DARKSLATEBLUE);
-        this.curve.setFill(Color.TRANSPARENT);
+        this.curve.getStyleClass().add("pitchbend");
     }
 
     @Override

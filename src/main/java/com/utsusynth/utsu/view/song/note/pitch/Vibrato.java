@@ -62,7 +62,7 @@ public class Vibrato {
         this.vibrato = startVibrato;
 
         vibratoPath = new Path();
-        vibratoPath.setStroke(Color.DARKSLATEBLUE);
+        vibratoPath.getStyleClass().add("pitchbend");
         vibratoPath.setMouseTransparent(true);
         redrawVibrato();
 

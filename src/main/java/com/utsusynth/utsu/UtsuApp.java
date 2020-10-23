@@ -58,7 +58,7 @@ public class UtsuApp extends Application {
         InputStream fxml = getClass().getResourceAsStream("/fxml/UtsuScene.fxml");
         BorderPane pane = loader.load(fxml);
         Scene scene = new Scene(pane);
-        scene.getStylesheets().add("/css/piano_roll.css");
+        scene.getStylesheets().add("/css/main.css");
 
         // Set the stage.
         primaryStage.setScene(scene);

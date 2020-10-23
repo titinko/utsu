@@ -21,6 +21,7 @@ public class Lyric {
         this.alias = "";
         this.text = new Label(defaultLyric);
         this.text.setMouseTransparent(true);
+        this.text.getStyleClass().add("track-note-text");
         this.textField = new TextField("mi");
         this.textField.setFont(Font.font(9));
         this.textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 2);

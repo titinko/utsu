@@ -13,8 +13,7 @@ public class JCurve implements Curve {
         double halfX = (startX + endX) / 2;
         double halfY = (startY + endY) / 2;
         this.curve = new CubicCurve(startX, startY, halfX, startY, endX, halfY, endX, endY);
-        this.curve.setStroke(Color.DARKSLATEBLUE);
-        this.curve.setFill(Color.TRANSPARENT);
+        this.curve.getStyleClass().add("pitchbend");
     }
 
     @Override

@@ -1,6 +1,17 @@
+.root {
+    -fx-base: #ececec;
+    -fx-accent: #0096C9;
+    -fx-focus-color: #0096C9;
+    -fx-faint-focus-color: transparent;
+}
+
+.scroll-bar {
+    -fx-background-color: derive(-fx-base,45%)
+}
+
 .status-bar {
-	-fx-background-color: lightgray, whitesmoke;
-    -fx-background-insets: 0, 1 0 0 1;
+	-fx-background-color: derive(-fx-color,-23%), derive(-fx-base,26.4%);
+    -fx-background-insets: 0, 1 0 0 0;
 }
 
 .start-bar, .playback-bar, .end-bar {
@@ -92,13 +103,25 @@
     -fx-stroke: darkslategray;
 }
 
+.track-note-text {
+    -fx-text-fill: black;
+}
+
 .note-overlap {
 	-fx-fill: gray;
 	-fx-stroke: transparent;
 }
 
 .table-row-cell {
-	-fx-table-cell-border-color: gainsboro;
+	-fx-table-cell-border-color: lightgray;
+}
+
+.table-row-cell:even {
+    -fx-background: white;
+}
+
+.table-row-cell:odd {
+    -fx-background: whitesmoke;
 }
 
 .table-row-cell:selected {
@@ -128,7 +151,7 @@
 }
 
 .background.offset, .background.cutoff {
-	-fx-background-color: gainsboro;
+	-fx-background-color: lightgray;
 }
 
 .background.consonant {
@@ -200,8 +223,25 @@
 	-fx-background-insets: 0, 0 0 1 0 ;
 }
 
+.piano-white-key > Label {
+	-fx-text-fill: black;
+}
+
 .piano-no-border {
 	-fx-background-color: white;
+}
+
+.pitchbend {
+    -fx-stroke: darkslateblue;
+    -fx-fill: transparent;
+}
+
+.envelope-circle {
+    -fx-fill: yellow;
+}
+
+.envelope-line {
+    -fx-stroke: yellow;
 }
 
 .dynamics-top-cell {

@@ -13,8 +13,7 @@ public class RCurve implements Curve {
         double halfX = (startX + endX) / 2;
         double halfY = (startY + endY) / 2;
         this.curve = new CubicCurve(startX, startY, startX, halfY, halfX, endY, endX, endY);
-        this.curve.setStroke(Color.DARKSLATEBLUE);
-        this.curve.setFill(Color.TRANSPARENT);
+        this.curve.getStyleClass().add("pitchbend");
     }
 
     @Override

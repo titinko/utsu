@@ -38,7 +38,7 @@ public class Envelope {
         Circle[] circles = new Circle[5]; // Control points.
         for (int i = 0; i < 5; i++) {
             Circle circle = new Circle(lines[i].getX(), lines[i].getY(), 3);
-            circle.setFill(Color.YELLOW);
+            circle.getStyleClass().add("envelope-circle");
             lines[i].xProperty().bind(circle.centerXProperty());
             lines[i].yProperty().bind(circle.centerYProperty());
             final int index = i;
@@ -76,7 +76,7 @@ public class Envelope {
         }
         this.end = end;
         Path path = new Path(start, lines[0], lines[1], lines[2], lines[3], lines[4], end);
-        path.setStroke(Color.YELLOW);
+        path.getStyleClass().add("envelope-line");
         this.group = new Group(path, circles[0], circles[1], circles[2], circles[4], circles[3]);
     }
 
