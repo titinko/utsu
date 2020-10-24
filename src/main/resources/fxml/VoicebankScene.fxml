@@ -116,7 +116,7 @@
                               <HBox>
                                  <children>
                                 <ScrollPane fx:id="pitchPane" fitToHeight="true" fitToWidth="true" minViewportHeight="0.0" prefViewportWidth="250.0" />
-                                    <AnchorPane minHeight="180.0" prefWidth="122.0" style="-fx-background-insets: 0, 0 1 1 0; -fx-background-color: lightgray, white">
+                                    <AnchorPane minHeight="180.0" prefWidth="122.0" styleClass="pitch-whitespace">
                                        <children>
                                           <TextField fx:id="suffixTextField" layoutX="12.0" layoutY="63.0" prefHeight="27.0" prefWidth="100.0" />
                                           <Button fx:id="applySuffixButton" layoutX="32.0" layoutY="109.0" mnemonicParsing="false" onAction="#applySuffix" text="Apply" />

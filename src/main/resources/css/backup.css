@@ -150,6 +150,11 @@
 	-fx-background-color: transparent, #ffda7c;
 }
 
+.pitch-whitespace {
+    -fx-background-insets: 0, 0 1 1 0;
+    -fx-background-color: lightgray, white
+}
+
 .background.offset, .background.cutoff {
 	-fx-background-color: lightgray;
 }

@@ -2,6 +2,7 @@ package com.utsusynth.utsu.files;
 
 import com.utsusynth.utsu.UtsuModule.SettingsPath;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import javafx.scene.paint.Color;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -126,19 +127,19 @@ public class ThemeManager {
         return StringUtils.replaceEach(input, keys, values);
     }
 
-    // Helper method
-    private static String formatHexString(double val) {
-        String in = Integer.toHexString((int) Math.round(val * 255));
+    // Removes floating point values before converting to hex.
+    private static String formatHexString(double value) {
+        String in = Integer.toHexString(RoundUtils.round(value * 255));
         return in.length() == 1 ? "0" + in : in;
     }
 
     // Convert Color to a CSS-readable string.
-    public static String toHexString(Color value) {
+    public static String toHexString(Color color) {
         return "#"
-                + (formatHexString(value.getRed())
-                + formatHexString(value.getGreen())
-                + formatHexString(value.getBlue())
-                + formatHexString(value.getOpacity()))
+                + (formatHexString(color.getRed())
+                + formatHexString(color.getGreen())
+                + formatHexString(color.getBlue())
+                + formatHexString(color.getOpacity()))
                 .toUpperCase();
     }
 }
