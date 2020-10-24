@@ -24,6 +24,7 @@ import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.Engine.PlaybackStatus;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
+import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.files.song.Ust12Reader;
 import com.utsusynth.utsu.files.song.Ust12Writer;
 import com.utsusynth.utsu.files.song.Ust20Reader;
@@ -88,7 +89,7 @@ public class SongController implements EditorController, Localizable {
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
     private final IconManager iconManager;
-    private ContextMenu iconContextMenu;
+    private final ThemeManager themeManager;
     private final ExternalProcessRunner processRunner;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
@@ -131,6 +132,9 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="languageChoiceBox"
     private ChoiceBox<NativeLocale> languageChoiceBox; // Value injected by FXMLLoader
 
+    @FXML // fx:id="themeChoiceBox"
+    private ChoiceBox<String> themeChoiceBox; // Value injected by FXMLLoader
+
     @Inject
     public SongController(
             SongContainer songContainer, // Inject an empty song.
@@ -148,6 +152,7 @@ public class SongController implements EditorController, Localizable {
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
             IconManager iconManager,
+            ThemeManager themeManager,
             ExternalProcessRunner processRunner,
             Provider<FXMLLoader> fxmlLoaders) {
         this.song = songContainer;
@@ -165,6 +170,7 @@ public class SongController implements EditorController, Localizable {
         this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
         this.iconManager = iconManager;
+        this.themeManager = themeManager;
         this.processRunner = processRunner;
         this.fxmlLoaderProvider = fxmlLoaders;
     }
@@ -315,6 +321,21 @@ public class SongController implements EditorController, Localizable {
         languageChoiceBox
                 .setOnAction((action) -> localizer.setLocale(languageChoiceBox.getValue()));
         languageChoiceBox.setValue(localizer.getCurrentLocale());
+
+        themeChoiceBox
+                .setItems(FXCollections.observableArrayList("Light Theme", "Dark Theme"));
+        themeChoiceBox.setValue("Light Theme");
+        themeChoiceBox.setOnAction((action) -> {
+            String themeChoice = themeChoiceBox.getValue();
+            Optional<File> maybeCss = themeChoice.equals("Light Theme")
+                    ? themeManager.applyLightTheme() : themeManager.applyDarkTheme();
+            if (maybeCss.isPresent()) {
+                String css = "file:///" + maybeCss.get().getAbsolutePath().replace("\\", "/");
+                themeChoiceBox.getScene().getStylesheets().set(0, css);
+            } else {
+                statusBar.setStatus("Failed to load theme.");
+            }
+        });
 
         refreshView();
 

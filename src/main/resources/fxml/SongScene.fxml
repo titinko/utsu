@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/15" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongController">
+<BorderPane xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongController">
    <top>
       <AnchorPane BorderPane.alignment="CENTER">
          <children>
@@ -29,6 +29,7 @@
                      </children>
                   </HBox>
                   <ChoiceBox fx:id="languageChoiceBox" prefWidth="150.0" />
+                  <ChoiceBox fx:id="themeChoiceBox" prefWidth="150.0" />
                </children>
                <padding>
                   <Insets left="10.0" top="30.0" />

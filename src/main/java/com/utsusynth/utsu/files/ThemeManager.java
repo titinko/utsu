@@ -50,7 +50,7 @@ public class ThemeManager {
                 IOUtils.toString(getClass().getResource(lightThemeSource), StandardCharsets.UTF_8));
         darkTheme = parseTheme(
                 IOUtils.toString(getClass().getResource(darkThemeSource), StandardCharsets.UTF_8));
-        currentTheme = darkTheme;
+        currentTheme = lightTheme;
         applyCurrentTheme();
         return generatedCss;
     }
