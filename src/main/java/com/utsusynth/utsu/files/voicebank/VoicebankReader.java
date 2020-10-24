@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.files;
+package com.utsusynth.utsu.files.voicebank;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +13,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.utsusynth.utsu.files.AssetManager;
 import org.apache.commons.io.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provider;

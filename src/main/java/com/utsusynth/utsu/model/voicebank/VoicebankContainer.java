@@ -2,7 +2,7 @@ package com.utsusynth.utsu.model.voicebank;
 
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
-import com.utsusynth.utsu.files.VoicebankReader;
+import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 
 import java.io.File;
 

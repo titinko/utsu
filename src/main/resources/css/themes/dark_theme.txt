@@ -1,0 +1,2 @@
+BASE=#373e43
+ACCENT=#1e74c6

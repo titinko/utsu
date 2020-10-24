@@ -8,7 +8,7 @@ import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.common.i18n.Localizer;
-import com.utsusynth.utsu.files.SoundFileReader;
+import com.utsusynth.utsu.files.voicebank.SoundFileReader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Side;

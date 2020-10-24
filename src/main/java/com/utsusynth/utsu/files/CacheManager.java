@@ -10,8 +10,6 @@ import java.nio.file.Files;
 import java.util.UUID;
 
 public class CacheManager {
-    private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
-
     private final File cachePath;
 
     @Inject

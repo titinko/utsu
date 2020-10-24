@@ -9,10 +9,8 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.*;
-import com.utsusynth.utsu.files.AssetManager;
-import com.utsusynth.utsu.files.CacheManager;
-import com.utsusynth.utsu.files.FileNameFixer;
-import com.utsusynth.utsu.files.VoicebankReader;
+import com.utsusynth.utsu.files.*;
+import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import javafx.fxml.FXMLLoader;
 
 import java.io.File;
@@ -64,6 +62,16 @@ public class UtsuModule extends AbstractModule {
     private File provideSettingsPath(@Version String curVersion) {
         File homePath = new File(System.getProperty("user.home"));
         return new File(homePath, ".utsu/" + curVersion);
+    }
+
+    @Provides
+    @Singleton
+    private ThemeManager provideThemeManager(@SettingsPath File settingsPath) {
+        return new ThemeManager(
+                settingsPath,
+                "/css/css_template.txt",
+                "/css/themes/light_theme.txt",
+                "/css/themes/dark_theme.txt");
     }
 
     @Provides

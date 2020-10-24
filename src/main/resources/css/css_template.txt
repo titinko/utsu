@@ -192,7 +192,7 @@
 
 .consonant {
 	-fx-stroke: $[CONSONANT_LINE];
-	-fx-text-fill: $[CONSONANT_FILL];
+	-fx-text-fill: $[CONSONANT_TEXT];
 	-fx-stroke-width: 2;
 }
 
@@ -202,12 +202,12 @@
 
 .preutterance {
 	-fx-stroke: $[PREUTTER_LINE];
-	-fx-text-fill: $[PREUTTER_FILL];
+	-fx-text-fill: $[PREUTTER_TEXT];
 }
 
 .overlap {
 	-fx-stroke: $[OVERLAP_LINE];
-	-fx-text-fill: $[OVERLAP_FILL];
+	-fx-text-fill: $[OVERLAP_TEXT];
 }
 
 .offset.selected, .cutoff.selected, .consonant.selected, .preutterance.selected, .overlap.selected {

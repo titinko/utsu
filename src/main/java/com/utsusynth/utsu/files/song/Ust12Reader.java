@@ -1,8 +1,9 @@
-package com.utsusynth.utsu.files;
+package com.utsusynth.utsu.files.song;
 
 import java.util.regex.Pattern;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 

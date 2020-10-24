@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.utsusynth.utsu.controller.UtsuController;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.CacheManager;
+import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.model.ModelModule;
 import com.utsusynth.utsu.view.ViewModule;
 import javafx.application.Application;
@@ -19,6 +20,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.InputStream;
 
 /**
@@ -58,7 +60,17 @@ public class UtsuApp extends Application {
         InputStream fxml = getClass().getResourceAsStream("/fxml/UtsuScene.fxml");
         BorderPane pane = loader.load(fxml);
         Scene scene = new Scene(pane);
-        scene.getStylesheets().add("/css/main.css");
+
+        // Apply style and default theme.
+        ThemeManager themeManager = injector.getInstance(ThemeManager.class);
+        try {
+            File cssFile = themeManager.initialize();
+            scene.getStylesheets().add("file:///" + cssFile.getAbsolutePath().replace("\\", "/"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error: Exception while generating css, switching to backup.");
+            scene.getStylesheets().add("/css/backup.css");
+        }
 
         // Set the stage.
         primaryStage.setScene(scene);

@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.files;
+package com.utsusynth.utsu.files.voicebank;
 
 import java.io.File;
 import java.io.FileNotFoundException;

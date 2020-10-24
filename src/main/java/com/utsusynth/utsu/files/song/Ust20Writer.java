@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.files;
+package com.utsusynth.utsu.files.song;
 
 import java.io.PrintStream;
 import java.util.Iterator;
