@@ -3,6 +3,9 @@ package com.utsusynth.utsu.files;
 import com.utsusynth.utsu.UtsuModule.SettingsPath;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -15,72 +18,83 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class ThemeManager {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
+    public static final String DEFAULT_LIGHT_THEME = "light_theme.txt";
+    public static final String DEFAULT_DARK_THEME = "dark_theme.txt";
+
     private final File generatedCss;
     private final String templateSource;
-    private final String lightThemeSource;
-    private final String darkThemeSource;
+    private final String defaultThemeSource;
+    private final StringProperty currentTheme;
 
     private String templateData;
-    private Map<String, Color> lightTheme;
-    private Map<String, Color> darkTheme;
-    private Map<String, Color> currentTheme;
+    private Map<String, Color> defaultThemeMap;
 
     @Inject
     public ThemeManager(
             @SettingsPath File settingsPath,
             String templateSource,
-            String lightThemeSource,
-            String darkThemeSource) {
+            String defaultThemeSource) {
         generatedCss = new File(settingsPath, "generated.css");
         this.templateSource = templateSource;
-        this.lightThemeSource = lightThemeSource;
-        this.darkThemeSource = darkThemeSource;
+        this.defaultThemeSource = defaultThemeSource;
+        currentTheme = new SimpleStringProperty(DEFAULT_LIGHT_THEME);
     }
 
     // Initializes class and creates default theme.
-    public File initialize() throws IOException {
+    public void initialize(Scene scene) throws IOException {
         templateData = IOUtils.toString(
                 getClass().getResource(templateSource), StandardCharsets.UTF_8);
-        lightTheme = parseTheme(
+        String lightThemeSource = defaultThemeSource + DEFAULT_LIGHT_THEME;
+        defaultThemeMap = parseTheme(
                 IOUtils.toString(getClass().getResource(lightThemeSource), StandardCharsets.UTF_8));
-        darkTheme = parseTheme(
-                IOUtils.toString(getClass().getResource(darkThemeSource), StandardCharsets.UTF_8));
-        currentTheme = lightTheme;
+        currentTheme.set(DEFAULT_LIGHT_THEME);
         applyCurrentTheme();
-        return generatedCss;
+        String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
+        scene.getStylesheets().add(css);
+        addSceneListener(scene);
     }
 
-    public Optional<File> applyLightTheme() {
-        if (currentTheme == lightTheme) {
-            return Optional.of(generatedCss);
-        }
-        try {
-            currentTheme = lightTheme;
-            applyCurrentTheme();
-            return Optional.of(generatedCss);
-        } catch (IOException e) {
-            errorLogger.logError(e);
-            return Optional.empty();
-        }
+    public StringProperty getCurrentTheme() {
+        return currentTheme;
     }
 
-    public Optional<File> applyDarkTheme() {
-        if (currentTheme == darkTheme) {
-            return Optional.of(generatedCss);
+    private void addSceneListener(Scene scene) {
+        currentTheme.addListener((oldTheme, newTheme, obs) -> {
+            if (!oldTheme.equals(newTheme)) {
+                try {
+                    applyCurrentTheme();
+                } catch (Exception e) {
+                    errorLogger.logError(e);
+                    return;
+                }
+                String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
+                if (scene.getStylesheets().size() > 0) {
+                    scene.getStylesheets().set(0, css);
+                } else {
+                    scene.getStylesheets().add(css);
+                }
+            }
+        });
+    }
+
+    private void applyCurrentTheme() throws IOException {
+        Map<String, Color> currentThemeMap;
+        if (currentTheme.get().equals(DEFAULT_LIGHT_THEME)
+                || currentTheme.get().equals(DEFAULT_DARK_THEME)) {
+            String source = defaultThemeSource + currentTheme.get();
+            currentThemeMap = parseTheme(
+                    IOUtils.toString(getClass().getResource(source), StandardCharsets.UTF_8));
+        } else {
+            // TODO: Parse custom themes here.
+            currentThemeMap = new HashMap<>();
         }
-        try {
-            currentTheme = darkTheme;
-            applyCurrentTheme();
-            return Optional.of(generatedCss);
-        } catch (IOException e) {
-            errorLogger.logError(e);
-            return Optional.empty();
-        }
+        String withCurrentTheme = findAndReplace(templateData, currentThemeMap);
+        String withBackupTheme = findAndReplace(withCurrentTheme, defaultThemeMap); // Backup.
+        FileUtils.writeStringToFile(generatedCss, withBackupTheme, StandardCharsets.UTF_8);
     }
 
     private Map<String, Color> parseTheme(String themeData) {
@@ -107,12 +121,6 @@ public class ThemeManager {
             }
         }
         return themeMap;
-    }
-
-    private void applyCurrentTheme() throws IOException {
-        String withCurrentTheme = findAndReplace(templateData, currentTheme);
-        String withBackupTheme = findAndReplace(withCurrentTheme, lightTheme); // Backup.
-        FileUtils.writeStringToFile(generatedCss, withBackupTheme, StandardCharsets.UTF_8);
     }
 
     private static String findAndReplace(String input, Map<String, Color> theme) {

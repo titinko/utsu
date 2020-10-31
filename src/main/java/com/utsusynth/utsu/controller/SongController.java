@@ -1,5 +1,8 @@
 package com.utsusynth.utsu.controller;
 
+import static com.utsusynth.utsu.files.ThemeManager.DEFAULT_LIGHT_THEME;
+import static com.utsusynth.utsu.files.ThemeManager.DEFAULT_DARK_THEME;
+
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -57,6 +60,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -322,20 +326,20 @@ public class SongController implements EditorController, Localizable {
                 .setOnAction((action) -> localizer.setLocale(languageChoiceBox.getValue()));
         languageChoiceBox.setValue(localizer.getCurrentLocale());
 
-        themeChoiceBox
-                .setItems(FXCollections.observableArrayList("Light Theme", "Dark Theme"));
-        themeChoiceBox.setValue("Light Theme");
-        themeChoiceBox.setOnAction((action) -> {
-            String themeChoice = themeChoiceBox.getValue();
-            Optional<File> maybeCss = themeChoice.equals("Light Theme")
-                    ? themeManager.applyLightTheme() : themeManager.applyDarkTheme();
-            if (maybeCss.isPresent()) {
-                String css = "file:///" + maybeCss.get().getAbsolutePath().replace("\\", "/");
-                themeChoiceBox.getScene().getStylesheets().set(0, css);
-            } else {
-                statusBar.setStatus("Failed to load theme.");
+        themeChoiceBox.setItems(
+                FXCollections.observableArrayList(DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME));
+        themeChoiceBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(String themeName) {
+                return themeName.equals(DEFAULT_LIGHT_THEME) ? "Light Theme" : "Dark Theme";
+            }
+
+            @Override
+            public String fromString(String displayName) {
+                return displayName.equals("Light Theme") ? DEFAULT_LIGHT_THEME : DEFAULT_DARK_THEME;
             }
         });
+        themeChoiceBox.valueProperty().bindBidirectional(themeManager.getCurrentTheme());
 
         refreshView();
 

@@ -7,6 +7,7 @@ import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.model.ModelModule;
+import com.utsusynth.utsu.model.config.UserPreferences;
 import com.utsusynth.utsu.view.ViewModule;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -64,8 +65,7 @@ public class UtsuApp extends Application {
         // Apply style and default theme.
         ThemeManager themeManager = injector.getInstance(ThemeManager.class);
         try {
-            File cssFile = themeManager.initialize();
-            scene.getStylesheets().add("file:///" + cssFile.getAbsolutePath().replace("\\", "/"));
+            themeManager.initialize(scene);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error: Exception while generating css, switching to backup.");

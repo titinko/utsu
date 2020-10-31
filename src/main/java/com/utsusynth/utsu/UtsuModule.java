@@ -70,8 +70,7 @@ public class UtsuModule extends AbstractModule {
         return new ThemeManager(
                 settingsPath,
                 "/css/css_template.txt",
-                "/css/themes/light_theme.txt",
-                "/css/themes/dark_theme.txt");
+                "/css/themes/");
     }
 
     @Provides
