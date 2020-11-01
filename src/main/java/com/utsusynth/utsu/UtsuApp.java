@@ -7,7 +7,6 @@ import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.model.ModelModule;
-import com.utsusynth.utsu.model.config.UserPreferences;
 import com.utsusynth.utsu.view.ViewModule;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -21,7 +20,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
-import java.io.File;
 import java.io.InputStream;
 
 /**

@@ -7,6 +7,7 @@ open module com.utsusynth.utsu {
     requires org.apache.commons.io;
     requires jdk.charsets;
     requires jdk.localedata;
+    requires kotlin.stdlib;
 
     exports com.utsusynth.utsu;
 }

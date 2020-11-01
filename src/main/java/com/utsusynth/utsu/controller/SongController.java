@@ -32,6 +32,7 @@ import com.utsusynth.utsu.files.song.Ust12Reader;
 import com.utsusynth.utsu.files.song.Ust12Writer;
 import com.utsusynth.utsu.files.song.Ust20Reader;
 import com.utsusynth.utsu.files.song.Ust20Writer;
+import com.utsusynth.utsu.model.config.Theme;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.view.song.Piano;
@@ -137,7 +138,7 @@ public class SongController implements EditorController, Localizable {
     private ChoiceBox<NativeLocale> languageChoiceBox; // Value injected by FXMLLoader
 
     @FXML // fx:id="themeChoiceBox"
-    private ChoiceBox<String> themeChoiceBox; // Value injected by FXMLLoader
+    private ChoiceBox<Theme> themeChoiceBox; // Value injected by FXMLLoader
 
     @Inject
     public SongController(
@@ -326,17 +327,17 @@ public class SongController implements EditorController, Localizable {
                 .setOnAction((action) -> localizer.setLocale(languageChoiceBox.getValue()));
         languageChoiceBox.setValue(localizer.getCurrentLocale());
 
-        themeChoiceBox.setItems(
-                FXCollections.observableArrayList(DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME));
+        themeChoiceBox.setItems(FXCollections.observableArrayList(themeManager.getThemes()));
         themeChoiceBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(String themeName) {
-                return themeName.equals(DEFAULT_LIGHT_THEME) ? "Light Theme" : "Dark Theme";
+            public String toString(Theme theme) {
+                return theme.getId().equals(DEFAULT_LIGHT_THEME) ? "Light Theme" : "Dark Theme";
             }
 
             @Override
-            public String fromString(String displayName) {
-                return displayName.equals("Light Theme") ? DEFAULT_LIGHT_THEME : DEFAULT_DARK_THEME;
+            public Theme fromString(String displayName) {
+                return displayName.equals("Light Theme")
+                        ? new Theme(DEFAULT_LIGHT_THEME) : new Theme(DEFAULT_DARK_THEME);
             }
         });
         themeChoiceBox.valueProperty().bindBidirectional(themeManager.getCurrentTheme());

@@ -4,7 +4,7 @@ import static com.utsusynth.utsu.files.ThemeManager.DEFAULT_LIGHT_THEME;
 
 import java.util.HashMap;
 
-public class UserPreferences {
+public class Preferences {
     HashMap<String, String> preferences = new HashMap<>();
 
     public String getTheme() {

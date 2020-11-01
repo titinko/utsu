@@ -3,8 +3,9 @@ package com.utsusynth.utsu.files;
 import com.utsusynth.utsu.UtsuModule.SettingsPath;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.utils.RoundUtils;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import com.utsusynth.utsu.model.config.Theme;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import org.apache.commons.io.FileUtils;
@@ -16,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,10 +30,11 @@ public class ThemeManager {
     private final File generatedCss;
     private final String templateSource;
     private final String defaultThemeSource;
-    private final StringProperty currentTheme;
+    private final Map<String, Theme> themes;
+    private final ObjectProperty<Theme> currentTheme;
 
     private String templateData;
-    private Map<String, Color> defaultThemeMap;
+    private Theme defaultTheme;
 
     @Inject
     public ThemeManager(
@@ -41,30 +44,38 @@ public class ThemeManager {
         generatedCss = new File(settingsPath, "generated.css");
         this.templateSource = templateSource;
         this.defaultThemeSource = defaultThemeSource;
-        currentTheme = new SimpleStringProperty(DEFAULT_LIGHT_THEME);
+        themes = new HashMap<>();
+        themes.put(DEFAULT_LIGHT_THEME, new Theme(DEFAULT_LIGHT_THEME));
+        themes.put(DEFAULT_DARK_THEME, new Theme(DEFAULT_DARK_THEME));
+        currentTheme = new SimpleObjectProperty<>(themes.get(DEFAULT_LIGHT_THEME));
+
     }
 
     // Initializes class and creates default theme.
     public void initialize(Scene scene) throws IOException {
         templateData = IOUtils.toString(
                 getClass().getResource(templateSource), StandardCharsets.UTF_8);
+        defaultTheme = themes.get(DEFAULT_LIGHT_THEME);
         String lightThemeSource = defaultThemeSource + DEFAULT_LIGHT_THEME;
-        defaultThemeMap = parseTheme(
-                IOUtils.toString(getClass().getResource(lightThemeSource), StandardCharsets.UTF_8));
-        currentTheme.set(DEFAULT_LIGHT_THEME);
+        defaultTheme.setColorMap(parseTheme(IOUtils.toString
+                (getClass().getResource(lightThemeSource), StandardCharsets.UTF_8)));
         applyCurrentTheme();
         String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
         scene.getStylesheets().add(css);
         addSceneListener(scene);
     }
 
-    public StringProperty getCurrentTheme() {
+    public Collection<Theme> getThemes() {
+        return themes.values();
+    }
+
+    public ObjectProperty<Theme> getCurrentTheme() {
         return currentTheme;
     }
 
     private void addSceneListener(Scene scene) {
         currentTheme.addListener((oldTheme, newTheme, obs) -> {
-            if (!oldTheme.equals(newTheme)) {
+            if (!oldTheme.getValue().getId().equals(newTheme.getId())) {
                 try {
                     applyCurrentTheme();
                 } catch (Exception e) {
@@ -82,18 +93,18 @@ public class ThemeManager {
     }
 
     private void applyCurrentTheme() throws IOException {
-        Map<String, Color> currentThemeMap;
-        if (currentTheme.get().equals(DEFAULT_LIGHT_THEME)
-                || currentTheme.get().equals(DEFAULT_DARK_THEME)) {
-            String source = defaultThemeSource + currentTheme.get();
-            currentThemeMap = parseTheme(
-                    IOUtils.toString(getClass().getResource(source), StandardCharsets.UTF_8));
-        } else {
-            // TODO: Parse custom themes here.
-            currentThemeMap = new HashMap<>();
+        if (currentTheme.get().getColorMap().isEmpty()) {
+            if (currentTheme.get().getId().equals(DEFAULT_LIGHT_THEME)
+                    || currentTheme.get().getId().equals(DEFAULT_DARK_THEME)) {
+                String source = defaultThemeSource + currentTheme.get().getId();
+                currentTheme.get().setColorMap(parseTheme(
+                        IOUtils.toString(getClass().getResource(source), StandardCharsets.UTF_8)));
+            } else {
+                // TODO: Parse custom themes here.
+            }
         }
-        String withCurrentTheme = findAndReplace(templateData, currentThemeMap);
-        String withBackupTheme = findAndReplace(withCurrentTheme, defaultThemeMap); // Backup.
+        String withCurrentTheme = findAndReplace(templateData, currentTheme.get());
+        String withBackupTheme = findAndReplace(withCurrentTheme, defaultTheme);
         FileUtils.writeStringToFile(generatedCss, withBackupTheme, StandardCharsets.UTF_8);
     }
 
@@ -123,15 +134,16 @@ public class ThemeManager {
         return themeMap;
     }
 
-    private static String findAndReplace(String input, Map<String, Color> theme) {
-        ArrayList<String> keyList = new ArrayList<>(theme.size());
-        ArrayList<String> valueList = new ArrayList<>(theme.size());
-        for (String key : theme.keySet()) {
+    private static String findAndReplace(String input, Theme theme) {
+        Map<String, Color> colorMap = theme.getColorMap();
+        ArrayList<String> keyList = new ArrayList<>(colorMap.size());
+        ArrayList<String> valueList = new ArrayList<>(colorMap.size());
+        for (String key : colorMap.keySet()) {
             keyList.add("$[" + key + "]");
-            valueList.add(toHexString(theme.get(key)));
+            valueList.add(toHexString(colorMap.get(key)));
         }
-        String[] keys = keyList.toArray(new String[theme.size()]);
-        String[] values = valueList.toArray(new String[theme.size()]);
+        String[] keys = keyList.toArray(new String[colorMap.size()]);
+        String[] values = valueList.toArray(new String[colorMap.size()]);
         return StringUtils.replaceEach(input, keys, values);
     }
 
