@@ -13,6 +13,8 @@ import com.utsusynth.utsu.files.*;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import javafx.fxml.FXMLLoader;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.TransformerFactory;
 import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -71,6 +73,15 @@ public class UtsuModule extends AbstractModule {
                 settingsPath,
                 "/css/css_template.txt",
                 "/css/themes/");
+    }
+
+    @Provides
+    @Singleton
+    private PreferencesManager providePreferencesManager(@SettingsPath File settingsPath) {
+        return new PreferencesManager(
+                settingsPath,
+                DocumentBuilderFactory.newDefaultInstance(),
+                TransformerFactory.newDefaultInstance());
     }
 
     @Provides

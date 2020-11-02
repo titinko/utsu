@@ -34,7 +34,8 @@ public class ThemeManager {
     private final ObjectProperty<Theme> currentTheme;
 
     private String templateData;
-    private Theme defaultTheme;
+    private String defaultThemeId;
+    private PreferencesManager preferences;
 
     @Inject
     public ThemeManager(
@@ -52,17 +53,23 @@ public class ThemeManager {
     }
 
     // Initializes class and creates default theme.
-    public void initialize(Scene scene) throws IOException {
+    public void initialize(Scene scene, PreferencesManager preferences) throws IOException {
         templateData = IOUtils.toString(
                 getClass().getResource(templateSource), StandardCharsets.UTF_8);
-        defaultTheme = themes.get(DEFAULT_LIGHT_THEME);
-        String lightThemeSource = defaultThemeSource + DEFAULT_LIGHT_THEME;
-        defaultTheme.setColorMap(parseTheme(IOUtils.toString
-                (getClass().getResource(lightThemeSource), StandardCharsets.UTF_8)));
+        this.defaultThemeId = DEFAULT_LIGHT_THEME;
         applyCurrentTheme();
         String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
         scene.getStylesheets().add(css);
         addSceneListener(scene);
+
+        // TODO: Remove current theme and only use preferences.
+        String chosenThemeId = preferences.getTheme();
+        loadThemeIfNeeded(chosenThemeId);
+        currentTheme.set(themes.get(chosenThemeId));
+        currentTheme.addListener(obs -> {
+            preferences.setTheme(currentTheme.get().getId());
+            preferences.save();
+        });
     }
 
     public Collection<Theme> getThemes() {
@@ -93,19 +100,28 @@ public class ThemeManager {
     }
 
     private void applyCurrentTheme() throws IOException {
-        if (currentTheme.get().getColorMap().isEmpty()) {
-            if (currentTheme.get().getId().equals(DEFAULT_LIGHT_THEME)
-                    || currentTheme.get().getId().equals(DEFAULT_DARK_THEME)) {
-                String source = defaultThemeSource + currentTheme.get().getId();
-                currentTheme.get().setColorMap(parseTheme(
+        loadThemeIfNeeded(currentTheme.get().getId());
+        String withCurrentTheme = findAndReplace(templateData, currentTheme.get());
+        loadThemeIfNeeded(defaultThemeId);
+        String withBackupTheme = findAndReplace(withCurrentTheme, themes.get(defaultThemeId));
+        FileUtils.writeStringToFile(generatedCss, withBackupTheme, StandardCharsets.UTF_8);
+    }
+
+    private void loadThemeIfNeeded(String themeId) throws IOException {
+        if (!themes.containsKey(themeId)) {
+            themes.put(themeId, new Theme(themeId));
+        }
+        Theme theme = themes.get(themeId);
+        if (theme.getColorMap().isEmpty()) {
+            if (theme.getId().equals(DEFAULT_LIGHT_THEME)
+                    || theme.getId().equals(DEFAULT_DARK_THEME)) {
+                String source = defaultThemeSource + theme.getId();
+                theme.setColorMap(parseTheme(
                         IOUtils.toString(getClass().getResource(source), StandardCharsets.UTF_8)));
             } else {
                 // TODO: Parse custom themes here.
             }
         }
-        String withCurrentTheme = findAndReplace(templateData, currentTheme.get());
-        String withBackupTheme = findAndReplace(withCurrentTheme, defaultTheme);
-        FileUtils.writeStringToFile(generatedCss, withBackupTheme, StandardCharsets.UTF_8);
     }
 
     private Map<String, Color> parseTheme(String themeData) {

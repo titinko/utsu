@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.utsusynth.utsu.controller.UtsuController;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.CacheManager;
+import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.model.ModelModule;
 import com.utsusynth.utsu.view.ViewModule;
@@ -33,10 +34,12 @@ public class UtsuApp extends Application {
                 Guice.createInjector(new UtsuModule(), new ModelModule(), new ViewModule());
 
         // Initialize settings directory. Show alert if directory can't be created.
+        PreferencesManager preferencesManager = injector.getInstance(PreferencesManager.class);
         AssetManager assetManager = injector.getInstance(AssetManager.class);
         CacheManager cacheManager = injector.getInstance(CacheManager.class);
         StringBuilder alertText = new StringBuilder();
         try {
+            preferencesManager.initializePreferences();
             if (!assetManager.initializeAssets() || !cacheManager.initializeCache()) {
                 alertText.append("Could not initialize settings directory.");
             }
@@ -63,7 +66,7 @@ public class UtsuApp extends Application {
         // Apply style and default theme.
         ThemeManager themeManager = injector.getInstance(ThemeManager.class);
         try {
-            themeManager.initialize(scene);
+            themeManager.initialize(scene, preferencesManager);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error: Exception while generating css, switching to backup.");
