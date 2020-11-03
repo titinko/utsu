@@ -14,11 +14,14 @@ import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -115,6 +118,8 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem exportToWavItem; // Value injected by FXMLLoader;
     @FXML
+    private MenuItem preferencesItem; // Value injected by FXMLLoader;
+    @FXML
     private Menu editMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem undoItem; // Value injected by FXMLLoader
@@ -168,6 +173,7 @@ public class UtsuController implements Localizable {
         saveItem.setText(bundle.getString("general.save"));
         saveAsItem.setText(bundle.getString("menu.file.saveFileAs"));
         exportToWavItem.setText(bundle.getString("menu.file.exportWav"));
+        preferencesItem.setText(bundle.getString("menu.file.preferences"));
         editMenu.setText(bundle.getString("menu.edit"));
         undoItem.setText(bundle.getString("menu.edit.undo"));
         redoItem.setText(bundle.getString("menu.edit.redo"));
@@ -205,6 +211,7 @@ public class UtsuController implements Localizable {
         saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN));
         saveAsItem.setAccelerator(new KeyCodeCombination(KeyCode.S, SHORTCUT_DOWN, SHIFT_DOWN));
         exportToWavItem.setAccelerator(new KeyCodeCombination(KeyCode.W, SHORTCUT_DOWN));
+        preferencesItem.setAccelerator(new KeyCodeCombination(KeyCode.COMMA, SHORTCUT_DOWN));
         undoItem.setAccelerator(new KeyCodeCombination(KeyCode.Z, SHORTCUT_DOWN));
         redoItem.setAccelerator(new KeyCodeCombination(KeyCode.Z, SHORTCUT_DOWN, SHIFT_DOWN));
         cutItem.setAccelerator(new KeyCodeCombination(KeyCode.X, SHORTCUT_DOWN));
@@ -473,6 +480,26 @@ public class UtsuController implements Localizable {
     void exportToWav(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             editors.get(tabs.getSelectionModel().getSelectedItem().getId()).exportToWav();
+        }
+    }
+
+    @FXML
+    void openPreferences(ActionEvent event) {
+        // Open preferences modal.
+        InputStream fxml = getClass().getResourceAsStream("/fxml/PreferencesScene.fxml");
+        FXMLLoader loader = fxmlLoaderProvider.get();
+        try {
+            Stage currentStage = (Stage) tabs.getScene().getWindow();
+            Stage preferencesWindow = new Stage();
+            // setTitle("Preferences");
+            preferencesWindow.initModality(Modality.APPLICATION_MODAL);
+            preferencesWindow.initOwner(currentStage);
+            BorderPane preferencesPane = loader.load(fxml);
+            preferencesWindow.setScene(new Scene(preferencesPane));
+            preferencesWindow.showAndWait();
+        } catch (IOException e) {
+            statusBar.setStatus("Error: Unable to open note properties editor.");
+            errorLogger.logError(e);
         }
     }
 
