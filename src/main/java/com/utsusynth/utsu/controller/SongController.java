@@ -744,7 +744,9 @@ public class SongController implements EditorController, Localizable {
                 redoAction.run();
                 undoService.setMostRecentAction(redoAction, undoAction);
             });
-            propertiesWindow.setScene(new Scene(notePropertiesPane));
+            Scene scene = new Scene(notePropertiesPane);
+            themeManager.applyToScene(scene);
+            propertiesWindow.setScene(scene);
             propertiesWindow.showAndWait();
         } catch (IOException e) {
             statusBar.setStatus("Error: Unable to open note properties editor.");
@@ -908,7 +910,9 @@ public class SongController implements EditorController, Localizable {
                 });
                 return null;
             });
-            propertiesWindow.setScene(new Scene(propertiesPane));
+            Scene scene = new Scene(propertiesPane);
+            themeManager.applyToScene(scene);
+            propertiesWindow.setScene(scene);
             propertiesWindow.showAndWait();
         } catch (IOException e) {
             statusBar.setStatus("Error: Unable to open note properties editor.");

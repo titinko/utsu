@@ -72,6 +72,11 @@ public class ThemeManager {
         });
     }
 
+    public void applyToScene(Scene scene) {
+        String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
+        scene.getStylesheets().add(css);
+    }
+
     public Collection<Theme> getThemes() {
         return themes.values();
     }

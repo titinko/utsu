@@ -10,6 +10,7 @@ import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.files.ThemeManager;
 import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -47,6 +48,7 @@ public class UtsuController implements Localizable {
     private final Map<String, EditorController> editors;
 
     // Helper classes go here.
+    private final ThemeManager themeManager;
     private final Localizer localizer;
     private final Scaler scaler;
     private final StatusBar statusBar;
@@ -62,11 +64,13 @@ public class UtsuController implements Localizable {
 
     @Inject
     public UtsuController(
+            ThemeManager themeManager,
             Localizer localizer,
             Scaler scaler,
             StatusBar statusBar,
             Provider<SaveWarningDialog> saveWarningProvider,
             Provider<FXMLLoader> fxmlLoaders) {
+        this.themeManager = themeManager;
         this.localizer = localizer;
         this.scaler = scaler;
         this.statusBar = statusBar;
@@ -494,8 +498,9 @@ public class UtsuController implements Localizable {
             // setTitle("Preferences");
             preferencesWindow.initModality(Modality.APPLICATION_MODAL);
             preferencesWindow.initOwner(currentStage);
-            BorderPane preferencesPane = loader.load(fxml);
-            preferencesWindow.setScene(new Scene(preferencesPane));
+            Scene scene = new Scene(loader.load(fxml));
+            themeManager.applyToScene(scene);
+            preferencesWindow.setScene(scene);
             preferencesWindow.showAndWait();
         } catch (IOException e) {
             statusBar.setStatus("Error: Unable to open note properties editor.");
