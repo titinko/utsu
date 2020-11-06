@@ -495,7 +495,7 @@ public class UtsuController implements Localizable {
         try {
             Stage currentStage = (Stage) tabs.getScene().getWindow();
             Stage preferencesWindow = new Stage();
-            // setTitle("Preferences");
+            preferencesWindow.setTitle(localizer.getMessage("preferences.title"));
             preferencesWindow.initModality(Modality.APPLICATION_MODAL);
             preferencesWindow.initOwner(currentStage);
             Scene scene = new Scene(loader.load(fxml));
