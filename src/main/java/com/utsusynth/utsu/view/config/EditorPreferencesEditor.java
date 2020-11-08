@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.config;
 
+import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 
@@ -28,7 +29,17 @@ public class EditorPreferencesEditor extends PreferencesEditor {
     }
 
     @Override
-    protected Pane initializeInternal() {
+    protected Node initializeInternal() {
         return new Pane();
+    }
+
+    @Override
+    public void savePreferences() {
+        // TODO
+    }
+
+    @Override
+    public void revertToPreferences() {
+        // TODO
     }
 }

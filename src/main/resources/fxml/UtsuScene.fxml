@@ -6,6 +6,7 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.BorderPane?>
@@ -80,7 +81,7 @@
       <TabPane fx:id="tabs" tabClosingPolicy="ALL_TABS" BorderPane.alignment="CENTER" />
    </center>
    <bottom>
-      <BorderPane styleClass="status-bar" BorderPane.alignment="CENTER">
+      <BorderPane BorderPane.alignment="CENTER">
          <left>
             <Label fx:id="statusLabel">
                <BorderPane.margin>
@@ -93,6 +94,9 @@
                   <Insets bottom="2.0" left="2.0" right="2.0" top="2.5" />
                </BorderPane.margin></ProgressBar>
          </right>
+         <top>
+            <Separator prefWidth="200.0" BorderPane.alignment="CENTER" />
+         </top>
       </BorderPane>
    </bottom>
 </BorderPane>

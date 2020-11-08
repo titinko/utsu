@@ -1,7 +1,11 @@
 package com.utsusynth.utsu.files;
 
+import com.google.common.collect.ImmutableMap;
 import com.utsusynth.utsu.UtsuModule.SettingsPath;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
+import com.utsusynth.utsu.common.i18n.Localizer;
+import com.utsusynth.utsu.common.i18n.NativeLocale;
+import com.utsusynth.utsu.model.config.Theme;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -17,6 +21,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.HashMap;
+import java.util.Locale;
 
 import static com.utsusynth.utsu.files.ThemeManager.DEFAULT_LIGHT_THEME;
 
@@ -27,16 +32,18 @@ public class PreferencesManager {
     private final DocumentBuilderFactory documentBuilderFactory;
     private final TransformerFactory transformerFactory;
     private final HashMap<String, String> preferences;
+    private final ImmutableMap<String, String> defaultPreferences;
 
-    @Inject
     public PreferencesManager(
             @SettingsPath File settingsPath,
             DocumentBuilderFactory documentBuilderFactory,
-            TransformerFactory transformerFactory) {
+            TransformerFactory transformerFactory,
+            ImmutableMap<String, String> defaultPreferences) {
         preferencesFile = new File(settingsPath, "preferences.xml");
         this.documentBuilderFactory = documentBuilderFactory;
         this.transformerFactory = transformerFactory;
         preferences = new HashMap<>();
+        this.defaultPreferences = defaultPreferences;
     }
 
     public void initializePreferences() {
@@ -61,7 +68,7 @@ public class PreferencesManager {
         }
     }
 
-    public void save() {
+    public void saveToFile() {
         if (!preferencesFile.exists() && !preferencesFile.getParentFile().exists()) {
             System.out.println("Error: Could not find settings directory.");
             return;
@@ -85,14 +92,22 @@ public class PreferencesManager {
         }
     }
 
-    public String getTheme() {
-        if (preferences.containsKey("theme")) {
-            return preferences.get("theme");
-        }
-        return DEFAULT_LIGHT_THEME;
+    public Theme getTheme() {
+        return preferences.containsKey("theme")
+                ? new Theme(preferences.get("theme")) : new Theme(defaultPreferences.get("theme"));
     }
 
-    public void setTheme(String newTheme) {
-        preferences.put("theme", newTheme);
+    public void setTheme(Theme newTheme) {
+        preferences.put("theme", newTheme.getId());
+    }
+
+    public NativeLocale getLocale() {
+        String localeCode = preferences.containsKey("locale")
+                ? preferences.get("locale") : defaultPreferences.get("locale");
+        return new NativeLocale(new Locale(localeCode));
+    }
+
+    public void setLocale(NativeLocale locale) {
+        preferences.put("locale", locale.getLocale().toLanguageTag());
     }
 }

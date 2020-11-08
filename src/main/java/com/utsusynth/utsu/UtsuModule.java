@@ -1,6 +1,7 @@
 package com.utsusynth.utsu;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.*;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -78,10 +79,14 @@ public class UtsuModule extends AbstractModule {
     @Provides
     @Singleton
     private PreferencesManager providePreferencesManager(@SettingsPath File settingsPath) {
+        ImmutableMap<String, String> defaultPreferences = ImmutableMap.of(
+                "theme", ThemeManager.DEFAULT_LIGHT_THEME,
+                "locale", "en");
         return new PreferencesManager(
                 settingsPath,
                 DocumentBuilderFactory.newDefaultInstance(),
-                TransformerFactory.newDefaultInstance());
+                TransformerFactory.newDefaultInstance(),
+                defaultPreferences);
     }
 
     @Provides

@@ -9,9 +9,9 @@
     -fx-background-color: derive(-fx-base,45%)
 }
 
-.status-bar {
-	-fx-background-color: derive(-fx-color,-23%), derive(-fx-base,26.4%);
-    -fx-background-insets: 0, 1 0 0 0;
+.separator:horizontal *.line {
+    -fx-border-color: derive(-fx-color,-23%);
+    -fx-border-width: 0.5;
 }
 
 .start-bar, .playback-bar, .end-bar {

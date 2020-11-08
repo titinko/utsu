@@ -106,7 +106,7 @@ public class PreferencesController implements Localizable {
             Stage currentStage = (Stage) root.getScene().getWindow();
             currentStage.setTitle(bundle.getString("preferences.title"));
         }
-        themeEditor.setDisplayName(bundle.getString("preferences.theme"));
+        themeEditor.setDisplayName(bundle.getString("preferences.colorScheme"));
         editorEditor.setDisplayName(bundle.getString("preferences.editor"));
         engineEditor.setDisplayName(bundle.getString("preferences.engine"));
         applyButton.setText(bundle.getString("general.apply"));
@@ -115,19 +115,20 @@ public class PreferencesController implements Localizable {
 
     @FXML
     void closePreferences(ActionEvent event) {
-        // Restore from file?
+        themeEditor.revertToPreferences();
+        editorEditor.revertToPreferences();
+        engineEditor.revertToPreferences();
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
 
     @FXML
     void applyPreferences(ActionEvent event) {
-        preferencesManager.save();
-    }
-
-    @FXML
-    void applyAndClose(ActionEvent event) {
-        applyPreferences(null);
-        closePreferences(null);
+        themeEditor.savePreferences();
+        editorEditor.savePreferences();
+        engineEditor.savePreferences();
+        preferencesManager.saveToFile();
+        Stage currentStage = (Stage) root.getScene().getWindow();
+        currentStage.close();
     }
 }

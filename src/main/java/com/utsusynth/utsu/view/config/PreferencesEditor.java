@@ -1,8 +1,8 @@
 package com.utsusynth.utsu.view.config;
 
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 
 public abstract class PreferencesEditor {
     public abstract String getDisplayName();
@@ -19,7 +19,7 @@ public abstract class PreferencesEditor {
 
     protected abstract void setViewInternal(BorderPane view);
 
-    protected abstract Pane initializeInternal();
+    protected abstract Node initializeInternal();
 
     /* Handles UI elements common to all preferences editors. */
     public void initialize() {
@@ -28,4 +28,9 @@ public abstract class PreferencesEditor {
         borderPane.setCenter(initializeInternal());
         setViewInternal(borderPane);
     }
+
+    public abstract void savePreferences();
+
+    /* Changes UI to reflect the preferences file instead of local unsaved changes. */
+    public abstract void revertToPreferences();
 }

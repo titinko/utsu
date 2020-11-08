@@ -66,7 +66,7 @@ public class UtsuApp extends Application {
         // Apply style and default theme.
         ThemeManager themeManager = injector.getInstance(ThemeManager.class);
         try {
-            themeManager.initialize(scene, preferencesManager);
+            themeManager.initialize(scene, preferencesManager.getTheme());
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error: Exception while generating css, switching to backup.");

@@ -29,7 +29,6 @@
                      </children>
                   </HBox>
                   <ChoiceBox fx:id="languageChoiceBox" prefWidth="150.0" />
-                  <ChoiceBox fx:id="themeChoiceBox" prefWidth="150.0" />
                </children>
                <padding>
                   <Insets left="10.0" top="30.0" />

@@ -35,7 +35,6 @@ public class ThemeManager {
 
     private String templateData;
     private String defaultThemeId;
-    private PreferencesManager preferences;
 
     @Inject
     public ThemeManager(
@@ -48,33 +47,29 @@ public class ThemeManager {
         themes = new HashMap<>();
         themes.put(DEFAULT_LIGHT_THEME, new Theme(DEFAULT_LIGHT_THEME));
         themes.put(DEFAULT_DARK_THEME, new Theme(DEFAULT_DARK_THEME));
-        currentTheme = new SimpleObjectProperty<>(themes.get(DEFAULT_LIGHT_THEME));
+        currentTheme = new SimpleObjectProperty<>(null);
 
     }
 
     // Initializes class and creates default theme.
-    public void initialize(Scene scene, PreferencesManager preferences) throws IOException {
+    public void initialize(Scene scene, Theme chosenTheme) throws IOException {
         templateData = IOUtils.toString(
                 getClass().getResource(templateSource), StandardCharsets.UTF_8);
         this.defaultThemeId = DEFAULT_LIGHT_THEME;
-        applyCurrentTheme();
-        String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
-        scene.getStylesheets().add(css);
-        addSceneListener(scene);
 
-        // TODO: Remove current theme and only use preferences.
-        String chosenThemeId = preferences.getTheme();
-        loadThemeIfNeeded(chosenThemeId);
-        currentTheme.set(themes.get(chosenThemeId));
-        currentTheme.addListener(obs -> {
-            preferences.setTheme(currentTheme.get().getId());
-            preferences.save();
-        });
+        currentTheme.set(chosenTheme);
+        applyCurrentTheme(); // Generate css file from theme and template data.
+        applyToScene(scene); // Apply generated css to scene.
+        addSceneListener(scene); // Set this up to be automatic when theme changes again.
     }
 
     public void applyToScene(Scene scene) {
         String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
-        scene.getStylesheets().add(css);
+        if (scene.getStylesheets().size() > 0) {
+            scene.getStylesheets().set(0, css);
+        } else {
+            scene.getStylesheets().add(css);
+        }
     }
 
     public Collection<Theme> getThemes() {
@@ -87,32 +82,27 @@ public class ThemeManager {
 
     private void addSceneListener(Scene scene) {
         currentTheme.addListener((oldTheme, newTheme, obs) -> {
-            if (!oldTheme.getValue().getId().equals(newTheme.getId())) {
+            if (oldTheme == null || !oldTheme.getValue().getId().equals(newTheme.getId())) {
                 try {
-                    applyCurrentTheme();
+                    applyCurrentTheme(); // Creates new generated CSS file.
                 } catch (Exception e) {
                     errorLogger.logError(e);
                     return;
                 }
-                String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
-                if (scene.getStylesheets().size() > 0) {
-                    scene.getStylesheets().set(0, css);
-                } else {
-                    scene.getStylesheets().add(css);
-                }
+                applyToScene(scene); // Adds new generated CSS file to this scene.
             }
         });
     }
 
     private void applyCurrentTheme() throws IOException {
-        loadThemeIfNeeded(currentTheme.get().getId());
-        String withCurrentTheme = findAndReplace(templateData, currentTheme.get());
-        loadThemeIfNeeded(defaultThemeId);
-        String withBackupTheme = findAndReplace(withCurrentTheme, themes.get(defaultThemeId));
+        Theme loadedTheme = loadThemeIfNeeded(currentTheme.get().getId());
+        String withCurrentTheme = findAndReplace(templateData, loadedTheme);
+        Theme defaultTheme = loadThemeIfNeeded(defaultThemeId);
+        String withBackupTheme = findAndReplace(withCurrentTheme, defaultTheme);
         FileUtils.writeStringToFile(generatedCss, withBackupTheme, StandardCharsets.UTF_8);
     }
 
-    private void loadThemeIfNeeded(String themeId) throws IOException {
+    private Theme loadThemeIfNeeded(String themeId) throws IOException {
         if (!themes.containsKey(themeId)) {
             themes.put(themeId, new Theme(themeId));
         }
@@ -127,6 +117,7 @@ public class ThemeManager {
                 // TODO: Parse custom themes here.
             }
         }
+        return theme;
     }
 
     private Map<String, Color> parseTheme(String themeData) {

@@ -13,7 +13,7 @@ public class NativeLocale {
                 + (locale.getCountry().isEmpty() ? "" : " (" + locale.getCountry() + ")");
     }
 
-    Locale getLocale() {
+    public Locale getLocale() {
         return locale;
     }
 

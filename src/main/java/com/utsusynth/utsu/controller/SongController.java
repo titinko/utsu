@@ -137,9 +137,6 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="languageChoiceBox"
     private ChoiceBox<NativeLocale> languageChoiceBox; // Value injected by FXMLLoader
 
-    @FXML // fx:id="themeChoiceBox"
-    private ChoiceBox<Theme> themeChoiceBox; // Value injected by FXMLLoader
-
     @Inject
     public SongController(
             SongContainer songContainer, // Inject an empty song.
@@ -326,21 +323,6 @@ public class SongController implements EditorController, Localizable {
         languageChoiceBox
                 .setOnAction((action) -> localizer.setLocale(languageChoiceBox.getValue()));
         languageChoiceBox.setValue(localizer.getCurrentLocale());
-
-        themeChoiceBox.setItems(FXCollections.observableArrayList(themeManager.getThemes()));
-        themeChoiceBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Theme theme) {
-                return theme.getId().equals(DEFAULT_LIGHT_THEME) ? "Light Theme" : "Dark Theme";
-            }
-
-            @Override
-            public Theme fromString(String displayName) {
-                return displayName.equals("Light Theme")
-                        ? new Theme(DEFAULT_LIGHT_THEME) : new Theme(DEFAULT_DARK_THEME);
-            }
-        });
-        themeChoiceBox.valueProperty().bindBidirectional(themeManager.getCurrentTheme());
 
         refreshView();
 
