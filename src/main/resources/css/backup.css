@@ -268,3 +268,11 @@
 	-fx-background-color: darkgray, black;
 	-fx-background-insets: 0, 0 1 0 1;
 }
+
+.theme-settings {
+    -fx-font-size: 20px;
+}
+
+.theme-settings.highlighted {
+    -fx-background-color: derive(-fx-color,-18%);
+}

@@ -6,10 +6,7 @@ import com.utsusynth.utsu.model.config.Theme;
 import javafx.collections.FXCollections;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ColorPicker;
-import javafx.scene.control.Separator;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -56,12 +53,11 @@ public class ThemePreferencesEditor extends PreferencesEditor {
 
     @Override
     protected Node initializeInternal() {
-        VBox vBox = new VBox();
-        vBox.setSpacing(10);
+        VBox vBox = new VBox(10);
 
-        HBox themeChoiceRow = new HBox();
-        themeChoiceRow.setSpacing(10);
+        HBox themeChoiceRow = new HBox(10);
         ChoiceBox<Theme> themeChoiceBox = new ChoiceBox<>();
+        themeChoiceBox.setPrefWidth(150);
         themeChoiceBox.setItems(FXCollections.observableArrayList(themeManager.getThemes()));
         themeChoiceBox.setConverter(new StringConverter<>() {
             @Override
@@ -78,8 +74,31 @@ public class ThemePreferencesEditor extends PreferencesEditor {
         themeChoiceBox.valueProperty().bindBidirectional(themeManager.getCurrentTheme());
         themeChoiceBox.valueProperty().addListener(
                 obs -> themeManager.applyToScene(vBox.getScene()));
-        Button themeChoiceSettingsButton = new Button("⚙");
-        themeChoiceRow.getChildren().addAll(themeChoiceBox, themeChoiceSettingsButton);
+
+        Label themeSettingsBox = new Label(" ⚙˯ ");
+        themeSettingsBox.getStyleClass().add("theme-settings");
+        themeSettingsBox.setOnMouseEntered(event -> {
+            themeSettingsBox.getStyleClass().add("highlighted");
+        });
+        themeSettingsBox.setOnMouseExited(event -> {
+            themeSettingsBox.getStyleClass().remove("highlighted");
+        });
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem renameItem = new MenuItem("Rename");
+        MenuItem editItem = new MenuItem("Edit");
+        MenuItem duplicateItem = new MenuItem("Duplicate");
+        MenuItem importItem = new MenuItem("Import");
+        MenuItem exportItem = new MenuItem("Export");
+        contextMenu.getItems().addAll(renameItem, editItem, duplicateItem, importItem, exportItem);
+        contextMenu.setOnShowing(event -> {
+            // Apply localization.
+        });
+        themeSettingsBox.setOnMouseClicked(event -> {
+            contextMenu.hide();
+            contextMenu.show(themeChoiceRow, event.getScreenX(), event.getScreenY());
+        });
+
+        themeChoiceRow.getChildren().addAll(themeChoiceBox, themeSettingsBox);
 
         vBox.getChildren().add(themeChoiceRow);
         vBox.getChildren().add(new Separator(Orientation.HORIZONTAL));

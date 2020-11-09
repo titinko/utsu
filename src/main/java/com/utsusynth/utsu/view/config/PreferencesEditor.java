@@ -1,8 +1,12 @@
 package com.utsusynth.utsu.view.config;
 
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 public abstract class PreferencesEditor {
     public abstract String getDisplayName();
@@ -11,7 +15,8 @@ public abstract class PreferencesEditor {
 
     public void setDisplayName(String displayName) {
         BorderPane borderPane = getView();
-        borderPane.setTop(new Label(displayName));
+        Label title = (Label) borderPane.getTop();
+        title.setText(displayName);
         setDisplayNameInternal(displayName);
     }
 
@@ -24,7 +29,11 @@ public abstract class PreferencesEditor {
     /* Handles UI elements common to all preferences editors. */
     public void initialize() {
         BorderPane borderPane = new BorderPane();
-        borderPane.setTop(new Label(getDisplayName()));
+        Label title = new Label(getDisplayName());
+        title.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
+        BorderPane.setMargin(title, new Insets(0, 0, 10, 0));
+        BorderPane.setAlignment(title, Pos.TOP_LEFT);
+        borderPane.setTop(title);
         borderPane.setCenter(initializeInternal());
         setViewInternal(borderPane);
     }

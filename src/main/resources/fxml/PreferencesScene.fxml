@@ -10,7 +10,10 @@
 
 <BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.PreferencesController">
    <center>
-      <AnchorPane fx:id="anchorRight" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+      <AnchorPane fx:id="anchorRight" minWidth="200.0" prefHeight="200.0" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </BorderPane.margin></AnchorPane>
    </center>
    <left>
       <AnchorPane fx:id="anchorLeft" prefWidth="150.0" BorderPane.alignment="CENTER" />
@@ -21,7 +24,7 @@
             <Separator prefWidth="200.0" />
               <ButtonBar prefHeight="40.0">
                   <buttons>
-                      <Button fx:id="cancelButton" alignment="CENTER" mnemonicParsing="false" onAction="#closePreferences" text="Cancel" />
+                      <Button fx:id="cancelButton" alignment="CENTER" cancelButton="true" mnemonicParsing="false" onAction="#closePreferences" text="Cancel" />
                       <Button fx:id="applyButton" alignment="CENTER" contentDisplay="CENTER" defaultButton="true" mnemonicParsing="false" onAction="#applyPreferences" text="Apply" />
                   </buttons>
                <padding>
