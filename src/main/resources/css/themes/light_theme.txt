@@ -1,3 +1,5 @@
+NAME=Default (Light)
+
 BASE=#ececec
 ACCENT=#0096C9
 

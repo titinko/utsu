@@ -14,9 +14,6 @@ import javafx.util.StringConverter;
 
 import javax.inject.Inject;
 
-import static com.utsusynth.utsu.files.ThemeManager.DEFAULT_DARK_THEME;
-import static com.utsusynth.utsu.files.ThemeManager.DEFAULT_LIGHT_THEME;
-
 public class ThemePreferencesEditor extends PreferencesEditor {
     private final PreferencesManager preferencesManager;
     private final ThemeManager themeManager;
@@ -62,13 +59,12 @@ public class ThemePreferencesEditor extends PreferencesEditor {
         themeChoiceBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Theme theme) {
-                return theme.getId().equals(DEFAULT_LIGHT_THEME) ? "Light Theme" : "Dark Theme";
+                return theme.getName().isEmpty() ? theme.getId() : theme.getName();
             }
 
             @Override
             public Theme fromString(String displayName) {
-                return displayName.equals("Light Theme")
-                        ? new Theme(DEFAULT_LIGHT_THEME) : new Theme(DEFAULT_DARK_THEME);
+                return null; // Never used.
             }
         });
         themeChoiceBox.valueProperty().bindBidirectional(themeManager.getCurrentTheme());

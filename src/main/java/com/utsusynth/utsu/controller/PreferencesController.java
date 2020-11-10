@@ -10,7 +10,6 @@ import com.utsusynth.utsu.view.config.PreferencesEditor;
 import com.utsusynth.utsu.view.config.ThemePreferencesEditor;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;

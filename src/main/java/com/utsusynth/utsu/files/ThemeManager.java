@@ -10,16 +10,17 @@ import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ThemeManager {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
@@ -28,34 +29,52 @@ public class ThemeManager {
     public static final String DEFAULT_DARK_THEME = "dark_theme.txt";
 
     private final File generatedCss;
+    private final File themesPath;
     private final String templateSource;
     private final String defaultThemeSource;
+    private final String defaultThemeId;
     private final Map<String, Theme> themes;
     private final ObjectProperty<Theme> currentTheme;
 
     private String templateData;
-    private String defaultThemeId;
 
-    @Inject
     public ThemeManager(
             @SettingsPath File settingsPath,
             String templateSource,
             String defaultThemeSource) {
-        generatedCss = new File(settingsPath, "generated.css");
+        File cssSettingsPath = new File(settingsPath, "css");
+        generatedCss = new File(cssSettingsPath, "generated.css");
+        themesPath = new File(cssSettingsPath, "themes");
         this.templateSource = templateSource;
         this.defaultThemeSource = defaultThemeSource;
+        defaultThemeId = DEFAULT_LIGHT_THEME;
         themes = new HashMap<>();
-        themes.put(DEFAULT_LIGHT_THEME, new Theme(DEFAULT_LIGHT_THEME));
-        themes.put(DEFAULT_DARK_THEME, new Theme(DEFAULT_DARK_THEME));
         currentTheme = new SimpleObjectProperty<>(null);
-
     }
 
     // Initializes class and creates default theme.
     public void initialize(Scene scene, Theme chosenTheme) throws IOException {
+        // Set up template.
         templateData = IOUtils.toString(
                 getClass().getResource(templateSource), StandardCharsets.UTF_8);
-        this.defaultThemeId = DEFAULT_LIGHT_THEME;
+
+        // Load default themes.
+        loadThemeIfNeeded(DEFAULT_LIGHT_THEME);
+        loadThemeIfNeeded(DEFAULT_DARK_THEME);
+
+        // Read in list of themes from file.
+        if (!themesPath.exists() && !themesPath.mkdirs()) {
+            throw new IOException("Error: Failed to create themes path.");
+        }
+        Iterator<File> themeFiles =
+                FileUtils.iterateFiles(themesPath, new SuffixFileFilter(".txt"), null);
+        while (themeFiles.hasNext()) {
+            try {
+                loadThemeIfNeeded(themeFiles.next().getName());
+            } catch (IOException e) {
+                errorLogger.logWarning(e); // Swallow exceptions reading optional theme files.
+            }
+        }
 
         currentTheme.set(chosenTheme);
         applyCurrentTheme(); // Generate css file from theme and template data.
@@ -78,6 +97,11 @@ public class ThemeManager {
 
     public ObjectProperty<Theme> getCurrentTheme() {
         return currentTheme;
+    }
+
+    public static boolean isDefault(Theme theme) {
+        return theme.getId().equals(DEFAULT_LIGHT_THEME)
+                || theme.getId().equals(DEFAULT_DARK_THEME);
     }
 
     private void addSceneListener(Scene scene) {
@@ -108,19 +132,20 @@ public class ThemeManager {
         }
         Theme theme = themes.get(themeId);
         if (theme.getColorMap().isEmpty()) {
-            if (theme.getId().equals(DEFAULT_LIGHT_THEME)
-                    || theme.getId().equals(DEFAULT_DARK_THEME)) {
+            if (isDefault(theme)) {
+                // Special case for default themes.
                 String source = defaultThemeSource + theme.getId();
-                theme.setColorMap(parseTheme(
-                        IOUtils.toString(getClass().getResource(source), StandardCharsets.UTF_8)));
+                parseTheme(
+                        theme,
+                        IOUtils.toString(getClass().getResource(source), StandardCharsets.UTF_8));
             } else {
-                // TODO: Parse custom themes here.
+                parseTheme(theme, readConfigFile(new File(themesPath, themeId)));
             }
         }
         return theme;
     }
 
-    private Map<String, Color> parseTheme(String themeData) {
+    private static void parseTheme(Theme theme, String themeData) {
         Map<String, Color> themeMap = new HashMap<>();
         for (String themeLine : themeData.split("\n")) {
             if (!themeLine.contains("=")) {
@@ -129,6 +154,10 @@ public class ThemeManager {
             String[] themeMapping = themeLine.trim().split("=");
             if (themeMapping.length != 2) {
                 continue; // Assume this is not a config line.
+            }
+            if (themeMapping[0].equals("NAME")) {
+                theme.setName(themeMapping[1]); // Special case for theme name.
+                continue;
             }
             if (themeMap.containsKey(themeMapping[0])) {
                 System.out.println(
@@ -143,7 +172,7 @@ public class ThemeManager {
                 errorLogger.logWarning(e);
             }
         }
-        return themeMap;
+        theme.setColorMap(themeMap);
     }
 
     private static String findAndReplace(String input, Theme theme) {
@@ -166,12 +195,35 @@ public class ThemeManager {
     }
 
     // Convert Color to a CSS-readable string.
-    public static String toHexString(Color color) {
+    private static String toHexString(Color color) {
         return "#"
                 + (formatHexString(color.getRed())
                 + formatHexString(color.getGreen())
                 + formatHexString(color.getBlue())
                 + formatHexString(color.getOpacity()))
                 .toUpperCase();
+    }
+
+    private static String readConfigFile(File file) {
+        if (!file.canRead() || !file.isFile()) {
+            // This is often okay.
+            return "";
+        }
+        try {
+            byte[] bytes = FileUtils.readFileToByteArray(file);
+            String charset = "UTF-8";
+            CharsetDecoder utf8Decoder =
+                    StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                            .onUnmappableCharacter(CodingErrorAction.REPORT);
+            try {
+                utf8Decoder.decode(ByteBuffer.wrap(bytes));
+            } catch (CharacterCodingException e) {
+                charset = "SJIS";
+            }
+            return new String(bytes, charset);
+        } catch (IOException e) {
+            errorLogger.logError(e);
+        }
+        return "";
     }
 }
