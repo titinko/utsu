@@ -3,8 +3,8 @@ package com.utsusynth.utsu.view.config;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.model.config.Theme;
-import javafx.collections.FXCollections;
 import javafx.geometry.Orientation;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -18,8 +18,16 @@ public class ThemePreferencesEditor extends PreferencesEditor {
     private final PreferencesManager preferencesManager;
     private final ThemeManager themeManager;
 
+    // Session data.
     private String displayName = "Color Scheme";
+    private boolean newThemePending = false;
     private BorderPane view;
+    private VBox viewInternal;
+    private Group themeRow;
+    private HBox themeChoiceRow;
+    private ChoiceBox<Theme> themeChoiceBox;
+    private HBox themeEnterRow;
+    private TextField themeTextField;
 
     @Inject
     public ThemePreferencesEditor(
@@ -50,56 +58,16 @@ public class ThemePreferencesEditor extends PreferencesEditor {
 
     @Override
     protected Node initializeInternal() {
-        VBox vBox = new VBox(10);
+        viewInternal = new VBox(10);
+        themeRow = new Group();
 
-        HBox themeChoiceRow = new HBox(10);
-        ChoiceBox<Theme> themeChoiceBox = new ChoiceBox<>();
-        themeChoiceBox.setPrefWidth(150);
-        themeChoiceBox.setItems(FXCollections.observableArrayList(themeManager.getThemes()));
-        themeChoiceBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Theme theme) {
-                return theme.getName().isEmpty() ? theme.getId() : theme.getName();
-            }
-
-            @Override
-            public Theme fromString(String displayName) {
-                return null; // Never used.
-            }
-        });
-        themeChoiceBox.valueProperty().bindBidirectional(themeManager.getCurrentTheme());
-        themeChoiceBox.valueProperty().addListener(
-                obs -> themeManager.applyToScene(vBox.getScene()));
-
-        Label themeSettingsBox = new Label(" ⚙˯ ");
-        themeSettingsBox.getStyleClass().add("theme-settings");
-        themeSettingsBox.setOnMouseEntered(event -> {
-            themeSettingsBox.getStyleClass().add("highlighted");
-        });
-        themeSettingsBox.setOnMouseExited(event -> {
-            themeSettingsBox.getStyleClass().remove("highlighted");
-        });
-        ContextMenu contextMenu = new ContextMenu();
-        MenuItem renameItem = new MenuItem("Rename");
-        MenuItem editItem = new MenuItem("Edit");
-        MenuItem duplicateItem = new MenuItem("Duplicate");
-        MenuItem importItem = new MenuItem("Import");
-        MenuItem exportItem = new MenuItem("Export");
-        contextMenu.getItems().addAll(renameItem, editItem, duplicateItem, importItem, exportItem);
-        contextMenu.setOnShowing(event -> {
-            // Apply localization.
-        });
-        themeSettingsBox.setOnMouseClicked(event -> {
-            contextMenu.hide();
-            contextMenu.show(themeChoiceRow, event.getScreenX(), event.getScreenY());
-        });
-
-        themeChoiceRow.getChildren().addAll(themeChoiceBox, themeSettingsBox);
-
-        vBox.getChildren().add(themeChoiceRow);
-        vBox.getChildren().add(new Separator(Orientation.HORIZONTAL));
-        vBox.getChildren().add(new ColorPicker());
-        return vBox;
+        initializeThemeChoiceRow();
+        initializeThemeEnterRow();
+        themeRow.getChildren().add(themeChoiceRow);
+        viewInternal.getChildren().add(themeRow);
+        viewInternal.getChildren().add(new Separator(Orientation.HORIZONTAL));
+        viewInternal.getChildren().add(new ColorPicker());
+        return viewInternal;
     }
 
     @Override
@@ -110,5 +78,115 @@ public class ThemePreferencesEditor extends PreferencesEditor {
     @Override
     public void revertToPreferences() {
         themeManager.getCurrentTheme().set(preferencesManager.getTheme());
+    }
+
+    private void initializeThemeChoiceRow() {
+        themeChoiceRow = new HBox(10);
+        initializeThemeChoiceBox();
+
+        Label themeSettingsBox = new Label(" ⚙˯ ");
+        themeSettingsBox.getStyleClass().add("theme-settings");
+        themeSettingsBox.setOnMouseEntered(event -> {
+            themeSettingsBox.getStyleClass().add("highlighted");
+        });
+        themeSettingsBox.setOnMouseExited(event -> {
+            themeSettingsBox.getStyleClass().remove("highlighted");
+        });
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem duplicateItem = new MenuItem("Duplicate");
+        duplicateItem.setOnAction(event -> {
+            newThemePending = true;
+            themeTextField.setText(themeChoiceBox.getValue().getName());
+            themeRow.getChildren().set(0, themeEnterRow);
+        });
+        MenuItem renameItem = new MenuItem("Rename");
+        renameItem.setOnAction(event -> {
+            themeTextField.setText(themeChoiceBox.getValue().getName());
+            themeRow.getChildren().set(0, themeEnterRow);
+        });
+        MenuItem editItem = new MenuItem("Edit");
+        MenuItem deleteItem = new MenuItem("Delete");
+        deleteItem.setOnAction(event -> {
+            themeManager.deleteTheme(themeChoiceBox.getValue());
+            themeChoiceBox.setValue(themeChoiceBox.getItems().get(0));
+        });
+        MenuItem importItem = new MenuItem("Import...");
+        MenuItem exportItem = new MenuItem("Export...");
+        contextMenu.getItems().addAll(
+                duplicateItem,
+                new SeparatorMenuItem(),
+                renameItem,
+                editItem,
+                deleteItem,
+                new SeparatorMenuItem(),
+                importItem,
+                exportItem);
+        contextMenu.setOnShowing(event -> {
+            Theme currentTheme = themeChoiceBox.getValue();
+            renameItem.setDisable(ThemeManager.isDefault(currentTheme));
+            editItem.setDisable(ThemeManager.isDefault(currentTheme));
+            deleteItem.setDisable(ThemeManager.isDefault(currentTheme));
+            // Apply localization.
+        });
+        themeSettingsBox.setOnMouseClicked(event -> {
+            contextMenu.hide();
+            contextMenu.show(themeChoiceRow, event.getScreenX(), event.getScreenY());
+        });
+        themeChoiceRow.getChildren().addAll(themeChoiceBox, themeSettingsBox);
+    }
+
+    private void initializeThemeChoiceBox() {
+        themeChoiceBox = new ChoiceBox<>();
+        themeManager.populateChoiceBox(themeChoiceBox);
+        themeChoiceBox.setPrefWidth(150);
+        themeChoiceBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Theme theme) {
+                return theme.getName();
+            }
+
+            @Override
+            public Theme fromString(String displayName) {
+                return null; // Never used.
+            }
+        });
+        themeChoiceBox.valueProperty().bindBidirectional(themeManager.getCurrentTheme());
+        themeChoiceBox.valueProperty().addListener(
+                obs -> themeManager.applyToScene(viewInternal.getScene()));
+    }
+
+    private void initializeThemeEnterRow() {
+        themeEnterRow = new HBox(10);
+        themeTextField = new TextField();
+        themeTextField.setPrefWidth(150);
+        themeTextField.setOnAction(event -> closeThemeEnterRow(themeTextField.getText()));
+        Button cancelButton = new Button("Cancel");
+        cancelButton.setCancelButton(true);
+        cancelButton.setOnAction(event -> closeThemeEnterRow(""));
+        Button applyButton = new Button("Apply");
+        applyButton.setDefaultButton(true);
+        applyButton.setOnAction(event -> closeThemeEnterRow(themeTextField.getText()));
+        themeEnterRow.getChildren().addAll(themeTextField, cancelButton, applyButton);
+    }
+
+    private void closeThemeEnterRow(String newThemeName) {
+        if (!themeRow.getChildren().contains(themeEnterRow)) {
+            return; // Prevent accidental double activations.
+        }
+        if (!newThemeName.isEmpty()) {
+            if (newThemePending) {
+                newThemePending = false;
+                Theme duplicateTheme = themeManager.duplicateTheme(
+                        themeChoiceBox.getValue(), newThemeName);
+                themeChoiceBox.setValue(duplicateTheme);
+            } else {
+                // Regenerate choice box with new name.
+                themeChoiceBox.getValue().setName(newThemeName);
+            }
+            initializeThemeChoiceBox();
+            themeChoiceRow.getChildren().set(0, themeChoiceBox);
+        }
+        // Swap out for choice box.
+        themeRow.getChildren().set(0, themeChoiceRow);
     }
 }

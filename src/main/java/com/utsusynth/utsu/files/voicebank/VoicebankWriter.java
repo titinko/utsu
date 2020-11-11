@@ -36,7 +36,6 @@ public class VoicebankWriter {
             ps.println("author=" + voicebank.getAuthor());
             ps.println("image=" + voicebank.getImageName());
             ps.flush();
-            ps.close();
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             // TODO: Handle this.
             errorLogger.logError(e);
@@ -48,7 +47,6 @@ public class VoicebankWriter {
         try (PrintStream ps = new PrintStream(readmeFile, getCharset(description))) {
             ps.print(description);
             ps.flush();
-            ps.close();
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             // TODO: Handle this.
             errorLogger.logError(e);

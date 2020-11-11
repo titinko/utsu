@@ -6,20 +6,23 @@ import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.model.config.Theme;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.paint.Color;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 
 public class ThemeManager {
@@ -33,7 +36,7 @@ public class ThemeManager {
     private final String templateSource;
     private final String defaultThemeSource;
     private final String defaultThemeId;
-    private final Map<String, Theme> themes;
+    private final ObservableList<Theme> themes;
     private final ObjectProperty<Theme> currentTheme;
 
     private String templateData;
@@ -48,12 +51,12 @@ public class ThemeManager {
         this.templateSource = templateSource;
         this.defaultThemeSource = defaultThemeSource;
         defaultThemeId = DEFAULT_LIGHT_THEME;
-        themes = new HashMap<>();
+        themes = FXCollections.observableArrayList();
         currentTheme = new SimpleObjectProperty<>(null);
     }
 
     // Initializes class and creates default theme.
-    public void initialize(Scene scene, Theme chosenTheme) throws IOException {
+    public void initialize(Scene scene, String chosenThemeId) throws IOException {
         // Set up template.
         templateData = IOUtils.toString(
                 getClass().getResource(templateSource), StandardCharsets.UTF_8);
@@ -76,7 +79,11 @@ public class ThemeManager {
             }
         }
 
-        currentTheme.set(chosenTheme);
+        if (hasTheme(chosenThemeId)) {
+            currentTheme.set(findTheme(chosenThemeId));
+        } else {
+            currentTheme.set(findTheme(defaultThemeId));
+        }
         applyCurrentTheme(); // Generate css file from theme and template data.
         applyToScene(scene); // Apply generated css to scene.
         addSceneListener(scene); // Set this up to be automatic when theme changes again.
@@ -91,8 +98,34 @@ public class ThemeManager {
         }
     }
 
-    public Collection<Theme> getThemes() {
-        return themes.values();
+    public Theme duplicateTheme(Theme themeToCopy, String newName) {
+        String newThemeId = UUID.randomUUID() + "_theme.txt";
+        Theme newTheme = new Theme(newThemeId);
+        newTheme.setName(newName);
+        Map<String, Color> shallowCopy = new HashMap<>();
+        for (Map.Entry<String, Color> entry : themeToCopy.getColorMap().entrySet()) {
+            shallowCopy.put(entry.getKey(), entry.getValue());
+        }
+        newTheme.setColorMap(shallowCopy);
+        writeThemeToFile(newTheme);
+        return newTheme;
+    }
+
+    public void deleteTheme(Theme themeToDelete) {
+        if (isDefault(themeToDelete)) {
+            return; // Don't try to delete the default themes.
+        }
+        themes.remove(themeToDelete);
+        try {
+            File fileToDelete = new File(themesPath, themeToDelete.getId());
+            Files.delete(fileToDelete.toPath());
+        } catch (IOException e) {
+            errorLogger.logError(e);
+        }
+    }
+
+    public void populateChoiceBox(ChoiceBox<Theme> choiceBox) {
+        choiceBox.setItems(themes);
     }
 
     public ObjectProperty<Theme> getCurrentTheme() {
@@ -102,6 +135,19 @@ public class ThemeManager {
     public static boolean isDefault(Theme theme) {
         return theme.getId().equals(DEFAULT_LIGHT_THEME)
                 || theme.getId().equals(DEFAULT_DARK_THEME);
+    }
+
+    private boolean hasTheme(String id) {
+        return findTheme(id) != null;
+    }
+
+    private Theme findTheme(String id) {
+        for (Theme theme : themes) {
+            if (theme.getId().equals(id)) {
+                return theme;
+            }
+        }
+        return null;
     }
 
     private void addSceneListener(Scene scene) {
@@ -118,6 +164,20 @@ public class ThemeManager {
         });
     }
 
+    private void writeThemeToFile(Theme toWrite) {
+        File writeToMe = new File(themesPath, toWrite.getId());
+        try (PrintStream ps = new PrintStream(writeToMe)) {
+            ps.println("NAME=" + toWrite.getName());
+            for (String key : toWrite.getColorMap().keySet()) {
+                ps.println(key + "=" + toHexString(toWrite.getColorMap().get(key)));
+            }
+            ps.flush();
+        } catch (FileNotFoundException e) {
+            // TODO: Handle this.
+            errorLogger.logError(e);
+        }
+    }
+
     private void applyCurrentTheme() throws IOException {
         Theme loadedTheme = loadThemeIfNeeded(currentTheme.get().getId());
         String withCurrentTheme = findAndReplace(templateData, loadedTheme);
@@ -127,10 +187,14 @@ public class ThemeManager {
     }
 
     private Theme loadThemeIfNeeded(String themeId) throws IOException {
-        if (!themes.containsKey(themeId)) {
-            themes.put(themeId, new Theme(themeId));
+        Theme theme;
+        if (hasTheme(themeId)) {
+            theme = findTheme(themeId);
+        } else {
+            theme = new Theme(themeId);
+            themes.add(theme);
         }
-        Theme theme = themes.get(themeId);
+        assert theme != null;
         if (theme.getColorMap().isEmpty()) {
             if (isDefault(theme)) {
                 // Special case for default themes.
