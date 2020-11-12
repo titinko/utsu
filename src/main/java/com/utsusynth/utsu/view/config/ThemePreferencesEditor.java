@@ -15,6 +15,7 @@ import javafx.util.StringConverter;
 import javax.inject.Inject;
 
 public class ThemePreferencesEditor extends PreferencesEditor {
+    private final ThemeColorPicker themeColorPicker;
     private final PreferencesManager preferencesManager;
     private final ThemeManager themeManager;
 
@@ -31,7 +32,10 @@ public class ThemePreferencesEditor extends PreferencesEditor {
 
     @Inject
     public ThemePreferencesEditor(
-            PreferencesManager preferencesManager, ThemeManager themeManager) {
+            ThemeColorPicker themeColorPicker,
+            PreferencesManager preferencesManager,
+            ThemeManager themeManager) {
+        this.themeColorPicker = themeColorPicker;
         this.preferencesManager = preferencesManager;
         this.themeManager = themeManager;
     }
@@ -58,15 +62,15 @@ public class ThemePreferencesEditor extends PreferencesEditor {
 
     @Override
     protected Node initializeInternal() {
-        viewInternal = new VBox(10);
         themeRow = new Group();
 
         initializeThemeChoiceRow();
         initializeThemeEnterRow();
         themeRow.getChildren().add(themeChoiceRow);
+
+        viewInternal = new VBox(10);
         viewInternal.getChildren().add(themeRow);
         viewInternal.getChildren().add(new Separator(Orientation.HORIZONTAL));
-        viewInternal.getChildren().add(new ColorPicker());
         return viewInternal;
     }
 
@@ -99,12 +103,12 @@ public class ThemePreferencesEditor extends PreferencesEditor {
             themeTextField.setText(themeChoiceBox.getValue().getName());
             themeRow.getChildren().set(0, themeEnterRow);
         });
-        MenuItem renameItem = new MenuItem("Rename");
-        renameItem.setOnAction(event -> {
+        MenuItem editItem = new MenuItem("Edit");
+        editItem.setOnAction(event -> {
             themeTextField.setText(themeChoiceBox.getValue().getName());
             themeRow.getChildren().set(0, themeEnterRow);
+            viewInternal.getChildren().add(themeColorPicker.initialize(themeChoiceBox.getValue()));
         });
-        MenuItem editItem = new MenuItem("Edit");
         MenuItem deleteItem = new MenuItem("Delete");
         deleteItem.setOnAction(event -> {
             themeManager.deleteTheme(themeChoiceBox.getValue());
@@ -115,7 +119,6 @@ public class ThemePreferencesEditor extends PreferencesEditor {
         contextMenu.getItems().addAll(
                 duplicateItem,
                 new SeparatorMenuItem(),
-                renameItem,
                 editItem,
                 deleteItem,
                 new SeparatorMenuItem(),
@@ -123,7 +126,6 @@ public class ThemePreferencesEditor extends PreferencesEditor {
                 exportItem);
         contextMenu.setOnShowing(event -> {
             Theme currentTheme = themeChoiceBox.getValue();
-            renameItem.setDisable(ThemeManager.isDefault(currentTheme));
             editItem.setDisable(ThemeManager.isDefault(currentTheme));
             deleteItem.setDisable(ThemeManager.isDefault(currentTheme));
             // Apply localization.
@@ -175,18 +177,31 @@ public class ThemePreferencesEditor extends PreferencesEditor {
         }
         if (!newThemeName.isEmpty()) {
             if (newThemePending) {
+                // Creating a new theme.
                 newThemePending = false;
                 Theme duplicateTheme = themeManager.duplicateTheme(
                         themeChoiceBox.getValue(), newThemeName);
                 themeChoiceBox.setValue(duplicateTheme);
             } else {
-                // Regenerate choice box with new name.
+                // Editing an existing theme.
                 themeChoiceBox.getValue().setName(newThemeName);
+                themeManager.writeThemeToFile(themeChoiceBox.getValue());
             }
             initializeThemeChoiceBox();
             themeChoiceRow.getChildren().set(0, themeChoiceBox);
+        } else {
+            if (!newThemePending) {
+                // Cancel edit on an existing theme.
+                themeChoiceBox.getValue().getColorMap().clear(); // Triggers reload from file.
+                themeManager.reloadCurrentTheme();
+                themeManager.applyToScene(viewInternal.getScene());
+            }
         }
         // Swap out for choice box.
         themeRow.getChildren().set(0, themeChoiceRow);
+        // Delete color picker if present.
+        if (viewInternal.getChildren().size() > 2) {
+            viewInternal.getChildren().remove(2);
+        }
     }
 }

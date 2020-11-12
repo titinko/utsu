@@ -40,6 +40,7 @@ public class ThemeManager {
     private final ObjectProperty<Theme> currentTheme;
 
     private String templateData;
+    private Scene primaryScene;
 
     public ThemeManager(
             @SettingsPath File settingsPath,
@@ -60,6 +61,7 @@ public class ThemeManager {
         // Set up template.
         templateData = IOUtils.toString(
                 getClass().getResource(templateSource), StandardCharsets.UTF_8);
+        primaryScene = scene;
 
         // Load default themes.
         loadThemeIfNeeded(DEFAULT_LIGHT_THEME);
@@ -86,7 +88,23 @@ public class ThemeManager {
         }
         applyCurrentTheme(); // Generate css file from theme and template data.
         applyToScene(scene); // Apply generated css to scene.
-        addSceneListener(scene); // Set this up to be automatic when theme changes again.
+        // Set this up to be automatic when theme changes again.
+        currentTheme.addListener((oldTheme, newTheme, obs) -> {
+            if (oldTheme == null || !oldTheme.getValue().getId().equals(newTheme.getId())) {
+                reloadCurrentTheme();
+            }
+        });
+    }
+
+    /* Reloads the primary scene using the current theme. Useful when a theme is mutated. */
+    public void reloadCurrentTheme() {
+        try {
+            applyCurrentTheme(); // Creates new generated CSS file.
+        } catch (Exception e) {
+            errorLogger.logError(e);
+            return;
+        }
+        applyToScene(primaryScene); // Adds new generated CSS file to this scene.
     }
 
     public void applyToScene(Scene scene) {
@@ -137,34 +155,7 @@ public class ThemeManager {
                 || theme.getId().equals(DEFAULT_DARK_THEME);
     }
 
-    private boolean hasTheme(String id) {
-        return findTheme(id) != null;
-    }
-
-    private Theme findTheme(String id) {
-        for (Theme theme : themes) {
-            if (theme.getId().equals(id)) {
-                return theme;
-            }
-        }
-        return null;
-    }
-
-    private void addSceneListener(Scene scene) {
-        currentTheme.addListener((oldTheme, newTheme, obs) -> {
-            if (oldTheme == null || !oldTheme.getValue().getId().equals(newTheme.getId())) {
-                try {
-                    applyCurrentTheme(); // Creates new generated CSS file.
-                } catch (Exception e) {
-                    errorLogger.logError(e);
-                    return;
-                }
-                applyToScene(scene); // Adds new generated CSS file to this scene.
-            }
-        });
-    }
-
-    private void writeThemeToFile(Theme toWrite) {
+    public void writeThemeToFile(Theme toWrite) {
         File writeToMe = new File(themesPath, toWrite.getId());
         try (PrintStream ps = new PrintStream(writeToMe)) {
             ps.println("NAME=" + toWrite.getName());
@@ -176,6 +167,19 @@ public class ThemeManager {
             // TODO: Handle this.
             errorLogger.logError(e);
         }
+    }
+
+    private boolean hasTheme(String id) {
+        return findTheme(id) != null;
+    }
+
+    private Theme findTheme(String id) {
+        for (Theme theme : themes) {
+            if (theme.getId().equals(id)) {
+                return theme;
+            }
+        }
+        return null;
     }
 
     private void applyCurrentTheme() throws IOException {

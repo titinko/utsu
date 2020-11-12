@@ -23,12 +23,9 @@ public class Localizer {
      * element to be re-translated if the Locale changes.
      */
     public void localize(Localizable target) {
-        if (targets.contains(target)) {
-            // TODO: Handle this, or just ignore it. I'm not a cop.
-            target.localize(this.bundle);
-            return;
+        if (!targets.contains(target)) { // No need to localize the same widget twice.
+            targets.add(target);
         }
-        targets.add(target);
         target.localize(this.bundle);
     }
 
