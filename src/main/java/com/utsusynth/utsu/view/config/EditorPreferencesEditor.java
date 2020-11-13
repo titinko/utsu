@@ -34,6 +34,11 @@ public class EditorPreferencesEditor extends PreferencesEditor {
     }
 
     @Override
+    public boolean onCloseEditor() {
+        return true;
+    }
+
+    @Override
     public void savePreferences() {
         // TODO
     }

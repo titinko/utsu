@@ -34,6 +34,11 @@ public class EnginePreferencesEditor extends PreferencesEditor {
     }
 
     @Override
+    public boolean onCloseEditor() {
+        return true;
+    }
+
+    @Override
     public void savePreferences() {
         // TODO
     }

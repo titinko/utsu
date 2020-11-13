@@ -112,17 +112,33 @@ public class PreferencesController implements Localizable {
         cancelButton.setText(bundle.getString("general.cancel"));
     }
 
-    @FXML
-    void closePreferences(ActionEvent event) {
+    /* Handler for when modal is closed without saving. */
+    public boolean onCloseWindow() {
+        if (!themeEditor.onCloseEditor()
+                || !editorEditor.onCloseEditor()
+                || !engineEditor.onCloseEditor()) {
+            return false;
+        }
         themeEditor.revertToPreferences();
         editorEditor.revertToPreferences();
         engineEditor.revertToPreferences();
+        return true;
+    }
+
+    @FXML
+    void closePreferences(ActionEvent event) {
+        if (!onCloseWindow()) {
+            return;
+        }
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
 
     @FXML
     void applyPreferences(ActionEvent event) {
+        if (!themeEditor.onCloseEditor() || !editorEditor.onCloseEditor() || !engineEditor.onCloseEditor()) {
+            return;
+        }
         themeEditor.savePreferences();
         editorEditor.savePreferences();
         engineEditor.savePreferences();

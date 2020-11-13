@@ -1,5 +1,8 @@
 package com.utsusynth.utsu.view.config;
 
+import com.google.inject.Provider;
+import com.utsusynth.utsu.common.dialog.DeleteWarningDialog;
+import com.utsusynth.utsu.common.dialog.SaveWarningDialog;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.model.config.Theme;
@@ -10,6 +13,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 import javax.inject.Inject;
@@ -18,10 +22,13 @@ public class ThemePreferencesEditor extends PreferencesEditor {
     private final ThemeColorPicker themeColorPicker;
     private final PreferencesManager preferencesManager;
     private final ThemeManager themeManager;
+    private final Provider<SaveWarningDialog> saveWarningProvider;
+    private final Provider<DeleteWarningDialog> deleteWarningProvider;
 
     // Session data.
     private String displayName = "Color Scheme";
     private boolean newThemePending = false;
+    private boolean editPending = false;
     private BorderPane view;
     private VBox viewInternal;
     private Group themeRow;
@@ -34,10 +41,14 @@ public class ThemePreferencesEditor extends PreferencesEditor {
     public ThemePreferencesEditor(
             ThemeColorPicker themeColorPicker,
             PreferencesManager preferencesManager,
-            ThemeManager themeManager) {
+            ThemeManager themeManager,
+            Provider<SaveWarningDialog> saveWarningProvider,
+            Provider<DeleteWarningDialog> deleteWarningProvider) {
         this.themeColorPicker = themeColorPicker;
         this.preferencesManager = preferencesManager;
         this.themeManager = themeManager;
+        this.saveWarningProvider = saveWarningProvider;
+        this.deleteWarningProvider = deleteWarningProvider;
     }
 
     @Override
@@ -75,6 +86,11 @@ public class ThemePreferencesEditor extends PreferencesEditor {
     }
 
     @Override
+    public boolean onCloseEditor() {
+        return resolveOngoingEdits(); // Don't bother with in-progress duplications.
+    }
+
+    @Override
     public void savePreferences() {
         preferencesManager.setTheme(themeManager.getCurrentTheme().get());
     }
@@ -105,14 +121,28 @@ public class ThemePreferencesEditor extends PreferencesEditor {
         });
         MenuItem editItem = new MenuItem("Edit");
         editItem.setOnAction(event -> {
+            editPending = true;
             themeTextField.setText(themeChoiceBox.getValue().getName());
             themeRow.getChildren().set(0, themeEnterRow);
             viewInternal.getChildren().add(themeColorPicker.initialize(themeChoiceBox.getValue()));
         });
         MenuItem deleteItem = new MenuItem("Delete");
         deleteItem.setOnAction(event -> {
-            themeManager.deleteTheme(themeChoiceBox.getValue());
-            themeChoiceBox.setValue(themeChoiceBox.getItems().get(0));
+            Theme themeToDelete = themeChoiceBox.getValue();
+            Stage parent = (Stage) viewInternal.getScene().getWindow();
+            DeleteWarningDialog.Decision decision =
+                    deleteWarningProvider.get().popup(parent, themeToDelete.getName());
+            if (decision != DeleteWarningDialog.Decision.DELETE) {
+                return; // Give the user one last chance to back out.
+            }
+            themeChoiceBox.setValue(themeChoiceBox.getItems().get(0)); // Swap to default theme.
+            themeManager.applyToScene(viewInternal.getScene()); // Needed for some reason.
+            if (preferencesManager.getTheme().equals(themeToDelete)) {
+                // If needed, save a different theme to the preferences file.
+                preferencesManager.setTheme(themeChoiceBox.getValue());
+                preferencesManager.saveToFile();
+            }
+            themeManager.deleteTheme(themeToDelete);
         });
         MenuItem importItem = new MenuItem("Import...");
         MenuItem exportItem = new MenuItem("Export...");
@@ -182,26 +212,50 @@ public class ThemePreferencesEditor extends PreferencesEditor {
                 Theme duplicateTheme = themeManager.duplicateTheme(
                         themeChoiceBox.getValue(), newThemeName);
                 themeChoiceBox.setValue(duplicateTheme);
-            } else {
+            } else if (editPending) {
                 // Editing an existing theme.
                 themeChoiceBox.getValue().setName(newThemeName);
                 themeManager.writeThemeToFile(themeChoiceBox.getValue());
             }
+            // Reload choice box to make new name appear.
             initializeThemeChoiceBox();
             themeChoiceRow.getChildren().set(0, themeChoiceBox);
         } else {
-            if (!newThemePending) {
+            if (editPending) {
                 // Cancel edit on an existing theme.
                 themeChoiceBox.getValue().getColorMap().clear(); // Triggers reload from file.
                 themeManager.reloadCurrentTheme();
                 themeManager.applyToScene(viewInternal.getScene());
             }
         }
+        // Remove any pending changes.
+        newThemePending = false;
+        editPending = false;
         // Swap out for choice box.
         themeRow.getChildren().set(0, themeChoiceRow);
         // Delete color picker if present.
         if (viewInternal.getChildren().size() > 2) {
             viewInternal.getChildren().remove(2);
         }
+    }
+
+    private boolean resolveOngoingEdits() {
+        if (editPending) {
+            // If editor has unsaved changes, confirm close.
+            String newName = themeTextField.getText();
+            Stage parent = (Stage) viewInternal.getScene().getWindow();
+            SaveWarningDialog.Decision decision = saveWarningProvider.get().popup(parent, newName);
+            switch (decision) {
+                case CANCEL:
+                    return false;
+                case CLOSE_WITHOUT_SAVING:
+                    closeThemeEnterRow("");
+                    return true;
+                case SAVE_AND_CLOSE:
+                    closeThemeEnterRow(newName);
+                    return true;
+            }
+        }
+        return true;
     }
 }

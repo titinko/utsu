@@ -21,7 +21,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -501,9 +500,16 @@ public class UtsuController implements Localizable {
             Scene scene = new Scene(loader.load(fxml));
             themeManager.applyToScene(scene);
             preferencesWindow.setScene(scene);
+            // Set up an event that runs when the program is closed.
+            PreferencesController controller = loader.getController();
+            preferencesWindow.setOnCloseRequest(windowEvent -> {
+                if (!controller.onCloseWindow()) {
+                    windowEvent.consume();
+                }
+            });
             preferencesWindow.showAndWait();
         } catch (IOException e) {
-            statusBar.setStatus("Error: Unable to open note properties editor.");
+            statusBar.setStatus("Error: Unable to open preferences.");
             errorLogger.logError(e);
         }
     }

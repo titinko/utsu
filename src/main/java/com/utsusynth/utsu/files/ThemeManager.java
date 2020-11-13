@@ -16,7 +16,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
@@ -109,6 +112,10 @@ public class ThemeManager {
 
     public void applyToScene(Scene scene) {
         String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
+        if (scene == null) {
+            System.out.println("Warning: tried to write theme to a null scene.");
+            return;
+        }
         if (scene.getStylesheets().size() > 0) {
             scene.getStylesheets().set(0, css);
         } else {

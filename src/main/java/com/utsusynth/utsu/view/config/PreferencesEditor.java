@@ -38,6 +38,9 @@ public abstract class PreferencesEditor {
         setViewInternal(borderPane);
     }
 
+    /* Returns whether the close should proceed. */
+    public abstract boolean onCloseEditor();
+
     public abstract void savePreferences();
 
     /* Changes UI to reflect the preferences file instead of local unsaved changes. */

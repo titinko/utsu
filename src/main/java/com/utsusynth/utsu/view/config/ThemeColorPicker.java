@@ -43,12 +43,12 @@ public class ThemeColorPicker implements Localizable {
                 "Note",
                 ImmutableList.of(
                         ImmutableList.of(
-                            "NOTE_TEXT",
-                            "NOTE",
-                            "NOTE_BORDER",
-                            "INVALID_NOTE",
-                            "INVALID_NOTE_BORDER",
-                            "PITCHBEND")));
+                                "NOTE_TEXT",
+                                "NOTE",
+                                "NOTE_BORDER",
+                                "INVALID_NOTE",
+                                "INVALID_NOTE_BORDER",
+                                "PITCHBEND")));
         songColors = makeColorSection(
                 "Song",
                 ImmutableList.of(
