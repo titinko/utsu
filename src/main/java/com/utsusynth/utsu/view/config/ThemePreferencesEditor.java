@@ -145,7 +145,14 @@ public class ThemePreferencesEditor extends PreferencesEditor {
             themeManager.deleteTheme(themeToDelete);
         });
         MenuItem importItem = new MenuItem("Import...");
+        importItem.setOnAction(event -> {
+            themeManager.importTheme();
+            // Reload choice box to make fully-loaded theme appear.
+            initializeThemeChoiceBox();
+            themeChoiceRow.getChildren().set(0, themeChoiceBox);
+        });
         MenuItem exportItem = new MenuItem("Export...");
+        exportItem.setOnAction(event -> themeManager.exportTheme(themeChoiceBox.getValue()));
         contextMenu.getItems().addAll(
                 duplicateItem,
                 new SeparatorMenuItem(),

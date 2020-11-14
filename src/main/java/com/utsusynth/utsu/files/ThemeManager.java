@@ -11,6 +11,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
@@ -171,6 +172,45 @@ public class ThemeManager {
             }
             ps.flush();
         } catch (FileNotFoundException e) {
+            // TODO: Handle this.
+            errorLogger.logError(e);
+        }
+    }
+
+    public void importTheme() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Color Scheme File");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("TXT files", "*.txt"),
+                new FileChooser.ExtensionFilter("All files", "*.*"));
+        File file = fileChooser.showOpenDialog(null);
+        if (file == null) {
+            return;
+        }
+        String newThemeId = UUID.randomUUID() + "_theme.txt";
+        try {
+            FileUtils.copyFile(file, new File(themesPath, newThemeId));
+            loadThemeIfNeeded(newThemeId);
+        } catch (IOException e) {
+            // TODO: Handle this.
+            errorLogger.logError(e);
+        }
+        currentTheme.setValue(findTheme(newThemeId));
+    }
+
+    public void exportTheme(Theme themeToExport) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Create Color Scheme File");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("TXT", "*.txt"));
+        File file = fileChooser.showSaveDialog(null);
+        if (file == null) {
+            return;
+        }
+        String themeId = themeToExport.getId();
+        try {
+            FileUtils.copyFile(new File(themesPath, themeId), file);
+        } catch (IOException e) {
             // TODO: Handle this.
             errorLogger.logError(e);
         }
