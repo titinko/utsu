@@ -114,9 +114,10 @@ public class PreferencesController implements Localizable {
 
     /* Handler for when modal is closed without saving. */
     public boolean onCloseWindow() {
-        if (!themeEditor.onCloseEditor()
-                || !editorEditor.onCloseEditor()
-                || !engineEditor.onCloseEditor()) {
+        Stage currentStage = (Stage) root.getScene().getWindow();
+        if (!themeEditor.onCloseEditor(currentStage)
+                || !editorEditor.onCloseEditor(currentStage)
+                || !engineEditor.onCloseEditor(currentStage)) {
             return false;
         }
         themeEditor.revertToPreferences();
@@ -136,14 +137,16 @@ public class PreferencesController implements Localizable {
 
     @FXML
     void applyPreferences(ActionEvent event) {
-        if (!themeEditor.onCloseEditor() || !editorEditor.onCloseEditor() || !engineEditor.onCloseEditor()) {
+        Stage currentStage = (Stage) root.getScene().getWindow();
+        if (!themeEditor.onCloseEditor(currentStage)
+                || !editorEditor.onCloseEditor(currentStage)
+                || !engineEditor.onCloseEditor(currentStage)) {
             return;
         }
         themeEditor.savePreferences();
         editorEditor.savePreferences();
         engineEditor.savePreferences();
         preferencesManager.saveToFile();
-        Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
 }

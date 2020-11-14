@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.config;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
 
 public class EnginePreferencesEditor extends PreferencesEditor {
     private String displayName = "Engine";
@@ -34,7 +35,7 @@ public class EnginePreferencesEditor extends PreferencesEditor {
     }
 
     @Override
-    public boolean onCloseEditor() {
+    public boolean onCloseEditor(Stage stage) {
         return true;
     }
 

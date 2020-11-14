@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 public abstract class PreferencesEditor {
     public abstract String getDisplayName();
@@ -39,7 +40,7 @@ public abstract class PreferencesEditor {
     }
 
     /* Returns whether the close should proceed. */
-    public abstract boolean onCloseEditor();
+    public abstract boolean onCloseEditor(Stage stage);
 
     public abstract void savePreferences();
 

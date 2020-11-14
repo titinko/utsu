@@ -99,10 +99,10 @@ public class ThemeColorPicker implements Localizable {
 
     @Override
     public void localize(ResourceBundle bundle) {
-        generalColors.setText("General");
-        noteColors.setText("Note");
-        songColors.setText("Song");
-        voicebankColors.setText("Voicebank");
+        generalColors.setText(bundle.getString("preferences.colorScheme.general"));
+        noteColors.setText(bundle.getString("preferences.colorScheme.note"));
+        songColors.setText(bundle.getString("menu.file.new.song"));
+        voicebankColors.setText(bundle.getString("menu.file.new.voicebank"));
     }
 
     private TitledPane makeColorSection(String title, List<List<String>> widgetGroups) {

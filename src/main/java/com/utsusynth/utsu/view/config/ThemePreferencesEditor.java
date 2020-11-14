@@ -3,6 +3,8 @@ package com.utsusynth.utsu.view.config;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.dialog.DeleteWarningDialog;
 import com.utsusynth.utsu.common.dialog.SaveWarningDialog;
+import com.utsusynth.utsu.common.i18n.Localizable;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.model.config.Theme;
@@ -17,13 +19,15 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 import javax.inject.Inject;
+import java.util.ResourceBundle;
 
-public class ThemePreferencesEditor extends PreferencesEditor {
+public class ThemePreferencesEditor extends PreferencesEditor implements Localizable {
     private final ThemeColorPicker themeColorPicker;
     private final PreferencesManager preferencesManager;
     private final ThemeManager themeManager;
     private final Provider<SaveWarningDialog> saveWarningProvider;
     private final Provider<DeleteWarningDialog> deleteWarningProvider;
+    private final Localizer localizer;
 
     // Session data.
     private String displayName = "Color Scheme";
@@ -43,12 +47,14 @@ public class ThemePreferencesEditor extends PreferencesEditor {
             PreferencesManager preferencesManager,
             ThemeManager themeManager,
             Provider<SaveWarningDialog> saveWarningProvider,
-            Provider<DeleteWarningDialog> deleteWarningProvider) {
+            Provider<DeleteWarningDialog> deleteWarningProvider,
+            Localizer localizer) {
         this.themeColorPicker = themeColorPicker;
         this.preferencesManager = preferencesManager;
         this.themeManager = themeManager;
         this.saveWarningProvider = saveWarningProvider;
         this.deleteWarningProvider = deleteWarningProvider;
+        this.localizer = localizer;
     }
 
     @Override
@@ -82,12 +88,14 @@ public class ThemePreferencesEditor extends PreferencesEditor {
         viewInternal = new VBox(10);
         viewInternal.getChildren().add(themeRow);
         viewInternal.getChildren().add(new Separator(Orientation.HORIZONTAL));
+
+        localizer.localize(this);
         return viewInternal;
     }
 
     @Override
-    public boolean onCloseEditor() {
-        return resolveOngoingEdits(); // Don't bother with in-progress duplications.
+    public boolean onCloseEditor(Stage stage) {
+        return resolveOngoingEdits(stage); // Don't bother with in-progress duplications.
     }
 
     @Override
@@ -98,6 +106,16 @@ public class ThemePreferencesEditor extends PreferencesEditor {
     @Override
     public void revertToPreferences() {
         themeManager.getCurrentTheme().set(preferencesManager.getTheme());
+    }
+
+    @Override
+    public void localize(ResourceBundle bundle) {
+        themeManager.renameDefaultThemes(
+                bundle.getString("preferences.colorScheme.defaultLight"),
+                bundle.getString("preferences.colorScheme.defaultDark"));
+        // Reload choice box to make new names appear.
+        initializeThemeChoiceBox();
+        themeChoiceRow.getChildren().set(0, themeChoiceBox);
     }
 
     private void initializeThemeChoiceRow() {
@@ -166,6 +184,11 @@ public class ThemePreferencesEditor extends PreferencesEditor {
             editItem.setDisable(ThemeManager.isDefault(currentTheme));
             deleteItem.setDisable(ThemeManager.isDefault(currentTheme));
             // Apply localization.
+            duplicateItem.setText(localizer.getMessage("preferences.colorScheme.duplicate"));
+            editItem.setText(localizer.getMessage("menu.edit"));
+            deleteItem.setText(localizer.getMessage("menu.edit.delete"));
+            importItem.setText(localizer.getMessage("preferences.colorScheme.import"));
+            exportItem.setText(localizer.getMessage("preferences.colorScheme.export"));
         });
         themeSettingsBox.setOnMouseClicked(event -> {
             contextMenu.hide();
@@ -246,11 +269,10 @@ public class ThemePreferencesEditor extends PreferencesEditor {
         }
     }
 
-    private boolean resolveOngoingEdits() {
+    private boolean resolveOngoingEdits(Stage parent) {
         if (editPending) {
             // If editor has unsaved changes, confirm close.
             String newName = themeTextField.getText();
-            Stage parent = (Stage) viewInternal.getScene().getWindow();
             SaveWarningDialog.Decision decision = saveWarningProvider.get().popup(parent, newName);
             switch (decision) {
                 case CANCEL:

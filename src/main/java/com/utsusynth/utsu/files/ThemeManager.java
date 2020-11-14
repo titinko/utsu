@@ -158,6 +158,17 @@ public class ThemeManager {
         return currentTheme;
     }
 
+    public void renameDefaultThemes(String lightThemeName, String darkThemeName) {
+        Theme lightTheme = findTheme(DEFAULT_LIGHT_THEME);
+        if (lightTheme != null) {
+            lightTheme.setName(lightThemeName);
+        }
+        Theme darkTheme = findTheme(DEFAULT_DARK_THEME);
+        if (darkTheme != null) {
+            darkTheme.setName(darkThemeName);
+        }
+    }
+
     public static boolean isDefault(Theme theme) {
         return theme.getId().equals(DEFAULT_LIGHT_THEME)
                 || theme.getId().equals(DEFAULT_DARK_THEME);
