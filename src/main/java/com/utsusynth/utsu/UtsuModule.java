@@ -81,6 +81,8 @@ public class UtsuModule extends AbstractModule {
     private PreferencesManager providePreferencesManager(@SettingsPath File settingsPath) {
         ImmutableMap<String, String> defaultPreferences = ImmutableMap.of(
                 "theme", ThemeManager.DEFAULT_LIGHT_THEME,
+                "autoscroll", PreferencesManager.AutoscrollMode.ENABLED_END.name(),
+                "autoscrollCancel", PreferencesManager.AutoscrollCancelMode.ENABLED.name(),
                 "locale", "en");
         return new PreferencesManager(
                 settingsPath,

@@ -4,6 +4,8 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.files.PreferencesManager;
+import com.utsusynth.utsu.files.PreferencesManager.AutoscrollMode;
+import com.utsusynth.utsu.files.PreferencesManager.AutoscrollCancelMode;
 import javafx.collections.FXCollections;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
@@ -13,7 +15,6 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -76,6 +77,16 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         autoscrollEnabledMiddle.setToggleGroup(autoscrollGroup);
         autoscrollVBox.getChildren().addAll(
                 autoscrollDisabled, autoscrollEnabledEnd, autoscrollEnabledMiddle);
+        switch (preferencesManager.getAutoscroll()) {
+            case DISABLED:
+                autoscrollDisabled.setSelected(true);
+                break;
+            case ENABLED_END:
+                autoscrollEnabledEnd.setSelected(true);
+                break;
+            case ENABLED_MIDDLE:
+                autoscrollEnabledMiddle.setSelected(true);
+        }
 
         autoscrollCancelLabel = new Label("Cancel playback autoscroll");
         GridPane.setValignment(autoscrollCancelLabel, VPos.TOP);
@@ -87,6 +98,13 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         autoscrollCancelEnabled.setToggleGroup(autoscrollCancelGroup);
         autoscrollCancelVBox.getChildren().addAll(
                 autoscrollCancelDisabled, autoscrollCancelEnabled);
+        switch (preferencesManager.getAutoscrollCancel()) {
+            case DISABLED:
+                autoscrollCancelDisabled.setSelected(true);
+                break;
+            case ENABLED:
+                autoscrollCancelEnabled.setSelected(true);
+        }
 
         languageLabel = new Label("Language");
         languageChoiceBox = new ChoiceBox<>();
@@ -126,6 +144,20 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
 
     @Override
     public void savePreferences() {
+        // Playback autoscroll.
+        if (autoscrollDisabled.isSelected()) {
+            preferencesManager.setAutoscroll(AutoscrollMode.DISABLED);
+        } else if (autoscrollEnabledEnd.isSelected()) {
+            preferencesManager.setAutoscroll(AutoscrollMode.ENABLED_END);
+        } else if (autoscrollEnabledMiddle.isSelected()) {
+            preferencesManager.setAutoscroll(AutoscrollMode.ENABLED_MIDDLE);
+        }
+        // Whether playback autoscroll is cancellable through manual scrollbar movement.
+        if (autoscrollCancelDisabled.isSelected()) {
+            preferencesManager.setAutoscrollCancel(AutoscrollCancelMode.DISABLED);
+        } else if (autoscrollCancelEnabled.isSelected()) {
+            preferencesManager.setAutoscrollCancel(AutoscrollCancelMode.ENABLED);
+        }
         preferencesManager.setLocale(localizer.getCurrentLocale());
     }
 

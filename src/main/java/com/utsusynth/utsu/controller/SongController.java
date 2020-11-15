@@ -1,8 +1,5 @@
 package com.utsusynth.utsu.controller;
 
-import static com.utsusynth.utsu.files.ThemeManager.DEFAULT_LIGHT_THEME;
-import static com.utsusynth.utsu.files.ThemeManager.DEFAULT_DARK_THEME;
-
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -16,7 +13,6 @@ import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
-import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.RoundUtils;
@@ -27,12 +23,14 @@ import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.Engine.PlaybackStatus;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
+import com.utsusynth.utsu.files.PreferencesManager;
+import com.utsusynth.utsu.files.PreferencesManager.AutoscrollMode;
+import com.utsusynth.utsu.files.PreferencesManager.AutoscrollCancelMode;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.files.song.Ust12Reader;
 import com.utsusynth.utsu.files.song.Ust12Writer;
 import com.utsusynth.utsu.files.song.Ust20Reader;
 import com.utsusynth.utsu.files.song.Ust20Writer;
-import com.utsusynth.utsu.model.config.Theme;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.view.song.Piano;
@@ -61,7 +59,6 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.util.StringConverter;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -94,6 +91,7 @@ public class SongController implements EditorController, Localizable {
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
     private final IconManager iconManager;
+    private final PreferencesManager preferencesManager;
     private final ThemeManager themeManager;
     private final ExternalProcessRunner processRunner;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
@@ -151,6 +149,7 @@ public class SongController implements EditorController, Localizable {
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
             IconManager iconManager,
+            PreferencesManager preferencesManager,
             ThemeManager themeManager,
             ExternalProcessRunner processRunner,
             Provider<FXMLLoader> fxmlLoaders) {
@@ -169,6 +168,7 @@ public class SongController implements EditorController, Localizable {
         this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
         this.iconManager = iconManager;
+        this.preferencesManager = preferencesManager;
         this.themeManager = themeManager;
         this.processRunner = processRunner;
         this.fxmlLoaderProvider = fxmlLoaders;
@@ -764,25 +764,36 @@ public class SongController implements EditorController, Localizable {
 
         Function<Duration, Void> startPlaybackFn = duration -> {
             DoubleProperty playbackX = songEditor.startPlayback(regionToPlay, duration);
-            if (playbackX != null) {
-                // Implements autoscroll to follow playback bar.
-                InvalidationListener autoscrollListener = event -> {
-                    RegionBounds scrollRegion = scrollPaneRegion();
-                    int newMs = regionToPlay.getMinMs()
-                            + RoundUtils.round(scaler.unscaleX(playbackX.get()));
-                    // TODO: Let the user choose this mode in User Preferences.
-                    /*int halfWidth = RoundUtils.round(
+            if (playbackX == null) {
+                return null;
+            }
+            AutoscrollMode autoscrollMode = preferencesManager.getAutoscroll();
+            if (autoscrollMode.equals(AutoscrollMode.DISABLED)) {
+                return null;
+            }
+            // Implements autoscroll to follow playback bar.
+            InvalidationListener autoscrollListener = event -> {
+                RegionBounds scrollRegion = scrollPaneRegion();
+                int newMs = regionToPlay.getMinMs()
+                        + RoundUtils.round(scaler.unscaleX(playbackX.get()));
+                if (autoscrollMode.equals(AutoscrollMode.ENABLED_END)) {
+                    // Scroll when playback bar reaches end of screen.
+                    if (!scrollRegion.contains(newMs)) {
+                        scrollToPosition(newMs);
+                    }
+                } else if (autoscrollMode.equals(AutoscrollMode.ENABLED_MIDDLE)) {
+                    // Scroll when playback bar reaches middle of screen.
+                    int halfWidth = RoundUtils.round(
                             (scrollRegion.getMaxMs() - scrollRegion.getMinMs()) / 2.0);
                     int scrollMid = scrollRegion.getMinMs() + halfWidth;
                     if (!new RegionBounds(scrollMid - 10, scrollMid + 10).contains(newMs)) {
                         scrollToPosition(newMs - halfWidth);
-                    }*/
-                    if (!scrollRegion.contains(newMs)) {
-                        scrollToPosition(newMs);
                     }
-                };
-                playbackX.addListener(autoscrollListener);
-                // Disables autoscroll if the user jiggles the scroll bar.
+                }
+            };
+            playbackX.addListener(autoscrollListener);
+            // Disables autoscroll if the user jiggles the scroll bar.
+            if (preferencesManager.getAutoscrollCancel().equals(AutoscrollCancelMode.ENABLED)) {
                 ChangeListener<Number> disableAutoScroll = new ChangeListener<>() {
                     @Override
                     public void changed(
@@ -811,7 +822,11 @@ public class SongController implements EditorController, Localizable {
         playPauseIcon.setDisable(true);
 
         statusBar.setStatus("Rendering...");
-        new Thread(() -> {
+        new
+
+                Thread(() ->
+
+        {
             if (engine.startPlayback(song.get(), regionToPlay, startPlaybackFn, endPlaybackFn)) {
                 playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
                 Platform.runLater(() -> statusBar.setStatus("Render complete."));
@@ -819,7 +834,10 @@ public class SongController implements EditorController, Localizable {
                 Platform.runLater(() -> statusBar.setStatus("Render produced no output."));
             }
             playPauseIcon.setDisable(false);
-        }).start();
+        }).
+
+                start();
+
     }
 
     private void pausePlayback() {

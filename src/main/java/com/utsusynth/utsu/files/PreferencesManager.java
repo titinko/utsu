@@ -97,6 +97,44 @@ public class PreferencesManager {
         preferences.put("theme", newTheme.getId());
     }
 
+    public enum AutoscrollMode {
+        DISABLED, ENABLED_END, ENABLED_MIDDLE,
+    }
+
+    public AutoscrollMode getAutoscroll() {
+        String autoscrollName = preferences.containsKey("autoscroll")
+                ? preferences.get("autoscroll") : defaultPreferences.get("autoscroll");
+        try {
+            return AutoscrollMode.valueOf(autoscrollName);
+        } catch (IllegalArgumentException e) {
+            errorLogger.logError(e);
+            return AutoscrollMode.valueOf(defaultPreferences.get("autoscroll"));
+        }
+    }
+
+    public void setAutoscroll(AutoscrollMode autoscrollMode) {
+        preferences.put("autoscroll", autoscrollMode.name());
+    }
+
+    public enum AutoscrollCancelMode {
+        DISABLED, ENABLED
+    }
+
+    public AutoscrollCancelMode getAutoscrollCancel() {
+        String autoscrollCancelName = preferences.containsKey("autoscrollCancel")
+                ? preferences.get("autoscrollCancel") : defaultPreferences.get("autoscrollCancel");
+        try {
+            return AutoscrollCancelMode.valueOf(autoscrollCancelName);
+        } catch (IllegalArgumentException e) {
+            errorLogger.logError(e);
+            return AutoscrollCancelMode.valueOf(defaultPreferences.get("autoscrollCancel"));
+        }
+    }
+
+    public void setAutoscrollCancel(AutoscrollCancelMode autoscrollCancelMode) {
+        preferences.put("autoscrollCancel", autoscrollCancelMode.name());
+    }
+
     public NativeLocale getLocale() {
         String localeCode = preferences.containsKey("locale")
                 ? preferences.get("locale") : defaultPreferences.get("locale");
