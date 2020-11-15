@@ -2,7 +2,9 @@ package com.utsusynth.utsu.common.i18n;
 
 import java.util.Locale;
 
-/** A locale with toString overridden as the localized name of that locale. */
+/**
+ * A locale with toString overridden as the localized name of that locale.
+ */
 public class NativeLocale {
     private final Locale locale;
     private final String localizedName;
@@ -15,6 +17,15 @@ public class NativeLocale {
 
     public Locale getLocale() {
         return locale;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof NativeLocale)) {
+            return false;
+        }
+        NativeLocale otherLocale = (NativeLocale) other;
+        return this.localizedName.equals(otherLocale.localizedName);
     }
 
     @Override

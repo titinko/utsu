@@ -38,7 +38,7 @@ public class RegionBounds {
 
     /**
      * Merges two regions into one. If one region is invalid, returns the other region.
-     * 
+     *
      * @param other the region to merge with.
      * @return the combination of the two regions.
      */
@@ -54,7 +54,7 @@ public class RegionBounds {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof RegionBounds)) {
+        if (!(other instanceof RegionBounds)) {
             return false;
         }
         RegionBounds otherBounds = (RegionBounds) other;

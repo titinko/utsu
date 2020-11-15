@@ -3,14 +3,12 @@ package com.utsusynth.utsu.files;
 import com.google.common.collect.ImmutableMap;
 import com.utsusynth.utsu.UtsuModule.SettingsPath;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
-import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.model.config.Theme;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.inject.Inject;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,8 +20,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.HashMap;
 import java.util.Locale;
-
-import static com.utsusynth.utsu.files.ThemeManager.DEFAULT_LIGHT_THEME;
 
 public class PreferencesManager {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();

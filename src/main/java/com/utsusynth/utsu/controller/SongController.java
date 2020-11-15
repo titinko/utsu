@@ -134,9 +134,6 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="quantizeChoiceBox"
     private ChoiceBox<String> quantizeChoiceBox; // Value injected by FXMLLoader
 
-    @FXML // fx:id="languageChoiceBox"
-    private ChoiceBox<NativeLocale> languageChoiceBox; // Value injected by FXMLLoader
-
     @Inject
     public SongController(
             SongContainer songContainer, // Inject an empty song.
@@ -318,11 +315,6 @@ public class SongController implements EditorController, Localizable {
                 event -> stopIcon.setImage(iconManager.getImage(IconType.STOP_PRESSED)));
         stopIcon.setOnMouseReleased(
                 event -> stopIcon.setImage(iconManager.getImage(IconType.STOP_NORMAL)));
-
-        languageChoiceBox.setItems(FXCollections.observableArrayList(localizer.getAllLocales()));
-        languageChoiceBox
-                .setOnAction((action) -> localizer.setLocale(languageChoiceBox.getValue()));
-        languageChoiceBox.setValue(localizer.getCurrentLocale());
 
         refreshView();
 

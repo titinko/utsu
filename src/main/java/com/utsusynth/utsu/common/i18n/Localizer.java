@@ -30,6 +30,9 @@ public class Localizer {
     }
 
     public void setLocale(NativeLocale locale) {
+        if (!supportedLocales.contains(locale)) {
+            return;
+        }
         this.locale = locale;
         this.bundle = ResourceBundle.getBundle("messages.messages", locale.getLocale());
         for (Localizable target : targets) {

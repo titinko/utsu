@@ -28,7 +28,6 @@
                         <ImageView fx:id="stopIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#stopPlayback" pickOnBounds="true" preserveRatio="true" />
                      </children>
                   </HBox>
-                  <ChoiceBox fx:id="languageChoiceBox" prefWidth="150.0" />
                </children>
                <padding>
                   <Insets left="10.0" top="30.0" />

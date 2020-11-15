@@ -2,6 +2,7 @@ package com.utsusynth.utsu;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.controller.UtsuController;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.CacheManager;
@@ -56,6 +57,10 @@ public class UtsuApp extends Application {
             primaryStage.close();
             return;
         }
+
+        // Set language.
+        Localizer localizer = injector.getInstance(Localizer.class);
+        localizer.setLocale(preferencesManager.getLocale());
 
         // Construct scene.
         FXMLLoader loader = injector.getInstance(FXMLLoader.class);
