@@ -787,7 +787,7 @@ public class SongController implements EditorController, Localizable {
                             (scrollRegion.getMaxMs() - scrollRegion.getMinMs()) / 2.0);
                     int scrollMid = scrollRegion.getMinMs() + halfWidth;
                     if (!new RegionBounds(scrollMid - 10, scrollMid + 10).contains(newMs)) {
-                        scrollToPosition(newMs - halfWidth);
+                        scrollToPosition(Math.max(0, newMs - halfWidth));
                     }
                 }
             };
@@ -802,7 +802,15 @@ public class SongController implements EditorController, Localizable {
                             Number newValue) {
                         double pixelsTravelled = scrollPaneCenter.getWidth() *
                                 Math.abs(newValue.doubleValue() - oldValue.doubleValue());
-                        if (pixelsTravelled < 5) {
+                        if (autoscrollMode.equals(AutoscrollMode.ENABLED_END)
+                                && pixelsTravelled < 5) {
+                            playbackX.removeListener(autoscrollListener);
+                            // These listeners remove themselves when user touches the scrollbar,
+                            // but there's a chance they could pile up before then.
+                            scrollPaneCenter.hvalueProperty().removeListener(this);
+                        } else if (autoscrollMode.equals(AutoscrollMode.ENABLED_MIDDLE)
+                                && pixelsTravelled < 5
+                                && oldValue.doubleValue() > newValue.doubleValue()) {
                             playbackX.removeListener(autoscrollListener);
                             // These listeners remove themselves when user touches the scrollbar,
                             // but there's a chance they could pile up before then.
