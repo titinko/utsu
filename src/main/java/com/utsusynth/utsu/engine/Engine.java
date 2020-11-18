@@ -9,11 +9,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.Optional;
 
-import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.CacheManager;
+import com.utsusynth.utsu.files.PreferencesManager;
+import com.utsusynth.utsu.files.PreferencesManager.CacheMode;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
-import com.google.common.io.Files;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
@@ -42,6 +42,7 @@ public class Engine {
     private final StatusBar statusBar;
     private final int threadPoolSize;
     private final CacheManager cacheManager;
+    private final PreferencesManager preferencesManager;
     private File resamplerPath;
     private File wavtoolPath;
 
@@ -54,18 +55,22 @@ public class Engine {
             StatusBar statusBar,
             int threadPoolSize,
             CacheManager cacheManager,
-            AssetManager assetManager) {
+            PreferencesManager preferencesManager) {
         this.resampler = resampler;
         this.wavtool = wavtool;
         this.statusBar = statusBar;
         this.threadPoolSize = threadPoolSize;
         this.cacheManager = cacheManager;
-        this.resamplerPath = assetManager.getResamplerFile();
-        this.wavtoolPath = assetManager.getWavtoolFile();
+        this.preferencesManager = preferencesManager;
+        resamplerPath = preferencesManager.getResampler();
+        wavtoolPath = preferencesManager.getWavtool();
     }
 
     public File getResamplerPath() {
-        return resamplerPath;
+        if (resamplerPath != null) {
+            return resamplerPath;
+        }
+        return preferencesManager.getResampler();
     }
 
     public void setResamplerPath(File resamplerPath) {
@@ -73,11 +78,14 @@ public class Engine {
     }
 
     public File getWavtoolPath() {
-        return wavtoolPath;
+        if (wavtoolPath != null) {
+            return wavtoolPath;
+        }
+        return preferencesManager.getWavtool();
     }
 
     public void setWavtoolPath(File wavtoolPath) {
-        this.wavtoolPath = wavtoolPath;
+        wavtoolPath = wavtoolPath;
     }
 
     /**
@@ -175,10 +183,13 @@ public class Engine {
     }
 
     private Optional<File> render(Song song, RegionBounds bounds) {
-        if (bounds.equals(song.getCacheRegion())
+        // Use cached render if it exists and cache is enabled.
+        if (preferencesManager.getCache().equals(CacheMode.DISABLED)) {
+            song.clearCache();
+        } else if (bounds.equals(song.getCacheRegion())
                 && song.getCacheFile().isPresent()
                 && song.getCacheFile().get().exists()) {
-            return song.getCacheFile(); // Return cached render if it's still valid.
+            return song.getCacheFile();
         }
 
         // Set up a thread pool for asynchronous rendering.
@@ -271,15 +282,21 @@ public class Engine {
             final boolean includeOverlap =
                     areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter));
             final boolean isLastNote = notes.peekNext().isEmpty();
+            final int currentTotalDelta = totalDelta;
             final double expectedDelta = totalDelta - preutter;
             futures.add(executor.submit(() -> {
                 // Re-samples lyric and puts result into renderedNote file.
                 File renderedNote;
+                if (preferencesManager.getCache().equals(CacheMode.DISABLED)) {
+                    song.clearNoteCache(currentTotalDelta, currentTotalDelta);
+                }
                 if (note.getCacheFile().isEmpty()) {
                     renderedNote = cacheManager.createNoteCache();
-                    note.setCacheFile(Optional.of(renderedNote));
+                    if (preferencesManager.getCache().equals(CacheMode.ENABLED)) {
+                        note.setCacheFile(Optional.of(renderedNote));
+                    }
                     resampler.resample(
-                            resamplerPath,
+                            getResamplerPath(),
                             note,
                             adjustedLength,
                             curConfig,
@@ -292,7 +309,7 @@ public class Engine {
                 return () -> {
                     // Append rendered note to output file using wavtool.
                     wavtool.addNewNote(
-                            wavtoolPath,
+                            getWavtoolPath(),
                             song,
                             note,
                             adjustedLength,
@@ -339,7 +356,11 @@ public class Engine {
         Platform.runLater(() -> statusBar.setProgress(1.0)); // Mark task as complete.
         executor.shutdown(); // Shut down thread pool
 
-        song.setCache(bounds, finalSong); // Cache region that was played.
+        if (preferencesManager.getCache().equals(CacheMode.ENABLED)) {
+            song.setCache(bounds, finalSong); // Cache region that was played.
+        } else {
+            cacheManager.clearNotes(); // Clear note cache if we aren't keeping caches.
+        }
         cacheManager.clearSilences(); // Clear all silence temp files.
         return Optional.of(finalSong);
     }
@@ -358,10 +379,15 @@ public class Engine {
         double trueDelta = totalDelta * (125.0 / song.getTempo());
         File renderedSilence = cacheManager.createSilenceCache();
         futures.add(executor.submit(() -> {
-            resampler.resampleSilence(resamplerPath, renderedSilence, trueDuration);
+            resampler.resampleSilence(getResamplerPath(), renderedSilence, trueDuration);
             return () -> {
                 wavtool.addSilence(
-                        wavtoolPath, trueDuration, trueDelta, renderedSilence, finalSong, false);
+                        getWavtoolPath(),
+                        trueDuration,
+                        trueDelta,
+                        renderedSilence,
+                        finalSong,
+                        false);
             };
         }));
     }
@@ -378,10 +404,15 @@ public class Engine {
         double trueDelta = totalDelta * (125.0 / song.getTempo());
         File renderedSilence = cacheManager.createSilenceCache();
         futures.add(executor.submit(() -> {
-            resampler.resampleSilence(resamplerPath, renderedSilence, trueDuration);
+            resampler.resampleSilence(getResamplerPath(), renderedSilence, trueDuration);
             return () -> {
                 wavtool.addSilence(
-                        wavtoolPath, trueDuration, trueDelta, renderedSilence, finalSong, true);
+                        getWavtoolPath(),
+                        trueDuration,
+                        trueDelta,
+                        renderedSilence,
+                        finalSong,
+                        true);
             };
         }));
     }

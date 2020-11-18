@@ -19,7 +19,7 @@ public class VoicebankContainer {
     public VoicebankContainer(VoicebankManager voicebankManager, VoicebankReader voicebankReader) {
         this.voicebankManager = voicebankManager;
         this.voicebankReader = voicebankReader;
-        setVoicebankForSong(voicebankReader.getDefaultPath()); // Start with default voicebank.
+        setVoicebankForRead(voicebankReader.getDefaultPath()); // Start with default voicebank.
     }
 
     public Voicebank get() {
@@ -37,7 +37,7 @@ public class VoicebankContainer {
         voicebankManager.setVoicebank(location, newVoicebank);
     }
 
-    public void setVoicebankForSong(File newLocation) {
+    public void setVoicebankForRead(File newLocation) {
         location = newLocation;
     }
 

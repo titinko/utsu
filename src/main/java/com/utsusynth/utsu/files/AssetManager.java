@@ -117,14 +117,26 @@ public class AssetManager {
     }
 
     public File getResamplerFile() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return new File(executablesPath, "macres.exe");
+        }
         return new File(executablesPath, "macres");
     }
 
     public File getWavtoolFile() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return new File(executablesPath, "wavtool-yawu.exe");
+        }
         return new File(executablesPath, "wavtool-yawu");
     }
 
     public File getFrqGeneratorFile() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return new File(executablesPath, "frq0003gen.exe");
+        }
         return new File(executablesPath, "frq0003gen");
     }
 

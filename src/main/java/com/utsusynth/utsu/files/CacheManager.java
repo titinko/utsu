@@ -1,7 +1,6 @@
 package com.utsusynth.utsu.files;
 
 import com.utsusynth.utsu.UtsuModule.SettingsPath;
-import com.utsusynth.utsu.common.exception.ErrorLogger;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -11,10 +10,12 @@ import java.util.UUID;
 
 public class CacheManager {
     private final File cachePath;
+    private final PreferencesManager preferencesManager;
 
     @Inject
-    public CacheManager(@SettingsPath File settingsPath) {
+    public CacheManager(@SettingsPath File settingsPath, PreferencesManager preferencesManager) {
         cachePath = new File(settingsPath, "cache");
+        this.preferencesManager = preferencesManager;
     }
 
     /**
@@ -59,6 +60,15 @@ public class CacheManager {
         } else {
             System.out.println("Tried to delete cache file that no longer exists.");
             return false;
+        }
+    }
+
+    public void clearNotes() {
+        File[] silences = cachePath.listFiles((dir, name) -> name.endsWith("note.wav"));
+        if (silences != null) {
+            for (File silence : silences) {
+                clearCache(silence);
+            }
         }
     }
 

@@ -144,4 +144,77 @@ public class PreferencesManager {
     public void setLocale(NativeLocale locale) {
         preferences.put("locale", locale.getLocale().toLanguageTag());
     }
+
+    public enum CacheMode {
+        DISABLED, ENABLED
+    }
+
+    public CacheMode getCache() {
+        String cacheName = preferences.containsKey("cache")
+                ? preferences.get("cache") : defaultPreferences.get("cache");
+        try {
+            return CacheMode.valueOf(cacheName);
+        } catch (IllegalArgumentException e) {
+            errorLogger.logError(e);
+            return CacheMode.valueOf(defaultPreferences.get("cache"));
+        }
+    }
+
+    public void setCache(CacheMode cacheMode) {
+        preferences.put("cache", cacheMode.name());
+    }
+
+    public File getResampler() {
+        File resampler = preferences.containsKey("resampler")
+                ? new File(preferences.get("resampler"))
+                : new File(defaultPreferences.get("resampler"));
+        if (!resampler.canExecute()) {
+            return new File(defaultPreferences.get("resampler"));
+        }
+        return resampler;
+    }
+
+    public File getResamplerDefault() {
+        return new File(defaultPreferences.get("resampler"));
+    }
+
+    public void setResampler(File resampler) {
+        preferences.put("resampler", resampler.getAbsolutePath());
+    }
+
+    public File getWavtool() {
+        File wavtool = preferences.containsKey("wavtool")
+                ? new File(preferences.get("wavtool"))
+                : new File(defaultPreferences.get("wavtool"));
+        if (!wavtool.canExecute()) {
+            return new File(defaultPreferences.get("wavtool"));
+        }
+        return wavtool;
+    }
+
+    public File getWavtoolDefault() {
+        return new File(defaultPreferences.get("wavtool"));
+    }
+
+    public void setWavtool(File wavtool) {
+        preferences.put("wavtool", wavtool.getAbsolutePath());
+    }
+
+    public File getVoicebank() {
+        File voicebank = preferences.containsKey("voicebank")
+                ? new File(preferences.get("voicebank"))
+                : new File(defaultPreferences.get("voicebank"));
+        if (!voicebank.isDirectory()) {
+            return new File(defaultPreferences.get("voicebank"));
+        }
+        return voicebank;
+    }
+
+    public File getVoicebankDefault() {
+        return new File(defaultPreferences.get("voicebank"));
+    }
+
+    public void setVoicebank(File voicebank) {
+        preferences.put("voicebank", voicebank.getAbsolutePath());
+    }
 }

@@ -78,17 +78,23 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private PreferencesManager providePreferencesManager(@SettingsPath File settingsPath) {
-        ImmutableMap<String, String> defaultPreferences = ImmutableMap.of(
-                "theme", ThemeManager.DEFAULT_LIGHT_THEME,
-                "autoscroll", PreferencesManager.AutoscrollMode.ENABLED_END.name(),
-                "autoscrollCancel", PreferencesManager.AutoscrollCancelMode.ENABLED.name(),
-                "locale", "en");
+    private PreferencesManager providePreferencesManager(
+            @SettingsPath File settingsPath, AssetManager assetManager) {
+        ImmutableMap.Builder<String, String> defaultBuilder = ImmutableMap.builder();
+        defaultBuilder.put("theme", ThemeManager.DEFAULT_LIGHT_THEME);
+        defaultBuilder.put("autoscroll", PreferencesManager.AutoscrollMode.ENABLED_END.name());
+        defaultBuilder.put(
+                "autoscrollCancel", PreferencesManager.AutoscrollCancelMode.ENABLED.name());
+        defaultBuilder.put("locale", "en");
+        defaultBuilder.put("cache", PreferencesManager.CacheMode.ENABLED.name());
+        defaultBuilder.put("resampler", assetManager.getResamplerFile().getAbsolutePath());
+        defaultBuilder.put("wavtool", assetManager.getWavtoolFile().getAbsolutePath());
+        defaultBuilder.put("voicebank", assetManager.getVoicePath().getAbsolutePath());
         return new PreferencesManager(
                 settingsPath,
                 DocumentBuilderFactory.newDefaultInstance(),
                 TransformerFactory.newDefaultInstance(),
-                defaultPreferences);
+                defaultBuilder.build());
     }
 
     @Provides
@@ -128,14 +134,14 @@ public class UtsuModule extends AbstractModule {
             Wavtool wavtool,
             StatusBar statusBar,
             CacheManager cacheManager,
-            AssetManager assetManager) {
+            PreferencesManager preferencesManager) {
         return new Engine(
                 resampler,
                 wavtool,
                 statusBar,
                 /* threadPoolSize= */ 10,
                 cacheManager,
-                assetManager);
+                preferencesManager);
     }
 
     @Provides

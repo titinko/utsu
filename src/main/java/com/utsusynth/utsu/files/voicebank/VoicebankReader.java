@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.utsusynth.utsu.files.AssetManager;
+import com.utsusynth.utsu.files.PreferencesManager;
 import org.apache.commons.io.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provider;
@@ -31,19 +32,22 @@ public class VoicebankReader {
     private static final Pattern PITCH_PATTERN =
             Pattern.compile("([a-gA-G]#?[1-7])\\t\\S*\\t(\\S.*)");
 
-    private final File defaultVoicePath;
     private final AssetManager assetManager;
+    private final PreferencesManager preferencesManager;
     private final Provider<Voicebank> voicebankProvider;
 
     @Inject
-    public VoicebankReader(AssetManager assetManager, Provider<Voicebank> voicebankProvider) {
-        this.defaultVoicePath = assetManager.getVoicePath();
+    public VoicebankReader(
+            AssetManager assetManager,
+            PreferencesManager preferencesManager,
+            Provider<Voicebank> voicebankProvider) {
         this.assetManager = assetManager;
+        this.preferencesManager = preferencesManager;
         this.voicebankProvider = voicebankProvider;
     }
 
     public File getDefaultPath() {
-        return defaultVoicePath;
+        return preferencesManager.getVoicebank();
     }
 
     public Voicebank loadVoicebankFromDirectory(File sourceDir) {
@@ -51,7 +55,7 @@ public class VoicebankReader {
 
         File pathToVoicebank;
         if (!sourceDir.exists()) {
-            pathToVoicebank = defaultVoicePath;
+            pathToVoicebank = preferencesManager.getVoicebank();
         } else {
             if (!sourceDir.isDirectory()) {
                 pathToVoicebank = sourceDir.getParentFile();
@@ -92,7 +96,7 @@ public class VoicebankReader {
                     pathToVoicebank.toPath(),
                     EnumSet.of(FileVisitOption.FOLLOW_LINKS),
                     10,
-                    new SimpleFileVisitor<Path>() {
+                    new SimpleFileVisitor<>() {
                         @Override
                         public FileVisitResult visitFile(Path path, BasicFileAttributes attr) {
                             for (String otoName : ImmutableSet.of("oto.ini", "oto_ini.txt")) {
@@ -208,7 +212,10 @@ public class VoicebankReader {
      */
     public File parseFilePath(String line, String property) {
         String pathString = line.substring(property.length());
-        pathString = pathString.replaceFirst("\\$\\{DEFAULT\\}", defaultVoicePath.getAbsolutePath())
+        pathString = pathString
+                .replaceFirst(
+                        "\\$\\{DEFAULT\\}",
+                        preferencesManager.getVoicebank().getAbsolutePath())
                 .replaceFirst("\\$\\{HOME\\}", System.getProperty("user.home"));
         return new File(pathString);
     }

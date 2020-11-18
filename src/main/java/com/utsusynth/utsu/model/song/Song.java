@@ -75,7 +75,7 @@ public class Song {
         }
 
         public Builder setVoiceDirectory(File voiceDirectory) {
-            newSong.voicebank.setVoicebankForSong(voiceDirectory);
+            newSong.voicebank.setVoicebankForRead(voiceDirectory);
             return this;
         }
 
