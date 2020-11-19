@@ -91,7 +91,7 @@ public class ThemeColorPicker implements Localizable {
 
         ScrollPane scrollPane = new ScrollPane(accordion);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setMaxHeight(310);
+        scrollPane.setFitToWidth(true);
 
         localizer.localize(this);
         return scrollPane;
@@ -124,7 +124,7 @@ public class ThemeColorPicker implements Localizable {
                 Pane spacer = new Pane();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
                 HBox colorRow = new HBox(10);
-                colorRow.setPrefWidth(300);
+                colorRow.setPrefWidth(305);
                 colorRow.getChildren().addAll(new Label(widgetName), spacer, colorPicker);
                 vBox.getChildren().add(colorRow);
             }

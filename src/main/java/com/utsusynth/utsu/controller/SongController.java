@@ -105,7 +105,7 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="anchorCenter"
     private AnchorPane anchorCenter; // Value injected by FXMLLoader
 
-    @FXML // fx:id="scrollPaneRight"
+    @FXML // fx:id="scrollPaneCenter"
     private ScrollPane scrollPaneCenter; // Value injected by FXMLLoader
 
     @FXML // fx:id="anchorRight"

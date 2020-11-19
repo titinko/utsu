@@ -14,8 +14,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.util.ResourceBundle;
@@ -33,11 +34,11 @@ public class PreferencesController implements Localizable {
     @FXML // fx:id="root"
     private BorderPane root; // Value injected by FXMLLoader
 
-    @FXML // fx:id="anchorLeft"
-    private AnchorPane anchorLeft;
+    @FXML // fx:id="vBoxLeft"
+    private VBox vBoxLeft;
 
-    @FXML // fx:id="anchorRight"
-    private AnchorPane anchorRight; // Value injected by FXMLLoader
+    @FXML // fx:id="vBoxRight"
+    private VBox vBoxRight; // Value injected by FXMLLoader
 
     @FXML // fx:id="applyButton"
     private Button applyButton; // Value injected by FXMLLoader
@@ -71,7 +72,7 @@ public class PreferencesController implements Localizable {
         root.getChildren().add(new TreeItem<>(engineEditor));
 
         TreeView<PreferencesEditor> tableOfContents = new TreeView<>(root);
-        tableOfContents.setPrefWidth(anchorLeft.getPrefWidth());
+        tableOfContents.setPrefWidth(vBoxLeft.getPrefWidth());
         tableOfContents.setShowRoot(false);
         tableOfContents.setCellFactory(preferencesEditor -> {
             TreeCell<PreferencesEditor> treeCell = new TreeCell<>() {
@@ -87,13 +88,16 @@ public class PreferencesController implements Localizable {
             };
             treeCell.setOnMouseClicked(event -> {
                 if (treeCell.getItem() != null) {
-                    anchorRight.getChildren().clear();
-                    anchorRight.getChildren().add(treeCell.getItem().getView());
+                    vBoxRight.getChildren().clear();
+                    vBoxRight.getChildren().add(treeCell.getItem().getView());
                 }
             });
             return treeCell;
         });
-        anchorLeft.getChildren().add(tableOfContents);
+        vBoxLeft.getChildren().add(tableOfContents);
+        VBox.setVgrow(tableOfContents, Priority.ALWAYS);
+        tableOfContents.getSelectionModel().selectFirst();
+        vBoxRight.getChildren().add(tableOfContents.getTreeItem(0).getValue().getView());
 
         // Set up localization.
         localizer.localize(this);

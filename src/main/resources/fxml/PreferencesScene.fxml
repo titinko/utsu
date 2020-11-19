@@ -10,14 +10,11 @@
 
 <BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.PreferencesController">
    <center>
-      <AnchorPane fx:id="anchorRight" minWidth="330.0" prefHeight="200.0" BorderPane.alignment="CENTER">
+      <VBox fx:id="vBoxRight" minWidth="340.0" prefHeight="200.0" BorderPane.alignment="CENTER">
          <BorderPane.margin>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </BorderPane.margin></AnchorPane>
+         </BorderPane.margin></VBox>
    </center>
-   <left>
-      <AnchorPane fx:id="anchorLeft" prefWidth="150.0" BorderPane.alignment="CENTER" />
-   </left>
    <bottom>
       <VBox BorderPane.alignment="CENTER">
          <children>
@@ -34,4 +31,7 @@
          </children>
       </VBox>
    </bottom>
+   <left>
+      <VBox fx:id="vBoxLeft" prefWidth="150.0" BorderPane.alignment="CENTER" />
+   </left>
 </BorderPane>
