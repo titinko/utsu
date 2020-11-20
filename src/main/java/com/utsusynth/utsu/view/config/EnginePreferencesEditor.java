@@ -71,7 +71,7 @@ public class EnginePreferencesEditor extends PreferencesEditor implements Locali
 
     @Override
     protected Node initializeInternal() {
-        cacheLabel = new Label("Cache resampler output");
+        cacheLabel = new Label("Cache render output");
         GridPane.setValignment(cacheLabel, VPos.TOP);
         ToggleGroup cacheGroup = new ToggleGroup();
         VBox cacheVBox = new VBox(5);
@@ -181,16 +181,16 @@ public class EnginePreferencesEditor extends PreferencesEditor implements Locali
 
     @Override
     public void localize(ResourceBundle bundle) {
-        cacheLabel.setText("Cache resampler output");
-        cacheDisabled.setText("Disabled");
-        cacheEnabled.setText("Enabled");
-        defaultResamplerLabel.setText("Default resampler");
+        cacheLabel.setText(bundle.getString("preferences.engine.cacheRenderOutput"));
+        cacheDisabled.setText(bundle.getString("preferences.disabled"));
+        cacheEnabled.setText(bundle.getString("preferences.enabled"));
+        defaultResamplerLabel.setText(bundle.getString("preferences.engine.defaultResampler"));
         changeResamplerButton.setText(bundle.getString("properties.change"));
         resetResamplerButton.setText(bundle.getString("general.reset"));
-        defaultWavtoolLabel.setText("Default wavtool");
+        defaultWavtoolLabel.setText(bundle.getString("preferences.engine.defaultWavtool"));
         changeWavtoolButton.setText(bundle.getString("properties.change"));
         resetWavtoolButton.setText(bundle.getString("general.reset"));
-        defaultVoicebankLabel.setText("Default voicebank");
+        defaultVoicebankLabel.setText(bundle.getString("preferences.engine.defaultVoicebank"));
         changeVoicebankButton.setText(bundle.getString("properties.change"));
         resetVoicebankButton.setText(bundle.getString("general.reset"));
     }

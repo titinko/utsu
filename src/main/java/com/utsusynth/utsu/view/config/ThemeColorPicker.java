@@ -102,7 +102,7 @@ public class ThemeColorPicker implements Localizable {
         generalColors.setText(bundle.getString("preferences.colorScheme.general"));
         noteColors.setText(bundle.getString("preferences.colorScheme.note"));
         songColors.setText(bundle.getString("menu.file.new.song"));
-        voicebankColors.setText(bundle.getString("menu.file.new.voicebank"));
+        voicebankColors.setText(bundle.getString("properties.voicebank"));
     }
 
     private TitledPane makeColorSection(String title, List<List<String>> widgetGroups) {

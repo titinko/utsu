@@ -71,9 +71,9 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         VBox autoscrollVBox = new VBox(5);
         autoscrollDisabled = new RadioButton("Disabled");
         autoscrollDisabled.setToggleGroup(autoscrollGroup);
-        autoscrollEnabledEnd = new RadioButton("Enabled (End)");
+        autoscrollEnabledEnd = new RadioButton("Enabled (Standard)");
         autoscrollEnabledEnd.setToggleGroup(autoscrollGroup);
-        autoscrollEnabledMiddle = new RadioButton("Enabled (Middle)");
+        autoscrollEnabledMiddle = new RadioButton("Enabled (Smooth)");
         autoscrollEnabledMiddle.setToggleGroup(autoscrollGroup);
         autoscrollVBox.getChildren().addAll(
                 autoscrollDisabled, autoscrollEnabledEnd, autoscrollEnabledMiddle);
@@ -122,19 +122,21 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         viewInternal.add(autoscrollCancelVBox, 1, 1);
         viewInternal.add(languageLabel, 0, 2);
         viewInternal.add(languageChoiceBox, 1, 2);
+
+        localizer.localize(this);
         return viewInternal;
     }
 
     @Override
     public void localize(ResourceBundle bundle) {
-        autoscrollLabel.setText("Autoscroll during playback");
-        autoscrollDisabled.setText("Disabled");
-        autoscrollEnabledEnd.setText("Enabled (End)");
-        autoscrollEnabledMiddle.setText("Enabled (Middle)");
-        autoscrollCancelLabel.setText("Cancel playback autoscroll");
-        autoscrollCancelDisabled.setText("Disabled");
-        autoscrollCancelEnabled.setText("Enabled");
-        languageLabel.setText("Language");
+        autoscrollLabel.setText(bundle.getString("preferences.editor.autoscroll"));
+        autoscrollDisabled.setText(bundle.getString("preferences.disabled"));
+        autoscrollEnabledEnd.setText(bundle.getString("preferences.editor.enabledStandard"));
+        autoscrollEnabledMiddle.setText(bundle.getString("preferences.editor.enabledSmooth"));
+        autoscrollCancelLabel.setText(bundle.getString("preferences.editor.autoscrollCancel"));
+        autoscrollCancelDisabled.setText(bundle.getString("preferences.disabled"));
+        autoscrollCancelEnabled.setText(bundle.getString("preferences.enabled"));
+        languageLabel.setText(bundle.getString("preferences.editor.language"));
     }
 
     @Override

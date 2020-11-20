@@ -46,6 +46,8 @@ public class PreferencesController implements Localizable {
     @FXML // fx:id="cancelButton"
     private Button cancelButton; // Value injected by FXMLLoader
 
+    private TreeView<PreferencesEditor> tableOfContents;
+
     @Inject
     public PreferencesController(
             PreferencesManager preferencesManager,
@@ -71,7 +73,7 @@ public class PreferencesController implements Localizable {
         root.getChildren().add(new TreeItem<>(editorEditor));
         root.getChildren().add(new TreeItem<>(engineEditor));
 
-        TreeView<PreferencesEditor> tableOfContents = new TreeView<>(root);
+        tableOfContents = new TreeView<>(root);
         tableOfContents.setPrefWidth(vBoxLeft.getPrefWidth());
         tableOfContents.setShowRoot(false);
         tableOfContents.setCellFactory(preferencesEditor -> {
@@ -112,6 +114,8 @@ public class PreferencesController implements Localizable {
         themeEditor.setDisplayName(bundle.getString("preferences.colorScheme"));
         editorEditor.setDisplayName(bundle.getString("preferences.editor"));
         engineEditor.setDisplayName(bundle.getString("preferences.engine"));
+        tableOfContents.refresh(); // Lazy way to hard refresh TreeView with new names.
+
         applyButton.setText(bundle.getString("general.apply"));
         cancelButton.setText(bundle.getString("general.cancel"));
     }
