@@ -23,9 +23,9 @@
                   <ChoiceBox fx:id="quantizeChoiceBox" prefWidth="150.0" />
                   <HBox spacing="10.0">
                      <children>
-                        <ImageView fx:id="rewindIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#rewindPlayback" pickOnBounds="true" preserveRatio="true" />
-                        <ImageView fx:id="playPauseIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#playOrPause" pickOnBounds="true" preserveRatio="true" />
-                        <ImageView fx:id="stopIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#stopPlayback" pickOnBounds="true" preserveRatio="true" />
+                        <AnchorPane fx:id="rewindIcon" prefHeight="27.0" prefWidth="27.0" onMouseClicked="#rewindPlayback" />
+                        <AnchorPane fx:id="playPauseIcon" prefHeight="27.0" prefWidth="27.0" onMouseClicked="#playOrPause" />
+                        <AnchorPane fx:id="stopIcon" prefHeight="27.0" prefWidth="27.0" onMouseClicked="#stopPlayback" />
                      </children>
                   </HBox>
                </children>

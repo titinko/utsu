@@ -14,6 +14,14 @@
     -fx-border-width: 0.5;
 }
 
+.playback-icon.not-selected {
+    -fx-fill: $[PLAYBACK_BUTTON];
+}
+
+.playback-icon.selected {
+    -fx-fill: derive($[PLAYBACK_BUTTON],-23%);;
+}
+
 .start-bar, .playback-bar, .end-bar {
 	-fx-stroke-width: 2;
 }

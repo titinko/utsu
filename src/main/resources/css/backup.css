@@ -14,6 +14,14 @@
     -fx-border-width: 0.5;
 }
 
+.playback-icon.not-selected {
+    -fx-fill: steelblue;
+}
+
+.playback-icon.selected {
+    -fx-fill: derive(steelblue,-23%);;
+}
+
 .start-bar, .playback-bar, .end-bar {
 	-fx-stroke-width: 2;
 }

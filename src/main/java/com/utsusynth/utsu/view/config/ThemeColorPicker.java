@@ -52,7 +52,7 @@ public class ThemeColorPicker implements Localizable {
         songColors = makeColorSection(
                 "Song",
                 ImmutableList.of(
-                        ImmutableList.of("START_BAR", "END_BAR", "PLAYBACK_BAR"),
+                        ImmutableList.of("PLAYBACK_BUTTON", "START_BAR", "END_BAR", "PLAYBACK_BAR"),
                         ImmutableList.of("SELECT_BOX_BORDER", "ADD_NOTE_BOX_BORDER"),
                         ImmutableList.of(
                                 "TRACK_CELL_LIGHT",

@@ -17,15 +17,13 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.common.IconManager;
-import com.utsusynth.utsu.controller.common.IconManager.IconType;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.engine.Engine;
-import com.utsusynth.utsu.engine.Engine.PlaybackStatus;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.PreferencesManager;
-import com.utsusynth.utsu.files.PreferencesManager.AutoscrollMode;
 import com.utsusynth.utsu.files.PreferencesManager.AutoscrollCancelMode;
+import com.utsusynth.utsu.files.PreferencesManager.AutoscrollMode;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.files.song.Ust12Reader;
 import com.utsusynth.utsu.files.song.Ust12Writer;
@@ -108,9 +106,6 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="scrollPaneCenter"
     private ScrollPane scrollPaneCenter; // Value injected by FXMLLoader
 
-    @FXML // fx:id="anchorRight"
-    private AnchorPane anchorRight; // Value injected by FXMLLoader
-
     @FXML // fx:id="scrollPaneBottom"
     private ScrollPane scrollPaneBottom; // Value injected by FXMLLoader
 
@@ -121,13 +116,13 @@ public class SongController implements EditorController, Localizable {
     private ImageView voicebankImage; // Value injected by FXMLLoader
 
     @FXML // fx:id="rewindIcon"
-    private ImageView rewindIcon; // Value injected by FXMLLoader
+    private AnchorPane rewindIcon; // Value injected by FXMLLoader
 
     @FXML // fx:id="playPauseIcon"
-    private ImageView playPauseIcon; // Value injected by FXMLLoader
+    private AnchorPane playPauseIcon; // Value injected by FXMLLoader
 
     @FXML // fx:id="stopIcon"
-    private ImageView stopIcon; // Value injected by FXMLLoader
+    private AnchorPane stopIcon; // Value injected by FXMLLoader
 
     @FXML // fx:id="quantizeChoiceBox"
     private ChoiceBox<String> quantizeChoiceBox; // Value injected by FXMLLoader
@@ -290,31 +285,15 @@ public class SongController implements EditorController, Localizable {
         });
         quantizeChoiceBox.setValue("1/16");
 
-        rewindIcon.setImage(iconManager.getImage(IconType.REWIND_NORMAL));
-        rewindIcon.setOnMousePressed(
-                event -> rewindIcon.setImage(iconManager.getImage(IconType.REWIND_PRESSED)));
-        rewindIcon.setOnMouseReleased(
-                event -> rewindIcon.setImage(iconManager.getImage(IconType.REWIND_NORMAL)));
-        playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
-        playPauseIcon.setOnMousePressed(event -> {
-            if (engine.getStatus() == PlaybackStatus.PLAYING) {
-                playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_PRESSED));
-            } else {
-                playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_PRESSED));
-            }
-        });
-        playPauseIcon.setOnMouseReleased(event -> {
-            if (engine.getStatus() == PlaybackStatus.PLAYING) {
-                playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
-            } else {
-                playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
-            }
-        });
-        stopIcon.setImage(iconManager.getImage(IconType.STOP_NORMAL));
-        stopIcon.setOnMousePressed(
-                event -> stopIcon.setImage(iconManager.getImage(IconType.STOP_PRESSED)));
-        stopIcon.setOnMouseReleased(
-                event -> stopIcon.setImage(iconManager.getImage(IconType.STOP_NORMAL)));
+        iconManager.setRewindIcon(rewindIcon);
+        rewindIcon.setOnMousePressed(event -> iconManager.selectIcon(rewindIcon));
+        rewindIcon.setOnMouseReleased(event -> iconManager.deselectIcon(rewindIcon));
+        iconManager.setPlayIcon(playPauseIcon);
+        playPauseIcon.setOnMousePressed(event -> iconManager.selectIcon(playPauseIcon));
+        playPauseIcon.setOnMouseReleased(event -> iconManager.deselectIcon(playPauseIcon));
+        iconManager.setStopIcon(stopIcon);
+        stopIcon.setOnMousePressed(event -> iconManager.selectIcon(stopIcon));
+        stopIcon.setOnMouseReleased(event -> iconManager.deselectIcon(stopIcon));
 
         refreshView();
 
@@ -397,15 +376,15 @@ public class SongController implements EditorController, Localizable {
     public boolean onKeyPressed(KeyEvent keyEvent) {
         if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
             // In the pause case, flicker will be overridden before it can happen.
-            flickerImage(playPauseIcon, iconManager.getImage(IconType.PLAY_PRESSED));
+            flickerIcon(playPauseIcon);
             playOrPause();
             return true;
         } else if (new KeyCodeCombination(KeyCode.V).match(keyEvent)) {
-            flickerImage(rewindIcon, iconManager.getImage(IconType.REWIND_PRESSED));
+            flickerIcon(rewindIcon);
             rewindPlayback(); // Rewind button's event handler.
             return true;
         } else if (new KeyCodeCombination(KeyCode.B).match(keyEvent)) {
-            flickerImage(stopIcon, iconManager.getImage(IconType.STOP_PRESSED));
+            flickerIcon(stopIcon);
             stopPlayback(); // Stop button's event handler.
             return true;
         } else if (new KeyCodeCombination(KeyCode.BACK_SPACE).match(keyEvent)) {
@@ -464,17 +443,13 @@ public class SongController implements EditorController, Localizable {
     }
 
     /**
-     * Quickly sets an icon to a different image, then changes it back.
+     * Quickly selects an icon, then changes it back.
      */
-    private void flickerImage(ImageView icon, Image flickerImage) {
-        Image defaultImage = icon.getImage();
-        icon.setImage(flickerImage);
+    private void flickerIcon(AnchorPane icon) {
+        iconManager.selectIcon(icon);
         PauseTransition briefPause = new PauseTransition(Duration.millis(120));
         briefPause.setOnFinished(event -> {
-            // Do nothing if an external source has already changed the image.
-            if (icon.getImage().equals(flickerImage)) {
-                icon.setImage(defaultImage);
-            }
+            iconManager.deselectIcon(icon);
         });
         briefPause.play();
     }
@@ -823,21 +798,20 @@ public class SongController implements EditorController, Localizable {
             return null;
         };
         Runnable endPlaybackFn = () -> {
-            playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
+            iconManager.setPlayIcon(playPauseIcon);
         };
 
         // Disable the play button while rendering.
         playPauseIcon.setDisable(true);
 
         statusBar.setStatus("Rendering...");
-        new
-
-                Thread(() ->
-
+        new Thread(() ->
         {
             if (engine.startPlayback(song.get(), regionToPlay, startPlaybackFn, endPlaybackFn)) {
-                playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
-                Platform.runLater(() -> statusBar.setStatus("Render complete."));
+                Platform.runLater(() -> {
+                    iconManager.setPauseIcon(playPauseIcon);
+                    statusBar.setStatus("Render complete.");
+                });
             } else {
                 Platform.runLater(() -> statusBar.setStatus("Render produced no output."));
             }
@@ -851,13 +825,13 @@ public class SongController implements EditorController, Localizable {
     private void pausePlayback() {
         engine.pausePlayback();
         songEditor.pausePlayback();
-        playPauseIcon.setImage(iconManager.getImage(IconType.PLAY_NORMAL));
+        iconManager.setPlayIcon(playPauseIcon);
     }
 
     private void resumePlayback() {
         engine.resumePlayback();
         songEditor.resumePlayback();
-        playPauseIcon.setImage(iconManager.getImage(IconType.PAUSE_NORMAL));
+        iconManager.setPauseIcon(playPauseIcon);
     }
 
     @FXML

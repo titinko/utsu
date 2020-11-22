@@ -13,6 +13,7 @@ INVALID_NOTE=gray
 INVALID_NOTE_BORDER=darkslategray
 PITCHBEND=darkslateblue
 
+PLAYBACK_BUTTON=steelblue
 START_BAR=crimson
 END_BAR=cornflowerblue
 PLAYBACK_BAR=crimson

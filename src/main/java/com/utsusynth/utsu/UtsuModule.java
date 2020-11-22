@@ -44,6 +44,7 @@ public class UtsuModule extends AbstractModule {
         bind(AssetManager.class).asEagerSingleton();
         bind(CacheManager.class).asEagerSingleton();
         bind(FileNameFixer.class).asEagerSingleton();
+        bind(IconManager.class).asEagerSingleton();
         bind(VoicebankReader.class).asEagerSingleton();
     }
 
@@ -95,20 +96,6 @@ public class UtsuModule extends AbstractModule {
                 DocumentBuilderFactory.newDefaultInstance(),
                 TransformerFactory.newDefaultInstance(),
                 defaultBuilder.build());
-    }
-
-    @Provides
-    @Singleton
-    private IconManager provideIconManager() {
-        return new IconManager(
-                "/icons/Rewind.png",
-                "/icons/RewindPressed.png",
-                "/icons/Play.png",
-                "/icons/PlayPressed.png",
-                "/icons/Pause.png",
-                "/icons/PausePressed.png",
-                "/icons/Stop.png",
-                "/icons/StopPressed.png");
     }
 
     @Provides
