@@ -151,6 +151,12 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem zoomOutVerticallyItem; // Value injected by FXMLLoader
     @FXML
+    private CheckMenuItem showLyricsItem; // Value injected by FXMLLoader
+    @FXML
+    private CheckMenuItem showAliasesItem; // Value injected by FXMLLoader
+    @FXML
+    private CheckMenuItem showPitchbendsItem; // Value injected by FXMLLoader
+    @FXML
     private Menu projectMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem propertiesItem; // Value injected by FXMLLoader
@@ -191,6 +197,9 @@ public class UtsuController implements Localizable {
         zoomOutHorizontallyItem.setText(bundle.getString("menu.view.zoomOutHorizontally"));
         zoomInVerticallyItem.setText(bundle.getString("menu.view.zoomInVertically"));
         zoomOutVerticallyItem.setText(bundle.getString("menu.view.zoomOutVertically"));
+        showLyricsItem.setText(bundle.getString("menu.view.showLyrics"));
+        showAliasesItem.setText(bundle.getString("menu.view.showAliases"));
+        showPitchbendsItem.setText(bundle.getString("menu.view.showPitchbends"));
         projectMenu.setText(bundle.getString("menu.project"));
         propertiesItem.setText(bundle.getString("menu.project.properties"));
         pluginsMenu.setText(bundle.getString("menu.plugins"));
