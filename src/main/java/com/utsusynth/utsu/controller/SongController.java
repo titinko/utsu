@@ -19,6 +19,7 @@ import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
+import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.PreferencesManager;
@@ -37,6 +38,7 @@ import com.utsusynth.utsu.view.song.SongEditor;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -223,6 +225,11 @@ public class SongController implements EditorController, Localizable {
             public void clearCache(int firstPos, int lastPos) {
                 // Only clears cache without making changes, so does not trigger onSongChange.
                 song.get().clearNoteCache(firstPos, lastPos);
+            }
+
+            @Override
+            public BooleanProperty getCheckboxValue(CheckboxType checkboxType) {
+                return callback.getCheckboxValue(checkboxType);
             }
         });
         anchorCenter.widthProperty().addListener((obs, oldWidthNum, newWidthNum) -> {

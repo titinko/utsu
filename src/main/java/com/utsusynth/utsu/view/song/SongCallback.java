@@ -4,6 +4,8 @@ import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
+import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
+import javafx.beans.property.BooleanProperty;
 
 import java.util.List;
 import java.util.Set;
@@ -51,4 +53,9 @@ public interface SongCallback {
      * Clears cache for a section of notes.
      */
     void clearCache(int firstPosition, int lastPosition);
+
+    /**
+     * Fetches the value of any global checkbox menu item.
+     */
+    BooleanProperty getCheckboxValue(CheckboxType checkboxType);
 }

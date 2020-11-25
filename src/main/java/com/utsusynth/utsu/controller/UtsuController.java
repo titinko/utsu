@@ -12,6 +12,7 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.files.ThemeManager;
 import javafx.animation.PauseTransition;
+import javafx.beans.property.BooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -38,6 +39,11 @@ import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
  */
 public class UtsuController implements Localizable {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
+    // All available checkbox menu items.
+    public enum CheckboxType {
+        SHOW_LYRICS, SHOW_ALIASES, SHOW_PITCHBENDS,
+    }
 
     private enum EditorType {
         SONG, VOICEBANK,
@@ -397,6 +403,20 @@ public class UtsuController implements Localizable {
                     briefPause.setOnFinished(event ->
                             editors.get(curTab.getId()).showLyricConfig(trueLyric));
                     briefPause.play();
+                }
+
+                @Override
+                public BooleanProperty getCheckboxValue(CheckboxType checkboxType) {
+                    switch (checkboxType) {
+                        case SHOW_LYRICS:
+                            return showLyricsItem.selectedProperty();
+                        case SHOW_ALIASES:
+                            return showAliasesItem.selectedProperty();
+                        case SHOW_PITCHBENDS:
+                            return showPitchbendsItem.selectedProperty();
+                        default:
+                            throw new IllegalArgumentException("Unknown checkbox type.");
+                    }
                 }
             });
             editor.refreshView();

@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.song.note.pitch;
 import java.util.Optional;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
+import javafx.beans.property.BooleanProperty;
 import javafx.scene.Group;
 
 public class Pitchbend {
@@ -10,10 +11,11 @@ public class Pitchbend {
     private final Vibrato vibrato;
     private final Group group;
 
-    Pitchbend(Portamento portamento, Vibrato vibrato) {
+    Pitchbend(Portamento portamento, Vibrato vibrato, BooleanProperty showPitchbend) {
         this.portamento = portamento;
         this.vibrato = vibrato;
-        this.group = new Group(portamento.getElement(), vibrato.getElement());
+        group = new Group(portamento.getElement(), vibrato.getElement());
+        group.visibleProperty().bind(showPitchbend);
     }
 
     public Group getElement() {

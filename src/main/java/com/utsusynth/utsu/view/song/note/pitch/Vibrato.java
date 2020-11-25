@@ -36,6 +36,7 @@ public class Vibrato {
     private final double noteY;
     private final BooleanProperty showEditor;
 
+    private final Group vibratoGroup;
     private final Path vibratoPath;
     private final Group editorGroup;
     private final PitchbendCallback callback;
@@ -84,10 +85,13 @@ public class Vibrato {
                 vibratoEditorMenuItem.setText(localizer.getMessage("song.note.vibratoEditor")));
         editorGroup.setOnContextMenuRequested(
                 event -> menu.show(editorGroup, event.getScreenX(), event.getScreenY()));
+
+        // Create final group.
+        vibratoGroup = new Group(vibratoPath, editorGroup);
     }
 
     Group getElement() {
-        return new Group(vibratoPath, editorGroup);
+        return vibratoGroup;
     }
 
     public Optional<int[]> getVibrato() {

@@ -31,10 +31,11 @@ public class PitchbendFactory {
             String prevPitch,
             PitchbendData pitchbend,
             PitchbendCallback callback,
-            BooleanProperty vibratoEditor) {
+            BooleanProperty vibratoEditor,
+            BooleanProperty showPitchbend) {
         Portamento portamento = createPortamento(note, prevPitch, pitchbend, callback);
         Vibrato vibrato = createVibrato(note, pitchbend, callback, vibratoEditor);
-        return new Pitchbend(portamento, vibrato);
+        return new Pitchbend(portamento, vibrato, showPitchbend);
     }
 
     private Portamento createPortamento(

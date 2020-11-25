@@ -200,14 +200,16 @@ public class NoteMap {
             String prevPitch,
             PitchbendData pitchData,
             PitchbendCallback callback,
-            BooleanProperty vibratoEditor) {
+            BooleanProperty vibratoEditor,
+            BooleanProperty showPitchbend) {
         if (noteMap.containsKey(position)) {
             Pitchbend pitchbend = pitchbendFactory.createPitchbend(
                     noteMap.get(position),
                     prevPitch,
                     pitchData,
                     callback,
-                    vibratoEditor);
+                    vibratoEditor,
+                    showPitchbend);
             // Overrides are expected here.
             if (pitchbendMap.containsKey(position)) {
                 visiblePitchbends.getChildren().remove(pitchbendMap.get(position).getElement());

@@ -11,6 +11,7 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
@@ -133,7 +134,8 @@ public class SongEditor {
                             prevNote.getPitch(),
                             note.getPitchbend().get(),
                             getPitchbendCallback(position),
-                            vibratoEditor);
+                            vibratoEditor,
+                            model.getCheckboxValue(CheckboxType.SHOW_PITCHBENDS));
                 }
             } catch (NoteAlreadyExistsException e) {
                 // TODO: Throw an error here?
@@ -401,7 +403,8 @@ public class SongEditor {
                     prevPitch.isEmpty() ? PitchUtils.rowNumToPitch(curNote.getRow()) : prevPitch,
                     curData.getPitchbend(),
                     getPitchbendCallback(curData.getPosition()),
-                    vibratoEditor);
+                    vibratoEditor,
+                    model.getCheckboxValue(CheckboxType.SHOW_PITCHBENDS));
             if (prevNote != null) {
                 prevNote.adjustForOverlap(curData.getPosition() - prevNote.getAbsPositionMs());
             }
@@ -422,7 +425,8 @@ public class SongEditor {
                     prevPitch.isEmpty() ? PitchUtils.rowNumToPitch(nextNote.getRow()) : prevPitch,
                     nextData.getPitchbend(),
                     getPitchbendCallback(nextData.getPosition()),
-                    vibratoEditor);
+                    vibratoEditor,
+                    model.getCheckboxValue(CheckboxType.SHOW_PITCHBENDS));
             if (curNote != null) {
                 curNote.adjustForOverlap(nextData.getPosition() - curData.getPosition());
             }
