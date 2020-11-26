@@ -118,7 +118,12 @@ public class SongEditor {
         // Add all notes.
         NoteData prevNote = notes.get(0);
         for (NoteData note : notes) {
-            Note newNote = noteFactory.createNote(note, noteCallback, vibratoEditor);
+            Note newNote = noteFactory.createNote(
+                    note,
+                    noteCallback,
+                    vibratoEditor,
+                    model.getCheckboxValue(CheckboxType.SHOW_LYRICS),
+                    model.getCheckboxValue(CheckboxType.SHOW_ALIASES));
             int position = note.getPosition();
             try {
                 noteMap.putNote(position, newNote);
@@ -257,7 +262,12 @@ public class SongEditor {
         LinkedList<NoteData> toAdd = new LinkedList<>();
         LinkedList<Note> newNotes = new LinkedList<>();
         for (NoteData noteData : toPaste) {
-            Note newNote = noteFactory.createNote(noteData, noteCallback, vibratoEditor);
+            Note newNote = noteFactory.createNote(
+                    noteData,
+                    noteCallback,
+                    vibratoEditor,
+                    model.getCheckboxValue(CheckboxType.SHOW_LYRICS),
+                    model.getCheckboxValue(CheckboxType.SHOW_ALIASES));
             newNote.moveNoteElement(positionDelta, 0);
             newNotes.add(newNote);
             curPosition = newNote.getAbsPositionMs();
@@ -299,8 +309,8 @@ public class SongEditor {
     }
 
     private void deleteNotes(List<Note> notes) {
-        Set<Integer> positionsToRemove = notes.stream().filter(curNote -> curNote.isValid())
-                .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
+        Set<Integer> positionsToRemove = notes.stream().filter(Note::isValid)
+                .map(Note::getAbsPositionMs).collect(Collectors.toSet());
         RegionBounds toStandardize = removeNotes(positionsToRemove);
         if (!toStandardize.equals(RegionBounds.INVALID)) {
             refreshNotes(toStandardize.getMinMs(), toStandardize.getMaxMs());
@@ -438,8 +448,8 @@ public class SongEditor {
     }
 
     private void moveNotes(List<Note> notes, int positionDelta, int rowDelta) {
-        Set<Integer> positionsToRemove = notes.stream().filter(curNote -> curNote.isValid())
-                .map(curNote -> curNote.getAbsPositionMs()).collect(Collectors.toSet());
+        Set<Integer> positionsToRemove = notes.stream().filter(Note::isValid)
+                .map(Note::getAbsPositionMs).collect(Collectors.toSet());
         RegionBounds toStandardize = removeNotes(positionsToRemove);
 
         LinkedList<NoteData> toAdd = new LinkedList<>();
@@ -651,7 +661,9 @@ public class SongEditor {
                             startMs,
                             endMs - startMs,
                             noteCallback,
-                            vibratoEditor);
+                            vibratoEditor,
+                            model.getCheckboxValue(CheckboxType.SHOW_LYRICS),
+                            model.getCheckboxValue(CheckboxType.SHOW_ALIASES));
                     noteMap.addNoteElement(newNote);
                     List<Note> noteList = ImmutableList.of(newNote);
                     model.recordAction(() -> {
@@ -803,7 +815,7 @@ public class SongEditor {
             List<Note> notesToCopy =
                     playbackManager.isHighlighted(note) ? playbackManager.getHighlightedNotes()
                             : ImmutableList.of(note);
-            List<NoteData> dataToCopy = notesToCopy.stream().map(curNote -> curNote.getNoteData())
+            List<NoteData> dataToCopy = notesToCopy.stream().map(Note::getNoteData)
                     .collect(Collectors.toList());
             clipboard.setNotes(dataToCopy);
         }

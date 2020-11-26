@@ -55,6 +55,8 @@ public class Note implements Comparable<Note> {
             StackPane layout,
             NoteCallback callback,
             BooleanProperty vibratoEditor,
+            BooleanProperty showLyrics,
+            BooleanProperty showAliases,
             Localizer localizer,
             Quantizer quantizer,
             Scaler scaler) {
@@ -93,7 +95,7 @@ public class Note implements Comparable<Note> {
                 // TODO: Factor lyric width into this.
                 thisNote.adjustDragEdge(thisNote.getDurationMs());
             }
-        });
+        }, showLyrics, showAliases);
 
         // Create context menu.
         this.contextMenu = new ContextMenu();

@@ -2,55 +2,64 @@ package com.utsusynth.utsu.view.song.note;
 
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import javafx.beans.property.BooleanProperty;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 
 public class Lyric {
-    private String lyric;
-    private String alias; // Defaults to empty string if there is no alias.
     private LyricCallback trackNote;
     private final Group activeNode;
 
-    private final Label text;
+    private final HBox lyricAndAlias;
+    private final Label lyricText;
+    private final Label aliasText; // Defaults to empty string if there is no alias.
     private final TextField textField;
 
     public Lyric(String defaultLyric, Scaler scaler) {
-        this.lyric = defaultLyric;
-        this.alias = "";
-        this.text = new Label(defaultLyric);
-        this.text.setMouseTransparent(true);
-        this.text.getStyleClass().add("track-note-text");
-        this.textField = new TextField("mi");
-        this.textField.setFont(Font.font(9));
-        this.textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 2);
-        this.textField.setMaxWidth(scaler.scaleX(Quantizer.COL_WIDTH) - 2);
-        this.textField.setOnAction((event) -> {
+        lyricText = new Label(defaultLyric);
+        lyricText.getStyleClass().add("track-note-text");
+
+        aliasText = new Label("");
+        aliasText.getStyleClass().add("track-note-text");
+
+        lyricAndAlias = new HBox(lyricText, aliasText);
+        lyricAndAlias.setMouseTransparent(true);
+
+        textField = new TextField();
+        textField.setFont(Font.font(9));
+        textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 2);
+        textField.setMaxWidth(scaler.scaleX(Quantizer.COL_WIDTH) - 2);
+        textField.setOnAction((event) -> {
             closeTextFieldIfNeeded();
         });
-        this.textField.focusedProperty().addListener(event -> {
-            if (!this.textField.isFocused()) {
+        textField.focusedProperty().addListener(event -> {
+            if (!textField.isFocused()) {
                 closeTextFieldIfNeeded();
             }
         });
 
         // Initialize with text active.
         activeNode = new Group();
-        activeNode.getChildren().add(text);
+        activeNode.getChildren().add(lyricAndAlias);
     }
 
     /** Connect this lyric to a track note. */
-    void initialize(LyricCallback callback) {
-        this.trackNote = callback;
+    void initialize(
+            LyricCallback callback, BooleanProperty showLyrics, BooleanProperty showAliases) {
+        trackNote = callback;
+        activeNode.visibleProperty().bind(showLyrics);
+        aliasText.visibleProperty().bind(showAliases);
     }
 
     void setVisibleLyric(String newLyric) {
-        if (!newLyric.equals(this.lyric)) {
-            text.setText(alias.length() > 0 ? newLyric + " (" + alias + ")" : newLyric);
+        String oldLyric = lyricText.getText();
+        if (!newLyric.equals(oldLyric)) {
+            lyricText.setText(newLyric);
             textField.setText(newLyric);
-            this.lyric = newLyric;
-            this.trackNote.adjustColumnSpan();
+            trackNote.adjustColumnSpan();
         }
     }
 
@@ -59,47 +68,46 @@ public class Lyric {
     }
 
     String getLyric() {
-        return this.lyric;
-    }
-
-    double getWidth() {
-        double width = Math.max(textField.getWidth(), text.getWidth());
-        if (width <= 0) {
-            // If width not calculated yet, infer from current text instead.
-            return text.getText().length() * 10;
-        }
-        return width;
+        return lyricText.getText();
     }
 
     void setVisibleAlias(String newAlias) {
-        text.setText(newAlias.length() > 0 ? lyric + " (" + newAlias + ")" : lyric);
-        this.alias = newAlias;
-        this.trackNote.adjustColumnSpan();
+        lyricAndAlias.getChildren().remove(aliasText); // Will re-add this if alias present.
+        String oldAlias = aliasText.getText();
+        if (!newAlias.equals(oldAlias)) {
+            if (newAlias.length() > 0) {
+                aliasText.setText(" (" + newAlias + ")");
+                lyricAndAlias.getChildren().add(aliasText);
+            } else {
+                aliasText.setText(newAlias);
+            }
+            trackNote.adjustColumnSpan();
+        }
     }
 
     void openTextField() {
-        this.activeNode.getChildren().clear();
-        this.activeNode.getChildren().add(this.textField);
-        this.textField.requestFocus();
-        this.textField.selectAll();
+        activeNode.getChildren().clear();
+        activeNode.getChildren().add(textField);
+        textField.requestFocus();
+        textField.selectAll();
     }
 
     boolean isTextFieldOpen() {
-        return this.activeNode.getChildren().contains(this.textField);
+        return activeNode.getChildren().contains(textField);
     }
 
     void closeTextFieldIfNeeded() {
         if (isTextFieldOpen()) {
-            this.activeNode.getChildren().clear();
-            this.activeNode.getChildren().add(this.text);
-            String oldLyric = this.lyric;
+            activeNode.getChildren().clear();
+            activeNode.getChildren().add(lyricAndAlias);
+            String oldLyric = lyricText.getText();
             String newLyric = textField.getText();
             setVisibleLyric(newLyric);
-            this.trackNote.replaceSongLyric(oldLyric, newLyric);
+            trackNote.replaceSongLyric(oldLyric, newLyric);
         }
     }
 
     void registerLyric() {
-        trackNote.setSongLyric(lyric);
+        trackNote.setSongLyric(lyricText.getText());
     }
 }

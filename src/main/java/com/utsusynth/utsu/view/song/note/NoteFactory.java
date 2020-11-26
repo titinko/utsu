@@ -31,7 +31,12 @@ public class NoteFactory {
         this.lyricProvider = lyricProvider;
     }
 
-    public Note createNote(NoteData note, NoteCallback callback, BooleanProperty vibratoEditor) {
+    public Note createNote(
+            NoteData note,
+            NoteCallback callback,
+            BooleanProperty vibratoEditor,
+            BooleanProperty showLyrics,
+            BooleanProperty showAliases) {
         int absStart = note.getPosition();
         int absDuration = note.getDuration();
         Rectangle rect = new Rectangle();
@@ -65,6 +70,8 @@ public class NoteFactory {
                 layout,
                 callback,
                 vibratoEditor,
+                showLyrics,
+                showAliases,
                 localizer,
                 quantizer,
                 scaler);
@@ -92,7 +99,9 @@ public class NoteFactory {
             int positionMs,
             int durationMs,
             NoteCallback callback,
-            BooleanProperty vibratoEditor) {
+            BooleanProperty vibratoEditor,
+            BooleanProperty showLyrics,
+            BooleanProperty showAliases) {
         Rectangle note = new Rectangle();
         note.setWidth(scaler.scaleX(durationMs) - 1);
         note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
@@ -123,6 +132,8 @@ public class NoteFactory {
                 layout,
                 callback,
                 vibratoEditor,
+                showLyrics,
+                showAliases,
                 localizer,
                 quantizer,
                 scaler);
