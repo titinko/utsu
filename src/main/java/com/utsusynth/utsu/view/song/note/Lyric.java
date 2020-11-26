@@ -59,6 +59,7 @@ public class Lyric {
         if (!newLyric.equals(oldLyric)) {
             lyricText.setText(newLyric);
             textField.setText(newLyric);
+            adjustLyricAndAlias();
             trackNote.adjustColumnSpan();
         }
     }
@@ -72,20 +73,20 @@ public class Lyric {
     }
 
     void setVisibleAlias(String newAlias) {
-        lyricAndAlias.getChildren().remove(aliasText); // Will re-add this if alias present.
         String oldAlias = aliasText.getText();
         if (!newAlias.equals(oldAlias)) {
             if (newAlias.length() > 0) {
                 aliasText.setText(" (" + newAlias + ")");
-                lyricAndAlias.getChildren().add(aliasText);
             } else {
                 aliasText.setText(newAlias);
             }
+            adjustLyricAndAlias();
             trackNote.adjustColumnSpan();
         }
     }
 
     void openTextField() {
+        trackNote.bringToFront(); // Don't let this text field be hidden by other notes.
         activeNode.getChildren().clear();
         activeNode.getChildren().add(textField);
         textField.requestFocus();
@@ -109,5 +110,15 @@ public class Lyric {
 
     void registerLyric() {
         trackNote.setSongLyric(lyricText.getText());
+    }
+
+    private void adjustLyricAndAlias() {
+        lyricAndAlias.getChildren().clear();
+        if (!lyricText.getText().isEmpty()) {
+            lyricAndAlias.getChildren().add(lyricText);
+        }
+        if (!aliasText.getText().isEmpty()) {
+            lyricAndAlias.getChildren().add(aliasText);
+        }
     }
 }

@@ -95,6 +95,11 @@ public class Note implements Comparable<Note> {
                 // TODO: Factor lyric width into this.
                 thisNote.adjustDragEdge(thisNote.getDurationMs());
             }
+
+            @Override
+            public void bringToFront() {
+                thisNote.getElement().toFront();
+            }
         }, showLyrics, showAliases);
 
         // Create context menu.
