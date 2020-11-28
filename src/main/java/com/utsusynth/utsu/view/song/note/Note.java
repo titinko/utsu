@@ -195,7 +195,7 @@ public class Note implements Comparable<Note> {
         layout.setOnMouseDragged(event -> {
             if (subMode == SubMode.RESIZING) {
                 // Find quantized mouse position.
-                int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
+                int quantSize = quantizer.getQuant();
                 int newQuant = (int) Math.floor(
                         (scaler.unscaleX(event.getX()) * 1.0 + getAbsPositionMs()) / quantSize);
 
@@ -206,7 +206,7 @@ public class Note implements Comparable<Note> {
 
                 // Calculate actual change in duration.
                 int oldPosition = getAbsPositionMs();
-                int newPosition = newQuant * (Quantizer.COL_WIDTH / quantizer.getQuant());
+                int newPosition = newQuant * quantSize;
                 int positionChange = newPosition - oldPosition;
 
                 // Increase or decrease duration.
@@ -229,11 +229,10 @@ public class Note implements Comparable<Note> {
                 }
 
                 // Handle horizontal movement.
-                int curQuant = quantizer.getQuant(); // Ensure constant quantization.
-                int curQuantSize = Quantizer.COL_WIDTH / curQuant;
+                int curQuantSize = quantizer.getQuant(); // Ensure constant quantization.
                 // Determine whether a note is aligned with the current quantization.
                 boolean aligned = getAbsPositionMs() % curQuantSize == 0;
-                int oldQuantInNote = positionInNote / (Quantizer.COL_WIDTH / curQuant);
+                int oldQuantInNote = positionInNote / curQuantSize;
                 int newQuantInNote =
                         (int) Math.floor(scaler.unscaleX(event.getX()) * 1.0 / curQuantSize);
                 int quantChange = newQuantInNote - oldQuantInNote;
@@ -245,10 +244,9 @@ public class Note implements Comparable<Note> {
                         quantChange++;
                     }
                     // Convert to smallest quantization.
-                    quantChange *= (Quantizer.COL_WIDTH / curQuant);
+                    quantChange *= curQuantSize;
                     // Both values are in the smallest quantization.
-                    int truncatedStart =
-                            getAbsPositionMs() / curQuantSize * (Quantizer.COL_WIDTH / curQuant);
+                    int truncatedStart = (getAbsPositionMs() / curQuantSize) * curQuantSize;
                     int actualStart = getAbsPositionMs();
                     // Align start quant with true quantization.
                     if (quantChange > 0) {
@@ -259,22 +257,21 @@ public class Note implements Comparable<Note> {
                         quantChange += (truncatedStart + Quantizer.COL_WIDTH - actualStart);
                     }
                     // Adjust curQuant now that quantChange has been corrected.
-                    curQuant = Quantizer.COL_WIDTH;
                     curQuantSize = 1;
                 }
-                int oldQuant = getQuantizedStart(curQuant);
+                int oldQuant = getQuantizedStart(curQuantSize);
                 int newQuant = oldQuant + quantChange;
 
                 // Check column bounds of leftmost note.
-                int positionChange = (newQuant - oldQuant) * (Quantizer.COL_WIDTH / curQuant);
+                int positionChange = (newQuant - oldQuant) * curQuantSize;
                 if (this.track.getBounds(thisNote).getMinMs() + positionChange < 0) {
                     newQuant = oldQuant;
                 }
 
                 // Actual movement.
                 if (oldRow != newRow || oldQuant != newQuant) {
-                    int oldPosition = oldQuant * (Quantizer.COL_WIDTH / curQuant);
-                    int newPosition = newQuant * (Quantizer.COL_WIDTH / curQuant);
+                    int oldPosition = oldQuant * curQuantSize;
+                    int newPosition = newQuant * curQuantSize;
                     this.track.moveNote(thisNote, newPosition - oldPosition, newRow - oldRow);
                     hasMoved = true;
                 }
@@ -446,7 +443,7 @@ public class Note implements Comparable<Note> {
     }
 
     private int getQuantizedStart(int quantization) {
-        return getAbsPositionMs() / (Quantizer.COL_WIDTH / quantization);
+        return getAbsPositionMs() / quantization;
     }
 
     @Override

@@ -268,26 +268,61 @@ public class SongController implements EditorController, Localizable {
             iconContextMenu.show(voicebankImage, event.getScreenX(), event.getScreenY());
         }));
 
-        quantizeChoiceBox
-                .setItems(FXCollections.observableArrayList("1/4", "1/8", "1/16", "1/32", "1/64"));
+        quantizeChoiceBox.setItems(FXCollections.observableArrayList(
+                "1/4",
+                "1/6",
+                "1/8",
+                "1/12",
+                "1/16",
+                "1/24",
+                "1/32",
+                "1/48",
+                "1/64",
+                "1/96",
+                "1/128",
+                "1/192",
+                "--"));
         quantizeChoiceBox.setOnAction((action) -> {
             String quantization = quantizeChoiceBox.getValue();
             switch (quantization) {
                 case "1/4":
-                    quantizer.changeQuant(quantizer.getQuant(), 1);
+                    quantizer.changeQuant(quantizer.getQuant(), 480);
+                    break;
+                case "1/6":
+                    quantizer.changeQuant(quantizer.getQuant(), 320);
                     break;
                 case "1/8":
-                    quantizer.changeQuant(quantizer.getQuant(), 2);
+                    quantizer.changeQuant(quantizer.getQuant(), 240);
+                    break;
+                case "1/12":
+                    quantizer.changeQuant(quantizer.getQuant(), 160);
                     break;
                 case "1/16":
-                    quantizer.changeQuant(quantizer.getQuant(), 4);
+                    quantizer.changeQuant(quantizer.getQuant(), 120);
+                    break;
+                case "1/24":
+                    quantizer.changeQuant(quantizer.getQuant(), 80);
                     break;
                 case "1/32":
-                    quantizer.changeQuant(quantizer.getQuant(), 8);
+                    quantizer.changeQuant(quantizer.getQuant(), 60);
+                    break;
+                case "1/48":
+                    quantizer.changeQuant(quantizer.getQuant(), 40);
                     break;
                 case "1/64":
-                    quantizer.changeQuant(quantizer.getQuant(), 16);
+                    quantizer.changeQuant(quantizer.getQuant(), 30);
                     break;
+                case "1/96":
+                    quantizer.changeQuant(quantizer.getQuant(), 20);
+                    break;
+                case "1/128":
+                    quantizer.changeQuant(quantizer.getQuant(), 15);
+                    break;
+                case "1/192":
+                    quantizer.changeQuant(quantizer.getQuant(), 10);
+                    break;
+                case "--":
+                    quantizer.changeQuant(quantizer.getQuant(), 1);
             }
         });
         quantizeChoiceBox.setValue("1/16");

@@ -143,7 +143,7 @@ public class UtsuModule extends AbstractModule {
     @Provides
     @Singleton
     private Quantizer provideQuantizer() {
-        return new Quantizer(4);
+        return new Quantizer(120);
     }
 
     @Provides

@@ -646,7 +646,7 @@ public class SongEditor {
     private void activateMeasure(Pane measure) {
         measure.setOnMouseReleased(event -> {
             selection.setVisible(false); // Remove selection box if present.
-            int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
+            int quantSize = quantizer.getQuant();
             double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
             double endX = Math
                     .min(getWidthX(), Math.max(measureWidth, measure.getLayoutX() + event.getX()));
@@ -718,7 +718,7 @@ public class SongEditor {
                 }
             } else {
                 subMode = SubMode.DRAG_CREATE;
-                int quantSize = Quantizer.COL_WIDTH / quantizer.getQuant();
+                int quantSize = quantizer.getQuant();
                 int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
                 int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;

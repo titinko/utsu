@@ -1,13 +1,11 @@
 package com.utsusynth.utsu.common.quantize;
 
 public class Quantizer {
-    public static final int SMALLEST = 32;
-    public static final int LARGEST = 1;
-
     public static final int DEFAULT_NOTE_DURATION = 480;
     public static final int COL_WIDTH = DEFAULT_NOTE_DURATION;
     public static final int ROW_HEIGHT = 20;
 
+    /* The number of ms in one quant. */
     private int quantization;
 
     public Quantizer(int defaultQuantization) {
