@@ -6,10 +6,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.Optional;
+import javax.inject.Inject;
 import javax.sound.sampled.AudioFormat.Encoding;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
+
+import com.utsusynth.utsu.common.StatusBar;
 import org.apache.commons.io.FileUtils;
 import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.WavData;
@@ -21,9 +24,17 @@ import com.utsusynth.utsu.common.exception.ErrorLogger;
 public class SoundFileReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
+    private final StatusBar statusBar;
+
+    @Inject
+    public SoundFileReader(StatusBar statusBar) {
+        this.statusBar = statusBar;
+    }
+
+    /* TODO: Separate from frontend statusBar widget. */
     public Optional<FrequencyData> loadFrqData(File frqFile) {
         if (!frqFile.canRead()) {
-            System.out.println("Warning: frq file not found: " + frqFile.getAbsolutePath());
+            statusBar.setStatus("Warning: frq file not found: " + frqFile.getAbsolutePath());
             return Optional.empty();
         }
         try {
@@ -33,7 +44,7 @@ public class SoundFileReader {
             byte[] charBuf = new byte[8];
             buffer.get(charBuf);
             if (!"FREQ0003".equals(new String(charBuf))) {
-                System.out.println("Error: used loadFrqData on a non-frq file.");
+                statusBar.setStatus("Error: Tried to load frq data on a non-frq file.");
                 return Optional.empty();
             }
             int samplesPerFrq = buffer.getInt(); // Number of samples per frequency value.
@@ -49,7 +60,7 @@ public class SoundFileReader {
                 amplitudes[i] = buffer.getDouble();
             }
             if (buffer.hasRemaining()) {
-                System.out.println("Warning: Parts of frq file were left unread.");
+                statusBar.setStatus("Warning: Parts of frq file were left unread.");
             }
             return Optional.of(new FrequencyData(average, samplesPerFrq, frqs, amplitudes));
         } catch (IOException e) {
@@ -59,20 +70,21 @@ public class SoundFileReader {
         }
     }
 
+    /* TODO: Separate from frontend statusBar widget. */
     public Optional<WavData> loadWavData(File wavFile) {
         if (!wavFile.canRead()) {
-            System.out.println("Error: wav file not found!");
+            statusBar.setStatus("Error: wav file not found!");
             return Optional.empty();
         }
         try (AudioInputStream input = AudioSystem.getAudioInputStream(wavFile)) {
             int numFrames = (int) input.getFrameLength();
             double lengthMs = numFrames / input.getFormat().getFrameRate() * 1000;
             if (input.getFormat().getSampleSizeInBits() != 16) {
-                System.out.println("Error: Does not support sample sizes other than 16 bit.");
+                statusBar.setStatus("Error: Does not support sample sizes other than 16 bit.");
                 return Optional.empty();
             }
             if (input.getFormat().getEncoding() != Encoding.PCM_SIGNED) {
-                System.out.println("Error: Does not support encodings other than PCM_SIGNED.");
+                statusBar.setStatus("Error: Does not support encodings other than PCM_SIGNED.");
                 return Optional.empty();
             }
 
@@ -80,7 +92,7 @@ public class SoundFileReader {
             byte[] bytes = new byte[numFrames * input.getFormat().getFrameSize()];
             int bytesRead = input.read(bytes);
             if (bytesRead < bytes.length) {
-                System.out.println("Error: Could not read entire wav file.");
+                statusBar.setStatus("Error: Could not read entire wav file.");
                 return Optional.empty();
             }
             ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
@@ -99,7 +111,7 @@ public class SoundFileReader {
                 }
             }
             if (shortBuffer.hasRemaining()) {
-                System.out.println("Warning: Parts of wav file were left unread.");
+                statusBar.setStatus("Warning: Parts of wav file were left unread.");
             }
             input.close();
             return Optional.of(new WavData(lengthMs, samples));
