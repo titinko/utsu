@@ -50,7 +50,7 @@ public class Lyric {
     void initialize(
             LyricCallback callback, BooleanProperty showLyrics, BooleanProperty showAliases) {
         trackNote = callback;
-        activeNode.visibleProperty().bind(showLyrics);
+        lyricAndAlias.visibleProperty().bind(showLyrics);
         aliasText.visibleProperty().bind(showAliases);
     }
 

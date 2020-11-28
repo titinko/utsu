@@ -14,6 +14,7 @@ import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
@@ -68,8 +69,9 @@ public class Note implements Comparable<Note> {
         this.scaler = scaler;
         this.lyric = lyric;
         this.layout = layout;
-        this.layout.getChildren()
+        layout.getChildren()
                 .addAll(this.note, this.overlap, this.lyric.getElement(), this.dragEdge);
+        StackPane.setAlignment(this.note, Pos.TOP_LEFT);
 
         Note thisNote = this;
         lyric.initialize(new LyricCallback() {
