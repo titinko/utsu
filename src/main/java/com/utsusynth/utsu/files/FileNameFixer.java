@@ -13,10 +13,11 @@ public class FileNameFixer {
     }
 
     public String getFixedName(String absolutePath) {
-        String os = System.getProperty("os.name").toLowerCase();
+        // TODO: Better way to handle SHIFT-JIS/Unicode filename issues.
+        /*String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
             return getWindowsPath(absolutePath);
-        }
+        }*/
         return absolutePath;
     }
 
