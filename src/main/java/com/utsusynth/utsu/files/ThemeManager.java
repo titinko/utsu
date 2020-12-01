@@ -61,11 +61,10 @@ public class ThemeManager {
     }
 
     // Initializes class and creates default theme.
-    public void initialize(Scene scene, String chosenThemeId) throws IOException {
+    public void initialize(String chosenThemeId) throws IOException {
         // Set up template.
         templateData = IOUtils.toString(
                 getClass().getResource(templateSource), StandardCharsets.UTF_8);
-        primaryScene = scene;
 
         // Load default themes.
         loadThemeIfNeeded(DEFAULT_LIGHT_THEME);
@@ -91,13 +90,17 @@ public class ThemeManager {
             currentTheme.set(findTheme(defaultThemeId));
         }
         applyCurrentTheme(); // Generate css file from theme and template data.
-        applyToScene(scene); // Apply generated css to scene.
         // Set this up to be automatic when theme changes again.
         currentTheme.addListener((oldTheme, newTheme, obs) -> {
             if (oldTheme == null || !oldTheme.getValue().getId().equals(newTheme.getId())) {
                 reloadCurrentTheme();
             }
         });
+    }
+
+    public void setPrimaryTheme(Scene scene) {
+        primaryScene = scene;
+        applyToScene(primaryScene);
     }
 
     /* Reloads the primary scene using the current theme. Useful when a theme is mutated. */
@@ -108,15 +111,17 @@ public class ThemeManager {
             errorLogger.logError(e);
             return;
         }
-        applyToScene(primaryScene); // Adds new generated CSS file to this scene.
+        if (primaryScene != null) {
+            applyToScene(primaryScene); // Adds new generated CSS file to this scene.
+        }
     }
 
     public void applyToScene(Scene scene) {
-        String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
         if (scene == null) {
-            System.out.println("Warning: tried to write theme to a null scene.");
+            System.out.println("Warning: tried to apply theme to a null scene.");
             return;
         }
+        String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
         if (scene.getStylesheets().size() > 0) {
             scene.getStylesheets().set(0, css);
         } else {

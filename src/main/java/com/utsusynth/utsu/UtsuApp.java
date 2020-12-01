@@ -2,6 +2,7 @@ package com.utsusynth.utsu;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.utsusynth.utsu.common.dialog.StartupDialog;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.controller.UtsuController;
 import com.utsusynth.utsu.files.AssetManager;
@@ -36,16 +37,21 @@ public class UtsuApp extends Application {
 
         // Initialize settings directory. Show alert if directory can't be created.
         PreferencesManager preferencesManager = injector.getInstance(PreferencesManager.class);
+        ThemeManager themeManager = injector.getInstance(ThemeManager.class);
         AssetManager assetManager = injector.getInstance(AssetManager.class);
         CacheManager cacheManager = injector.getInstance(CacheManager.class);
         StringBuilder alertText = new StringBuilder();
         try {
             preferencesManager.initializePreferences();
+            themeManager.initialize(preferencesManager.getTheme().getId());
             if (!assetManager.initializeAssets() || !cacheManager.initializeCache()) {
                 alertText.append("Could not initialize settings directory.");
             }
         } catch (Exception e) {
-            alertText.append("Could not initialize settings directory.\n" + e.getMessage() + "\n");
+            alertText
+                    .append("Could not initialize settings directory.\n")
+                    .append(e.getMessage())
+                    .append("\n");
             for (StackTraceElement element : e.getStackTrace()) {
                 alertText.append(element).append("\n");
             }
@@ -53,6 +59,7 @@ public class UtsuApp extends Application {
         if (alertText.length() > 0) {
             Alert alert = new Alert(AlertType.ERROR, alertText.toString());
             alert.showAndWait();
+            // Close program.
             primaryStage.show();
             primaryStage.close();
             return;
@@ -62,21 +69,25 @@ public class UtsuApp extends Application {
         Localizer localizer = injector.getInstance(Localizer.class);
         localizer.setLocale(preferencesManager.getLocale());
 
+        // If there is no pre-existing preferences file, prompt user for preferences.
+        if (!preferencesManager.hasPreferencesFile()) {
+            StartupDialog startupDialog = injector.getInstance(StartupDialog.class);
+            if (startupDialog.popup().equals(StartupDialog.Decision.CANCEL)) {
+                // Close program.
+                primaryStage.show();
+                primaryStage.close();
+                return;
+            }
+        }
+
         // Construct scene.
         FXMLLoader loader = injector.getInstance(FXMLLoader.class);
         InputStream fxml = getClass().getResourceAsStream("/fxml/UtsuScene.fxml");
         BorderPane pane = loader.load(fxml);
         Scene scene = new Scene(pane);
 
-        // Apply style and default theme.
-        ThemeManager themeManager = injector.getInstance(ThemeManager.class);
-        try {
-            themeManager.initialize(scene, preferencesManager.getTheme().getId());
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error: Exception while generating css, switching to backup.");
-            scene.getStylesheets().add("/css/backup.css");
-        }
+        // Apply style and theme.
+        themeManager.setPrimaryTheme(scene);
 
         // Set the stage.
         primaryStage.setScene(scene);

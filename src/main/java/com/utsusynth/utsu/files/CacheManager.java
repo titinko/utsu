@@ -10,12 +10,10 @@ import java.util.UUID;
 
 public class CacheManager {
     private final File cachePath;
-    private final PreferencesManager preferencesManager;
 
     @Inject
-    public CacheManager(@SettingsPath File settingsPath, PreferencesManager preferencesManager) {
+    public CacheManager(@SettingsPath File settingsPath) {
         cachePath = new File(settingsPath, "cache");
-        this.preferencesManager = preferencesManager;
     }
 
     /**

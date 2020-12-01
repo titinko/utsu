@@ -64,6 +64,10 @@ public class PreferencesManager {
         }
     }
 
+    public boolean hasPreferencesFile() {
+        return preferencesFile.exists();
+    }
+
     public void saveToFile() {
         if (!preferencesFile.exists() && !preferencesFile.getParentFile().exists()) {
             System.out.println("Error: Could not find settings directory.");
