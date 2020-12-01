@@ -57,8 +57,8 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Version
-    private String provideVersion() {
-        return ("0.4.2");
+    private String provideSettingsVersion() {
+        return ("0.5");
     }
 
     @Provides
