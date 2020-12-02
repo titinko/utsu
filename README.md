@@ -18,6 +18,9 @@ The Mac installer (64-bit DMG) can be found on the [releases page](https://githu
 
 The Linux installer (64-bit DEB) can be found on the [releases page](https://github.com/titinko/utsu/releases).
 
+For non-Debian users, a raw 64-bit Linux executable can be found on the [releases page](https://github.com/titinko/utsu/releases)
+as a zip file.
+
 ## Building from source
 
 ### Java
