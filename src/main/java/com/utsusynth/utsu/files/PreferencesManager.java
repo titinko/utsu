@@ -142,7 +142,11 @@ public class PreferencesManager {
     public NativeLocale getLocale() {
         String localeCode = preferences.containsKey("locale")
                 ? preferences.get("locale") : defaultPreferences.get("locale");
-        return new NativeLocale(new Locale(localeCode));
+        // Workaround since Locale class can't parse its own string representation.
+        Locale locale = localeCode.contains("-")
+                ? new Locale(localeCode.substring(0, 2), localeCode.substring(3))
+                : new Locale(localeCode);
+        return new NativeLocale(locale);
     }
 
     public void setLocale(NativeLocale locale) {
