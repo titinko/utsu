@@ -1,0 +1,7 @@
+// Patch test-runtime
+//
+// Allow deep reflection for test discovery
+--add-opens com.utsusynth.utsu/com.utsusynth.utsu=org.junit.platform.commons
+
+// "requires org.junit.jupiter.api"
+--add-reads com.utsusynth.utsu=org.junit.jupiter.api

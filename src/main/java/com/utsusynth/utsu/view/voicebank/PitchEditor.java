@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -17,8 +18,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Font;
 import javafx.util.StringConverter;
-
-import javax.inject.Inject;
 
 public class PitchEditor implements Localizable {
     private final Localizer localizer;

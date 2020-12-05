@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.voicebank;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import com.utsusynth.utsu.common.i18n.Localizable;
@@ -19,7 +20,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
 import javafx.util.StringConverter;
 
-import javax.inject.Inject;
 import java.io.File;
 import java.util.*;
 

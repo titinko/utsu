@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.config;
 
+import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.PreferencesManager;
@@ -13,7 +14,6 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import javax.inject.Inject;
 import java.io.File;
 import java.util.ResourceBundle;
 

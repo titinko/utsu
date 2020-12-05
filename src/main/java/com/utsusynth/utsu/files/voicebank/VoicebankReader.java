@@ -14,6 +14,7 @@ import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.inject.Inject;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.PreferencesManager;
 import org.apache.commons.io.FileUtils;
@@ -22,8 +23,6 @@ import com.google.inject.Provider;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
-
-import javax.inject.Inject;
 
 public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();

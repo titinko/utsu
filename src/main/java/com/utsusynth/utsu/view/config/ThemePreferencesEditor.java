@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.config;
 
+import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.dialog.DeleteWarningDialog;
 import com.utsusynth.utsu.common.dialog.SaveWarningDialog;
@@ -18,7 +19,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
-import javax.inject.Inject;
 import java.util.ResourceBundle;
 
 public class ThemePreferencesEditor extends PreferencesEditor implements Localizable {

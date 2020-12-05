@@ -6,12 +6,12 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.Optional;
-import javax.inject.Inject;
 import javax.sound.sampled.AudioFormat.Encoding;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import com.google.inject.Inject;
 import com.utsusynth.utsu.common.StatusBar;
 import org.apache.commons.io.FileUtils;
 import com.utsusynth.utsu.common.data.FrequencyData;

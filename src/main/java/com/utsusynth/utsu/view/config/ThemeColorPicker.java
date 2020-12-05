@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.view.config;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.ThemeManager;
@@ -11,7 +12,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-import javax.inject.Inject;
 import java.util.List;
 import java.util.ResourceBundle;
 

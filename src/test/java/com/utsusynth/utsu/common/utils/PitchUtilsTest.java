@@ -1,11 +1,10 @@
-package com.utsusynth.utsu.common;
+package com.utsusynth.utsu.common.utils;
 
-import static com.google.common.truth.Truth.assertWithMessage;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
-import com.utsusynth.utsu.common.utils.PitchUtils;
+import org.junit.jupiter.api.Test;
 
-/** Tests for the {@link PitchUtilsTest}. */
+/** Tests for {@link PitchUtils}. */
 public class PitchUtilsTest {
   @Test
   public void toAndFromNoteNum() {
@@ -18,12 +17,16 @@ public class PitchUtilsTest {
   }
 
   private static void testBothNoteNumConversions(String pitchString, int noteNum) {
-    assertWithMessage("Converting note num %s to pitch", noteNum)
-        .that(PitchUtils.noteNumToPitch(noteNum))
-        .isEqualTo(pitchString);
-    assertWithMessage("Converting %s to num")
-        .that(PitchUtils.pitchToNoteNum(pitchString))
-        .isEqualTo(noteNum);
+    assertEquals(
+            PitchUtils.noteNumToPitch(noteNum),
+            pitchString,
+            "Converting note num " + noteNum + "to pitch"
+    );
+    assertEquals(
+            PitchUtils.pitchToNoteNum(pitchString),
+            noteNum,
+            "Converting " + pitchString + " to num"
+    );
   }
 
   @Test
@@ -37,11 +40,15 @@ public class PitchUtilsTest {
   }
 
   private static void testBothRowNumConversions(String pitchString, int rowNum) {
-    assertWithMessage("Converting row %s to pitch", rowNum)
-        .that(PitchUtils.rowNumToPitch(rowNum))
-        .isEqualTo(pitchString);
-    assertWithMessage("Converting %s to row num")
-        .that(PitchUtils.pitchToRowNum(pitchString))
-        .isEqualTo(rowNum);
+    assertEquals(
+            PitchUtils.rowNumToPitch(rowNum),
+            pitchString,
+            "Converting row " + rowNum + "to pitch"
+    );
+    assertEquals(
+            PitchUtils.pitchToRowNum(pitchString),
+            rowNum,
+            "Converting " + pitchString + " to row num"
+    );
   }
 }

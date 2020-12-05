@@ -1,9 +1,9 @@
 package com.utsusynth.utsu.files;
 
+import com.google.inject.Inject;
 import com.utsusynth.utsu.UtsuModule.SettingsPath;
 import org.apache.commons.io.FileUtils;
 
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

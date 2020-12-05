@@ -1,37 +1,20 @@
 package com.utsusynth.utsu;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for UtsuApp.
  */
-public class UtsuAppTest extends TestCase
+public class UtsuAppTest
 {
     /**
-     * Create the test case
-     *
-     * @param testName name of the test case
+     * Test that confirms tests are working properly
      */
-    public UtsuAppTest( String testName )
-    {
-        super( testName );
-    }
-
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite()
-    {
-        return new TestSuite( UtsuAppTest.class );
-    }
-
-    /**
-     * Rigorous Test :-)
-     */
+    @Test
     public void testApp()
     {
-        assertTrue( true );
+        assertTrue(true);
     }
 }

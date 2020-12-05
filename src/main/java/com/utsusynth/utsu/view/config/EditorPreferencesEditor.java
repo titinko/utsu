@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.config;
 
+import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
@@ -18,7 +19,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import javax.inject.Inject;
 import java.util.ResourceBundle;
 
 public class EditorPreferencesEditor extends PreferencesEditor implements Localizable {
