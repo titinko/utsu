@@ -14,8 +14,9 @@ public class MenuItemManager {
     private final BooleanProperty copyEnabled;
     private final BooleanProperty pasteEnabled;
     private final BooleanProperty deleteEnabled;
-    private final BooleanProperty propertiesEnabled;
     private final BooleanProperty notePropertiesEnabled;
+    private final BooleanProperty propertiesEnabled;
+    private final BooleanProperty envelopeEditorEnabled;
 
     public MenuItemManager() {
         saveEnabled = new SimpleBooleanProperty(false);
@@ -27,8 +28,9 @@ public class MenuItemManager {
         copyEnabled = new SimpleBooleanProperty(false);
         pasteEnabled = new SimpleBooleanProperty(false);
         deleteEnabled = new SimpleBooleanProperty(false);
-        propertiesEnabled = new SimpleBooleanProperty(false);
         notePropertiesEnabled = new SimpleBooleanProperty(false);
+        propertiesEnabled = new SimpleBooleanProperty(false);
+        envelopeEditorEnabled = new SimpleBooleanProperty(false);
     }
 
     /** Initialize with default song settings. */
@@ -46,8 +48,9 @@ public class MenuItemManager {
         copyEnabled.bind(somethingIsHighlighted);
         pasteEnabled.bind(clipboardFilled);
         deleteEnabled.bind(somethingIsHighlighted);
-        propertiesEnabled.set(true);
         notePropertiesEnabled.bind(somethingIsHighlighted);
+        propertiesEnabled.set(true);
+        envelopeEditorEnabled.set(true);
     }
 
     /** Initialize with default voicebank settings. */
@@ -61,8 +64,9 @@ public class MenuItemManager {
         copyEnabled.set(false);
         pasteEnabled.set(false);
         deleteEnabled.set(false);
-        propertiesEnabled.set(false);
         notePropertiesEnabled.set(false);
+        propertiesEnabled.set(false);
+        envelopeEditorEnabled.set(false);
     }
 
     public void bindProperties(
@@ -75,8 +79,9 @@ public class MenuItemManager {
             BooleanProperty copyDisabled,
             BooleanProperty pasteDisabled,
             BooleanProperty deleteDisabled,
+            BooleanProperty notePropertiesDisabled,
             BooleanProperty propertiesDisabled,
-            BooleanProperty notePropertiesDisabled) {
+            BooleanProperty envelopeEditorDisabled) {
         saveDisabled.unbind();
         saveDisabled.bind(saveEnabled.not());
         saveAsDisabled.unbind();
@@ -99,6 +104,8 @@ public class MenuItemManager {
         propertiesDisabled.bind(propertiesEnabled.not());
         notePropertiesDisabled.unbind();
         notePropertiesDisabled.bind(notePropertiesEnabled.not());
+        envelopeEditorDisabled.unbind();
+        envelopeEditorDisabled.bind(envelopeEditorEnabled.not());
     }
 
     public void enableSave() {

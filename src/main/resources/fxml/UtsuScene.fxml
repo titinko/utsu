@@ -68,6 +68,15 @@
                 <MenuItem fx:id="propertiesItem" mnemonicParsing="false" onAction="#openProperties" text="Properties" />
               </items>
             </Menu>
+            <Menu fx:id="toolsMenu" mnemonicParsing="false" text="Tools">
+              <items>
+                  <Menu fx:id="bulkEditorMenu" mnemonicParsing="false" text="Bulk Editor">
+                    <items>
+                        <MenuItem fx:id="envelopeEditorItem" mnemonicParsing="false" text="Envelope" />
+                    </items>
+                  </Menu>
+              </items>
+            </Menu>
             <Menu fx:id="pluginsMenu" mnemonicParsing="false" text="Plugins" visible="false">
               <items>
                 <MenuItem fx:id="openPluginItem" mnemonicParsing="false" onAction="#openPlugin" text="Open Plugin..." />

@@ -31,8 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
-import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
+import static javafx.scene.input.KeyCombination.*;
 
 /**
  * 'UtsuScene.fxml' Controller Class
@@ -96,6 +95,18 @@ public class UtsuController implements Localizable {
 
         // Create keyboard shortcuts.
         createMenuKeyboardShortcuts();
+
+        // TODO: Resurrect Mac-specific preferences code once nsmenufx supports jlink.
+        /*String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("mac")) {
+            MenuToolkit macToolkit = MenuToolkit.toolkit();
+            fileMenu.getItems().remove(preferencesItem);
+            Menu appMenu = macToolkit.createDefaultApplicationMenu("Utsu");
+            appMenu.getItems().add(2, preferencesItem);
+            preferencesItem.setAccelerator(new KeyCodeCombination(KeyCode.COMMA, META_DOWN));
+            appMenu.getItems().add(3, new SeparatorMenuItem());
+            macToolkit.setApplicationMenu(appMenu);
+        }*/
 
         // Set up status bar.
         statusBar.initialize(statusLabel.textProperty(), loadingBar.progressProperty());
@@ -167,6 +178,12 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem propertiesItem; // Value injected by FXMLLoader
     @FXML
+    private Menu toolsMenu; // Value injected by FXMLLoader
+    @FXML
+    private Menu bulkEditorMenu; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem envelopeEditorItem; // Value injected by FXMLLoader
+    @FXML
     private Menu pluginsMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem openPluginItem; // Value injected by FXMLLoader
@@ -208,6 +225,9 @@ public class UtsuController implements Localizable {
         showPitchbendsItem.setText(bundle.getString("menu.view.showPitchbends"));
         projectMenu.setText(bundle.getString("menu.project"));
         propertiesItem.setText(bundle.getString("menu.project.properties"));
+        toolsMenu.setText(bundle.getString("menu.tools"));
+        bulkEditorMenu.setText(bundle.getString("menu.tools.bulkEditor"));
+        envelopeEditorItem.setText(bundle.getString("menu.tools.bulkEditor.envelope"));
         pluginsMenu.setText(bundle.getString("menu.plugins"));
         openPluginItem.setText(bundle.getString("menu.plugins.openPlugin"));
         recentPluginsMenu.setText(bundle.getString("menu.plugins.recentPlugins"));
@@ -253,6 +273,8 @@ public class UtsuController implements Localizable {
                 .setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN, SHIFT_DOWN));
         zoomOutVerticallyItem.setDisable(scaler.getVerticalRank() == 0);
         propertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.P, SHORTCUT_DOWN));
+        envelopeEditorItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.E, SHORTCUT_DOWN, SHIFT_DOWN));
         helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, SHORTCUT_DOWN, SHIFT_DOWN));
     }
 
@@ -350,8 +372,9 @@ public class UtsuController implements Localizable {
                             copyItem.disableProperty(),
                             pasteItem.disableProperty(),
                             deleteItem.disableProperty(),
+                            notePropertiesItem.disableProperty(),
                             propertiesItem.disableProperty(),
-                            notePropertiesItem.disableProperty());
+                            envelopeEditorItem.disableProperty());
                 }
             });
             tab.setOnCloseRequest(event -> {
