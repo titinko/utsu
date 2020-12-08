@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.controller;
+package com.utsusynth.utsu.controller.song;
 
 import java.util.List;
 import com.utsusynth.utsu.common.data.NoteConfigData;

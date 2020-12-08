@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.controller;
+package com.utsusynth.utsu.controller.voicebank;
 
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.StatusBar;
@@ -8,6 +8,8 @@ import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import com.utsusynth.utsu.controller.EditorCallback;
+import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.files.voicebank.VoicebankWriter;

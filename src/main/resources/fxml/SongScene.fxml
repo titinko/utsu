@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.SongController">
+<BorderPane xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.song.SongController">
    <top>
       <AnchorPane BorderPane.alignment="CENTER">
          <children>

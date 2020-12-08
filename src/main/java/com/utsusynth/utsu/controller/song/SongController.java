@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.controller;
+package com.utsusynth.utsu.controller.song;
 
 import com.google.common.base.Function;
 import com.google.inject.Inject;
@@ -16,6 +16,8 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.controller.EditorCallback;
+import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;

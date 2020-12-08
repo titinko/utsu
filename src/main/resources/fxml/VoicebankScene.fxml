@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.VoicebankController">
+<BorderPane xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.voicebank.VoicebankController">
    <bottom>
       <HBox maxHeight="150.0" prefHeight="150.0" prefWidth="700.0" spacing="10.0" BorderPane.alignment="CENTER">
          <children>

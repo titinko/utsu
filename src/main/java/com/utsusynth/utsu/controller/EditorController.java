@@ -10,7 +10,7 @@ import java.util.Optional;
 /**
  * Used to signify a controller of some sort of file editor.
  */
-interface EditorController {
+public interface EditorController {
     /**
      * Initializes an editor with a callback to the menu.
      */
