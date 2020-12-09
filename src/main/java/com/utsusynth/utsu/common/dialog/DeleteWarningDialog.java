@@ -7,7 +7,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -37,9 +40,7 @@ public class DeleteWarningDialog implements Localizable {
         // Initialize values that need to be localized.
         displayMessage = new Label();
         deleteButton = new Button();
-        deleteButton.setDefaultButton(true);
         cancelButton = new Button();
-        cancelButton.setCancelButton(true);
     }
 
     @Override
@@ -60,26 +61,32 @@ public class DeleteWarningDialog implements Localizable {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(parent);
 
-        VBox dialogVBox = new VBox(18);
-        dialogVBox.setPadding(new Insets(15));
+        BorderPane dialogPane = new BorderPane(displayMessage);
+        BorderPane.setMargin(displayMessage, new Insets(15));
 
         HBox dialogHBox = new HBox(10);
         dialogHBox.setAlignment(Pos.CENTER_RIGHT);
 
-        dialogVBox.getChildren().addAll(displayMessage, dialogHBox);
-        dialogHBox.getChildren().add(cancelButton);
-        dialogHBox.getChildren().add(deleteButton);
+        ButtonBar buttonBar = new ButtonBar();
+        buttonBar.setPrefHeight(40);
+        buttonBar.setPadding(new Insets(0, 5, 0, 5));
+        ButtonBar.setButtonData(deleteButton, ButtonData.APPLY);
+        ButtonBar.setButtonData(cancelButton, ButtonData.CANCEL_CLOSE);
+        buttonBar.getButtons().addAll(cancelButton, deleteButton);
+        dialogPane.setBottom(buttonBar);
 
+        deleteButton.setDefaultButton(true);
         deleteButton.setOnAction(event -> {
             decision = Decision.DELETE;
             dialog.close();
         });
+        cancelButton.setCancelButton(true);
         cancelButton.setOnAction(event -> {
             decision = Decision.CANCEL;
             dialog.close();
         });
 
-        Scene dialogScene = new Scene(dialogVBox);
+        Scene dialogScene = new Scene(dialogPane);
         dialog.setScene(dialogScene);
         dialog.showAndWait();
 

@@ -6,12 +6,12 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -37,10 +37,8 @@ public class SaveWarningDialog implements Localizable {
         // Initialize values that need to be localized.
         displayMessage = new Label();
         saveButton = new Button();
-        saveButton.setDefaultButton(true);
         closeWithoutSavingButton = new Button();
         cancelButton = new Button();
-        cancelButton.setCancelButton(true);
     }
 
     @Override
@@ -62,18 +60,19 @@ public class SaveWarningDialog implements Localizable {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(parent);
 
-        VBox dialogVBox = new VBox(18);
-        dialogVBox.setPadding(new Insets(15));
+        BorderPane dialogPane = new BorderPane(displayMessage);
+        BorderPane.setMargin(displayMessage, new Insets(15));
 
-        HBox dialogHBox = new HBox(10);
-        dialogHBox.setAlignment(Pos.CENTER_RIGHT);
+        ButtonBar buttonBar = new ButtonBar();
+        buttonBar.setPrefHeight(40);
+        buttonBar.setPadding(new Insets(0, 5, 0, 5));
+        ButtonBar.setButtonData(saveButton, ButtonData.APPLY);
+        ButtonBar.setButtonData(cancelButton, ButtonData.CANCEL_CLOSE);
+        ButtonBar.setButtonData(closeWithoutSavingButton, ButtonData.LEFT);
+        buttonBar.getButtons().addAll(closeWithoutSavingButton, cancelButton, saveButton);
+        dialogPane.setBottom(buttonBar);
 
-        dialogVBox.getChildren().addAll(displayMessage, dialogHBox);
-        dialogHBox.getChildren().add(closeWithoutSavingButton);
-        HBox.setMargin(closeWithoutSavingButton, new Insets(0, 15, 0, 0));
-        dialogHBox.getChildren().add(cancelButton);
-        dialogHBox.getChildren().add(saveButton);
-
+        saveButton.setDefaultButton(true);
         saveButton.setOnAction(event -> {
             decision = Decision.SAVE_AND_CLOSE;
             dialog.close();
@@ -82,12 +81,13 @@ public class SaveWarningDialog implements Localizable {
             decision = Decision.CLOSE_WITHOUT_SAVING;
             dialog.close();
         });
+        cancelButton.setCancelButton(true);
         cancelButton.setOnAction(event -> {
             decision = Decision.CANCEL;
             dialog.close();
         });
 
-        Scene dialogScene = new Scene(dialogVBox);
+        Scene dialogScene = new Scene(dialogPane);
         dialog.setScene(dialogScene);
         dialog.showAndWait();
 

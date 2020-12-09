@@ -9,20 +9,14 @@ import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.model.config.Theme;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
+import javafx.scene.control.*;
+import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
-import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
 public class StartupDialog implements Localizable {
@@ -60,9 +54,7 @@ public class StartupDialog implements Localizable {
         languageLabel = new Label("Language");
         colorSchemeLabel = new Label("Color scheme");
         applyButton = new Button();
-        applyButton.setDefaultButton(true);
         cancelButton = new Button();
-        cancelButton.setCancelButton(true);
     }
 
     @Override
@@ -101,16 +93,18 @@ public class StartupDialog implements Localizable {
         gridPane.add(colorSchemeLabel, 0, 1);
         gridPane.add(colorSchemeChoiceBox, 1, 1);
 
-        VBox dialogVBox = new VBox(18);
-        dialogVBox.setPadding(new Insets(15));
+        BorderPane dialogPane = new BorderPane(gridPane);
+        BorderPane.setMargin(gridPane, new Insets(10));
 
-        HBox dialogHBox = new HBox(10);
-        dialogHBox.setAlignment(Pos.CENTER_RIGHT);
+        ButtonBar buttonBar = new ButtonBar();
+        buttonBar.setPrefHeight(40);
+        buttonBar.setPadding(new Insets(0, 5, 0, 5));
+        ButtonBar.setButtonData(applyButton, ButtonData.APPLY);
+        ButtonBar.setButtonData(cancelButton, ButtonData.CANCEL_CLOSE);
+        buttonBar.getButtons().addAll(cancelButton, applyButton);
+        dialogPane.setBottom(buttonBar);
 
-        dialogVBox.getChildren().addAll(gridPane, dialogHBox);
-        dialogHBox.getChildren().add(cancelButton);
-        dialogHBox.getChildren().add(applyButton);
-
+        applyButton.setDefaultButton(true);
         applyButton.setOnAction(event -> {
             decision = Decision.APPLY;
             preferencesManager.setTheme(themeManager.getCurrentTheme().get());
@@ -118,13 +112,14 @@ public class StartupDialog implements Localizable {
             preferencesManager.saveToFile();
             dialog.close();
         });
+        cancelButton.setCancelButton(true);
         cancelButton.setOnAction(event -> {
             decision = Decision.CANCEL;
             dialog.close();
         });
 
         localizer.localize(this);
-        dialogScene = new Scene(dialogVBox);
+        dialogScene = new Scene(dialogPane);
         dialog.setScene(dialogScene);
         dialog.showAndWait();
 

@@ -13,13 +13,13 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/15" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.song.NotePropertiesController">
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.song.NotePropertiesController">
    <bottom>
       <ButtonBar prefHeight="40.0" BorderPane.alignment="CENTER">
         <buttons>
             <Button fx:id="resetButton" alignment="CENTER" mnemonicParsing="false" onAction="#restoreDefaults" text="Reset" ButtonBar.buttonData="LEFT" />
+            <Button fx:id="cancelButton" alignment="CENTER" cancelButton="true" mnemonicParsing="false" onAction="#closeProperties" text="Cancel" />
             <Button fx:id="applyButton" alignment="CENTER" defaultButton="true" mnemonicParsing="false" onAction="#applyProperties" text="Apply" />
-            <Button fx:id="cancelButton" alignment="CENTER" mnemonicParsing="false" onAction="#closeProperties" text="Cancel" />
         </buttons>
          <BorderPane.margin>
             <Insets left="5.0" right="5.0" />
