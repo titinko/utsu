@@ -15,8 +15,8 @@
    <bottom>
       <ButtonBar prefHeight="40.0" BorderPane.alignment="CENTER">
         <buttons>
-            <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#closeProperties" text="Cancel" />
-            <Button fx:id="applyButton" alignment="CENTER" defaultButton="true" mnemonicParsing="false" onAction="#applyProperties" text="Apply" />
+            <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#closeProperties" text="Cancel" ButtonBar.buttonData="CANCEL_CLOSE" />
+            <Button fx:id="applyButton" defaultButton="true" mnemonicParsing="false" onAction="#applyProperties" text="Apply" ButtonBar.buttonData="APPLY" />
         </buttons>
          <BorderPane.margin>
             <Insets left="5.0" right="5.0" />

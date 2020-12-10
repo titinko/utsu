@@ -14,7 +14,6 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1">
    <bottom>
       <VBox BorderPane.alignment="CENTER">
@@ -34,17 +33,17 @@
                   <ChoiceBox prefWidth="150.0" />
                </children>
                <VBox.margin>
-                  <Insets />
+                  <Insets left="5.0" right="5.0" />
                </VBox.margin>
             </HBox>
             <ButtonBar prefHeight="40.0">
               <buttons>
-                <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" text="Cancel" />
-                  <Button fx:id="applyAllButton" mnemonicParsing="false" text="Apply to all notes" />
-                  <Button fx:id="applySelectionButton" defaultButton="true" mnemonicParsing="false" text="Apply to selection" />
+                  <Button fx:id="applyAllButton" mnemonicParsing="false" text="Apply to All Notes" ButtonBar.buttonData="LEFT" />
+                <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" text="Cancel" ButtonBar.buttonData="CANCEL_CLOSE" />
+                  <Button fx:id="applySelectionButton" defaultButton="true" mnemonicParsing="false" text="Apply to Selection" ButtonBar.buttonData="APPLY" />
               </buttons>
                <VBox.margin>
-                  <Insets />
+                  <Insets left="5.0" right="5.0" />
                </VBox.margin>
             </ButtonBar>
          </children>
@@ -58,15 +57,15 @@
             <RadioButton mnemonicParsing="false" text="Preceded by silence" />
             <RadioButton mnemonicParsing="false" text="Succeeded by silence" />
          </children>
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
       </VBox>
    </left>
-   <padding>
-      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-   </padding>
    <right>
       <ScrollPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <content>
-            <ListView prefWidth="200.0" />
+            <ListView prefHeight="265.0" prefWidth="200.0" />
          </content>
       </ScrollPane>
    </right>

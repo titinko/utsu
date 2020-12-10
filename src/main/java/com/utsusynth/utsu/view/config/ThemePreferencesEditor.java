@@ -13,6 +13,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -40,6 +41,8 @@ public class ThemePreferencesEditor extends PreferencesEditor implements Localiz
     private ChoiceBox<Theme> themeChoiceBox;
     private HBox themeEnterRow;
     private TextField themeTextField;
+    private Button applyButton;
+    private Button cancelButton;
 
     @Inject
     public ThemePreferencesEditor(
@@ -116,6 +119,10 @@ public class ThemePreferencesEditor extends PreferencesEditor implements Localiz
         // Reload choice box to make new names appear.
         initializeThemeChoiceBox();
         themeChoiceRow.getChildren().set(0, themeChoiceBox);
+        if (applyButton != null && cancelButton != null) {
+            applyButton.setText(bundle.getString("general.apply"));
+            cancelButton.setText(bundle.getString("general.cancel"));
+        }
     }
 
     private void initializeThemeChoiceRow() {
@@ -219,16 +226,21 @@ public class ThemePreferencesEditor extends PreferencesEditor implements Localiz
 
     private void initializeThemeEnterRow() {
         themeEnterRow = new HBox(10);
+        themeEnterRow.setMaxWidth(340);
         themeTextField = new TextField();
         themeTextField.setPrefWidth(150);
         themeTextField.setOnAction(event -> closeThemeEnterRow(themeTextField.getText()));
-        Button cancelButton = new Button("Cancel");
+        cancelButton = new Button("Cancel");
         cancelButton.setCancelButton(true);
         cancelButton.setOnAction(event -> closeThemeEnterRow(""));
-        Button applyButton = new Button("Apply");
+        ButtonBar.setButtonData(cancelButton, ButtonData.CANCEL_CLOSE);
+        applyButton = new Button("Apply");
         applyButton.setDefaultButton(true);
         applyButton.setOnAction(event -> closeThemeEnterRow(themeTextField.getText()));
-        themeEnterRow.getChildren().addAll(themeTextField, cancelButton, applyButton);
+        ButtonBar.setButtonData(applyButton, ButtonData.APPLY);
+        ButtonBar buttonBar = new ButtonBar();
+        buttonBar.getButtons().addAll(applyButton, cancelButton);
+        themeEnterRow.getChildren().addAll(themeTextField, buttonBar);
     }
 
     private void closeThemeEnterRow(String newThemeName) {

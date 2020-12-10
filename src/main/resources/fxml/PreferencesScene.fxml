@@ -4,7 +4,6 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -21,11 +20,11 @@
             <Separator minWidth="200.0" />
               <ButtonBar prefHeight="40.0">
                   <buttons>
-                      <Button fx:id="cancelButton" alignment="CENTER" cancelButton="true" mnemonicParsing="false" onAction="#closePreferences" text="Cancel" />
-                      <Button fx:id="applyButton" alignment="CENTER" contentDisplay="CENTER" defaultButton="true" mnemonicParsing="false" onAction="#applyPreferences" text="Apply" />
+                      <Button fx:id="applyButton" alignment="CENTER" defaultButton="true" mnemonicParsing="false" onAction="#applyPreferences" text="Apply" ButtonBar.buttonData="APPLY" />
+                      <Button fx:id="cancelButton" alignment="CENTER" cancelButton="true" mnemonicParsing="false" onAction="#closePreferences" text="Cancel" ButtonBar.buttonData="CANCEL_CLOSE" />
                   </buttons>
                <padding>
-                  <Insets right="10.0" />
+                  <Insets right="5.0" />
                </padding>
               </ButtonBar>
          </children>
