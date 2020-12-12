@@ -69,26 +69,26 @@ public class PitchbendData {
     @Override
     public String toString() {
         // String representation of a PitchbendData object.
-        String result = "PBS: ";
+        StringBuilder result = new StringBuilder("PBS: ");
         for (double pbsValue : pbs) {
-            result += pbsValue + ", ";
+            result.append(pbsValue).append(", ");
         }
-        result += "\nPBW: ";
+        result.append("\nPBW: ");
         for (double pbwValue : pbw) {
-            result += pbwValue + ", ";
+            result.append(pbwValue).append(", ");
         }
-        result += "\nPBY: ";
+        result.append("\nPBY: ");
         for (double pbyValue : pby) {
-            result += pbyValue + ", ";
+            result.append(pbyValue).append(", ");
         }
-        result += "\nPBM: ";
+        result.append("\nPBM: ");
         for (String pbmValue : pbm) {
-            result += pbmValue + ", ";
+            result.append(pbmValue).append(", ");
         }
-        result += "\nVibrato: ";
+        result.append("\nVibrato: ");
         for (int vibratoValue : vibrato) {
-            result += vibratoValue + ", ";
+            result.append(vibratoValue).append(", ");
         }
-        return result;
+        return result.toString();
     }
 }
