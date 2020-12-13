@@ -3,6 +3,7 @@ package com.utsusynth.utsu.controller.song;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
@@ -12,6 +13,22 @@ import javafx.event.ActionEvent;
 import java.util.ResourceBundle;
 
 public class BulkEditorController implements Localizable {
+    // All available filters for applying edits.
+    public enum FilterType {
+        // Common.
+        HIGHLIGHTED,
+        // Note length filters.
+        GREATER_THAN_8TH,
+        GREATER_THAN_4TH,
+        GREATER_THAN_2ND,
+        // Envelope filters.
+        SILENCE_BEFORE,
+        SILENCE_AFTER,
+        // Portamento filters.
+        RISING_NOTE,
+        FALLING_NOTE,
+    }
+
     private final Localizer localizer;
 
     /* Common elements. */
@@ -22,7 +39,7 @@ public class BulkEditorController implements Localizable {
     @FXML
     private Label noteLengthFilterLabel;
     @FXML
-    private ChoiceBox noteLengthChoiceBox;
+    private ChoiceBox<FilterType> noteLengthChoiceBox;
     @FXML
     private Button applyAllButton;
     @FXML
@@ -108,11 +125,18 @@ public class BulkEditorController implements Localizable {
     }
 
     public void initialize() {
-        // Initialize radio buttons.
+        // Initialize common elements.
+        noteLengthChoiceBox.setItems(FXCollections.observableArrayList(
+                null,
+                FilterType.GREATER_THAN_2ND,
+                FilterType.GREATER_THAN_4TH,
+                FilterType.GREATER_THAN_8TH));
 
-        // Initialize visual editor.
+        // Initialize portamento elements.
 
-        // Initialize list of configurations.
+        // Initialize vibrato elements.
+
+        // Initialize envelope elements.
 
         localizer.localize(this);
     }
@@ -139,16 +163,16 @@ public class BulkEditorController implements Localizable {
 
     @FXML
     public void applyToSelection(ActionEvent event) {
-        // TODO
+        // TODO, should depend on active tab.
     }
 
     @FXML
     public void applyToAllNotes(ActionEvent event) {
-        // TODO
+        // TODO, should depend on active tab.
     }
 
     @FXML
     public void cancelAndClose(ActionEvent event) {
-        // TODO
+        // TODO, should depend on active tab.
     }
 }
