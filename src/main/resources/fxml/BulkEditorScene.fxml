@@ -5,7 +5,6 @@
 <?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
@@ -63,13 +62,13 @@
             <content>
               <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <right>
-                        <ScrollPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                           <content>
-                              <ListView fx:id="portamentoListView" prefHeight="265.0" prefWidth="200.0" />
-                           </content>
+                        <ScrollPane hbarPolicy="NEVER" fitToWidth="true" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                            <BorderPane.margin>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </BorderPane.margin>
+                           <content>
+                              <AnchorPane fx:id="portamentoListAnchor" />
+                           </content>
                         </ScrollPane>
                      </right>
                      <left>
@@ -109,13 +108,13 @@
             <content>
               <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <right>
-                        <ScrollPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                           <content>
-                              <ListView fx:id="vibratoListView" prefHeight="265.0" prefWidth="200.0" />
-                           </content>
+                        <ScrollPane hbarPolicy="NEVER" fitToWidth="true" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                            <BorderPane.margin>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </BorderPane.margin>
+                           <content>
+                              <AnchorPane fx:id="vibratoListAnchor" />
+                           </content>
                         </ScrollPane>
                      </right>
                      <left>
@@ -197,13 +196,13 @@
                           </VBox>
                      </left>
                      <right>
-                          <ScrollPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                              <content>
-                                  <ListView fx:id="envelopeListView" prefHeight="265.0" prefWidth="200.0" />
-                              </content>
+                          <ScrollPane hbarPolicy="NEVER" fitToWidth="true" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                            <BorderPane.margin>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </BorderPane.margin>
+                           <content>
+                              <AnchorPane fx:id="envelopeListAnchor" />
+                           </content>
                           </ScrollPane>
                      </right>
                      <center>
