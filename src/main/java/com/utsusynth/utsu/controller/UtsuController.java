@@ -10,6 +10,7 @@ import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.files.ThemeManager;
 import javafx.animation.PauseTransition;
 import javafx.beans.property.BooleanProperty;
@@ -668,6 +669,14 @@ public class UtsuController implements Localizable {
     void openProperties(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             editors.get(tabs.getSelectionModel().getSelectedItem().getId()).openProperties();
+        }
+    }
+
+    @FXML
+    void openBulkEnvelopeEditor(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            String id = tabs.getSelectionModel().getSelectedItem().getId();
+            editors.get(id).openBulkEditor(BulkEditorType.ENVELOPE);
         }
     }
 

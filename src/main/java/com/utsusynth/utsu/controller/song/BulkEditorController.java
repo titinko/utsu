@@ -3,6 +3,7 @@ package com.utsusynth.utsu.controller.song;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -16,6 +17,13 @@ import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 public class BulkEditorController implements Localizable {
+    // All available editors.
+    public enum BulkEditorType {
+        PORTAMENTO,
+        VIBRATO,
+        ENVELOPE,
+    }
+
     // All available filters for applying edits.
     public enum FilterType {
         // Common.
@@ -33,6 +41,8 @@ public class BulkEditorController implements Localizable {
     }
 
     private final Localizer localizer;
+
+    private BulkEditorCallback callback;
 
     /* Common elements. */
     @FXML
@@ -141,14 +151,14 @@ public class BulkEditorController implements Localizable {
         // TODO: Initialize config list.
 
         // Initialize vibrato elements.
-        // vibratoLengthTF
-        // vibratoAmplitudeTF
-        // vibratoPhaseInTF
-        // vibratoPhaseOutTF
-        // vibratoFrequencyTF
-        // vibratoFreqSlopeTF
-        // vibratoHeightTF
-        // vibratoPhaseTF
+        initializeVibratoField(vibratoLengthTF, 0, 100); // Vibrato length (% of note)
+        initializeVibratoField(vibratoAmplitudeTF, 5, 200); // Amplitude (cents)
+        initializeVibratoField(vibratoPhaseInTF, 0, 100); // Phase in (% of vibrato)
+        initializeVibratoField(vibratoPhaseOutTF, 0, 100); // Phase out (% of vibrato)
+        initializeVibratoField(vibratoFrequencyTF, 10, 512); // Cycle length (ms)
+        initializeVibratoField(vibratoFreqSlopeTF, -100, 100); // Frequency slope
+        initializeVibratoField(vibratoHeightTF, -100, 100); // Pitch shift (cents)
+        initializeVibratoField(vibratoPhaseTF, 0, 100); // Phase shift (% of cycle)
         // TODO: Initialize visual editor.
         // TODO: Initialize config list.
 
@@ -190,9 +200,36 @@ public class BulkEditorController implements Localizable {
         });
     }
 
+    private void initializeVibratoField(TextField textField, int min, int max) {
+        textField.focusedProperty().addListener(event -> {
+            if (!textField.isFocused()) {
+                // Round data.
+                try {
+                    double value = Double.parseDouble(textField.getText());
+                    int adjusted = Math.max(min, Math.min(max, RoundUtils.round(value)));
+                    textField.setText(Integer.toString(adjusted));
+                } catch (NullPointerException | NumberFormatException e) {
+                    // TODO: Reset from visual editor.
+                    textField.setText("0");
+                }
+            }
+        });
+    }
+
     @Override
     public void localize(ResourceBundle bundle) {
         cancelButton.setText(bundle.getString("general.cancel"));
+    }
+
+    void openEditor(BulkEditorType editorType, BulkEditorCallback callback) {
+        this.callback = callback;
+        if (editorType.equals(BulkEditorType.PORTAMENTO)) {
+            tabPane.getSelectionModel().select(portamentoTab);
+        } else if (editorType.equals(BulkEditorType.VIBRATO)) {
+            tabPane.getSelectionModel().select(vibratoTab);
+        } else if (editorType.equals(BulkEditorType.ENVELOPE)) {
+            tabPane.getSelectionModel().select(envelopeTab);
+        }
     }
 
     @FXML
@@ -236,16 +273,16 @@ public class BulkEditorController implements Localizable {
             } else if (portamentoFallingNotes.isSelected()) {
                 filters.add(FilterType.FALLING_NOTE);
             }
-            // Apply portamento.
+            callback.updatePortamento(null, filters);
         } else if (tabPane.getSelectionModel().getSelectedItem() == vibratoTab) {
-            // Apply vibrato.
+            callback.updateVibrato(null, filters);
         } else if (tabPane.getSelectionModel().getSelectedItem() == envelopeTab){
             if (envelopeSilenceBefore.isSelected()) {
                 filters.add(FilterType.SILENCE_BEFORE);
             } else if (envelopeSilenceAfter.isSelected()) {
                 filters.add(FilterType.SILENCE_AFTER);
             }
-            // Apply envelope.
+            callback.updateEnvelope(null, filters);
         }
     }
 

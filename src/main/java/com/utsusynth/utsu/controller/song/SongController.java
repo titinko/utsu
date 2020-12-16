@@ -5,10 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
-import com.utsusynth.utsu.common.data.MutateResponse;
-import com.utsusynth.utsu.common.data.NoteConfigData;
-import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.NoteUpdateData;
+import com.utsusynth.utsu.common.data.*;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
@@ -18,10 +15,11 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.EditorCallback;
 import com.utsusynth.utsu.controller.EditorController;
+import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
-import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
+import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.PreferencesManager;
@@ -984,6 +982,45 @@ public class SongController implements EditorController, Localizable {
     @Override
     public void showLyricConfig(String trueLyric) {
         // Lyric configs can only be shown on voicebank editor.
+    }
+
+    @Override
+    public void openBulkEditor(BulkEditorType editorType) {
+        // Open bulk editor modal.
+        InputStream fxml = getClass().getResourceAsStream("/fxml/BulkEditorScene.fxml");
+        FXMLLoader loader = fxmlLoaderProvider.get();
+        try {
+            Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
+            Stage editorWindow = new Stage();
+            editorWindow.setTitle(localizer.getMessage("menu.tools.bulkEditor"));
+            editorWindow.initModality(Modality.APPLICATION_MODAL);
+            editorWindow.initOwner(currentStage);
+            BorderPane editorPane = loader.load(fxml);
+            BulkEditorController controller = loader.getController();
+            controller.openEditor(editorType, new BulkEditorCallback() {
+                @Override
+                public void updatePortamento(PitchbendData newPortamento, List<BulkEditorController.FilterType> filters) {
+                    System.out.println("Update portamento");
+                }
+
+                @Override
+                public void updateVibrato(PitchbendData newVibrato, List<BulkEditorController.FilterType> filters) {
+                    System.out.println("Update vibrato");
+                }
+
+                @Override
+                public void updateEnvelope(EnvelopeData newEnvelope, List<BulkEditorController.FilterType> filters) {
+                    System.out.println("Update envelope");
+                }
+            });
+            Scene scene = new Scene(editorPane);
+            themeManager.applyToScene(scene);
+            editorWindow.setScene(scene);
+            editorWindow.showAndWait();
+        } catch (IOException e) {
+            statusBar.setStatus("Error: Unable to open bulk editor.");
+            errorLogger.logError(e);
+        }
     }
 
     @Override

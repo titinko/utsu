@@ -36,7 +36,7 @@
                                 <Insets />
                             </HBox.margin>
                         </Label>
-                        <ChoiceBox fx:id="noteLengthChoiceBox" prefWidth="150.0" />
+                        <ChoiceBox fx:id="noteLengthChoiceBox" prefWidth="180.0" />
                     </children>
                     <VBox.margin>
                         <Insets left="5.0" right="5.0" />
@@ -62,7 +62,7 @@
             <content>
               <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <right>
-                        <ScrollPane hbarPolicy="NEVER" fitToWidth="true" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                            <BorderPane.margin>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </BorderPane.margin>
@@ -90,7 +90,7 @@
                      <center>
                         <VBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
                            <children>
-                              <AnchorPane fx:id="portamentoAnchor" minHeight="200.0" minWidth="200.0" />
+                              <AnchorPane fx:id="portamentoAnchor" minHeight="200.0" minWidth="200.0" VBox.vgrow="ALWAYS" />
                               <Button mnemonicParsing="false" onAction="#addPortamentoConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
@@ -108,7 +108,7 @@
             <content>
               <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <right>
-                        <ScrollPane hbarPolicy="NEVER" fitToWidth="true" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                            <BorderPane.margin>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </BorderPane.margin>
@@ -162,7 +162,7 @@
                      <center>
                         <VBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
                            <children>
-                              <AnchorPane fx:id="vibratoAnchor" minHeight="200.0" minWidth="200.0" prefHeight="200.0" prefWidth="200.0" />
+                              <AnchorPane fx:id="vibratoAnchor" minHeight="200.0" minWidth="200.0" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
                               <Button mnemonicParsing="false" onAction="#addVibratoConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
@@ -196,7 +196,7 @@
                           </VBox>
                      </left>
                      <right>
-                          <ScrollPane hbarPolicy="NEVER" fitToWidth="true" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                          <ScrollPane fitToWidth="true" hbarPolicy="NEVER" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                            <BorderPane.margin>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </BorderPane.margin>
@@ -208,7 +208,7 @@
                      <center>
                           <VBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
                               <children>
-                                  <AnchorPane fx:id="envelopeAnchor" minHeight="200.0" minWidth="200.0" />
+                                  <AnchorPane fx:id="envelopeAnchor" minHeight="200.0" minWidth="200.0" VBox.vgrow="ALWAYS" />
                                   <Button mnemonicParsing="false" onAction="#addEnvelopeConfig" text="→">
                                  <font>
                                     <Font size="14.0" />

@@ -72,7 +72,7 @@
               <items>
                   <Menu fx:id="bulkEditorMenu" mnemonicParsing="false" text="Bulk Editor">
                     <items>
-                        <MenuItem fx:id="envelopeEditorItem" mnemonicParsing="false" text="Envelope" />
+                        <MenuItem fx:id="envelopeEditorItem" mnemonicParsing="false" onAction="#openBulkEnvelopeEditor" text="Envelope" />
                     </items>
                   </Menu>
               </items>

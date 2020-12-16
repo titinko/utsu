@@ -7,9 +7,9 @@ import com.utsusynth.utsu.controller.song.BulkEditorController.FilterType;
 import java.util.List;
 
 public interface BulkEditorCallback {
-    void updateEnvelope(EnvelopeData newEnvelope, List<FilterType> filters);
-
     void updatePortamento(PitchbendData newPortamento, List<FilterType> filters);
 
     void updateVibrato(PitchbendData newVibrato, List<FilterType> filters);
+
+    void updateEnvelope(EnvelopeData newEnvelope, List<FilterType> filters);
 }

@@ -142,11 +142,11 @@ public class NotePropertiesController implements Localizable {
     }
 
     void initializeDoubleSlider(Slider slider, TextField textField) {
-        slider.valueProperty().addListener((event) -> {
+        slider.valueProperty().addListener(event -> {
             double sliderValue = slider.getValue();
             textField.setText(RoundUtils.roundDecimal(sliderValue, "#.#"));
         });
-        textField.focusedProperty().addListener((event) -> {
+        textField.focusedProperty().addListener(event -> {
             if (!textField.isFocused() && !textField.getText().equals(DIFFERENT_VALUES)) {
                 try {
                     double boundedValue = Math.max(
@@ -162,12 +162,12 @@ public class NotePropertiesController implements Localizable {
 
     void initializeIntSlider(Slider slider, TextField textField) {
         // Setup modulation slider.
-        slider.valueProperty().addListener((event) -> {
+        slider.valueProperty().addListener(event -> {
             int sliderValue = RoundUtils.round(slider.getValue());
             slider.setValue(sliderValue);
             textField.setText(Integer.toString(sliderValue));
         });
-        textField.focusedProperty().addListener((event) -> {
+        textField.focusedProperty().addListener(event -> {
             if (!textField.isFocused() && !textField.getText().equals(DIFFERENT_VALUES)) {
                 try {
                     double boundedValue = Math.max(

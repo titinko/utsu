@@ -2,6 +2,7 @@ package com.utsusynth.utsu.controller;
 
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
+import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import javafx.scene.input.KeyEvent;
 
 import java.io.File;
@@ -81,6 +82,11 @@ public interface EditorController {
     void selectAll();
 
     void openProperties();
+
+    /**
+     * Song only for now. Open bulk editor.
+     */
+    void openBulkEditor(BulkEditorType editorType);
 
     /**
      * Song only. Opens config for a note.

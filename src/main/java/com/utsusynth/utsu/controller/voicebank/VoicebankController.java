@@ -12,6 +12,7 @@ import com.utsusynth.utsu.controller.EditorCallback;
 import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
+import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.files.voicebank.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import com.utsusynth.utsu.view.voicebank.*;
@@ -488,6 +489,11 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public void openProperties() {
         // TODO: Implement properties for voicebank, for example whether oto should be foldered.
+    }
+
+    @Override
+    public void openBulkEditor(BulkEditorType editorType) {
+        // Bulk portamento/vibrato/envelope editor does not apply to voicebanks.
     }
 
     @Override
