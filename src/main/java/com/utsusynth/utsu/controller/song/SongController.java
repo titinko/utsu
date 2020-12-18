@@ -6,6 +6,7 @@ import com.google.inject.Provider;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.*;
+import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
@@ -997,20 +998,30 @@ public class SongController implements EditorController, Localizable {
             editorWindow.initOwner(currentStage);
             BorderPane editorPane = loader.load(fxml);
             BulkEditorController controller = loader.getController();
-            controller.openEditor(editorType, new BulkEditorCallback() {
+            controller.openEditor(
+                    editorType, songEditor.getSelectedTrack(), new BulkEditorCallback() {
                 @Override
-                public void updatePortamento(PitchbendData newPortamento, List<BulkEditorController.FilterType> filters) {
-                    System.out.println("Update portamento");
+                public void updatePortamento(
+                        PitchbendData newPortamento,
+                        RegionBounds regionToUpdate,
+                        List<FilterType> filters) {
+                    List<NoteData> notes = song.get().getNotes(regionToUpdate, filters);
                 }
 
                 @Override
-                public void updateVibrato(PitchbendData newVibrato, List<BulkEditorController.FilterType> filters) {
-                    System.out.println("Update vibrato");
+                public void updateVibrato(
+                        PitchbendData newVibrato,
+                        RegionBounds regionToUpdate,
+                        List<FilterType> filters) {
+                    List<NoteData> notes = song.get().getNotes(regionToUpdate, filters);
                 }
 
                 @Override
-                public void updateEnvelope(EnvelopeData newEnvelope, List<BulkEditorController.FilterType> filters) {
-                    System.out.println("Update envelope");
+                public void updateEnvelope(
+                        EnvelopeData newEnvelope,
+                        RegionBounds regionToUpdate,
+                        List<FilterType> filters) {
+                    List<NoteData> notes = song.get().getNotes(regionToUpdate, filters);
                 }
             });
             Scene scene = new Scene(editorPane);

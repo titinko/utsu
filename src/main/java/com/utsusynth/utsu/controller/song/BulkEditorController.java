@@ -1,6 +1,8 @@
 package com.utsusynth.utsu.controller.song;
 
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.utils.RoundUtils;
@@ -24,25 +26,10 @@ public class BulkEditorController implements Localizable {
         ENVELOPE,
     }
 
-    // All available filters for applying edits.
-    public enum FilterType {
-        // Common.
-        HIGHLIGHTED,
-        // Note length filters.
-        GREATER_THAN_8TH,
-        GREATER_THAN_4TH,
-        GREATER_THAN_2ND,
-        // Envelope filters.
-        SILENCE_BEFORE,
-        SILENCE_AFTER,
-        // Portamento filters.
-        RISING_NOTE,
-        FALLING_NOTE,
-    }
-
     private final Localizer localizer;
 
     private BulkEditorCallback callback;
+    private RegionBounds highlightedRegion;
 
     /* Common elements. */
     @FXML
@@ -221,8 +208,9 @@ public class BulkEditorController implements Localizable {
         cancelButton.setText(bundle.getString("general.cancel"));
     }
 
-    void openEditor(BulkEditorType editorType, BulkEditorCallback callback) {
+    void openEditor(BulkEditorType editorType, RegionBounds region, BulkEditorCallback callback) {
         this.callback = callback;
+        highlightedRegion = region;
         if (editorType.equals(BulkEditorType.PORTAMENTO)) {
             tabPane.getSelectionModel().select(portamentoTab);
         } else if (editorType.equals(BulkEditorType.VIBRATO)) {
@@ -249,21 +237,20 @@ public class BulkEditorController implements Localizable {
 
     @FXML
     public void applyToSelection(ActionEvent event) {
-        ArrayList<FilterType> filters = new ArrayList<>();
-        filters.add(FilterType.HIGHLIGHTED);
-        applyToNotes(filters);
+        applyToNotes(highlightedRegion);
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
 
     @FXML
     public void applyToAllNotes(ActionEvent event) {
-        applyToNotes(new ArrayList<>());
+        applyToNotes(RegionBounds.WHOLE_SONG);
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
 
-    private void applyToNotes(ArrayList<FilterType> filters) {
+    private void applyToNotes(RegionBounds regionToUpdate) {
+        ArrayList<FilterType> filters = new ArrayList<>();
         if (noteLengthChoiceBox.getValue() != null) {
             filters.add(noteLengthChoiceBox.getValue());
         }
@@ -273,16 +260,16 @@ public class BulkEditorController implements Localizable {
             } else if (portamentoFallingNotes.isSelected()) {
                 filters.add(FilterType.FALLING_NOTE);
             }
-            callback.updatePortamento(null, filters);
+            callback.updatePortamento(null, regionToUpdate, filters);
         } else if (tabPane.getSelectionModel().getSelectedItem() == vibratoTab) {
-            callback.updateVibrato(null, filters);
+            callback.updateVibrato(null, regionToUpdate, filters);
         } else if (tabPane.getSelectionModel().getSelectedItem() == envelopeTab){
             if (envelopeSilenceBefore.isSelected()) {
                 filters.add(FilterType.SILENCE_BEFORE);
             } else if (envelopeSilenceAfter.isSelected()) {
                 filters.add(FilterType.SILENCE_AFTER);
             }
-            callback.updateEnvelope(null, filters);
+            callback.updateEnvelope(null, regionToUpdate, filters);
         }
     }
 

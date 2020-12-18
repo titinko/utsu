@@ -5,6 +5,7 @@ import com.utsusynth.utsu.common.data.MutateResponse;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.files.CacheManager;
@@ -381,12 +382,56 @@ public class Song {
     }
 
     public LinkedList<NoteData> getNotes() {
+        return getNotes(RegionBounds.WHOLE_SONG, new ArrayList<>());
+    }
+
+    public LinkedList<NoteData> getNotes(RegionBounds bounds, List<FilterType> filters) {
         LinkedList<NoteData> notes = new LinkedList<>();
-        NoteIterator iterator = noteList.iterator();
+        NoteIterator iterator = noteList.boundedIterator(bounds);
         int totalDelta = 0;
         while (iterator.hasNext()) {
             Note note = iterator.next();
             totalDelta += note.getDelta();
+            // Apply all filters.
+            if (filters.contains(FilterType.SILENCE_BEFORE)) {
+                Optional<Note> prev = iterator.peekPrev();
+                if (prev.isPresent() && prev.get().getDuration() == prev.get().getLength()) {
+                    continue;
+                }
+            }
+            if (filters.contains(FilterType.SILENCE_AFTER)) {
+                Optional<Note> next = iterator.peekNext();
+                if (next.isPresent() && note.getDuration() == note.getLength()) {
+                    continue;
+                }
+            }
+            if (filters.contains(FilterType.RISING_NOTE)) {
+                Optional<Note> prev = iterator.peekPrev();
+                if (prev.isPresent() && prev.get().getNoteNum() >= note.getNoteNum()) {
+                    continue;
+                }
+            }
+            if (filters.contains(FilterType.FALLING_NOTE)) {
+                Optional<Note> prev = iterator.peekPrev();
+                if (prev.isPresent() && prev.get().getNoteNum() <= note.getNoteNum()) {
+                    continue;
+                }
+            }
+            if (filters.contains(FilterType.GREATER_THAN_2ND)) {
+                if (note.getDuration() <= 960) {
+                    continue;
+                }
+            }
+            if (filters.contains(FilterType.GREATER_THAN_4TH)) {
+                if (note.getDuration() <= 480) {
+                    continue;
+                }
+            }
+            if (filters.contains(FilterType.GREATER_THAN_8TH)) {
+                if (note.getDuration() <= 240) {
+                    continue;
+                }
+            }
             notes.add(
                     new NoteData(
                             totalDelta,
