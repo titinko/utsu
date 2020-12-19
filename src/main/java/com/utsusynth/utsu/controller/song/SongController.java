@@ -66,6 +66,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 'SongScene.fxml' Controller Class
@@ -1005,7 +1006,19 @@ public class SongController implements EditorController, Localizable {
                         PitchbendData newPortamento,
                         RegionBounds regionToUpdate,
                         List<FilterType> filters) {
-                    List<NoteData> notes = song.get().getNotes(regionToUpdate, filters);
+                    Function<NoteData, NoteData> transformNote = noteData -> {
+                        if (noteData == null) {
+                            return noteData;
+                        }
+                        if (noteData.getPitchbend().isPresent()) {
+                            PitchbendData newPitchbend = newPortamento.withVibrato(
+                                    Optional.of(noteData.getPitchbend().get().getVibrato()));
+                            return noteData.withPitchbend(newPitchbend);
+                        } else {
+                            return noteData;
+                        }
+                    };
+                    modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
                 }
 
                 @Override
@@ -1013,7 +1026,19 @@ public class SongController implements EditorController, Localizable {
                         PitchbendData newVibrato,
                         RegionBounds regionToUpdate,
                         List<FilterType> filters) {
-                    List<NoteData> notes = song.get().getNotes(regionToUpdate, filters);
+                    Function<NoteData, NoteData> transformNote = noteData -> {
+                        if (noteData == null) {
+                            return noteData;
+                        }
+                        if (noteData.getPitchbend().isPresent()) {
+                            PitchbendData newPitchbend = noteData.getPitchbend().get().withVibrato(
+                                    Optional.of(newVibrato.getVibrato()));
+                            return noteData.withPitchbend(newPitchbend);
+                        } else {
+                            return noteData;
+                        }
+                    };
+                    modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
                 }
 
                 @Override
@@ -1021,7 +1046,13 @@ public class SongController implements EditorController, Localizable {
                         EnvelopeData newEnvelope,
                         RegionBounds regionToUpdate,
                         List<FilterType> filters) {
-                    List<NoteData> notes = song.get().getNotes(regionToUpdate, filters);
+                    Function<NoteData, NoteData> transformNote = noteData -> {
+                        if (noteData == null) {
+                            return noteData;
+                        }
+                        return noteData.withEnvelope(newEnvelope);
+                    };
+                    modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
                 }
             });
             Scene scene = new Scene(editorPane);
@@ -1032,6 +1063,45 @@ public class SongController implements EditorController, Localizable {
             statusBar.setStatus("Error: Unable to open bulk editor.");
             errorLogger.logError(e);
         }
+    }
+
+    private void modifyNotes(List<NoteData> oldNotes, Function<NoteData, NoteData> transform) {
+        List<NoteData> newNotes = oldNotes.stream().map(transform).collect(Collectors.toList());
+        Runnable redoAction = () -> {
+            int minMs = Integer.MAX_VALUE;
+            int maxMs = 0;
+            for (NoteData noteData : newNotes) {
+                song.get().modifyNote(noteData);
+                if (minMs > noteData.getPosition()) {
+                    minMs = noteData.getPosition();
+                }
+                if (maxMs < noteData.getPosition()) {
+                    maxMs = noteData.getPosition();
+                }
+            }
+            onSongChange();
+            songEditor.selectRegion(new RegionBounds(minMs, maxMs));
+            songEditor.refreshSelected();
+        };
+        Runnable undoAction = () -> {
+            int minMs = Integer.MAX_VALUE;
+            int maxMs = 0;
+            for (NoteData noteData : oldNotes) {
+                song.get().modifyNote(noteData);
+                if (minMs > noteData.getPosition()) {
+                    minMs = noteData.getPosition();
+                }
+                if (maxMs < noteData.getPosition()) {
+                    maxMs = noteData.getPosition();
+                }
+            }
+            onSongChange();
+            songEditor.selectRegion(new RegionBounds(minMs, maxMs));
+            songEditor.refreshSelected();
+        };
+        // Apply changes and save redo/undo for these changes.
+        redoAction.run();
+        undoService.setMostRecentAction(redoAction, undoAction);
     }
 
     @Override

@@ -106,4 +106,40 @@ public class NoteData {
     public Optional<NoteConfigData> getConfigData() {
         return this.configData;
     }
+
+    public NoteData withEnvelope(EnvelopeData envelope) {
+        return new NoteData(
+                position,
+                duration,
+                pitch,
+                lyric,
+                trueLyric,
+                Optional.of(envelope),
+                pitchbend,
+                configData);
+    }
+
+    public NoteData withPitchbend(PitchbendData pitchbend) {
+        return new NoteData(
+                position,
+                duration,
+                pitch,
+                lyric,
+                trueLyric,
+                envelope,
+                Optional.of(pitchbend),
+                configData);
+    }
+
+    public NoteData withConfigData(NoteConfigData configData) {
+        return new NoteData(
+                position,
+                duration,
+                pitch,
+                lyric,
+                trueLyric,
+                envelope,
+                pitchbend,
+                Optional.of(configData));
+    }
 }

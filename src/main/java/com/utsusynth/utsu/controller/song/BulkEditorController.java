@@ -2,6 +2,7 @@ package com.utsusynth.utsu.controller.song;
 
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
