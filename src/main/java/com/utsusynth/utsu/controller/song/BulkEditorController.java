@@ -7,6 +7,7 @@ import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.view.song.BulkEditor;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -27,6 +28,7 @@ public class BulkEditorController implements Localizable {
         ENVELOPE,
     }
 
+    private final BulkEditor bulkEditor;
     private final Localizer localizer;
 
     private BulkEditorCallback callback;
@@ -121,7 +123,8 @@ public class BulkEditorController implements Localizable {
     private AnchorPane envelopeListAnchor;
 
     @Inject
-    public BulkEditorController(Localizer localizer) {
+    public BulkEditorController(BulkEditor bulkEditor, Localizer localizer) {
+        this.bulkEditor = bulkEditor;
         this.localizer = localizer;
     }
 
@@ -156,7 +159,9 @@ public class BulkEditorController implements Localizable {
         envelopeSilenceBefore.setToggleGroup(silenceToggle);
         envelopeSilenceAfter.setToggleGroup(silenceToggle);
         envelopeAllNotes.setSelected(true); // Consider saving user's setting.
-        // TOOD: Initialize visual editor.
+        envelopeAnchor.getChildren().add(
+                bulkEditor.createEnvelopeEditor(
+                        envelopeAnchor.widthProperty(), envelopeAnchor.heightProperty()));
         // TODO: Initialize config list.
 
         localizer.localize(this);
