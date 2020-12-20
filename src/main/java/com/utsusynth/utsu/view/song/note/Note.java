@@ -371,7 +371,7 @@ public class Note implements Comparable<Note> {
         double oldOverlap = overlap.getWidth();
         double noteWidth = scaler.unscaleX(this.note.getWidth());
         if (noteWidth > distanceToNextNote) {
-            overlap.setWidth(scaler.scaleX(noteWidth - distanceToNextNote));
+            overlap.setWidth(scaler.scaleX(noteWidth - distanceToNextNote).get());
         } else {
             overlap.setWidth(0);
         }
@@ -390,9 +390,9 @@ public class Note implements Comparable<Note> {
     /** Only moves the visual note. */
     public void moveNoteElement(int positionMsDelta, int rowDelta) {
         int newPositionMs = getAbsPositionMs() + positionMsDelta;
-        layout.setTranslateX(scaler.scalePos(newPositionMs));
+        layout.setTranslateX(scaler.scalePos(newPositionMs).get());
         int newRow = getRow() + rowDelta;
-        layout.setTranslateY(scaler.scaleY(newRow * Quantizer.ROW_HEIGHT));
+        layout.setTranslateY(scaler.scaleY(newRow * Quantizer.ROW_HEIGHT).get());
     }
 
     public void setBackupData(NoteUpdateData backupData) {
@@ -426,13 +426,13 @@ public class Note implements Comparable<Note> {
     }
 
     private void resizeNote(int newDuration) {
-        note.setWidth(scaler.scaleX(newDuration) - 1);
+        note.setWidth(scaler.scaleX(newDuration).get() - 1);
         adjustDragEdge(newDuration);
         track.updateNote(this);
     }
 
     private void adjustDragEdge(double newDuration) {
-        double scaledDuration = scaler.scaleX(newDuration);
+        double scaledDuration = scaler.scaleX(newDuration).get();
         StackPane
                 .setMargin(dragEdge, new Insets(0, 0, 0, scaledDuration - dragEdge.getWidth() - 1));
         StackPane.setMargin(overlap, new Insets(0, 0, 0, scaledDuration - overlap.getWidth() - 1));

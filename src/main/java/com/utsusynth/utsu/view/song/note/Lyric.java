@@ -30,8 +30,8 @@ public class Lyric {
 
         textField = new TextField();
         textField.setFont(Font.font(9));
-        textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 2);
-        textField.setMaxWidth(scaler.scaleX(Quantizer.COL_WIDTH) - 2);
+        textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 2);
+        textField.setMaxWidth(scaler.scaleX(Quantizer.COL_WIDTH).get() - 2);
         textField.setOnAction((event) -> {
             closeTextFieldIfNeeded();
         });

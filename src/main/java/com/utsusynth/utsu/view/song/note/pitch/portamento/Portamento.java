@@ -14,7 +14,6 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class Portamento {
@@ -116,7 +115,7 @@ public class Portamento {
 
             if (index > 0 && index < squares.size() - 1) {
                 double newY = event.getY();
-                if (newY > 0 && newY < scaler.scaleY(Quantizer.ROW_HEIGHT * 12 * 7)) {
+                if (newY > 0 && newY < scaler.scaleY(Quantizer.ROW_HEIGHT * 12 * 7).get()) {
                     changed = true;
                     square.setY(newY - 2);
                 }

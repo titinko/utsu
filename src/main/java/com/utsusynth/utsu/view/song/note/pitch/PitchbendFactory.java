@@ -65,10 +65,10 @@ public class PitchbendFactory {
             String type = pitchbend.getPBM().size() > i ? pitchbend.getPBM().get(i) : "";
             pitchCurves.add(
                     curveFactory.createCurve(
-                            scaler.scalePos(tempX),
-                            scaler.scaleY(tempY),
-                            scaler.scalePos(curX),
-                            scaler.scaleY(curY),
+                            scaler.scalePos(tempX).get(),
+                            scaler.scaleY(tempY).get(),
+                            scaler.scalePos(curX).get(),
+                            scaler.scaleY(curY).get(),
                             type));
         }
         return new Portamento(
@@ -83,7 +83,7 @@ public class PitchbendFactory {
         return new Vibrato(
                 note.getAbsPositionMs(),
                 note.getAbsPositionMs() + note.getDurationMs(),
-                scaler.scaleY((note.getRow() + .5) * Quantizer.ROW_HEIGHT),
+                scaler.scaleY((note.getRow() + .5) * Quantizer.ROW_HEIGHT).get(),
                 callback,
                 localizer,
                 scaler,

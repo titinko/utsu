@@ -218,7 +218,7 @@ public class SongEditor {
     }
 
     public double getWidthX() {
-        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
+        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
         return measureWidth * (numMeasures + 1); // Include pre-roll.
     }
 
@@ -513,7 +513,7 @@ public class SongEditor {
 
     public void selectivelyShowRegion(double centerPercent, double margin) {
         int measureWidthMs = 4 * Quantizer.COL_WIDTH;
-        int marginMeasures = ((int) (margin / Math.round(scaler.scaleX(measureWidthMs)))) + 3;
+        int marginMeasures = ((int) (margin / Math.round(scaler.scaleX(measureWidthMs).get()))) + 3;
         int centerMeasure = RoundUtils.round((numMeasures) * centerPercent) - 1; // Pre-roll.
         int clampedStartMeasure =
                 Math.min(Math.max(centerMeasure - marginMeasures, 0), numMeasures - 1);
@@ -541,7 +541,7 @@ public class SongEditor {
     }
 
     private void showMeasures(int startMeasure, int endMeasure) {
-        int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH));
+        int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
         int startX = measureWidth * startMeasure;
         int endX = measureWidth * endMeasure;
         measures.getChildren().forEach(child -> {
@@ -565,7 +565,7 @@ public class SongEditor {
             // Nothing needs to be done.
             return;
         } else {
-            int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH));
+            int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
             int maxWidth = measureWidth * (newNumMeasures + 1); // Include pre-roll.
             // Remove measures.
             measures.getChildren().removeIf(
@@ -578,8 +578,8 @@ public class SongEditor {
     }
 
     private void addMeasure(boolean enabled) {
-        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH);
-        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT);
+        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
 
         Pane newMeasure = new Pane();
         newMeasure.setPrefSize(colWidth * 4, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
@@ -647,7 +647,7 @@ public class SongEditor {
         measure.setOnMouseReleased(event -> {
             selection.setVisible(false); // Remove selection box if present.
             int quantSize = quantizer.getQuant();
-            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
+            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
             double endX = Math
                     .min(getWidthX(), Math.max(measureWidth, measure.getLayoutX() + event.getX()));
             int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
@@ -686,7 +686,7 @@ public class SongEditor {
             }
         });
         measure.setOnMouseDragged(event -> {
-            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
+            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
             double endX = Math
                     .min(getWidthX(), Math.max(measureWidth, measure.getLayoutX() + event.getX()));
             if (subMode == SubMode.DRAG_SELECT || event.isShiftDown()
@@ -726,10 +726,10 @@ public class SongEditor {
                     // Draw selection rectangle.
                     selection.setVisible(true);
                     selection.getStyleClass().setAll("add-note-box");
-                    selection.setX(scaler.scalePos(startMs));
-                    selection.setY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT));
-                    selection.setWidth(scaler.scaleX(endMs - startMs));
-                    selection.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT));
+                    selection.setX(scaler.scalePos(startMs).get());
+                    selection.setY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT).get());
+                    selection.setWidth(scaler.scaleX(endMs - startMs).get());
+                    selection.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
                 } else {
                     selection.setVisible(false);
                 }

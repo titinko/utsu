@@ -17,7 +17,6 @@ import javafx.animation.TranslateTransition;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.scene.CacheHint;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.shape.Line;
@@ -59,14 +58,14 @@ public class PlaybackBarManager {
     DoubleProperty startPlayback(Duration duration, RegionBounds playRegion) {
         if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             // Create a playback bar.
-            double barX = scaler.scalePos(playRegion.getMinMs());
-            Line playBar = new Line(barX, 0, barX, scaler.scaleY(TOTAL_HEIGHT));
+            double barX = scaler.scalePos(playRegion.getMinMs()).get();
+            Line playBar = new Line(barX, 0, barX, scaler.scaleY(TOTAL_HEIGHT).get());
             playBar.getStyleClass().add("playback-bar");
 
             // Add a backing bar to handle a Windows-specific optimization issue.
             Node playBarNode;
             if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                Line backingBar = new Line(barX, 0, barX, scaler.scaleY(TOTAL_HEIGHT));
+                Line backingBar = new Line(barX, 0, barX, scaler.scaleY(TOTAL_HEIGHT).get());
                 backingBar.getStyleClass().add("playback-backing-bar");
                 playBarNode = new Group(playBar, backingBar);
             } else {
@@ -78,7 +77,8 @@ public class PlaybackBarManager {
             playback.stop();
             playback.setNode(playBarNode);
             playback.setDuration(duration);
-            playback.setToX(scaler.scaleX(playRegion.getMaxMs() - playRegion.getMinMs()));
+            playback.setToX(
+                    scaler.scaleX(playRegion.getMaxMs() - playRegion.getMinMs()).get());
             playback.setInterpolator(Interpolator.LINEAR);
             playback.statusProperty().addListener((obs, oldStatus, newStatus) -> {
                 if (newStatus == Status.STOPPED) {
@@ -127,8 +127,8 @@ public class PlaybackBarManager {
 
         // Add start and stop bars to the track at the correct location.
         bars.getChildren().addAll(startBar, endBar);
-        startBar.setTranslateX(scaler.scalePos(region.getMinMs()));
-        endBar.setTranslateX(scaler.scalePos(region.getMaxMs()));
+        startBar.setTranslateX(scaler.scalePos(region.getMinMs()).get());
+        endBar.setTranslateX(scaler.scalePos(region.getMaxMs()).get());
 
         // Highlight all notes within the add region.
         for (Note note : allNotes) {
@@ -158,8 +158,9 @@ public class PlaybackBarManager {
 
         // Add start and stop bars to the track at the correct location.
         bars.getChildren().addAll(startBar, endBar);
-        startBar.setTranslateX(scaler.scalePos(highlighted.first().getValidBounds().getMinMs()));
-        endBar.setTranslateX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()));
+        startBar.setTranslateX(
+                scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
+        endBar.setTranslateX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
     }
 
     /**
@@ -177,8 +178,9 @@ public class PlaybackBarManager {
                 bars.getChildren().add(endBar);
             }
             startBar.setTranslateX(
-                    scaler.scalePos(highlighted.first().getValidBounds().getMinMs()));
-            endBar.setTranslateX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()));
+                    scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
+            endBar.setTranslateX(
+                    scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
         }
     }
 
@@ -188,10 +190,10 @@ public class PlaybackBarManager {
         clearHighlights();
 
         // Recreate start and end bars, as scale might have changed.
-        startBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT));
+        startBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT).get());
         startBar.getStyleClass().add("start-bar");
         startBar.setMouseTransparent(true);
-        endBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT));
+        endBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT).get());
         endBar.getStyleClass().add("end-bar");
         endBar.setMouseTransparent(true);
     }
@@ -208,7 +210,7 @@ public class PlaybackBarManager {
     void setCursor(int positionMs) {
         clearHighlights();
         bars.getChildren().add(startBar);
-        startBar.setTranslateX(scaler.scalePos(positionMs));
+        startBar.setTranslateX(scaler.scalePos(positionMs).get());
     }
 
     int getCursorPosition() {

@@ -522,7 +522,8 @@ public class SongController implements EditorController, Localizable {
         double trackWidth = songEditor.getWidthX();
         double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
         if (viewportWidth != 0 && trackWidth > viewportWidth) {
-            scrollPaneCenter.setHvalue(scaler.scalePos(positionMs) / (trackWidth - viewportWidth));
+            scrollPaneCenter.setHvalue(
+                    scaler.scalePos(positionMs).get() / (trackWidth - viewportWidth));
         }
     }
 

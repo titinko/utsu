@@ -37,13 +37,13 @@ public class EnvelopeFactory {
 
         // Do not scale y axis for envelopes.
         return new Envelope(
-                new MoveTo(scaler.scalePos(startPos), 100),
-                new LineTo(scaler.scalePos(startPos + p1), v1),
-                new LineTo(scaler.scalePos(startPos + p1 + p2), v2),
-                new LineTo(scaler.scalePos(startPos + p1 + p2 + p5), v5),
-                new LineTo(scaler.scalePos(endPos - p4 - p3), v3),
-                new LineTo(scaler.scalePos(endPos - p4), v4),
-                new LineTo(scaler.scalePos(endPos), 100),
+                new MoveTo(scaler.scalePos(startPos).get(), 100),
+                new LineTo(scaler.scalePos(startPos + p1).get(), v1),
+                new LineTo(scaler.scalePos(startPos + p1 + p2).get(), v2),
+                new LineTo(scaler.scalePos(startPos + p1 + p2 + p5).get(), v5),
+                new LineTo(scaler.scalePos(endPos - p4 - p3).get(), v3),
+                new LineTo(scaler.scalePos(endPos - p4).get(), v4),
+                new LineTo(scaler.scalePos(endPos).get(), 100),
                 callback,
                 scaler);
     }

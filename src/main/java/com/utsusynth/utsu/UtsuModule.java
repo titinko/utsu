@@ -6,6 +6,7 @@ import com.google.inject.*;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
+import com.utsusynth.utsu.common.quantize.DiscreteScaler;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.common.IconManager;
@@ -46,6 +47,7 @@ public class UtsuModule extends AbstractModule {
         bind(FileNameFixer.class).asEagerSingleton();
         bind(IconManager.class).asEagerSingleton();
         bind(VoicebankReader.class).asEagerSingleton();
+        bind(Scaler.class).to(DiscreteScaler.class);
     }
 
     @Provides
@@ -148,7 +150,7 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private Scaler provideScaler() {
-        return new Scaler(2, 0);
+    private DiscreteScaler provideDiscreteScaler() {
+        return new DiscreteScaler(2, 0);
     }
 }

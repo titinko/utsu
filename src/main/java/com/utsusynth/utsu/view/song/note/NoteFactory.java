@@ -40,8 +40,8 @@ public class NoteFactory {
         int absStart = note.getPosition();
         int absDuration = note.getDuration();
         Rectangle rect = new Rectangle();
-        rect.setWidth(scaler.scaleX(absDuration) - 1);
-        rect.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
+        rect.setWidth(scaler.scaleX(absDuration).get() - 1);
+        rect.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
         rect.getStyleClass().addAll("track-note", "valid", "not-highlighted");
 
         Rectangle edge = new Rectangle();
@@ -57,9 +57,9 @@ public class NoteFactory {
         StackPane layout = new StackPane();
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
-        layout.setTranslateY(
-                scaler.scaleY(PitchUtils.pitchToRowNum(note.getPitch()) * Quantizer.ROW_HEIGHT));
-        layout.setTranslateX(scaler.scalePos(absStart));
+        layout.setTranslateY(scaler.scaleY(
+                PitchUtils.pitchToRowNum(note.getPitch()) * Quantizer.ROW_HEIGHT).get());
+        layout.setTranslateX(scaler.scalePos(absStart).get());
 
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(
@@ -103,8 +103,8 @@ public class NoteFactory {
             BooleanProperty showLyrics,
             BooleanProperty showAliases) {
         Rectangle note = new Rectangle();
-        note.setWidth(scaler.scaleX(durationMs) - 1);
-        note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
+        note.setWidth(scaler.scaleX(durationMs).get() - 1);
+        note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
         note.getStyleClass().addAll("track-note", "invalid", "not-highlighted");
 
         Rectangle edge = new Rectangle();
@@ -120,8 +120,8 @@ public class NoteFactory {
         StackPane layout = new StackPane();
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
-        layout.setTranslateY(scaler.scaleY(row * Quantizer.ROW_HEIGHT));
-        layout.setTranslateX(scaler.scalePos(positionMs));
+        layout.setTranslateY(scaler.scaleY(row * Quantizer.ROW_HEIGHT).get());
+        layout.setTranslateX(scaler.scalePos(positionMs).get());
 
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(

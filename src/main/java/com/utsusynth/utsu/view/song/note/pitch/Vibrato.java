@@ -223,7 +223,7 @@ public class Vibrato {
 
         // Draw path.
         double curStartMs = noteEndMs - lengthMs;
-        vibratoPath.getElements().add(new MoveTo(scaler.scalePos(curStartMs), noteY));
+        vibratoPath.getElements().add(new MoveTo(scaler.scalePos(curStartMs).get(), noteY));
         for (VibratoCurve hump : humps) {
             hump.addToPath(vibratoPath, curStartMs);
             curStartMs += hump.getWidthMs();
@@ -265,24 +265,26 @@ public class Vibrato {
 
         public Editor() {
             // Values that don't change.
-            this.minX = new SimpleDoubleProperty(scaler.scalePos(noteStartMs));
-            this.maxX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs));
+            this.minX = new SimpleDoubleProperty(scaler.scalePos(noteStartMs).get());
+            this.maxX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs).get());
             this.baseY = new SimpleDoubleProperty(noteY);
 
             this.centerY = new SimpleDoubleProperty(
-                    scaler.scaleY(-vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT) + noteY);
+                    scaler.scaleY(-vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT).get() + noteY);
             this.amplitudeY = new SimpleDoubleProperty(
-                    scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT));
+                    scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT).get());
 
             double lengthMs = (noteEndMs - noteStartMs) * (vibrato[0] / 100.0); // Vibrato length.
-            this.startX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs - lengthMs));
+            this.startX = new SimpleDoubleProperty(
+                    scaler.scalePos(noteEndMs - lengthMs).get());
             this.fadeInX = new SimpleDoubleProperty(
-                    scaler.scalePos(noteEndMs - lengthMs + (lengthMs * (vibrato[3] / 100.0))));
+                    scaler.scalePos(
+                            noteEndMs - lengthMs + (lengthMs * (vibrato[3] / 100.0))).get());
             this.fadeOutX = new SimpleDoubleProperty(
-                    scaler.scalePos(noteEndMs - (lengthMs * (vibrato[4] / 100.0))));
+                    scaler.scalePos(noteEndMs - (lengthMs * (vibrato[4] / 100.0))).get());
 
             this.maxSliderX = new SimpleDoubleProperty(
-                    Math.min(maxX.get(), startX.get() + scaler.scaleX(Quantizer.COL_WIDTH)));
+                    Math.min(maxX.get(), startX.get() + scaler.scaleX(Quantizer.COL_WIDTH).get()));
             this.frqX = new SimpleDoubleProperty(
                     startX.get() + (maxSliderX.get() - startX.get()) * (vibrato[1] - 10) / 448.0);
             this.phaseX = new SimpleDoubleProperty(
@@ -392,7 +394,8 @@ public class Vibrato {
                     startX.set(x);
                     fadeInX.set(x + ((maxX.get() - x) * vibrato[3] / 100.0));
                     fadeOutX.set(maxX.get() - ((maxX.get() - x) * vibrato[4] / 100.0));
-                    maxSliderX.set(Math.min(maxX.get(), x + scaler.scaleX(Quantizer.COL_WIDTH)));
+                    maxSliderX.set(
+                            Math.min(maxX.get(), x + scaler.scaleX(Quantizer.COL_WIDTH).get()));
                     frqX.set(x + (maxSliderX.get() - x) * (vibrato[1] - 10) / 448.0);
                     phaseX.set(x + (maxSliderX.get() - x) * vibrato[5] / 100.0);
                     frqSlopeX.set(x + (maxSliderX.get() - x) * (vibrato[8] + 100) / 200.0);
@@ -474,7 +477,7 @@ public class Vibrato {
         }
 
         private double centsToY(double cents) {
-            return scaler.scaleY(cents / 100.0 * Quantizer.ROW_HEIGHT);
+            return scaler.scaleY(cents / 100.0 * Quantizer.ROW_HEIGHT).get();
         }
 
         private int yToCents(double y) {

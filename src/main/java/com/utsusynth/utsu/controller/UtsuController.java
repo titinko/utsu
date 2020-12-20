@@ -9,7 +9,7 @@ import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
-import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.quantize.DiscreteScaler;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.files.ThemeManager;
 import javafx.animation.PauseTransition;
@@ -55,7 +55,7 @@ public class UtsuController implements Localizable {
     // Helper classes go here.
     private final ThemeManager themeManager;
     private final Localizer localizer;
-    private final Scaler scaler;
+    private final DiscreteScaler scaler;
     private final StatusBar statusBar;
     private final Provider<SaveWarningDialog> saveWarningProvider;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
@@ -71,7 +71,7 @@ public class UtsuController implements Localizable {
     public UtsuController(
             ThemeManager themeManager,
             Localizer localizer,
-            Scaler scaler,
+            DiscreteScaler scaler,
             StatusBar statusBar,
             Provider<SaveWarningDialog> saveWarningProvider,
             Provider<FXMLLoader> fxmlLoaders) {
@@ -262,14 +262,15 @@ public class UtsuController implements Localizable {
         zoomInHorizontallyItem
                 .setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
         zoomInHorizontallyItem
-                .setDisable(scaler.getHorizontalRank() == Scaler.HORIZONTAL_SCALES.size() - 1);
+                .setDisable(
+                        scaler.getHorizontalRank() == DiscreteScaler.HORIZONTAL_SCALES.size() - 1);
         zoomOutHorizontallyItem
                 .setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN));
         zoomOutHorizontallyItem.setDisable(scaler.getHorizontalRank() == 0);
         zoomInVerticallyItem
                 .setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN, SHIFT_DOWN));
         zoomInVerticallyItem
-                .setDisable(scaler.getVerticalRank() == Scaler.VERTICAL_SCALES.size() - 1);
+                .setDisable(scaler.getVerticalRank() == DiscreteScaler.VERTICAL_SCALES.size() - 1);
         zoomOutVerticallyItem
                 .setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN, SHIFT_DOWN));
         zoomOutVerticallyItem.setDisable(scaler.getVerticalRank() == 0);
@@ -638,7 +639,7 @@ public class UtsuController implements Localizable {
             return;
         }
         zoomOutHorizontallyItem.setDisable(newRank <= 0);
-        zoomInHorizontallyItem.setDisable(newRank >= Scaler.HORIZONTAL_SCALES.size() - 1);
+        zoomInHorizontallyItem.setDisable(newRank >= DiscreteScaler.HORIZONTAL_SCALES.size() - 1);
         for (Tab tab : tabs.getTabs()) {
             editors.get(tab.getId()).refreshView();
         }
@@ -659,7 +660,7 @@ public class UtsuController implements Localizable {
             return;
         }
         zoomOutVerticallyItem.setDisable(newRank <= 0);
-        zoomInVerticallyItem.setDisable(newRank >= Scaler.VERTICAL_SCALES.size() - 1);
+        zoomInVerticallyItem.setDisable(newRank >= DiscreteScaler.VERTICAL_SCALES.size() - 1);
         for (Tab tab : tabs.getTabs()) {
             editors.get(tab.getId()).refreshView();
         }
