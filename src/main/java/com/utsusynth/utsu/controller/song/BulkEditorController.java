@@ -159,9 +159,14 @@ public class BulkEditorController implements Localizable {
         envelopeSilenceBefore.setToggleGroup(silenceToggle);
         envelopeSilenceAfter.setToggleGroup(silenceToggle);
         envelopeAllNotes.setSelected(true); // Consider saving user's setting.
+        double[] envWidths = new double[] {200, 1, 1, 100, 1}; // Large fade in/out for visibility.
+        double[] envHeights = new double[] {100, 100, 100, 100, 100};
+        EnvelopeData sampleData = new EnvelopeData(envWidths, envHeights);
         envelopeAnchor.getChildren().add(
                 bulkEditor.createEnvelopeEditor(
-                        envelopeAnchor.widthProperty(), envelopeAnchor.heightProperty()));
+                        sampleData,
+                        envelopeAnchor.widthProperty(),
+                        envelopeAnchor.heightProperty()));
         // TODO: Initialize config list.
 
         localizer.localize(this);

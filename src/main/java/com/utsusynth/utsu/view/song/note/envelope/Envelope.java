@@ -15,6 +15,7 @@ public class Envelope {
     private final LineTo[] lines;
     private final LineTo end;
     private final Group group;
+    private final double maxHeight;
     private final Scaler scaler;
 
     // Temporary cache values.
@@ -30,7 +31,9 @@ public class Envelope {
             LineTo l5,
             LineTo end,
             EnvelopeCallback callback,
+            double maxHeight,
             Scaler scaler) {
+        this.maxHeight = maxHeight;
         this.scaler = scaler;
         this.start = start;
         this.lines = new LineTo[] {l1, l2, l3, l4, l5};
@@ -61,7 +64,7 @@ public class Envelope {
                     }
                 }
                 double newY = event.getY();
-                if (newY >= 0 && newY <= 100) {
+                if (newY >= 0 && newY <= maxHeight) {
                     changed = true;
                     circle.setCenterY(newY);
                 }
@@ -95,12 +98,13 @@ public class Envelope {
         widths[3] = scaler.unscaleX(end.getX() - lines[4].getX());
         widths[4] = scaler.unscaleX(lines[2].getX() - lines[1].getX());
 
+        double multiplier = 200 / maxHeight; // Final value should have range 0-200.
         double[] heights = new double[5];
-        heights[0] = 200 - (lines[0].getY() * 2);
-        heights[1] = 200 - (lines[1].getY() * 2);
-        heights[2] = 200 - (lines[3].getY() * 2);
-        heights[3] = 200 - (lines[4].getY() * 2);
-        heights[4] = 200 - (lines[2].getY() * 2);
+        heights[0] = (maxHeight - lines[0].getY()) * multiplier;
+        heights[1] = (maxHeight - lines[1].getY()) * multiplier;
+        heights[2] = (maxHeight - lines[3].getY()) * multiplier;
+        heights[3] = (maxHeight - lines[4].getY()) * multiplier;
+        heights[4] = (maxHeight - lines[2].getY()) * multiplier;
         return new EnvelopeData(widths, heights);
     }
 }

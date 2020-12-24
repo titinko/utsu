@@ -6,7 +6,7 @@ public class EnvelopeData {
     private final Optional<Double> envPreutter;
     private final Optional<Double> envLength;
     private final double[] widths; // "p" in milliseconds
-    private final double[] heights; // "v" in % of total intensity (0-100)
+    private final double[] heights; // "v" in % of total intensity (0-200)
 
     public EnvelopeData(double[] envWidths, double[] envHeights) {
         // TODO: Add more parameter checking here, don't just assume the inputs make sense.
