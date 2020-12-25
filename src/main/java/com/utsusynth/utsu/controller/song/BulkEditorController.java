@@ -28,7 +28,7 @@ public class BulkEditorController implements Localizable {
         ENVELOPE,
     }
 
-    private final BulkEditor bulkEditor;
+    private final BulkEditor view;
     private final Localizer localizer;
 
     private BulkEditorCallback callback;
@@ -124,7 +124,7 @@ public class BulkEditorController implements Localizable {
 
     @Inject
     public BulkEditorController(BulkEditor bulkEditor, Localizer localizer) {
-        this.bulkEditor = bulkEditor;
+        this.view = bulkEditor;
         this.localizer = localizer;
     }
 
@@ -163,10 +163,10 @@ public class BulkEditorController implements Localizable {
         double[] envHeights = new double[] {100, 100, 100, 100, 100};
         EnvelopeData sampleData = new EnvelopeData(envWidths, envHeights);
         envelopeAnchor.getChildren().add(
-                bulkEditor.createEnvelopeEditor(
+                view.createEnvelopeEditor(
                         sampleData,
-                        envelopeAnchor.widthProperty(),
-                        envelopeAnchor.heightProperty()));
+                        envelopeAnchor.widthProperty().subtract(1),
+                        envelopeAnchor.heightProperty().subtract(1)));
         // TODO: Initialize config list.
 
         localizer.localize(this);
@@ -280,7 +280,7 @@ public class BulkEditorController implements Localizable {
             } else if (envelopeSilenceAfter.isSelected()) {
                 filters.add(FilterType.SILENCE_AFTER);
             }
-            callback.updateEnvelope(null, regionToUpdate, filters);
+            callback.updateEnvelope(view.getEnvelopeData(), regionToUpdate, filters);
         }
     }
 

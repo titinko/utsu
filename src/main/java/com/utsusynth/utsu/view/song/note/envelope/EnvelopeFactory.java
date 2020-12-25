@@ -67,11 +67,12 @@ public class EnvelopeFactory {
 
         // Convert heights to a scale of 0-200.
         double[] heights = envelope.getHeights();
-        double v1 = (editorHeight - heights[0]) / (200 / editorHeight);
-        double v2 = (editorHeight - heights[1]) / (200 / editorHeight);
-        double v3 = (editorHeight - heights[2]) / (200 / editorHeight);
-        double v4 = (editorHeight - heights[3]) / (200 / editorHeight);
-        double v5 = (editorHeight - heights[4]) / (200 / editorHeight);
+        double multiplier = editorHeight / 200;
+        double v1 = editorHeight - (heights[0] * multiplier);
+        double v2 = editorHeight - (heights[1] * multiplier);
+        double v3 = editorHeight - (heights[2] * multiplier);
+        double v4 = editorHeight - (heights[3] * multiplier);
+        double v5 = editorHeight - (heights[4] * multiplier);
 
         // Do not scale y axis for envelopes.
         return new Envelope(

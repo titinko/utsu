@@ -6,7 +6,7 @@ import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
 import javafx.beans.InvalidationListener;
-import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.binding.DoubleBinding;
 import javafx.scene.Group;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
@@ -21,32 +21,35 @@ public class BulkEditor {
         this.envelopeFactory = envelopeFactory;
     }
 
-    public Group createEnvelopeEditor(EnvelopeData envelopeData, ReadOnlyDoubleProperty width, ReadOnlyDoubleProperty height) {
+    public Group createEnvelopeEditor(
+            EnvelopeData envelopeData, DoubleBinding width, DoubleBinding height) {
         AnchorPane topCell = new AnchorPane();
         topCell.getStyleClass().add("dynamics-top-cell");
         topCell.prefWidthProperty().bind(width);
-        topCell.prefHeightProperty().bind(height.divide(2));
+        topCell.prefHeightProperty().bind(height.divide(2.0));
         AnchorPane bottomCell = new AnchorPane();
         bottomCell.getStyleClass().add("dynamics-bottom-cell");
         bottomCell.prefWidthProperty().bind(width);
-        bottomCell.prefHeightProperty().bind(height.divide(2));
+        bottomCell.prefHeightProperty().bind(height.divide(2.0));
         VBox background = new VBox(topCell, bottomCell);
 
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                200, 200, envelopeData, ((oldData, newData) -> {}));
+                width.get(), height.get(), envelopeData, ((oldData, newData) -> {}));
         Group display = new Group(background, currentEnvelope.getElement());
 
         // Updating size is still buggy so disabled for this commit.
         InvalidationListener updateSize = obs -> {
-            //EnvelopeData curData = envelopeData;
-            System.out.println("Width = " + width.get());
-            System.out.println("Height = " + height.get());
-            //currentEnvelope = envelopeFactory.createEnvelopeEditor(
-            //        width.get(), height.get(), curData, ((oldData, newData) -> {}));
-            //display.getChildren().set(1, currentEnvelope.getElement());
+            EnvelopeData curData = currentEnvelope.getData();
+            currentEnvelope = envelopeFactory.createEnvelopeEditor(
+                    width.get(), height.get(), curData, ((oldData, newData) -> {}));
+            display.getChildren().set(1, currentEnvelope.getElement());
         };
         width.addListener(updateSize);
         height.addListener(updateSize);
         return display;
+    }
+
+    public EnvelopeData getEnvelopeData() {
+        return currentEnvelope.getData();
     }
 }

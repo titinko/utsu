@@ -90,7 +90,7 @@
                      <center>
                         <VBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
                            <children>
-                              <AnchorPane fx:id="portamentoAnchor" minHeight="200.0" minWidth="200.0" VBox.vgrow="ALWAYS" />
+                              <AnchorPane fx:id="portamentoAnchor" minHeight="200.0" minWidth="300.0" VBox.vgrow="ALWAYS" />
                               <Button mnemonicParsing="false" onAction="#addPortamentoConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
@@ -162,7 +162,7 @@
                      <center>
                         <VBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
                            <children>
-                              <AnchorPane fx:id="vibratoAnchor" minHeight="200.0" minWidth="200.0" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
+                              <AnchorPane fx:id="vibratoAnchor" minHeight="200.0" minWidth="300.0" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
                               <Button mnemonicParsing="false" onAction="#addVibratoConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
@@ -208,7 +208,7 @@
                      <center>
                           <VBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
                               <children>
-                                  <AnchorPane fx:id="envelopeAnchor" minHeight="200.0" minWidth="200.0" VBox.vgrow="ALWAYS" />
+                                  <AnchorPane fx:id="envelopeAnchor" minHeight="200.0" minWidth="300.0" VBox.vgrow="ALWAYS" />
                                   <Button mnemonicParsing="false" onAction="#addEnvelopeConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
