@@ -65,6 +65,15 @@ public class EnvelopeFactory {
         double p4 = widths[3];
         double p5 = widths[4];
 
+        double maxAllowedWidth = editorWidth - scaler.scaleX(p1 + p4).get();
+        double totalWidth = scaler.scaleX(p2 + p3 + p5).get();
+        if (maxAllowedWidth > 0 && totalWidth > maxAllowedWidth) {
+            double scaleFactor = maxAllowedWidth / totalWidth;
+            p2 *= scaleFactor;
+            p3 *= scaleFactor;
+            p5 *= scaleFactor;
+        }
+
         // Convert heights to a scale of 0-200.
         double[] heights = envelope.getHeights();
         double multiplier = editorHeight / 200;
