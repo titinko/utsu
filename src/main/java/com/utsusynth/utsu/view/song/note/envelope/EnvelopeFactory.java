@@ -4,8 +4,6 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.Note;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ObservableDoubleValue;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 

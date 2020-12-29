@@ -7,14 +7,20 @@ import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.DoubleBinding;
+import javafx.collections.ObservableList;
 import javafx.scene.Group;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class BulkEditor {
     private final EnvelopeFactory envelopeFactory;
 
     private Envelope currentEnvelope;
+    private ListView<EnvelopeData> envelopeList;
 
     @Inject
     public BulkEditor(EnvelopeFactory envelopeFactory, PitchbendFactory pitchbendFactory) {
@@ -37,7 +43,6 @@ public class BulkEditor {
                 width.get(), height.get(), envelopeData, ((oldData, newData) -> {}));
         Group display = new Group(background, currentEnvelope.getElement());
 
-        // Updating size is still buggy so disabled for this commit.
         InvalidationListener updateSize = obs -> {
             EnvelopeData curData = currentEnvelope.getData();
             currentEnvelope = envelopeFactory.createEnvelopeEditor(
@@ -51,5 +56,32 @@ public class BulkEditor {
 
     public EnvelopeData getEnvelopeData() {
         return currentEnvelope.getData();
+    }
+
+    public ListView<EnvelopeData> createEnvelopeList(ObservableList<EnvelopeData> envelopes) {
+        envelopeList = new ListView<>();
+        envelopeList.setPrefHeight(250);
+        envelopeList.setCellFactory(source -> {
+            return new ListCell<>() {
+                @Override
+                protected void updateItem(EnvelopeData item, boolean empty) {
+                    super.updateItem(item, empty);
+
+                    setText(null);
+                    if (empty || item == null) {
+                        setGraphic(null);
+                    } else {
+                        HBox graphic = new HBox(5);
+                        Envelope envelope = envelopeFactory.createEnvelopeEditor(
+                                150, 30, item, ((oldData, newData) -> {}));
+                        Button closeButton = new Button("X");
+                        graphic.getChildren().addAll(envelope.getElement(), closeButton);
+                        setGraphic(graphic);
+                    }
+                }
+            };
+        });
+        envelopeList.setItems(envelopes);
+        return envelopeList;
     }
 }

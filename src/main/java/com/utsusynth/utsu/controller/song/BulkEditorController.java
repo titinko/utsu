@@ -167,7 +167,8 @@ public class BulkEditorController implements Localizable {
                         sampleData,
                         envelopeAnchor.widthProperty().subtract(1),
                         envelopeAnchor.heightProperty().subtract(1)));
-        // TODO: Initialize config list.
+        envelopeListAnchor.getChildren().add(
+                view.createEnvelopeList(FXCollections.observableArrayList(sampleData, sampleData, sampleData)));
 
         localizer.localize(this);
     }
