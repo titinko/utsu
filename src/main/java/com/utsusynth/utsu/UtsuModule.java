@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.*;
 import com.utsusynth.utsu.common.StatusBar;
+import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.DiscreteScaler;
@@ -98,6 +99,15 @@ public class UtsuModule extends AbstractModule {
                 DocumentBuilderFactory.newDefaultInstance(),
                 TransformerFactory.newDefaultInstance(),
                 defaultBuilder.build());
+    }
+
+    @Provides
+    @Singleton
+    private BulkEditorConfigManager provideBulkEditorConfigManager() {
+        double[] envWidths = new double[] {200, 1, 1, 100, 1}; // Large fade in/out for visibility.
+        double[] envHeights = new double[] {100, 100, 100, 100, 100};
+        EnvelopeData defaultEnvelope = new EnvelopeData(envWidths, envHeights);
+        return new BulkEditorConfigManager(defaultEnvelope);
     }
 
     @Provides

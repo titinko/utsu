@@ -6,7 +6,8 @@ import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
 import javafx.beans.InvalidationListener;
-import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.DoubleExpression;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
@@ -28,16 +29,8 @@ public class BulkEditor {
     }
 
     public Group createEnvelopeEditor(
-            EnvelopeData envelopeData, DoubleBinding width, DoubleBinding height) {
-        AnchorPane topCell = new AnchorPane();
-        topCell.getStyleClass().add("dynamics-top-cell");
-        topCell.prefWidthProperty().bind(width);
-        topCell.prefHeightProperty().bind(height.divide(2.0));
-        AnchorPane bottomCell = new AnchorPane();
-        bottomCell.getStyleClass().add("dynamics-bottom-cell");
-        bottomCell.prefWidthProperty().bind(width);
-        bottomCell.prefHeightProperty().bind(height.divide(2.0));
-        VBox background = new VBox(topCell, bottomCell);
+            EnvelopeData envelopeData, DoubleExpression width, DoubleExpression height) {
+        VBox background = createEnvelopeBackground(width, height);
 
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
                 width.get(), height.get(), envelopeData, ((oldData, newData) -> {}));
@@ -61,8 +54,7 @@ public class BulkEditor {
     public ListView<EnvelopeData> createEnvelopeList(ObservableList<EnvelopeData> envelopes) {
         envelopeList = new ListView<>();
         envelopeList.setPrefHeight(250);
-        envelopeList.setCellFactory(source -> {
-            return new ListCell<>() {
+        envelopeList.setCellFactory(source -> new ListCell<>() {
                 @Override
                 protected void updateItem(EnvelopeData item, boolean empty) {
                     super.updateItem(item, empty);
@@ -72,16 +64,36 @@ public class BulkEditor {
                         setGraphic(null);
                     } else {
                         HBox graphic = new HBox(5);
+                        VBox background = createEnvelopeBackground(
+                                new SimpleDoubleProperty(150), new SimpleDoubleProperty(30));
+                        // TODO: Scale envelope to fit.
                         Envelope envelope = envelopeFactory.createEnvelopeEditor(
                                 150, 30, item, ((oldData, newData) -> {}));
+                        Group envelopeGroup = new Group(background, envelope.getElement());
+                        envelopeGroup.setMouseTransparent(true);
                         Button closeButton = new Button("X");
-                        graphic.getChildren().addAll(envelope.getElement(), closeButton);
+                        if (getIndex() == 0) {
+                            closeButton.setDisable(true); // Can't remove default option.
+                        }
+                        // TODO: Make X button remove envelope.
+                        graphic.getChildren().addAll(envelopeGroup, closeButton);
                         setGraphic(graphic);
                     }
                 }
-            };
-        });
+            });
         envelopeList.setItems(envelopes);
         return envelopeList;
+    }
+
+    private VBox createEnvelopeBackground(DoubleExpression width, DoubleExpression height) {
+        AnchorPane topCell = new AnchorPane();
+        topCell.getStyleClass().add("dynamics-top-cell");
+        topCell.prefWidthProperty().bind(width);
+        topCell.prefHeightProperty().bind(height.divide(2.0));
+        AnchorPane bottomCell = new AnchorPane();
+        bottomCell.getStyleClass().add("dynamics-bottom-cell");
+        bottomCell.prefWidthProperty().bind(width);
+        bottomCell.prefHeightProperty().bind(height.divide(2.0));
+        return new VBox(topCell, bottomCell);
     }
 }
