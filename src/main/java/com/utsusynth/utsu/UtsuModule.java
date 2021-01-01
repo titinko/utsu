@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.*;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.common.quantize.DiscreteScaler;
@@ -103,11 +104,17 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private BulkEditorConfigManager provideBulkEditorConfigManager() {
+    private BulkEditorConfigManager provideBulkEditorConfigManager(
+            @SettingsPath File settingsPath) {
+        ImmutableList<Double> pbs = ImmutableList.of(-40.0, 0.0);
+        ImmutableList<Double> pbw = ImmutableList.of(80.0);
+        ImmutableList<Double> pby = ImmutableList.of();
+        ImmutableList<String> pbm = ImmutableList.of();
+        PitchbendData defaultPitchbend = new PitchbendData(pbs, pbw, pby, pbm);
         double[] envWidths = new double[] {200, 1, 1, 100, 1}; // Large fade in/out for visibility.
         double[] envHeights = new double[] {100, 100, 100, 100, 100};
         EnvelopeData defaultEnvelope = new EnvelopeData(envWidths, envHeights);
-        return new BulkEditorConfigManager(defaultEnvelope);
+        return new BulkEditorConfigManager(settingsPath, defaultPitchbend, defaultEnvelope);
     }
 
     @Provides
