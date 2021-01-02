@@ -5,6 +5,7 @@ import com.utsusynth.utsu.UtsuModule.SettingsPath;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.apache.commons.io.FileUtils;
 
@@ -13,6 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 public class BulkEditorConfigManager {
@@ -35,7 +37,20 @@ public class BulkEditorConfigManager {
         this.defaultEnvelope = defaultEnvelope;
     }
 
-    public ObservableList<PitchbendData> readPortamentoData() {
+    /** Returns an in-code representation of the portamento config file. */
+    public ObservableList<PitchbendData> getPortamentoConfig() {
+        ObservableList<PitchbendData> portamentoConfig = loadPortamentoData();
+        portamentoConfig.addListener((ListChangeListener<? super PitchbendData>) change -> {
+            while (change.next()) {
+                if (change.wasAdded() || change.wasRemoved()) {
+                    writePortamentoData(portamentoConfig);
+                }
+            }
+        });
+        return portamentoConfig;
+    }
+
+    private ObservableList<PitchbendData> loadPortamentoData() {
         ObservableList<PitchbendData> portamentoData =
                 FXCollections.observableArrayList(defaultPitchbend);
         if (!portamentoConfigPath.canRead()) {
@@ -80,7 +95,7 @@ public class BulkEditorConfigManager {
         return portamentoData;
     }
 
-    public void writePortamentoData(ObservableList<PitchbendData> portamentoData) {
+    private void writePortamentoData(List<PitchbendData> portamentoData) {
         // Initialize config file.
         if (!configPath.exists() && !configPath.mkdirs()) {
             System.out.println("Error: Failed to create config path.");
@@ -115,7 +130,20 @@ public class BulkEditorConfigManager {
         }
     }
 
-    public ObservableList<PitchbendData> readVibratoData() {
+    /** Returns an in-code representation of the vibrato config file. */
+    public ObservableList<PitchbendData> getVibratoConfig() {
+        ObservableList<PitchbendData> vibratoConfig = loadVibratoData();
+        vibratoConfig.addListener((ListChangeListener<? super PitchbendData>) change -> {
+            while (change.next()) {
+                if (change.wasAdded() || change.wasRemoved()) {
+                    writeVibratoData(vibratoConfig);
+                }
+            }
+        });
+        return vibratoConfig;
+    }
+
+    private ObservableList<PitchbendData> loadVibratoData() {
         ObservableList<PitchbendData> vibratoData =
                 FXCollections.observableArrayList(defaultPitchbend);
         if (!vibratoConfigPath.canRead()) {
@@ -140,7 +168,7 @@ public class BulkEditorConfigManager {
         return vibratoData;
     }
 
-    public void writeVibratoData(ObservableList<PitchbendData> vibratoData) {
+    private void writeVibratoData(List<PitchbendData> vibratoData) {
         // Initialize config file.
         if (!configPath.exists() && !configPath.mkdirs()) {
             System.out.println("Error: Failed to create config path.");
@@ -163,7 +191,20 @@ public class BulkEditorConfigManager {
         }
     }
 
-    public ObservableList<EnvelopeData> readEnvelopeData() {
+    /** Returns an in-code representation of the envelope config file. */
+    public ObservableList<EnvelopeData> getEnvelopeConfig() {
+        ObservableList<EnvelopeData> envelopeConfig = loadEnvelopeData();
+        envelopeConfig.addListener((ListChangeListener<? super EnvelopeData>) change -> {
+            while (change.next()) {
+                if (change.wasAdded() || change.wasRemoved()) {
+                    writeEnvelopeData(envelopeConfig);
+                }
+            }
+        });
+        return envelopeConfig;
+    }
+
+    private ObservableList<EnvelopeData> loadEnvelopeData() {
         ObservableList<EnvelopeData> envelopeData =
                 FXCollections.observableArrayList(defaultEnvelope);
         if (!envelopeConfigPath.canRead()) {
@@ -197,7 +238,7 @@ public class BulkEditorConfigManager {
         return envelopeData;
     }
 
-    public void writeEnvelopeData(ObservableList<EnvelopeData> envelopeData) {
+    private void writeEnvelopeData(List<EnvelopeData> envelopeData) {
         // Initialize config file.
         if (!configPath.exists() && !configPath.mkdirs()) {
             System.out.println("Error: Failed to create config path.");

@@ -3,12 +3,15 @@ package com.utsusynth.utsu.controller.song;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.files.BulkEditorConfigManager;
 import com.utsusynth.utsu.view.song.BulkEditor;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -28,6 +31,7 @@ public class BulkEditorController implements Localizable {
         ENVELOPE,
     }
 
+    private final BulkEditorConfigManager configManager;
     private final BulkEditor view;
     private final Localizer localizer;
 
@@ -123,8 +127,10 @@ public class BulkEditorController implements Localizable {
     private AnchorPane envelopeListAnchor;
 
     @Inject
-    public BulkEditorController(BulkEditor bulkEditor, Localizer localizer) {
-        this.view = bulkEditor;
+    public BulkEditorController(
+            BulkEditorConfigManager configManager, BulkEditor view, Localizer localizer) {
+        this.configManager = configManager;
+        this.view = view;
         this.localizer = localizer;
     }
 
@@ -168,7 +174,7 @@ public class BulkEditorController implements Localizable {
                         envelopeAnchor.widthProperty().subtract(1),
                         envelopeAnchor.heightProperty().subtract(1)));
         envelopeListAnchor.getChildren().add(
-                view.createEnvelopeList(FXCollections.observableArrayList(sampleData, sampleData, sampleData)));
+                view.createEnvelopeList(configManager.getEnvelopeConfig()));
 
         localizer.localize(this);
     }
@@ -244,7 +250,7 @@ public class BulkEditorController implements Localizable {
 
     @FXML
     public void addEnvelopeConfig(ActionEvent event) {
-        // TODO
+        view.saveToEnvelopeList();
     }
 
     @FXML

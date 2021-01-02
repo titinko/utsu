@@ -20,6 +20,9 @@ import javafx.scene.layout.VBox;
 public class BulkEditor {
     private final EnvelopeFactory envelopeFactory;
 
+    private DoubleExpression editorWidth;
+    private DoubleExpression editorHeight;
+    private Group editorGroup;
     private Envelope currentEnvelope;
     private ListView<EnvelopeData> envelopeList;
 
@@ -30,21 +33,23 @@ public class BulkEditor {
 
     public Group createEnvelopeEditor(
             EnvelopeData envelopeData, DoubleExpression width, DoubleExpression height) {
-        VBox background = createEnvelopeBackground(width, height);
+        editorWidth = width;
+        editorHeight = height;
+        VBox background = createEnvelopeBackground(editorWidth, editorHeight);
 
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                width.get(), height.get(), envelopeData, ((oldData, newData) -> {}));
-        Group display = new Group(background, currentEnvelope.getElement());
+                editorWidth.get(), editorHeight.get(), envelopeData, ((oldData, newData) -> {}));
+        editorGroup = new Group(background, currentEnvelope.getElement());
 
         InvalidationListener updateSize = obs -> {
             EnvelopeData curData = currentEnvelope.getData();
             currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                    width.get(), height.get(), curData, ((oldData, newData) -> {}));
-            display.getChildren().set(1, currentEnvelope.getElement());
+                    editorWidth.get(), editorHeight.get(), curData, ((oldData, newData) -> {}));
+            editorGroup.getChildren().set(1, currentEnvelope.getElement());
         };
-        width.addListener(updateSize);
-        height.addListener(updateSize);
-        return display;
+        editorWidth.addListener(updateSize);
+        editorHeight.addListener(updateSize);
+        return editorGroup;
     }
 
     public EnvelopeData getEnvelopeData() {
@@ -54,7 +59,8 @@ public class BulkEditor {
     public ListView<EnvelopeData> createEnvelopeList(ObservableList<EnvelopeData> envelopes) {
         envelopeList = new ListView<>();
         envelopeList.setPrefHeight(250);
-        envelopeList.setCellFactory(source -> new ListCell<>() {
+        envelopeList.setCellFactory(source -> {
+            ListCell<EnvelopeData> listCell = new ListCell<>() {
                 @Override
                 protected void updateItem(EnvelopeData item, boolean empty) {
                     super.updateItem(item, empty);
@@ -72,17 +78,36 @@ public class BulkEditor {
                         Group envelopeGroup = new Group(background, envelope.getElement());
                         envelopeGroup.setMouseTransparent(true);
                         Button closeButton = new Button("X");
+                        closeButton.setOnAction(event -> {
+                            if (getIndex() != 0) {
+                                getListView().getItems().remove(getIndex());
+                            }
+                        });
                         if (getIndex() == 0) {
                             closeButton.setDisable(true); // Can't remove default option.
                         }
-                        // TODO: Make X button remove envelope.
                         graphic.getChildren().addAll(envelopeGroup, closeButton);
                         setGraphic(graphic);
                     }
                 }
+            };
+            listCell.setOnMouseClicked(event -> {
+                EnvelopeData curData = listCell.getItem();
+                if (curData == null) {
+                    return;
+                }
+                currentEnvelope = envelopeFactory.createEnvelopeEditor(
+                        editorWidth.get(), editorHeight.get(), curData, ((oldData, newData) -> {}));
+                editorGroup.getChildren().set(1, currentEnvelope.getElement());
             });
+            return listCell;
+        });
         envelopeList.setItems(envelopes);
         return envelopeList;
+    }
+
+    public void saveToEnvelopeList() {
+        envelopeList.getItems().add(getEnvelopeData());
     }
 
     private VBox createEnvelopeBackground(DoubleExpression width, DoubleExpression height) {
