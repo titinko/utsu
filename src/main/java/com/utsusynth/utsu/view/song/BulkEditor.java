@@ -38,13 +38,21 @@ public class BulkEditor {
         VBox background = createEnvelopeBackground(editorWidth, editorHeight);
 
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                editorWidth.get(), editorHeight.get(), envelopeData, ((oldData, newData) -> {}));
+                editorWidth.get(),
+                editorHeight.get(),
+                envelopeData,
+                ((oldData, newData) -> {}),
+                false);
         editorGroup = new Group(background, currentEnvelope.getElement());
 
         InvalidationListener updateSize = obs -> {
             EnvelopeData curData = currentEnvelope.getData();
             currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                    editorWidth.get(), editorHeight.get(), curData, ((oldData, newData) -> {}));
+                    editorWidth.get(),
+                    editorHeight.get(),
+                    curData,
+                    ((oldData, newData) -> {}),
+                    false);
             editorGroup.getChildren().set(1, currentEnvelope.getElement());
         };
         editorWidth.addListener(updateSize);
@@ -72,9 +80,12 @@ public class BulkEditor {
                         HBox graphic = new HBox(5);
                         VBox background = createEnvelopeBackground(
                                 new SimpleDoubleProperty(150), new SimpleDoubleProperty(30));
-                        // TODO: Scale envelope to fit.
                         Envelope envelope = envelopeFactory.createEnvelopeEditor(
-                                150, 30, item, ((oldData, newData) -> {}));
+                                150,
+                                30,
+                                item,
+                                ((oldData, newData) -> {}),
+                                true);
                         Group envelopeGroup = new Group(background, envelope.getElement());
                         envelopeGroup.setMouseTransparent(true);
                         Button closeButton = new Button("X");
@@ -97,7 +108,11 @@ public class BulkEditor {
                     return;
                 }
                 currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                        editorWidth.get(), editorHeight.get(), curData, ((oldData, newData) -> {}));
+                        editorWidth.get(),
+                        editorHeight.get(),
+                        curData,
+                        ((oldData, newData) -> {}),
+                        true);
                 editorGroup.getChildren().set(1, currentEnvelope.getElement());
             });
             return listCell;

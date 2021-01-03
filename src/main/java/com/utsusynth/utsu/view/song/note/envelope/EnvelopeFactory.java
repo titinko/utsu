@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.song.note.envelope;
 
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.quantize.ContinuousScaler;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.Note;
 import javafx.scene.shape.LineTo;
@@ -54,7 +55,9 @@ public class EnvelopeFactory {
             double editorWidth,
             double editorHeight,
             EnvelopeData envelope,
-            EnvelopeCallback callback) {
+            EnvelopeCallback callback,
+            boolean scaleToFit) {
+        Scaler editorScaler = scaler;
 
         double[] widths = envelope.getWidths();
         double p1 = widths[0];
@@ -63,13 +66,18 @@ public class EnvelopeFactory {
         double p4 = widths[3];
         double p5 = widths[4];
 
-        double maxAllowedWidth = editorWidth - scaler.scaleX(p1 + p4).get();
-        double totalWidth = scaler.scaleX(p2 + p3 + p5).get();
+        double maxAllowedWidth = editorWidth - editorScaler.scaleX(p1 + p4).get();
+        double totalWidth = editorScaler.scaleX(p2 + p3 + p5).get();
         if (maxAllowedWidth > 0 && totalWidth > maxAllowedWidth) {
             double scaleFactor = maxAllowedWidth / totalWidth;
-            p2 *= scaleFactor;
-            p3 *= scaleFactor;
-            p5 *= scaleFactor;
+            if (scaleToFit) {
+                double newScale = editorScaler.scaleX(1).get() * scaleFactor;
+                editorScaler = new ContinuousScaler(newScale, 1);
+            } else {
+                p2 *= scaleFactor;
+                p3 *= scaleFactor;
+                p5 *= scaleFactor;
+            }
         }
 
         // Convert heights to a scale of 0-200.
@@ -84,14 +92,14 @@ public class EnvelopeFactory {
         // Do not scale y axis for envelopes.
         return new Envelope(
                 new MoveTo(0, editorHeight),
-                new LineTo(scaler.scaleX(p1).get(), v1),
-                new LineTo(scaler.scaleX(p1 + p2).get(), v2),
-                new LineTo(scaler.scaleX(p1 + p2 + p5).get(), v5),
-                new LineTo(editorWidth - scaler.scaleX(p4 + p3).get(), v3),
-                new LineTo(editorWidth - scaler.scaleX(p4).get(), v4),
+                new LineTo(editorScaler.scaleX(p1).get(), v1),
+                new LineTo(editorScaler.scaleX(p1 + p2).get(), v2),
+                new LineTo(editorScaler.scaleX(p1 + p2 + p5).get(), v5),
+                new LineTo(editorWidth - editorScaler.scaleX(p4 + p3).get(), v3),
+                new LineTo(editorWidth - editorScaler.scaleX(p4).get(), v4),
                 new LineTo(editorWidth, editorHeight),
                 callback,
                 editorHeight,
-                scaler);
+                editorScaler);
     }
 }
