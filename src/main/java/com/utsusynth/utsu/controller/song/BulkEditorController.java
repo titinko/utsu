@@ -223,6 +223,9 @@ public class BulkEditorController implements Localizable {
 
     @Override
     public void localize(ResourceBundle bundle) {
+        applySelectionButton.setText(bundle.getString("bulkeditor.applySelectionButton"));
+
+        applyAllButton.setText(bundle.getString("bulkeditor.applyAllButton"));
         cancelButton.setText(bundle.getString("general.cancel"));
     }
 
