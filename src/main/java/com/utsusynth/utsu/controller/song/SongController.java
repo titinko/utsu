@@ -52,6 +52,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -423,7 +424,13 @@ public class SongController implements EditorController, Localizable {
             flickerIcon(playPauseIcon);
             playOrPause();
             return true;
-        } else if (new KeyCodeCombination(KeyCode.V).match(keyEvent)) {
+        } else if (new KeyCodeCombination( KeyCode.SPACE, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
+            flickerIcon(playPauseIcon);
+            stopPlayback();
+            startPlayback();
+            return true;
+        } else if (new KeyCodeCombination(KeyCode.V).match(keyEvent)
+                || new KeyCodeCombination(KeyCode.W).match(keyEvent)) {
             flickerIcon(rewindIcon);
             rewindPlayback(); // Rewind button's event handler.
             return true;
@@ -462,7 +469,8 @@ public class SongController implements EditorController, Localizable {
                 songEditor.focusOnNote(positionMs);
             }
             return true;
-        } else if (new KeyCodeCombination(KeyCode.LEFT).match(keyEvent)) {
+        } else if (new KeyCodeCombination(KeyCode.LEFT).match(keyEvent)
+        || new KeyCodeCombination( KeyCode.TAB, KeyCombination.SHIFT_DOWN).match(keyEvent)) {
             Optional<Integer> focusNote = songEditor.getFocusNote();
             if (focusNote.isPresent()) {
                 Optional<Integer> newFocus = song.get().getPrevNote(focusNote.get());
