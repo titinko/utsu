@@ -3,20 +3,20 @@ package com.utsusynth.utsu.controller.song;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
-import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.files.BulkEditorConfigManager;
 import com.utsusynth.utsu.view.song.BulkEditor;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
@@ -122,7 +122,7 @@ public class BulkEditorController implements Localizable {
     @FXML
     private RadioButton envelopeSilenceAfter;
     @FXML
-    private AnchorPane envelopeAnchor;
+    private VBox envelopeVBox;
     @FXML
     private AnchorPane envelopeListAnchor;
 
@@ -168,13 +168,16 @@ public class BulkEditorController implements Localizable {
         double[] envWidths = new double[] {200, 1, 1, 100, 1}; // Large fade in/out for visibility.
         double[] envHeights = new double[] {100, 100, 100, 100, 100};
         EnvelopeData sampleData = new EnvelopeData(envWidths, envHeights);
-        envelopeAnchor.getChildren().add(
+        envelopeVBox.getChildren().add(
+                0,
                 view.createEnvelopeEditor(
                         sampleData,
-                        envelopeAnchor.widthProperty().subtract(1),
-                        envelopeAnchor.heightProperty().subtract(1)));
+                        envelopeVBox.widthProperty().subtract(20),
+                        envelopeVBox.heightProperty().subtract(50)));
         envelopeListAnchor.getChildren().add(
-                view.createEnvelopeList(configManager.getEnvelopeConfig()));
+                view.createEnvelopeList(
+                        configManager.getEnvelopeConfig(),
+                        envelopeListAnchor.heightProperty().subtract(3)));
 
         localizer.localize(this);
     }

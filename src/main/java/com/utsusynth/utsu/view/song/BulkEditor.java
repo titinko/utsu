@@ -2,11 +2,14 @@ package com.utsusynth.utsu.view.song;
 
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
+import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.DoubleExpression;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.Group;
@@ -19,22 +22,49 @@ import javafx.scene.layout.VBox;
 
 public class BulkEditor {
     private final EnvelopeFactory envelopeFactory;
+    private final DoubleProperty editorWidth;
+    private final DoubleProperty editorHeight;
 
-    private DoubleExpression editorWidth;
-    private DoubleExpression editorHeight;
-    private Group editorGroup;
+    private Group portamentoGroup;
+    private Portamento currentPortamento;
+    private ListView<PitchbendData> portamentoList;
+
+    private Group envelopeGroup;
     private Envelope currentEnvelope;
     private ListView<EnvelopeData> envelopeList;
 
     @Inject
     public BulkEditor(EnvelopeFactory envelopeFactory, PitchbendFactory pitchbendFactory) {
         this.envelopeFactory = envelopeFactory;
+        editorWidth = new SimpleDoubleProperty(0);
+        editorHeight = new SimpleDoubleProperty(0);
+    }
+
+    public Group createPortamentoEditor(
+            PitchbendData portamentoData, DoubleExpression width, DoubleExpression height) {
+        editorWidth.bind(width);
+        editorHeight.bind(height);
+        VBox background = createPitchbendBackground(editorWidth, editorHeight);
+        portamentoGroup = new Group(background);
+        return portamentoGroup;
+    }
+
+    private VBox createPitchbendBackground(DoubleExpression width, DoubleExpression height) {
+        AnchorPane topCell = new AnchorPane();
+        topCell.getStyleClass().add("dynamics-top-cell");
+        topCell.prefWidthProperty().bind(width);
+        topCell.prefHeightProperty().bind(height.divide(2.0));
+        AnchorPane bottomCell = new AnchorPane();
+        bottomCell.getStyleClass().add("dynamics-bottom-cell");
+        bottomCell.prefWidthProperty().bind(width);
+        bottomCell.prefHeightProperty().bind(height.divide(2.0));
+        return new VBox(topCell, bottomCell);
     }
 
     public Group createEnvelopeEditor(
             EnvelopeData envelopeData, DoubleExpression width, DoubleExpression height) {
-        editorWidth = width;
-        editorHeight = height;
+        editorWidth.bind(width);
+        editorHeight.bind(height);
         VBox background = createEnvelopeBackground(editorWidth, editorHeight);
 
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
@@ -43,7 +73,7 @@ public class BulkEditor {
                 envelopeData,
                 ((oldData, newData) -> {}),
                 false);
-        editorGroup = new Group(background, currentEnvelope.getElement());
+        envelopeGroup = new Group(background, currentEnvelope.getElement());
 
         InvalidationListener updateSize = obs -> {
             EnvelopeData curData = currentEnvelope.getData();
@@ -53,20 +83,22 @@ public class BulkEditor {
                     curData,
                     ((oldData, newData) -> {}),
                     false);
-            editorGroup.getChildren().set(1, currentEnvelope.getElement());
+            envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
         };
         editorWidth.addListener(updateSize);
         editorHeight.addListener(updateSize);
-        return editorGroup;
+        return envelopeGroup;
     }
 
     public EnvelopeData getEnvelopeData() {
         return currentEnvelope.getData();
     }
 
-    public ListView<EnvelopeData> createEnvelopeList(ObservableList<EnvelopeData> envelopes) {
+    public ListView<EnvelopeData> createEnvelopeList(
+            ObservableList<EnvelopeData> envelopes, DoubleExpression height) {
         envelopeList = new ListView<>();
-        envelopeList.setPrefHeight(250);
+        envelopeList.prefHeightProperty().bind(height);
+        envelopeList.setPrefWidth(220);
         envelopeList.setCellFactory(source -> {
             ListCell<EnvelopeData> listCell = new ListCell<>() {
                 @Override
@@ -113,7 +145,7 @@ public class BulkEditor {
                         curData,
                         ((oldData, newData) -> {}),
                         true);
-                editorGroup.getChildren().set(1, currentEnvelope.getElement());
+                envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
             });
             return listCell;
         });
