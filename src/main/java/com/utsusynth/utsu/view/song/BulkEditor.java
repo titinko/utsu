@@ -3,6 +3,8 @@ package com.utsusynth.utsu.view.song;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
@@ -11,17 +13,22 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class BulkEditor {
+    private final PitchbendFactory pitchbendFactory;
     private final EnvelopeFactory envelopeFactory;
+    private final Scaler scaler;
     private final DoubleProperty editorWidth;
     private final DoubleProperty editorHeight;
 
@@ -34,8 +41,11 @@ public class BulkEditor {
     private ListView<EnvelopeData> envelopeList;
 
     @Inject
-    public BulkEditor(EnvelopeFactory envelopeFactory, PitchbendFactory pitchbendFactory) {
+    public BulkEditor(
+            PitchbendFactory pitchbendFactory, EnvelopeFactory envelopeFactory, Scaler scaler) {
+        this.pitchbendFactory = pitchbendFactory;
         this.envelopeFactory = envelopeFactory;
+        this.scaler = scaler;
         editorWidth = new SimpleDoubleProperty(0);
         editorHeight = new SimpleDoubleProperty(0);
     }
@@ -44,21 +54,22 @@ public class BulkEditor {
             PitchbendData portamentoData, DoubleExpression width, DoubleExpression height) {
         editorWidth.bind(width);
         editorHeight.bind(height);
-        VBox background = createPitchbendBackground(editorWidth, editorHeight);
+        ListView<String> background = createPitchbendBackground(editorWidth, editorHeight);
         portamentoGroup = new Group(background);
         return portamentoGroup;
     }
 
-    private VBox createPitchbendBackground(DoubleExpression width, DoubleExpression height) {
-        AnchorPane topCell = new AnchorPane();
-        topCell.getStyleClass().add("dynamics-top-cell");
-        topCell.prefWidthProperty().bind(width);
-        topCell.prefHeightProperty().bind(height.divide(2.0));
-        AnchorPane bottomCell = new AnchorPane();
-        bottomCell.getStyleClass().add("dynamics-bottom-cell");
-        bottomCell.prefWidthProperty().bind(width);
-        bottomCell.prefHeightProperty().bind(height.divide(2.0));
-        return new VBox(topCell, bottomCell);
+    private ListView<String> createPitchbendBackground(
+            DoubleExpression width, DoubleExpression height) {
+        ListView<String> background = new ListView<>();
+        background.prefWidthProperty().bind(width);
+        background.prefHeightProperty().bind(height);
+        background.setCellFactory(source -> new TextFieldListCell<>());
+        background.setFixedCellSize(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        background.setMouseTransparent(true);
+        background.setFocusTraversable(false);
+        background.setItems(FXCollections.observableArrayList("")); // Force generation.
+        return background;
     }
 
     public Group createEnvelopeEditor(

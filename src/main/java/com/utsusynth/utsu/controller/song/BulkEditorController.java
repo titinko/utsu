@@ -66,7 +66,7 @@ public class BulkEditorController implements Localizable {
     @FXML
     private RadioButton portamentoFallingNotes;
     @FXML
-    private AnchorPane portamentoAnchor;
+    private VBox portamentoVBox;
     @FXML
     private AnchorPane portamentoListAnchor;
 
@@ -106,7 +106,7 @@ public class BulkEditorController implements Localizable {
     @FXML
     private TextField vibratoPhaseTF;
     @FXML
-    private AnchorPane vibratoAnchor;
+    private VBox vibratoVBox;
     @FXML
     private AnchorPane vibratoListAnchor;
 
@@ -144,7 +144,12 @@ public class BulkEditorController implements Localizable {
         portamentoRisingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoFallingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoAllNotes.setSelected(true); // Consider saving user's setting.
-        // TODO: Initialize visual editor.
+        portamentoVBox.getChildren().add(
+                0,
+                view.createPortamentoEditor(
+                        null,
+                        portamentoVBox.widthProperty().subtract(20),
+                        portamentoVBox.heightProperty().subtract(50)));
         // TODO: Initialize config list.
 
         // Initialize vibrato elements.
