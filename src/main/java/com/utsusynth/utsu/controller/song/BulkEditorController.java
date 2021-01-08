@@ -66,7 +66,7 @@ public class BulkEditorController implements Localizable {
     @FXML
     private RadioButton portamentoFallingNotes;
     @FXML
-    private AnchorPane portamentoAnchor;
+    private VBox portamentoVBox;
     @FXML
     private AnchorPane portamentoListAnchor;
 
@@ -106,7 +106,7 @@ public class BulkEditorController implements Localizable {
     @FXML
     private TextField vibratoPhaseTF;
     @FXML
-    private AnchorPane vibratoAnchor;
+    private VBox vibratoVBox;
     @FXML
     private AnchorPane vibratoListAnchor;
 
@@ -144,8 +144,16 @@ public class BulkEditorController implements Localizable {
         portamentoRisingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoFallingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoAllNotes.setSelected(true); // Consider saving user's setting.
-        // TODO: Initialize visual editor.
-        // TODO: Initialize config list.
+        portamentoVBox.getChildren().add(
+                0,
+                view.createPortamentoEditor(
+                        null,
+                        portamentoVBox.widthProperty().subtract(20),
+                        portamentoVBox.heightProperty().subtract(50)));
+        portamentoListAnchor.getChildren().add(
+                view.createPortamentoList(
+                        configManager.getPortamentoConfig(),
+                        portamentoListAnchor.heightProperty().subtract(3)));
 
         // Initialize vibrato elements.
         initializeVibratoField(vibratoLengthTF, 0, 100); // Vibrato length (% of note)
@@ -156,8 +164,16 @@ public class BulkEditorController implements Localizable {
         initializeVibratoField(vibratoFreqSlopeTF, -100, 100); // Frequency slope
         initializeVibratoField(vibratoHeightTF, -100, 100); // Pitch shift (cents)
         initializeVibratoField(vibratoPhaseTF, 0, 100); // Phase shift (% of cycle)
-        // TODO: Initialize visual editor.
-        // TODO: Initialize config list.
+        vibratoVBox.getChildren().add(
+                0,
+                view.createVibratoEditor(
+                        null,
+                        vibratoVBox.widthProperty().subtract(20),
+                        vibratoVBox.heightProperty().subtract(50)));
+        vibratoListAnchor.getChildren().add(
+                view.createVibratoList(
+                        configManager.getVibratoConfig(),
+                        vibratoListAnchor.heightProperty().subtract(3)));
 
         // Initialize envelope elements.
         ToggleGroup silenceToggle = new ToggleGroup();

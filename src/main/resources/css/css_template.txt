@@ -124,6 +124,21 @@
 	-fx-stroke: transparent;
 }
 
+.list-cell:even {
+    -fx-background-color: $[TRACK_BORDER_THIN], $[TRACK_CELL_LIGHT];
+    -fx-background-insets: 0, 0 0 1 0;
+}
+
+.list-cell:odd {
+    -fx-background-color: $[TRACK_BORDER_THIN], $[TRACK_CELL_DARK];
+    -fx-background-insets: 0, 0 0 1 0;
+}
+
+.list-cell:selected {
+	-fx-background-color: $[HIGHLIGHTED_BORDER], $[HIGHLIGHTED];
+	-fx-background-insets: 0, 1 0 1 0;
+}
+
 .table-row-cell {
 	-fx-table-cell-border-color: $[TRACK_BORDER_THIN];
 }

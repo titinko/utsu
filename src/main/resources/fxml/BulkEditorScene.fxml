@@ -77,21 +77,20 @@
                         </VBox>
                      </left>
                      <center>
-                        <VBox alignment="CENTER_RIGHT" BorderPane.alignment="CENTER">
+                        <VBox fx:id="portamentoVBox" alignment="CENTER_RIGHT" minWidth="300.0" spacing="5.0" BorderPane.alignment="CENTER">
                            <children>
-                              <AnchorPane fx:id="portamentoAnchor" minHeight="200.0" minWidth="300.0" VBox.vgrow="ALWAYS">
-                                 <VBox.margin>
-                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                                 </VBox.margin></AnchorPane>
                               <Button mnemonicParsing="false" onAction="#addPortamentoConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
                                  <VBox.margin>
-                                    <Insets bottom="5.0" right="5.0" />
+                                    <Insets />
                                  </VBox.margin>
                               </Button>
                            </children>
+                           <padding>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
                         </VBox>
                      </center>
                      <right>
@@ -149,21 +148,20 @@
                         </GridPane>
                      </left>
                      <center>
-                        <VBox alignment="CENTER_RIGHT" BorderPane.alignment="CENTER">
+                        <VBox fx:id="vibratoVBox" alignment="CENTER_RIGHT" minWidth="300.0" spacing="5.0" BorderPane.alignment="CENTER">
                            <children>
-                              <AnchorPane fx:id="vibratoAnchor" minHeight="200.0" minWidth="300.0" VBox.vgrow="ALWAYS">
-                                 <VBox.margin>
-                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                                 </VBox.margin></AnchorPane>
                               <Button mnemonicParsing="false" onAction="#addVibratoConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
                                  <VBox.margin>
-                                    <Insets bottom="5.0" right="5.0" />
+                                    <Insets />
                                  </VBox.margin>
                               </Button>
                            </children>
+                           <padding>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
                         </VBox>
                      </center>
                      <right>

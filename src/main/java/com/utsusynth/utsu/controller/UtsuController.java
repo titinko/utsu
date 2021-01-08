@@ -183,6 +183,10 @@ public class UtsuController implements Localizable {
     @FXML
     private Menu bulkEditorMenu; // Value injected by FXMLLoader
     @FXML
+    private MenuItem portamentoEditorItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem vibratoEditorItem; // Value injected by FXMLLoader
+    @FXML
     private MenuItem envelopeEditorItem; // Value injected by FXMLLoader
     @FXML
     private Menu pluginsMenu; // Value injected by FXMLLoader
@@ -228,6 +232,8 @@ public class UtsuController implements Localizable {
         propertiesItem.setText(bundle.getString("menu.project.properties"));
         toolsMenu.setText(bundle.getString("menu.tools"));
         bulkEditorMenu.setText(bundle.getString("menu.tools.bulkEditor"));
+        portamentoEditorItem.setText(bundle.getString("menu.tools.bulkEditor.portamento"));
+        vibratoEditorItem.setText(bundle.getString("song.note.vibrato"));
         envelopeEditorItem.setText(bundle.getString("menu.tools.bulkEditor.envelope"));
         pluginsMenu.setText(bundle.getString("menu.plugins"));
         openPluginItem.setText(bundle.getString("menu.plugins.openPlugin"));
@@ -275,6 +281,10 @@ public class UtsuController implements Localizable {
                 .setAccelerator(new KeyCodeCombination(KeyCode.MINUS, SHORTCUT_DOWN, SHIFT_DOWN));
         zoomOutVerticallyItem.setDisable(scaler.getVerticalRank() == 0);
         propertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.P, SHORTCUT_DOWN));
+        portamentoEditorItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.P, SHORTCUT_DOWN, SHIFT_DOWN));
+        vibratoEditorItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.V, SHORTCUT_DOWN, SHIFT_DOWN));
         envelopeEditorItem
                 .setAccelerator(new KeyCodeCombination(KeyCode.E, SHORTCUT_DOWN, SHIFT_DOWN));
         helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, SHORTCUT_DOWN, SHIFT_DOWN));
@@ -670,6 +680,22 @@ public class UtsuController implements Localizable {
     void openProperties(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             editors.get(tabs.getSelectionModel().getSelectedItem().getId()).openProperties();
+        }
+    }
+
+    @FXML
+    void openBulkPortamentoEditor(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            String id = tabs.getSelectionModel().getSelectedItem().getId();
+            editors.get(id).openBulkEditor(BulkEditorType.PORTAMENTO);
+        }
+    }
+
+    @FXML
+    void openBulkVibratoEditor(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            String id = tabs.getSelectionModel().getSelectedItem().getId();
+            editors.get(id).openBulkEditor(BulkEditorType.VIBRATO);
         }
     }
 

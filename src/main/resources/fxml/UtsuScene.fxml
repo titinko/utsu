@@ -72,6 +72,8 @@
               <items>
                   <Menu fx:id="bulkEditorMenu" mnemonicParsing="false" text="Bulk Editor">
                     <items>
+                        <MenuItem fx:id="portamentoEditorItem" mnemonicParsing="false" onAction="#openBulkPortamentoEditor" text="Portamento" />
+                        <MenuItem fx:id="vibratoEditorItem" mnemonicParsing="false" onAction="#openBulkVibratoEditor" text="Vibrato" />
                         <MenuItem fx:id="envelopeEditorItem" mnemonicParsing="false" onAction="#openBulkEnvelopeEditor" text="Envelope" />
                     </items>
                   </Menu>
