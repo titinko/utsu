@@ -150,7 +150,10 @@ public class BulkEditorController implements Localizable {
                         null,
                         portamentoVBox.widthProperty().subtract(20),
                         portamentoVBox.heightProperty().subtract(50)));
-        // TODO: Initialize config list.
+        portamentoListAnchor.getChildren().add(
+                view.createPortamentoList(
+                        configManager.getPortamentoConfig(),
+                        portamentoListAnchor.heightProperty().subtract(3)));
 
         // Initialize vibrato elements.
         initializeVibratoField(vibratoLengthTF, 0, 100); // Vibrato length (% of note)
@@ -161,8 +164,16 @@ public class BulkEditorController implements Localizable {
         initializeVibratoField(vibratoFreqSlopeTF, -100, 100); // Frequency slope
         initializeVibratoField(vibratoHeightTF, -100, 100); // Pitch shift (cents)
         initializeVibratoField(vibratoPhaseTF, 0, 100); // Phase shift (% of cycle)
-        // TODO: Initialize visual editor.
-        // TODO: Initialize config list.
+        vibratoVBox.getChildren().add(
+                0,
+                view.createVibratoEditor(
+                        null,
+                        vibratoVBox.widthProperty().subtract(20),
+                        vibratoVBox.heightProperty().subtract(50)));
+        vibratoListAnchor.getChildren().add(
+                view.createVibratoList(
+                        configManager.getVibratoConfig(),
+                        vibratoListAnchor.heightProperty().subtract(3)));
 
         // Initialize envelope elements.
         ToggleGroup silenceToggle = new ToggleGroup();

@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.PitchbendData;
@@ -8,6 +9,7 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
+import com.utsusynth.utsu.view.song.note.pitch.Vibrato;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.DoubleExpression;
@@ -36,6 +38,10 @@ public class BulkEditor {
     private Portamento currentPortamento;
     private ListView<PitchbendData> portamentoList;
 
+    private Group vibratoGroup;
+    private Vibrato currentVibrato;
+    private ListView<PitchbendData> vibratoList;
+
     private Group envelopeGroup;
     private Envelope currentEnvelope;
     private ListView<EnvelopeData> envelopeList;
@@ -54,18 +60,151 @@ public class BulkEditor {
             PitchbendData portamentoData, DoubleExpression width, DoubleExpression height) {
         editorWidth.bind(width);
         editorHeight.bind(height);
-        ListView<String> background = createPitchbendBackground(editorWidth, editorHeight);
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        ListView<String> background =
+                createPitchbendBackground(editorWidth, editorHeight, rowHeight);
         portamentoGroup = new Group(background);
         return portamentoGroup;
     }
 
+    public PitchbendData getPortamentoData() {
+        return currentPortamento.getData();
+    }
+
+    public ListView<PitchbendData> createPortamentoList(
+            ObservableList<PitchbendData> portamentoData, DoubleExpression height) {
+        portamentoList = new ListView<>();
+        portamentoList.prefHeightProperty().bind(height);
+        portamentoList.setPrefWidth(220);
+        portamentoList.setCellFactory(source -> {
+            ListCell<PitchbendData> listCell = new ListCell<>() {
+                @Override
+                protected void updateItem(PitchbendData item, boolean empty) {
+                    super.updateItem(item, empty);
+
+                    setText(null);
+                    if (empty || item == null) {
+                        setGraphic(null);
+                    } else {
+                        HBox graphic = new HBox(5);
+                        ListView<String> background = createPitchbendBackground(
+                                new SimpleDoubleProperty(150),
+                                new SimpleDoubleProperty(30),
+                                5);
+                        // TODO: Draw pitchbend.
+                        Group portamentoGroup = new Group(background);
+                        portamentoGroup.setMouseTransparent(true);
+                        Button closeButton = new Button("X");
+                        closeButton.setOnAction(event -> {
+                            if (getIndex() != 0) {
+                                getListView().getItems().remove(getIndex());
+                            }
+                        });
+                        if (getIndex() == 0) {
+                            closeButton.setDisable(true); // Can't remove default option.
+                        }
+                        graphic.getChildren().addAll(portamentoGroup, closeButton);
+                        setGraphic(graphic);
+                    }
+                }
+            };
+            listCell.setOnMouseClicked(event -> {
+                PitchbendData curData = listCell.getItem();
+                if (curData == null) {
+                    return;
+                }
+                // Populate group with current data.
+                // portamentoGroup.getChildren().set(1, ...);
+            });
+            return listCell;
+        });
+        portamentoList.setItems(portamentoData);
+        return portamentoList;
+    }
+
+    public void saveToPortamentoList() {
+        portamentoList.getItems().add(getPortamentoData());
+    }
+
+    public Group createVibratoEditor(
+            PitchbendData vibratoData, DoubleExpression width, DoubleExpression height) {
+        editorWidth.bind(width);
+        editorHeight.bind(height);
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        ListView<String> background =
+                createPitchbendBackground(editorWidth, editorHeight.divide(2), rowHeight);
+        vibratoGroup = new Group(background);
+        return vibratoGroup;
+    }
+
+    public PitchbendData getVibratoData() {
+        PitchbendData empty = new PitchbendData(
+                ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
+        return empty.withVibrato(currentVibrato.getVibrato());
+    }
+
+    public ListView<PitchbendData> createVibratoList(
+            ObservableList<PitchbendData> vibratoData, DoubleExpression height) {
+        vibratoList = new ListView<>();
+        vibratoList.prefHeightProperty().bind(height);
+        vibratoList.setPrefWidth(220);
+        vibratoList.setCellFactory(source -> {
+            ListCell<PitchbendData> listCell = new ListCell<>() {
+                @Override
+                protected void updateItem(PitchbendData item, boolean empty) {
+                    super.updateItem(item, empty);
+
+                    setText(null);
+                    if (empty || item == null) {
+                        setGraphic(null);
+                    } else {
+                        HBox graphic = new HBox(5);
+                        ListView<String> background = createPitchbendBackground(
+                                new SimpleDoubleProperty(150),
+                                new SimpleDoubleProperty(30),
+                                5);
+                        // TODO: Add vibrato visualization.
+                        Group vibratoGroup = new Group(background);
+                        vibratoGroup.setMouseTransparent(true);
+                        Button closeButton = new Button("X");
+                        closeButton.setOnAction(event -> {
+                            if (getIndex() != 0) {
+                                getListView().getItems().remove(getIndex());
+                            }
+                        });
+                        if (getIndex() == 0) {
+                            closeButton.setDisable(true); // Can't remove default option.
+                        }
+                        graphic.getChildren().addAll(vibratoGroup, closeButton);
+                        setGraphic(graphic);
+                    }
+                }
+            };
+            listCell.setOnMouseClicked(event -> {
+                PitchbendData curData = listCell.getItem();
+                if (curData == null) {
+                    return;
+                }
+                // Populate group with current data.
+                // vibratoGroup.getChildren().set(1, ...);
+            });
+            return listCell;
+        });
+        vibratoList.setItems(vibratoData);
+        return vibratoList;
+    }
+
+    public void saveToVibratoList() {
+        vibratoList.getItems().add(getVibratoData());
+    }
+
     private ListView<String> createPitchbendBackground(
-            DoubleExpression width, DoubleExpression height) {
+            DoubleExpression width, DoubleExpression height, double rowHeight) {
         ListView<String> background = new ListView<>();
         background.prefWidthProperty().bind(width);
         background.prefHeightProperty().bind(height);
         background.setCellFactory(source -> new TextFieldListCell<>());
-        background.setFixedCellSize(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        background.setFixedCellSize(rowHeight);
         background.setMouseTransparent(true);
         background.setFocusTraversable(false);
         background.setItems(FXCollections.observableArrayList("")); // Force generation.
@@ -106,7 +245,7 @@ public class BulkEditor {
     }
 
     public ListView<EnvelopeData> createEnvelopeList(
-            ObservableList<EnvelopeData> envelopes, DoubleExpression height) {
+            ObservableList<EnvelopeData> envelopeData, DoubleExpression height) {
         envelopeList = new ListView<>();
         envelopeList.prefHeightProperty().bind(height);
         envelopeList.setPrefWidth(220);
@@ -160,7 +299,7 @@ public class BulkEditor {
             });
             return listCell;
         });
-        envelopeList.setItems(envelopes);
+        envelopeList.setItems(envelopeData);
         return envelopeList;
     }
 
