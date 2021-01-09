@@ -3,6 +3,7 @@ package com.utsusynth.utsu.controller.song;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -11,6 +12,7 @@ import com.utsusynth.utsu.files.BulkEditorConfigManager;
 import com.utsusynth.utsu.view.song.BulkEditor;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -21,6 +23,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class BulkEditorController implements Localizable {
@@ -144,15 +147,17 @@ public class BulkEditorController implements Localizable {
         portamentoRisingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoFallingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoAllNotes.setSelected(true); // Consider saving user's setting.
+        ObservableList<PitchbendData> portamentoConfig = configManager.getPortamentoConfig();
         portamentoVBox.getChildren().add(
                 0,
                 view.createPortamentoEditor(
-                        null,
+                        portamentoConfig.get(0),
+                        getFilters(),
                         portamentoVBox.widthProperty().subtract(20),
                         portamentoVBox.heightProperty().subtract(50)));
         portamentoListAnchor.getChildren().add(
                 view.createPortamentoList(
-                        configManager.getPortamentoConfig(),
+                        portamentoConfig,
                         portamentoListAnchor.heightProperty().subtract(3)));
 
         // Initialize vibrato elements.
@@ -164,15 +169,16 @@ public class BulkEditorController implements Localizable {
         initializeVibratoField(vibratoFreqSlopeTF, -100, 100); // Frequency slope
         initializeVibratoField(vibratoHeightTF, -100, 100); // Pitch shift (cents)
         initializeVibratoField(vibratoPhaseTF, 0, 100); // Phase shift (% of cycle)
+        ObservableList<PitchbendData> vibratoConfig = configManager.getVibratoConfig();
         vibratoVBox.getChildren().add(
                 0,
                 view.createVibratoEditor(
-                        null,
+                        vibratoConfig.get(0),
                         vibratoVBox.widthProperty().subtract(20),
                         vibratoVBox.heightProperty().subtract(50)));
         vibratoListAnchor.getChildren().add(
                 view.createVibratoList(
-                        configManager.getVibratoConfig(),
+                        vibratoConfig,
                         vibratoListAnchor.heightProperty().subtract(3)));
 
         // Initialize envelope elements.
@@ -181,18 +187,16 @@ public class BulkEditorController implements Localizable {
         envelopeSilenceBefore.setToggleGroup(silenceToggle);
         envelopeSilenceAfter.setToggleGroup(silenceToggle);
         envelopeAllNotes.setSelected(true); // Consider saving user's setting.
-        double[] envWidths = new double[] {200, 1, 1, 100, 1}; // Large fade in/out for visibility.
-        double[] envHeights = new double[] {100, 100, 100, 100, 100};
-        EnvelopeData sampleData = new EnvelopeData(envWidths, envHeights);
+        ObservableList<EnvelopeData> envelopeConfig = configManager.getEnvelopeConfig();
         envelopeVBox.getChildren().add(
                 0,
                 view.createEnvelopeEditor(
-                        sampleData,
+                        envelopeConfig.get(0),
                         envelopeVBox.widthProperty().subtract(20),
                         envelopeVBox.heightProperty().subtract(50)));
         envelopeListAnchor.getChildren().add(
                 view.createEnvelopeList(
-                        configManager.getEnvelopeConfig(),
+                        envelopeConfig,
                         envelopeListAnchor.heightProperty().subtract(3)));
 
         localizer.localize(this);
@@ -287,6 +291,17 @@ public class BulkEditorController implements Localizable {
     }
 
     private void applyToNotes(RegionBounds regionToUpdate) {
+        ArrayList<FilterType> filters = getFilters();
+        if (tabPane.getSelectionModel().getSelectedItem() == portamentoTab) {
+            callback.updatePortamento(null, regionToUpdate, filters);
+        } else if (tabPane.getSelectionModel().getSelectedItem() == vibratoTab) {
+            callback.updateVibrato(null, regionToUpdate, filters);
+        } else if (tabPane.getSelectionModel().getSelectedItem() == envelopeTab){
+            callback.updateEnvelope(view.getEnvelopeData(), regionToUpdate, filters);
+        }
+    }
+
+    private ArrayList<FilterType> getFilters() {
         ArrayList<FilterType> filters = new ArrayList<>();
         if (noteLengthChoiceBox.getValue() != null) {
             filters.add(noteLengthChoiceBox.getValue());
@@ -297,17 +312,14 @@ public class BulkEditorController implements Localizable {
             } else if (portamentoFallingNotes.isSelected()) {
                 filters.add(FilterType.FALLING_NOTE);
             }
-            callback.updatePortamento(null, regionToUpdate, filters);
-        } else if (tabPane.getSelectionModel().getSelectedItem() == vibratoTab) {
-            callback.updateVibrato(null, regionToUpdate, filters);
         } else if (tabPane.getSelectionModel().getSelectedItem() == envelopeTab){
             if (envelopeSilenceBefore.isSelected()) {
                 filters.add(FilterType.SILENCE_BEFORE);
             } else if (envelopeSilenceAfter.isSelected()) {
                 filters.add(FilterType.SILENCE_AFTER);
             }
-            callback.updateEnvelope(view.getEnvelopeData(), regionToUpdate, filters);
         }
+        return filters;
     }
 
     @FXML

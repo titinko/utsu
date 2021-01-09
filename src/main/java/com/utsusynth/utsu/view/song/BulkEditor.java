@@ -4,8 +4,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.view.song.note.Note;
+import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
@@ -27,7 +30,10 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.util.List;
+
 public class BulkEditor {
+    private final NoteFactory noteFactory;
     private final PitchbendFactory pitchbendFactory;
     private final EnvelopeFactory envelopeFactory;
     private final Scaler scaler;
@@ -48,7 +54,11 @@ public class BulkEditor {
 
     @Inject
     public BulkEditor(
-            PitchbendFactory pitchbendFactory, EnvelopeFactory envelopeFactory, Scaler scaler) {
+            NoteFactory noteFactory,
+            PitchbendFactory pitchbendFactory,
+            EnvelopeFactory envelopeFactory,
+            Scaler scaler) {
+        this.noteFactory = noteFactory;
         this.pitchbendFactory = pitchbendFactory;
         this.envelopeFactory = envelopeFactory;
         this.scaler = scaler;
@@ -57,13 +67,30 @@ public class BulkEditor {
     }
 
     public Group createPortamentoEditor(
-            PitchbendData portamentoData, DoubleExpression width, DoubleExpression height) {
+            PitchbendData portamentoData,
+            List<FilterType> filters,
+            DoubleExpression width,
+            DoubleExpression height) {
         editorWidth.bind(width);
         editorHeight.bind(height);
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
         ListView<String> background =
                 createPitchbendBackground(editorWidth, editorHeight, rowHeight);
         portamentoGroup = new Group(background);
+
+        // Create notes.
+        if (filters.contains(FilterType.RISING_NOTE)) {
+            Note note1 = noteFactory.createBackgroundNote(1, 200, 200);
+            portamentoGroup.getChildren().add(note1.getElement());
+        } else if (filters.contains(FilterType.FALLING_NOTE)) {
+            Note note1 = noteFactory.createBackgroundNote(1, 200, 200);
+            portamentoGroup.getChildren().add(note1.getElement());
+        } else {
+            Note note1 = noteFactory.createBackgroundNote(1, 300, 200);
+            portamentoGroup.getChildren().add(note1.getElement());
+        }
+        // Create portamento curve.
+        // pitchbendFactory.
         return portamentoGroup;
     }
 

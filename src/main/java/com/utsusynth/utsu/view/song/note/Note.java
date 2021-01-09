@@ -116,7 +116,9 @@ public class Note implements Comparable<Note> {
         MenuItem deleteMenuItem = new MenuItem("Delete");
         deleteMenuItem.setOnAction(action -> deleteNote());
         CheckMenuItem vibratoMenuItem = new CheckMenuItem("Vibrato");
-        vibratoMenuItem.setSelected(track.hasVibrato(getAbsPositionMs()));
+        if (track != null) {
+            vibratoMenuItem.setSelected(track.hasVibrato(getAbsPositionMs()));
+        }
         vibratoMenuItem.setOnAction(action -> {
             track.setHasVibrato(getAbsPositionMs(), vibratoMenuItem.isSelected());
         });

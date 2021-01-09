@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.song.note;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -9,6 +10,7 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
@@ -139,6 +141,36 @@ public class NoteFactory {
                 scaler);
         lyric.registerLyric();
 
+        return trackNote;
+    }
+
+    public Note createBackgroundNote(int row, int positionMs, int durationMs) {
+        Rectangle note = new Rectangle();
+        note.setWidth(scaler.scaleX(durationMs).get() - 1);
+        note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
+        note.getStyleClass().addAll("track-note", "valid", "not-highlighted");
+
+        StackPane layout = new StackPane();
+        layout.setPickOnBounds(false);
+        layout.setAlignment(Pos.CENTER_LEFT);
+        layout.setTranslateY(scaler.scaleY(row * Quantizer.ROW_HEIGHT).get());
+        layout.setTranslateX(scaler.scaleX(positionMs).get());
+
+        Lyric lyric = lyricProvider.get();
+        Note trackNote = new Note(
+                note,
+                new Rectangle(0, 0),
+                new Rectangle(0, 0),
+                lyricProvider.get(),
+                layout,
+                null,
+                new SimpleBooleanProperty(false),
+                new SimpleBooleanProperty(false),
+                new SimpleBooleanProperty(false),
+                localizer,
+                quantizer,
+                scaler);
+        trackNote.getElement().setMouseTransparent(true);
         return trackNote;
     }
 }
