@@ -144,9 +144,9 @@ public class NoteFactory {
         return trackNote;
     }
 
-    public Note createBackgroundNote(int row, int positionMs, int durationMs) {
+    public Note createBackgroundNote(int row, double startX, double width) {
         Rectangle note = new Rectangle();
-        note.setWidth(scaler.scaleX(durationMs).get() - 1);
+        note.setWidth(width - 1);
         note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
         note.getStyleClass().addAll("track-note", "valid", "not-highlighted");
 
@@ -154,7 +154,7 @@ public class NoteFactory {
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
         layout.setTranslateY(scaler.scaleY(row * Quantizer.ROW_HEIGHT).get());
-        layout.setTranslateX(scaler.scaleX(positionMs).get());
+        layout.setTranslateX(startX);
 
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(

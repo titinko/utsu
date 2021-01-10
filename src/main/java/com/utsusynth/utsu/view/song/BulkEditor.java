@@ -7,10 +7,12 @@ import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
+import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
 import com.utsusynth.utsu.view.song.note.pitch.Vibrato;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
@@ -42,6 +44,7 @@ public class BulkEditor {
 
     private Group portamentoGroup;
     private Portamento currentPortamento;
+    private List<FilterType> currentFilters;
     private ListView<PitchbendData> portamentoList;
 
     private Group vibratoGroup;
@@ -64,6 +67,7 @@ public class BulkEditor {
         this.scaler = scaler;
         editorWidth = new SimpleDoubleProperty(0);
         editorHeight = new SimpleDoubleProperty(0);
+        currentFilters = ImmutableList.of();
     }
 
     public Group createPortamentoEditor(
@@ -73,25 +77,50 @@ public class BulkEditor {
             DoubleExpression height) {
         editorWidth.bind(width);
         editorHeight.bind(height);
+        currentFilters = filters;
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
         ListView<String> background =
                 createPitchbendBackground(editorWidth, editorHeight, rowHeight);
         portamentoGroup = new Group(background);
 
-        // Create notes.
-        if (filters.contains(FilterType.RISING_NOTE)) {
-            Note note1 = noteFactory.createBackgroundNote(1, 200, 200);
-            portamentoGroup.getChildren().add(note1.getElement());
-        } else if (filters.contains(FilterType.FALLING_NOTE)) {
-            Note note1 = noteFactory.createBackgroundNote(1, 200, 200);
-            portamentoGroup.getChildren().add(note1.getElement());
-        } else {
-            Note note1 = noteFactory.createBackgroundNote(1, 300, 200);
-            portamentoGroup.getChildren().add(note1.getElement());
-        }
-        // Create portamento curve.
-        // pitchbendFactory.
+        // Create notes and portamento curve.
+        portamentoGroup.getChildren().add(createNotesAndPortamento(portamentoData));
+        InvalidationListener updateSize = obs -> {
+            PitchbendData currentData = currentPortamento.getData();
+            portamentoGroup.getChildren().set(1, createNotesAndPortamento(currentData));
+        };
+        editorWidth.addListener(updateSize);
+        editorHeight.addListener(updateSize);
         return portamentoGroup;
+    }
+
+    private Group createNotesAndPortamento(PitchbendData portamentoData) {
+        Group notesAndPortamento = new Group();
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        int noteWidth = (int) Math.max(1, editorWidth.get() / 2);
+        int numRows = (int) (editorHeight.get() / rowHeight);
+        if (currentFilters.contains(FilterType.RISING_NOTE)) {
+            Note first = noteFactory.createBackgroundNote(numRows / 3 * 2, 0, noteWidth);
+            Note second = noteFactory.createBackgroundNote(numRows / 3, noteWidth, noteWidth);
+            currentPortamento = pitchbendFactory.createPortamento(
+                    second, numRows / 3 * 2, portamentoData, null);
+            notesAndPortamento.getChildren().addAll(
+                    first.getElement(), second.getElement(), currentPortamento.getElement());
+        } else if (currentFilters.contains(FilterType.FALLING_NOTE)) {
+            Note first = noteFactory.createBackgroundNote(numRows / 3, 0, noteWidth);
+            Note second = noteFactory.createBackgroundNote(numRows / 3 * 2, noteWidth, noteWidth);
+            currentPortamento = pitchbendFactory.createPortamento(
+                    second, numRows / 3, portamentoData, null);
+            notesAndPortamento.getChildren().addAll(
+                    first.getElement(), second.getElement(), currentPortamento.getElement());
+        } else {
+            Note note = noteFactory.createBackgroundNote(numRows / 2, noteWidth, noteWidth);
+            currentPortamento = pitchbendFactory.createPortamento(
+                    note, numRows / 2, portamentoData, null);
+            notesAndPortamento.getChildren().addAll(
+                    note.getElement(), currentPortamento.getElement());
+        }
+        return notesAndPortamento;
     }
 
     public PitchbendData getPortamentoData() {
@@ -151,6 +180,11 @@ public class BulkEditor {
 
     public void saveToPortamentoList() {
         portamentoList.getItems().add(getPortamentoData());
+    }
+
+    public void setCurrentFilters(List<FilterType> filters) {
+        currentFilters = filters;
+        portamentoGroup.getChildren().set(1, createNotesAndPortamento(currentPortamento.getData()));
     }
 
     public Group createVibratoEditor(

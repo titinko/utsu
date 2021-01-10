@@ -147,6 +147,8 @@ public class BulkEditorController implements Localizable {
         portamentoRisingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoFallingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoAllNotes.setSelected(true); // Consider saving user's setting.
+        risingOrFallingToggle.selectedToggleProperty().addListener(
+                obs -> view.setCurrentFilters(getFilters()));
         ObservableList<PitchbendData> portamentoConfig = configManager.getPortamentoConfig();
         portamentoVBox.getChildren().add(
                 0,
@@ -263,12 +265,12 @@ public class BulkEditorController implements Localizable {
 
     @FXML
     public void addPortamentoConfig(ActionEvent event) {
-        // TODO
+        view.saveToPortamentoList();
     }
 
     @FXML
     public void addVibratoConfig(ActionEvent event) {
-        // TODO
+        view.saveToVibratoList();
     }
 
     @FXML
