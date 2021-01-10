@@ -120,6 +120,21 @@
 	-fx-stroke: transparent;
 }
 
+.list-cell:even {
+	-fx-background-color: lightgray, white;
+	-fx-background-insets: 0, 0 0 1 0;
+}
+
+.list-cell:odd {
+	-fx-background-color: lightgray, whitesmoke;
+	-fx-background-insets: 0, 0 0 1 0;
+}
+
+.list-cell:selected {
+	-fx-background-color: skyblue, azure;
+	-fx-background-insets: 0, 1 0 1 0;
+}
+
 .table-row-cell {
 	-fx-table-cell-border-color: lightgray;
 }

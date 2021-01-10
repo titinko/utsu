@@ -3,21 +3,27 @@ package com.utsusynth.utsu.controller.song;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
+import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.files.BulkEditorConfigManager;
 import com.utsusynth.utsu.view.song.BulkEditor;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class BulkEditorController implements Localizable {
@@ -28,6 +34,7 @@ public class BulkEditorController implements Localizable {
         ENVELOPE,
     }
 
+    private final BulkEditorConfigManager configManager;
     private final BulkEditor view;
     private final Localizer localizer;
 
@@ -62,7 +69,7 @@ public class BulkEditorController implements Localizable {
     @FXML
     private RadioButton portamentoFallingNotes;
     @FXML
-    private AnchorPane portamentoAnchor;
+    private VBox portamentoVBox;
     @FXML
     private AnchorPane portamentoListAnchor;
 
@@ -102,7 +109,7 @@ public class BulkEditorController implements Localizable {
     @FXML
     private TextField vibratoPhaseTF;
     @FXML
-    private AnchorPane vibratoAnchor;
+    private VBox vibratoVBox;
     @FXML
     private AnchorPane vibratoListAnchor;
 
@@ -118,13 +125,15 @@ public class BulkEditorController implements Localizable {
     @FXML
     private RadioButton envelopeSilenceAfter;
     @FXML
-    private AnchorPane envelopeAnchor;
+    private VBox envelopeVBox;
     @FXML
     private AnchorPane envelopeListAnchor;
 
     @Inject
-    public BulkEditorController(BulkEditor bulkEditor, Localizer localizer) {
-        this.view = bulkEditor;
+    public BulkEditorController(
+            BulkEditorConfigManager configManager, BulkEditor view, Localizer localizer) {
+        this.configManager = configManager;
+        this.view = view;
         this.localizer = localizer;
     }
 
@@ -138,8 +147,20 @@ public class BulkEditorController implements Localizable {
         portamentoRisingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoFallingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoAllNotes.setSelected(true); // Consider saving user's setting.
-        // TODO: Initialize visual editor.
-        // TODO: Initialize config list.
+        risingOrFallingToggle.selectedToggleProperty().addListener(
+                obs -> view.setCurrentFilters(getFilters()));
+        ObservableList<PitchbendData> portamentoConfig = configManager.getPortamentoConfig();
+        portamentoVBox.getChildren().add(
+                0,
+                view.createPortamentoEditor(
+                        portamentoConfig.get(0),
+                        getFilters(),
+                        portamentoVBox.widthProperty().subtract(20),
+                        portamentoVBox.heightProperty().subtract(50)));
+        portamentoListAnchor.getChildren().add(
+                view.createPortamentoList(
+                        portamentoConfig,
+                        portamentoListAnchor.heightProperty().subtract(3)));
 
         // Initialize vibrato elements.
         initializeVibratoField(vibratoLengthTF, 0, 100); // Vibrato length (% of note)
@@ -150,8 +171,17 @@ public class BulkEditorController implements Localizable {
         initializeVibratoField(vibratoFreqSlopeTF, -100, 100); // Frequency slope
         initializeVibratoField(vibratoHeightTF, -100, 100); // Pitch shift (cents)
         initializeVibratoField(vibratoPhaseTF, 0, 100); // Phase shift (% of cycle)
-        // TODO: Initialize visual editor.
-        // TODO: Initialize config list.
+        ObservableList<PitchbendData> vibratoConfig = configManager.getVibratoConfig();
+        vibratoVBox.getChildren().add(
+                0,
+                view.createVibratoEditor(
+                        vibratoConfig.get(0),
+                        vibratoVBox.widthProperty().subtract(20),
+                        vibratoVBox.heightProperty().subtract(50)));
+        vibratoListAnchor.getChildren().add(
+                view.createVibratoList(
+                        vibratoConfig,
+                        vibratoListAnchor.heightProperty().subtract(3)));
 
         // Initialize envelope elements.
         ToggleGroup silenceToggle = new ToggleGroup();
@@ -159,15 +189,17 @@ public class BulkEditorController implements Localizable {
         envelopeSilenceBefore.setToggleGroup(silenceToggle);
         envelopeSilenceAfter.setToggleGroup(silenceToggle);
         envelopeAllNotes.setSelected(true); // Consider saving user's setting.
-        double[] envWidths = new double[] {200, 1, 1, 100, 1}; // Large fade in/out for visibility.
-        double[] envHeights = new double[] {100, 100, 100, 100, 100};
-        EnvelopeData sampleData = new EnvelopeData(envWidths, envHeights);
-        envelopeAnchor.getChildren().add(
+        ObservableList<EnvelopeData> envelopeConfig = configManager.getEnvelopeConfig();
+        envelopeVBox.getChildren().add(
+                0,
                 view.createEnvelopeEditor(
-                        sampleData,
-                        envelopeAnchor.widthProperty().subtract(1),
-                        envelopeAnchor.heightProperty().subtract(1)));
-        // TODO: Initialize config list.
+                        envelopeConfig.get(0),
+                        envelopeVBox.widthProperty().subtract(20),
+                        envelopeVBox.heightProperty().subtract(50)));
+        envelopeListAnchor.getChildren().add(
+                view.createEnvelopeList(
+                        envelopeConfig,
+                        envelopeListAnchor.heightProperty().subtract(3)));
 
         localizer.localize(this);
     }
@@ -233,17 +265,17 @@ public class BulkEditorController implements Localizable {
 
     @FXML
     public void addPortamentoConfig(ActionEvent event) {
-        // TODO
+        view.saveToPortamentoList();
     }
 
     @FXML
     public void addVibratoConfig(ActionEvent event) {
-        // TODO
+        view.saveToVibratoList();
     }
 
     @FXML
     public void addEnvelopeConfig(ActionEvent event) {
-        // TODO
+        view.saveToEnvelopeList();
     }
 
     @FXML
@@ -261,6 +293,17 @@ public class BulkEditorController implements Localizable {
     }
 
     private void applyToNotes(RegionBounds regionToUpdate) {
+        ArrayList<FilterType> filters = getFilters();
+        if (tabPane.getSelectionModel().getSelectedItem() == portamentoTab) {
+            callback.updatePortamento(null, regionToUpdate, filters);
+        } else if (tabPane.getSelectionModel().getSelectedItem() == vibratoTab) {
+            callback.updateVibrato(null, regionToUpdate, filters);
+        } else if (tabPane.getSelectionModel().getSelectedItem() == envelopeTab){
+            callback.updateEnvelope(view.getEnvelopeData(), regionToUpdate, filters);
+        }
+    }
+
+    private ArrayList<FilterType> getFilters() {
         ArrayList<FilterType> filters = new ArrayList<>();
         if (noteLengthChoiceBox.getValue() != null) {
             filters.add(noteLengthChoiceBox.getValue());
@@ -271,17 +314,14 @@ public class BulkEditorController implements Localizable {
             } else if (portamentoFallingNotes.isSelected()) {
                 filters.add(FilterType.FALLING_NOTE);
             }
-            callback.updatePortamento(null, regionToUpdate, filters);
-        } else if (tabPane.getSelectionModel().getSelectedItem() == vibratoTab) {
-            callback.updateVibrato(null, regionToUpdate, filters);
         } else if (tabPane.getSelectionModel().getSelectedItem() == envelopeTab){
             if (envelopeSilenceBefore.isSelected()) {
                 filters.add(FilterType.SILENCE_BEFORE);
             } else if (envelopeSilenceAfter.isSelected()) {
                 filters.add(FilterType.SILENCE_AFTER);
             }
-            callback.updateEnvelope(view.getEnvelopeData(), regionToUpdate, filters);
         }
+        return filters;
     }
 
     @FXML

@@ -6,7 +6,6 @@
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
@@ -61,16 +60,6 @@
           <Tab fx:id="portamentoTab" text="Portamento">
             <content>
               <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                     <right>
-                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                           <BorderPane.margin>
-                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </BorderPane.margin>
-                           <content>
-                              <AnchorPane fx:id="portamentoListAnchor" />
-                           </content>
-                        </ScrollPane>
-                     </right>
                      <left>
                         <VBox prefWidth="170.0" spacing="5.0" BorderPane.alignment="CENTER">
                            <children>
@@ -88,37 +77,36 @@
                         </VBox>
                      </left>
                      <center>
-                        <VBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
+                        <VBox fx:id="portamentoVBox" alignment="CENTER_RIGHT" minWidth="300.0" spacing="5.0" BorderPane.alignment="CENTER">
                            <children>
-                              <AnchorPane fx:id="portamentoAnchor" minHeight="200.0" minWidth="300.0" VBox.vgrow="ALWAYS" />
                               <Button mnemonicParsing="false" onAction="#addPortamentoConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin>
                               </Button>
                            </children>
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
                         </VBox>
-                     </center></BorderPane>
+                     </center>
+                     <right>
+                        <AnchorPane fx:id="portamentoListAnchor" minWidth="175.0" BorderPane.alignment="CENTER">
+                           <BorderPane.margin>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </BorderPane.margin>
+                        </AnchorPane>
+                     </right></BorderPane>
             </content>
           </Tab>
           <Tab fx:id="vibratoTab" text="Vibrato">
             <content>
               <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                     <right>
-                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                           <BorderPane.margin>
-                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </BorderPane.margin>
-                           <content>
-                              <AnchorPane fx:id="vibratoListAnchor" />
-                           </content>
-                        </ScrollPane>
-                     </right>
                      <left>
-                        <GridPane prefWidth="170.0" BorderPane.alignment="CENTER">
+                        <GridPane prefHeight="250.0" prefWidth="170.0" BorderPane.alignment="CENTER">
                           <columnConstraints>
                             <ColumnConstraints hgrow="SOMETIMES" minWidth="80.0" prefWidth="80.0" />
                             <ColumnConstraints hgrow="SOMETIMES" minWidth="80.0" />
@@ -160,27 +148,36 @@
                         </GridPane>
                      </left>
                      <center>
-                        <VBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
+                        <VBox fx:id="vibratoVBox" alignment="CENTER_RIGHT" minWidth="300.0" spacing="5.0" BorderPane.alignment="CENTER">
                            <children>
-                              <AnchorPane fx:id="vibratoAnchor" minHeight="200.0" minWidth="300.0" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
                               <Button mnemonicParsing="false" onAction="#addVibratoConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin>
                               </Button>
                            </children>
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
                         </VBox>
-                     </center></BorderPane>
+                     </center>
+                     <right>
+                        <AnchorPane fx:id="vibratoListAnchor" minWidth="175.0" BorderPane.alignment="CENTER">
+                           <BorderPane.margin>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </BorderPane.margin>
+                        </AnchorPane>
+                     </right></BorderPane>
             </content>
           </Tab>
             <Tab fx:id="envelopeTab" text="Envelope">
               <content>
                 <BorderPane>
                      <left>
-                          <VBox prefWidth="170.0" spacing="5.0" BorderPane.alignment="CENTER">
+                          <VBox prefHeight="250.0" prefWidth="170.0" spacing="5.0" BorderPane.alignment="CENTER">
                               <children>
                                   <Label fx:id="envelopeApplyToLabel" text="Apply to:" />
                                   <RadioButton fx:id="envelopeAllNotes" mnemonicParsing="false" text="All notes" />
@@ -195,24 +192,16 @@
                            </padding>
                           </VBox>
                      </left>
-                     <right>
-                          <ScrollPane fitToWidth="true" hbarPolicy="NEVER" minWidth="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                           <BorderPane.margin>
-                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </BorderPane.margin>
-                           <content>
-                              <AnchorPane fx:id="envelopeListAnchor" />
-                           </content>
-                          </ScrollPane>
-                     </right>
                      <center>
-                          <VBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
+                          <VBox fx:id="envelopeVBox" alignment="CENTER_RIGHT" minWidth="300.0" spacing="5.0" BorderPane.alignment="CENTER">
                               <children>
-                                  <AnchorPane fx:id="envelopeAnchor" minHeight="200.0" minWidth="300.0" VBox.vgrow="ALWAYS" />
                                   <Button mnemonicParsing="false" onAction="#addEnvelopeConfig" text="→">
                                  <font>
                                     <Font size="14.0" />
-                                 </font></Button>
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin></Button>
                               </children>
                            <BorderPane.margin>
                               <Insets />
@@ -221,7 +210,14 @@
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
                           </VBox>
-                     </center></BorderPane>
+                     </center>
+                     <right>
+                        <AnchorPane fx:id="envelopeListAnchor" minWidth="175.0" BorderPane.alignment="CENTER">
+                           <BorderPane.margin>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </BorderPane.margin>
+                        </AnchorPane>
+                     </right></BorderPane>
               </content>
             </Tab>
         </tabs>

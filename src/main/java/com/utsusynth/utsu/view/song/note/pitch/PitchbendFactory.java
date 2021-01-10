@@ -33,20 +33,21 @@ public class PitchbendFactory {
             PitchbendCallback callback,
             BooleanProperty vibratoEditor,
             BooleanProperty showPitchbend) {
-        Portamento portamento = createPortamento(note, prevPitch, pitchbend, callback);
+        int prevRowNum = PitchUtils.pitchToRowNum(prevPitch);
+        Portamento portamento = createPortamento(note, prevRowNum, pitchbend, callback);
         Vibrato vibrato = createVibrato(note, pitchbend, callback, vibratoEditor);
         return new Pitchbend(portamento, vibrato, showPitchbend);
     }
 
-    private Portamento createPortamento(
+    public Portamento createPortamento(
             Note note,
-            String prevPitch,
+            int prevRowNum,
             PitchbendData pitchbend,
             PitchbendCallback callback) {
         double finalY = (note.getRow() + .5) * Quantizer.ROW_HEIGHT;
 
         double curX = note.getAbsPositionMs() + pitchbend.getPBS().get(0);
-        double curY = (PitchUtils.pitchToRowNum(prevPitch) + .5) * Quantizer.ROW_HEIGHT;
+        double curY = (prevRowNum + .5) * Quantizer.ROW_HEIGHT;
 
         ArrayList<Curve> pitchCurves = new ArrayList<>();
         ImmutableList<Double> widths = pitchbend.getPBW();
