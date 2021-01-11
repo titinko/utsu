@@ -122,7 +122,7 @@ public class Portamento {
             }
         });
         square.setOnMouseReleased(event -> {
-            if (changed) {
+            if (changed && callback != null) {
                 callback.modifySongPitchbend(startData, getData());
             }
         });
@@ -167,7 +167,9 @@ public class Portamento {
             squares.add(insertIndex, newSquare);
             initializeControlPoint(newSquare);
             squareGroup.getChildren().add(newSquare);
-            callback.modifySongPitchbend(oldData, getData());
+            if (callback != null) {
+                callback.modifySongPitchbend(oldData, getData());
+            }
         });
         addControlPoint.setDisable(squares.size() >= 50); // Arbitrary control point limit.
         MenuItem removeControlPoint = new MenuItem("Remove control point");
@@ -192,7 +194,9 @@ public class Portamento {
             // Remove the control point between the two curves.
             squares.remove(squareIndex);
             squareGroup.getChildren().remove(square);
-            callback.modifySongPitchbend(oldData, getData());
+            if (callback != null) {
+                callback.modifySongPitchbend(oldData, getData());
+            }
         });
         removeControlPoint.setDisable(squareIndex == 0 || squareIndex == squares.size() - 1);
 
@@ -238,7 +242,9 @@ public class Portamento {
             curves.set(curveIndex, newCurve);
             curveGroup.getChildren().remove(oldCurve.getElement());
             curveGroup.getChildren().add(newCurve.getElement());
-            callback.modifySongPitchbend(oldData, getData());
+            if (callback != null) {
+                callback.modifySongPitchbend(oldData, getData());
+            }
         });
         if (curves.get(curveIndex).getType().equals(curveType)) {
             radioItem.setSelected(true);
