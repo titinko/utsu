@@ -248,17 +248,15 @@ public class BulkEditorController implements Localizable {
 
     @Override
     public void localize(ResourceBundle bundle) {
-        applySelectionButton.setText(bundle.getString("bulkeditor.applySelectionButton"));
-        applyAllButton.setText(bundle.getString("bulkeditor.applyAllButton"));
-        envelopeApplyToLabel.setText(bundle.getString("bulkeditor.applyTo"));
-        portamentoApplyToLabel.setText(bundle.getString("bulkeditor.applyTo"));
+        applySelectionButton.setText(bundle.getString("bulkEditor.applySelection"));
+        applyAllButton.setText(bundle.getString("bulkEditor.applyAll"));
+        envelopeApplyToLabel.setText(bundle.getString("bulkEditor.applyTo"));
+        portamentoApplyToLabel.setText(bundle.getString("bulkEditor.applyTo"));
         cancelButton.setText(bundle.getString("general.cancel"));
 
-        portamentoAllNotes.setText(bundle.getString("bulkeditor.portamentoAllNotes"));
-        portamentoRisingNotes.setText(bundle.getString("bulkeditor.portamentoRisingNotes"));
-        portamentoFallingNotes.setText(bundle.getString("bulkeditor.portamentoFallingNotes"));
-
-
+        portamentoAllNotes.setText(bundle.getString("bulkEditor.portamento.allNotes"));
+        portamentoRisingNotes.setText(bundle.getString("bulkEditor.portamento.risingNotes"));
+        portamentoFallingNotes.setText(bundle.getString("bulkEditor.portamento.fallingNotes"));
     }
 
     void openEditor(BulkEditorType editorType, RegionBounds region, BulkEditorCallback callback) {

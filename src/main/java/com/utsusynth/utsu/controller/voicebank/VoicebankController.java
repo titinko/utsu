@@ -323,7 +323,7 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public Optional<String> open() throws FileAlreadyOpenException {
         DirectoryChooser dc = new DirectoryChooser();
-        dc.setTitle(localizer.getMessage("menu.file.selectVoicebankDirectory"));
+        dc.setTitle(localizer.getMessage("dialog.selectVoicebankDirectory"));
         File file = dc.showDialog(null);
         if (file != null) {
             open(file);
@@ -347,9 +347,8 @@ public class VoicebankController implements EditorController, Localizable {
                     callback.markChanged(false);
                     menuItemManager.disableSave();
 
-                    statusBar.setStatus(MessageFormat.format(localizer.getMessage("menu.file.loadedVoicebank"), file.getName()));
-
-                    //statusBar.setStatus("Loaded voicebank: " + file.getName());
+                    statusBar.setStatus(MessageFormat.format(
+                            localizer.getMessage("status.loadedVoicebank"), file.getName()));
                 });
             } catch (Exception e) {
                 Platform.runLater(
