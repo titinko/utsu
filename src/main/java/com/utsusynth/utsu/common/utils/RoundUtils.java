@@ -1,6 +1,8 @@
 package com.utsusynth.utsu.common.utils;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 /** Collection of functions to handle rounding numbers and printing rounded numbers. */
 public class RoundUtils {
@@ -21,8 +23,9 @@ public class RoundUtils {
      * @return String of number rounded to the correct number of decimal places.
      */
     public static String roundDecimal(double number, String roundFormat) {
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
         int formatNumPlaces = roundFormat.length() - roundFormat.indexOf(".") - 1;
-        String formatted = new DecimalFormat(roundFormat).format(number);
+        String formatted = new DecimalFormat(roundFormat, symbols).format(number);
         if (formatted.contains(".")) {
             int numPlaces = formatted.length() - formatted.indexOf(".") - 1;
             for (int i = numPlaces; i < formatNumPlaces; i++) {

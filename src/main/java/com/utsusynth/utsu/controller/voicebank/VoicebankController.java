@@ -37,6 +37,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.DirectoryChooser;
 
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -322,7 +323,7 @@ public class VoicebankController implements EditorController, Localizable {
     @Override
     public Optional<String> open() throws FileAlreadyOpenException {
         DirectoryChooser dc = new DirectoryChooser();
-        dc.setTitle("Select Voicebank Directory");
+        dc.setTitle(localizer.getMessage("menu.file.selectVoicebankDirectory"));
         File file = dc.showDialog(null);
         if (file != null) {
             open(file);
@@ -345,7 +346,10 @@ public class VoicebankController implements EditorController, Localizable {
                     refreshView();
                     callback.markChanged(false);
                     menuItemManager.disableSave();
-                    statusBar.setStatus("Loaded voicebank: " + file.getName());
+
+                    statusBar.setStatus(MessageFormat.format(localizer.getMessage("menu.file.loadedVoicebank"), file.getName()));
+
+                    //statusBar.setStatus("Loaded voicebank: " + file.getName());
                 });
             } catch (Exception e) {
                 Platform.runLater(
