@@ -1080,6 +1080,7 @@ public class SongController implements EditorController, Localizable {
             int minMs = Integer.MAX_VALUE;
             int maxMs = 0;
             for (NoteData noteData : newNotes) {
+                System.out.println(noteData.getPosition());
                 song.get().modifyNote(noteData);
                 if (minMs > noteData.getPosition()) {
                     minMs = noteData.getPosition();

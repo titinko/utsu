@@ -10,7 +10,6 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.files.BulkEditorConfigManager;
 import com.utsusynth.utsu.view.song.BulkEditor;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -23,7 +22,6 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class BulkEditorController implements Localizable {
@@ -303,9 +301,9 @@ public class BulkEditorController implements Localizable {
     private void applyToNotes(RegionBounds regionToUpdate) {
         ArrayList<FilterType> filters = getFilters();
         if (tabPane.getSelectionModel().getSelectedItem() == portamentoTab) {
-            callback.updatePortamento(null, regionToUpdate, filters);
+            callback.updatePortamento(view.getPortamentoData(), regionToUpdate, filters);
         } else if (tabPane.getSelectionModel().getSelectedItem() == vibratoTab) {
-            callback.updateVibrato(null, regionToUpdate, filters);
+            callback.updateVibrato(view.getVibratoData(), regionToUpdate, filters);
         } else if (tabPane.getSelectionModel().getSelectedItem() == envelopeTab){
             callback.updateEnvelope(view.getEnvelopeData(), regionToUpdate, filters);
         }

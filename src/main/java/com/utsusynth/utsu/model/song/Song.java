@@ -388,10 +388,8 @@ public class Song {
     public LinkedList<NoteData> getNotes(RegionBounds bounds, List<FilterType> filters) {
         LinkedList<NoteData> notes = new LinkedList<>();
         NoteIterator iterator = noteList.boundedIterator(bounds);
-        int totalDelta = 0;
         while (iterator.hasNext()) {
             Note note = iterator.next();
-            totalDelta += note.getDelta();
             // Apply all filters.
             if (filters.contains(FilterType.SILENCE_BEFORE)) {
                 Optional<Note> prev = iterator.peekPrev();
@@ -407,13 +405,13 @@ public class Song {
             }
             if (filters.contains(FilterType.RISING_NOTE)) {
                 Optional<Note> prev = iterator.peekPrev();
-                if (prev.isPresent() && prev.get().getNoteNum() >= note.getNoteNum()) {
+                if (prev.isEmpty() || prev.get().getNoteNum() >= note.getNoteNum()) {
                     continue;
                 }
             }
             if (filters.contains(FilterType.FALLING_NOTE)) {
                 Optional<Note> prev = iterator.peekPrev();
-                if (prev.isPresent() && prev.get().getNoteNum() <= note.getNoteNum()) {
+                if (prev.isEmpty() || prev.get().getNoteNum() <= note.getNoteNum()) {
                     continue;
                 }
             }
@@ -434,7 +432,7 @@ public class Song {
             }
             notes.add(
                     new NoteData(
-                            totalDelta,
+                            iterator.getCurDelta(),
                             note.getDuration(),
                             PitchUtils.noteNumToPitch(note.getNoteNum()),
                             note.getLyric(),
