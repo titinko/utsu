@@ -8,7 +8,13 @@ import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import com.utsusynth.utsu.engine.Engine;
+import com.utsusynth.utsu.engine.Resampler;
+import com.utsusynth.utsu.files.CacheManager;
+import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.voicebank.SoundFileReader;
+import com.utsusynth.utsu.model.song.Note;
+import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Side;
@@ -36,27 +42,44 @@ public class LyricConfigEditor {
     private final SoundFileReader soundFileReader;
     private final Localizer localizer;
 
+    private final Resampler resampler;
+    private final Engine engine;
+    private final PreferencesManager preferencesManager;
+    private final CacheManager cacheManager;
+
     private Optional<LyricConfigData> configData;
     private LyricConfigCallback model;
     private GridPane background;
     private LineChart<Number, Number> chart;
     private Group controlBars;
 
+
     // Temporary cache values.
     private boolean changed = false;
     private double[] cachedConfig;
 
     @Inject
-    public LyricConfigEditor(SoundFileReader soundFileReader, Localizer localizer) {
+    public LyricConfigEditor(
+            SoundFileReader soundFileReader,
+            Localizer localizer,
+            Resampler resampler,
+            Engine engine,
+            PreferencesManager preferencesManager,
+            CacheManager cacheManager
+    ) {
         this.soundFileReader = soundFileReader;
         this.localizer = localizer;
-
+        this.resampler = resampler;
+        this.engine = engine;
+        this.preferencesManager = preferencesManager;
+        this.cacheManager = cacheManager;
         // Initialize with dummy data.
         configData = Optional.empty();
         background = new GridPane();
         chart = new LineChart<>(new NumberAxis(), new NumberAxis());
         chart.setOpacity(0);
         controlBars = new Group();
+
     }
 
     /** Initialize editor with data from the controller. */
@@ -109,12 +132,28 @@ public class LyricConfigEditor {
                 .setAll(offsetBar, overlapBar, preutterBar, consonantBar, cutoffBar);
 
         // Context menu for config editor.
+
         MenuItem playItem = new MenuItem("Play");
         playItem.setOnAction(event -> {
             playSound();
         });
-        ContextMenu contextMenu = new ContextMenu(playItem);
-        contextMenu.setOnShowing(event -> playItem.setText(localizer.getMessage("song.play")));
+
+
+        MenuItem playItemWithResampler = new MenuItem("Play with resampler");
+        playItemWithResampler.setOnAction(event -> {
+            playSoundWithResampler(true);
+        });
+
+        MenuItem playItemWithResamplerNoModulation = new MenuItem("Play with resampler (no modulation)");
+        playItemWithResamplerNoModulation.setOnAction(event -> {
+            playSoundWithResampler(false);
+        });
+
+        ContextMenu contextMenu = new ContextMenu();
+        contextMenu.getItems().addAll(playItem, playItemWithResampler,playItemWithResamplerNoModulation);
+        contextMenu.setOnShowing(event -> playItem.setText(localizer.getMessage("voice.play")));
+        contextMenu.setOnShowing(event -> playItemWithResampler.setText(localizer.getMessage("voice.playWithResampler")));
+        contextMenu.setOnShowing(event -> playItemWithResamplerNoModulation.setText(localizer.getMessage("voice.playWithResamplerNoModulation")));
         background.setOnContextMenuRequested(event -> {
             contextMenu.show(background, event.getScreenX(), event.getScreenY());
         });
@@ -208,15 +247,54 @@ public class LyricConfigEditor {
     public Group getControlElement() {
         return controlBars;
     }
+    public void playSoundWithResampler(boolean modulation) {
+        if (!configData.isPresent()) {
+            System.out.println("No info");
+            return;
+        }
+        System.out.println("Parsing");
 
+        LyricConfigData curConfigData = configData.get();
+        Note note= new Note();
+        note.setLyric(curConfigData.getLyric());
+        note.setNoteNum(60);
+        note.setDuration(1000);
+        note.setModulation(modulation ? 100:0);
+
+        File renderedNote;
+
+        renderedNote = cacheManager.createNoteCache();
+        resampler.resampleNote(
+                    engine.getResamplerPath(),
+                    note,
+                    2000.0,
+                    curConfigData,
+                    renderedNote,
+                    "",
+                    120);
+
+//        System.out.println(renderedNote.toString());
+//        System.out.println(new File(renderedNote.toString() ).isFile());
+        try {
+            Media media = new Media(renderedNote.toURI().toString());
+            mediaPlayer = new MediaPlayer(media);
+            mediaPlayer.setOnReady(() -> {
+                mediaPlayer.play();
+            });
+        } catch(IllegalArgumentException e) {
+            System.out.println("Not correct parameter for file");
+        }
+    }
     public void playSound() {
         if (!configData.isPresent()) {
             return;
         }
+        System.out.println("Path to play: "+configData.get().getPathToFile().toURI().toString());
         Media media = new Media(configData.get().getPathToFile().toURI().toString());
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setOnReady(() -> {
             double lengthMs = media.getDuration().toMillis();
+
             double offsetLengthMs =
                     Math.max(Math.min(configData.get().offsetProperty().get(), lengthMs), 0);
             double cutoffLengthMs = configData.get().cutoffProperty().get();
@@ -227,6 +305,7 @@ public class LyricConfigEditor {
             }
             mediaPlayer.setStartTime(Duration.millis(offsetLengthMs));
             mediaPlayer.setStopTime(Duration.millis(lengthMs - cutoffLengthMs));
+
             mediaPlayer.play();
         });
     }

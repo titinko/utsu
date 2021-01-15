@@ -13,6 +13,7 @@ import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
+import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.files.voicebank.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import com.utsusynth.utsu.view.voicebank.*;
@@ -25,10 +26,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Line;
@@ -107,6 +105,7 @@ public class VoicebankController implements EditorController, Localizable {
         this.menuItemManager = menuItemManager;
         this.statusBar = statusBar;
         this.voicebankWriter = voicebankWriter;
+
     }
 
     // Provide setup for other frontend song management.
@@ -314,6 +313,12 @@ public class VoicebankController implements EditorController, Localizable {
         if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
             configEditor.playSound(); // Does nothing if config editor not loaded.
             return true;
+        } else if (new KeyCodeCombination( KeyCode.SPACE, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
+            configEditor.playSoundWithResampler(true);
+            return true;
+        } else if (new KeyCodeCombination( KeyCode.SPACE, KeyCombination.SHIFT_DOWN, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
+            configEditor.playSoundWithResampler(false);
+            return true;
         } else {
             // No need to override default key behavior.
             return false;
@@ -353,7 +358,10 @@ public class VoicebankController implements EditorController, Localizable {
             } catch (Exception e) {
                 Platform.runLater(
                         () -> statusBar.setStatus(
-                                "Error: Unable to load voicebank: " + file.getName()));
+                        //        "Error: Unable to load voicebank: " + file.getName()
+                            MessageFormat.format(
+                                localizer.getMessage("status.unableToLoadVoicebank"), file.getName())
+                        ));
             }
         }).start();
     }

@@ -2,6 +2,7 @@ package com.utsusynth.utsu.engine;
 
 import java.io.File;
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.FileNameFixer;
@@ -62,6 +63,52 @@ public class Resampler {
                 tempo,
                 pitchString);
     }
+
+
+    // engine.getResamplerPath(),
+    //                    note,
+    //                    2.0,
+    //                    curConfig,
+    //                    renderedNote,
+    //                    "");
+    public void resampleNote(
+            File resamplerPath,
+            Note note,
+            double noteLength,
+            LyricConfigData config,
+            File outputFile,
+            String pitchString,
+            int tempo) {
+        String inputFilePath = fileNameFixer.getFixedName(config.getPathToFile().getAbsolutePath());
+        String outputFilePath = outputFile.getAbsolutePath();
+        String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
+        String consonantVelocity = Double.toString(note.getVelocity());
+        String flags = note.getNoteFlags().isEmpty() ? "?" : note.getNoteFlags();
+        String offset = Double.toString(config.offsetProperty().getValue());
+        double consonantLength = config.consonantProperty().getValue(); // TODO: Cutoff?
+        String cutoff = Double.toString(config.cutoffProperty().getValue());
+        String intensity = Integer.toString(note.getIntensity());
+        String modulation = Integer.toString(note.getModulation()); // TODO: Set this song-wide?
+        String tempoString = "T" + tempo; // TODO: Override with note tempo.
+
+        // Call resampler.
+        runner.runProcess(
+                resamplerPath.getAbsolutePath(),
+                inputFilePath,
+                outputFilePath,
+                pitch,
+                consonantVelocity,
+                flags.isEmpty() ? "?" : flags, // Uses placeholder value if there are no flags.
+                offset,
+                Double.toString(noteLength),
+                Double.toString(consonantLength),
+                cutoff,
+                intensity,
+                modulation,
+                tempoString,
+                pitchString);
+    }
+
 
     void resampleSilence(File resamplerPath, File outputFile, double duration) {
         String desiredLength = Double.toString(duration + 1);

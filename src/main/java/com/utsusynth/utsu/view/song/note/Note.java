@@ -24,6 +24,8 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
+// This represent the note on screen
+
 public class Note implements Comparable<Note> {
     private final StackPane layout;
     private final Rectangle note;
