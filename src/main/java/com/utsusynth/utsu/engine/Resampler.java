@@ -65,12 +65,16 @@ public class Resampler {
     }
 
 
-    // engine.getResamplerPath(),
-    //                    note,
-    //                    2.0,
-    //                    curConfig,
-    //                    renderedNote,
-    //                    "");
+    /**
+     * Play a note based on Note and LyricConfigData, using the resampler
+     * @param resamplerPath Path to the resampler
+     * @param note A Note object
+     * @param noteLength Note length, in ms
+     * @param config a LyricConfigData, as present on LyricConfigEditor
+     * @param outputFile File to write the result
+     * @param pitchString Pitch changes
+     * @param tempo Tempo in BPM at which pitch changes are established
+     */
     public void resampleNote(
             File resamplerPath,
             Note note,
@@ -85,11 +89,11 @@ public class Resampler {
         String consonantVelocity = Double.toString(note.getVelocity());
         String flags = note.getNoteFlags().isEmpty() ? "?" : note.getNoteFlags();
         String offset = Double.toString(config.offsetProperty().getValue());
-        double consonantLength = config.consonantProperty().getValue(); // TODO: Cutoff?
+        double consonantLength = config.consonantProperty().getValue();
         String cutoff = Double.toString(config.cutoffProperty().getValue());
         String intensity = Integer.toString(note.getIntensity());
-        String modulation = Integer.toString(note.getModulation()); // TODO: Set this song-wide?
-        String tempoString = "T" + tempo; // TODO: Override with note tempo.
+        String modulation = Integer.toString(note.getModulation());
+        String tempoString = "T" + tempo;
 
         // Call resampler.
         runner.runProcess(
@@ -98,7 +102,7 @@ public class Resampler {
                 outputFilePath,
                 pitch,
                 consonantVelocity,
-                flags.isEmpty() ? "?" : flags, // Uses placeholder value if there are no flags.
+                flags.isEmpty() ? "?" : flags,
                 offset,
                 Double.toString(noteLength),
                 Double.toString(consonantLength),

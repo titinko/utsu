@@ -11,10 +11,8 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.Resampler;
 import com.utsusynth.utsu.files.CacheManager;
-import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.voicebank.SoundFileReader;
 import com.utsusynth.utsu.model.song.Note;
-import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Side;
@@ -44,7 +42,6 @@ public class LyricConfigEditor {
 
     private final Resampler resampler;
     private final Engine engine;
-    private final PreferencesManager preferencesManager;
     private final CacheManager cacheManager;
 
     private Optional<LyricConfigData> configData;
@@ -64,14 +61,12 @@ public class LyricConfigEditor {
             Localizer localizer,
             Resampler resampler,
             Engine engine,
-            PreferencesManager preferencesManager,
             CacheManager cacheManager
     ) {
         this.soundFileReader = soundFileReader;
         this.localizer = localizer;
         this.resampler = resampler;
         this.engine = engine;
-        this.preferencesManager = preferencesManager;
         this.cacheManager = cacheManager;
         // Initialize with dummy data.
         configData = Optional.empty();
@@ -247,22 +242,25 @@ public class LyricConfigEditor {
     public Group getControlElement() {
         return controlBars;
     }
+
+    /**
+     * Play a note using the resampler
+     * The note is played using pitch C4 (midi 60) during 2 seconds
+     *
+     * @param modulation if false, modulation on resampler is set to 0
+     */
     public void playSoundWithResampler(boolean modulation) {
         if (!configData.isPresent()) {
-            System.out.println("No info");
             return;
         }
-        System.out.println("Parsing");
-
+        File renderedNote;
         LyricConfigData curConfigData = configData.get();
+
         Note note= new Note();
         note.setLyric(curConfigData.getLyric());
         note.setNoteNum(60);
-        note.setDuration(1000);
+        note.setDuration(2000); // unnecessary
         note.setModulation(modulation ? 100:0);
-
-        File renderedNote;
-
         renderedNote = cacheManager.createNoteCache();
         resampler.resampleNote(
                     engine.getResamplerPath(),
@@ -273,8 +271,6 @@ public class LyricConfigEditor {
                     "",
                     120);
 
-//        System.out.println(renderedNote.toString());
-//        System.out.println(new File(renderedNote.toString() ).isFile());
         try {
             Media media = new Media(renderedNote.toURI().toString());
             mediaPlayer = new MediaPlayer(media);
@@ -289,7 +285,7 @@ public class LyricConfigEditor {
         if (!configData.isPresent()) {
             return;
         }
-        System.out.println("Path to play: "+configData.get().getPathToFile().toURI().toString());
+        //System.out.println("Path to play: "+configData.get().getPathToFile().toURI().toString());
         Media media = new Media(configData.get().getPathToFile().toURI().toString());
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setOnReady(() -> {
@@ -369,7 +365,7 @@ public class LyricConfigEditor {
         yAxis.setAutoRanging(false);
         yAxis.setLowerBound(-maxAmplitude);
         yAxis.setUpperBound(maxAmplitude);
-        yAxis.setTickUnit(maxAmplitude / 5);
+        yAxis.setTickUnit(maxAmplitude / 5.0);
         yAxis.setSide(Side.RIGHT);
         yAxis.setOpacity(0);
         yAxis.setTickLabelsVisible(false);

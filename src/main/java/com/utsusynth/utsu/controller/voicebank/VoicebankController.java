@@ -13,7 +13,6 @@ import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
-import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.files.voicebank.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import com.utsusynth.utsu.view.voicebank.*;
