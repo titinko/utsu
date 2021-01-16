@@ -2,7 +2,6 @@ package com.utsusynth.utsu.view.song.note.envelope;
 
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.EnvelopeData;
-import com.utsusynth.utsu.common.quantize.ContinuousScaler;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.Note;
 import javafx.scene.shape.LineTo;
@@ -55,9 +54,8 @@ public class EnvelopeFactory {
             double editorWidth,
             double editorHeight,
             EnvelopeData envelope,
-            EnvelopeCallback callback,
+            Scaler editorScaler,
             boolean scaleToFit) {
-        Scaler editorScaler = scaler;
 
         double[] widths = envelope.getWidths();
         double p1 = widths[0];
@@ -71,8 +69,7 @@ public class EnvelopeFactory {
         if (maxAllowedWidth > 0 && totalWidth > maxAllowedWidth) {
             double scaleFactor = maxAllowedWidth / totalWidth;
             if (scaleToFit) {
-                double newScale = editorScaler.scaleX(1).get() * scaleFactor;
-                editorScaler = new ContinuousScaler(newScale, 1);
+                editorScaler = editorScaler.derive(scaleFactor, 1);
             } else {
                 p2 *= scaleFactor;
                 p3 *= scaleFactor;
@@ -98,7 +95,7 @@ public class EnvelopeFactory {
                 new LineTo(editorWidth - editorScaler.scaleX(p4 + p3).get(), v3),
                 new LineTo(editorWidth - editorScaler.scaleX(p4).get(), v4),
                 new LineTo(editorWidth, editorHeight),
-                callback,
+                ((oldData, newData) -> {}),
                 editorHeight,
                 editorScaler);
     }

@@ -12,4 +12,5 @@ public interface Scaler {
     double unscaleX(double unscaleMe);
     double unscalePos(double unscaleMe);
     double unscaleY(double unscaleMe);
+    Scaler derive(double horizontalMultiplier, double verticalMultiplier);
 }

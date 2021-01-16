@@ -57,4 +57,11 @@ public class ContinuousScaler implements Scaler {
     public double unscaleY(double unscaleMe) {
         return unscaleMe / verticalScale.get();
     }
+
+    @Override
+    public Scaler derive(double horizontalMultiplier, double verticalMultiplier) {
+        return new ContinuousScaler(
+                horizontalScale.get() * horizontalMultiplier,
+                verticalScale.get() * verticalMultiplier);
+    }
 }

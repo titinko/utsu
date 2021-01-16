@@ -76,6 +76,52 @@ public class PitchbendFactory {
                 note.getAbsPositionMs(), pitchCurves, callback, curveFactory, localizer, scaler);
     }
 
+    public Portamento createPortamentoEditor(
+            double editorWidth,
+            double editorheight,
+            Note note,
+            int prevRowNum,
+            PitchbendData pitchbend,
+            Scaler editorScaler,
+            boolean scaleToFit) {
+        double finalY = (note.getRow() + .5) * Quantizer.ROW_HEIGHT;
+
+        double curX = note.getAbsPositionMs() + pitchbend.getPBS().get(0);
+        double curY = (prevRowNum + .5) * Quantizer.ROW_HEIGHT;
+
+        ArrayList<Curve> pitchCurves = new ArrayList<>();
+        ImmutableList<Double> widths = pitchbend.getPBW();
+        for (int i = 0; i < widths.size(); i++) {
+            double tempX = curX;
+            curX += widths.get(i);
+            double tempY = curY;
+            if (i == widths.size() - 1) {
+                curY = finalY;
+            } else {
+                if (pitchbend.getPBY().size() > i) {
+                    // Leave curY as-is if PBY has no value for this width.
+                    curY = finalY - (pitchbend.getPBY().get(i) / 10) * Quantizer.ROW_HEIGHT;
+                }
+            }
+            String type = pitchbend.getPBM().size() > i ? pitchbend.getPBM().get(i) : "";
+            pitchCurves.add(
+                    curveFactory.createCurve(
+                            editorScaler.scalePos(tempX).get(),
+                            editorScaler.scaleY(tempY).get(),
+                            editorScaler.scalePos(curX).get(),
+                            editorScaler.scaleY(curY).get(),
+                            type));
+        }
+
+        return new Portamento(
+                note.getAbsPositionMs(),
+                pitchCurves,
+                null,
+                curveFactory,
+                localizer,
+                editorScaler);
+    }
+
     private Vibrato createVibrato(
             Note note,
             PitchbendData pitchbend,

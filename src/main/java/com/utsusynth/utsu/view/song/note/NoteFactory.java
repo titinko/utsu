@@ -2,10 +2,10 @@ package com.utsusynth.utsu.view.song.note;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import com.utsusynth.utsu.common.quantize.ContinuousScaler;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
@@ -144,19 +144,18 @@ public class NoteFactory {
         return trackNote;
     }
 
-    public Note createBackgroundNote(int row, double startX, double width) {
+    public Note createBackgroundNote(int row, double startX, double widthX, Scaler noteScaler) {
         Rectangle note = new Rectangle();
-        note.setWidth(width - 1);
-        note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
+        note.setWidth(widthX - 1);
+        note.setHeight(noteScaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
         note.getStyleClass().addAll("track-note", "valid", "not-highlighted");
 
         StackPane layout = new StackPane();
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
-        layout.setTranslateY(scaler.scaleY(row * Quantizer.ROW_HEIGHT).get());
+        layout.setTranslateY(noteScaler.scaleY(row * Quantizer.ROW_HEIGHT).get());
         layout.setTranslateX(startX);
 
-        Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(
                 note,
                 new Rectangle(0, 0),
@@ -169,7 +168,7 @@ public class NoteFactory {
                 new SimpleBooleanProperty(false),
                 localizer,
                 quantizer,
-                scaler);
+                noteScaler);
         trackNote.getElement().setMouseTransparent(true);
         return trackNote;
     }

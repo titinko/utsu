@@ -7,12 +7,10 @@ import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
-import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
 import com.utsusynth.utsu.view.song.note.pitch.Vibrato;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
@@ -26,7 +24,6 @@ import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -95,26 +92,38 @@ public class BulkEditor {
     }
 
     private Group createNotesAndPortamento(PitchbendData portamentoData) {
-        Group notesAndPortamento = new Group();
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        return createNotesAndPortamento(portamentoData, currentFilters, rowHeight);
+    }
+
+    private Group createNotesAndPortamento(
+            PitchbendData portamentoData, List<FilterType> filters, double rowHeight) {
+        Group notesAndPortamento = new Group();
         int noteWidth = (int) Math.max(1, editorWidth.get() / 2);
         int numRows = (int) (editorHeight.get() / rowHeight);
-        if (currentFilters.contains(FilterType.RISING_NOTE)) {
-            Note first = noteFactory.createBackgroundNote(numRows / 3 * 2, 0, noteWidth);
-            Note second = noteFactory.createBackgroundNote(numRows / 3, noteWidth, noteWidth);
+        double verticalScale = rowHeight / Quantizer.ROW_HEIGHT;
+        Scaler noteScaler = scaler.derive(1, verticalScale);
+        if (filters.contains(FilterType.RISING_NOTE)) {
+            Note first = noteFactory.createBackgroundNote(
+                    numRows / 3 * 2, 0, noteWidth, noteScaler);
+            Note second = noteFactory.createBackgroundNote(
+                    numRows / 3, noteWidth, noteWidth, noteScaler);
             currentPortamento = pitchbendFactory.createPortamento(
                     second, numRows / 3 * 2, portamentoData, null);
             notesAndPortamento.getChildren().addAll(
                     first.getElement(), second.getElement(), currentPortamento.getElement());
-        } else if (currentFilters.contains(FilterType.FALLING_NOTE)) {
-            Note first = noteFactory.createBackgroundNote(numRows / 3, 0, noteWidth);
-            Note second = noteFactory.createBackgroundNote(numRows / 3 * 2, noteWidth, noteWidth);
+        } else if (filters.contains(FilterType.FALLING_NOTE)) {
+            Note first = noteFactory.createBackgroundNote(
+                    numRows / 3, 0, noteWidth, noteScaler);
+            Note second = noteFactory.createBackgroundNote(
+                    numRows / 3 * 2, noteWidth, noteWidth, noteScaler);
             currentPortamento = pitchbendFactory.createPortamento(
                     second, numRows / 3, portamentoData, null);
             notesAndPortamento.getChildren().addAll(
                     first.getElement(), second.getElement(), currentPortamento.getElement());
         } else {
-            Note note = noteFactory.createBackgroundNote(numRows / 2, noteWidth, noteWidth);
+            Note note = noteFactory.createBackgroundNote(
+                    numRows / 2, noteWidth, noteWidth, noteScaler);
             currentPortamento = pitchbendFactory.createPortamento(
                     note, numRows / 2, portamentoData, null);
             notesAndPortamento.getChildren().addAll(
@@ -169,8 +178,7 @@ public class BulkEditor {
                 if (curData == null) {
                     return;
                 }
-                // Populate group with current data.
-                // portamentoGroup.getChildren().set(1, ...);
+                portamentoGroup.getChildren().set(1, createNotesAndPortamento(curData));
             });
             return listCell;
         });
@@ -279,21 +287,13 @@ public class BulkEditor {
         VBox background = createEnvelopeBackground(editorWidth, editorHeight);
 
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                editorWidth.get(),
-                editorHeight.get(),
-                envelopeData,
-                ((oldData, newData) -> {}),
-                false);
+                editorWidth.get(), editorHeight.get(), envelopeData, scaler,false);
         envelopeGroup = new Group(background, currentEnvelope.getElement());
 
         InvalidationListener updateSize = obs -> {
             EnvelopeData curData = currentEnvelope.getData();
             currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                    editorWidth.get(),
-                    editorHeight.get(),
-                    curData,
-                    ((oldData, newData) -> {}),
-                    false);
+                    editorWidth.get(), editorHeight.get(), curData, scaler,false);
             envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
         };
         editorWidth.addListener(updateSize);
@@ -324,11 +324,7 @@ public class BulkEditor {
                         VBox background = createEnvelopeBackground(
                                 new SimpleDoubleProperty(150), new SimpleDoubleProperty(30));
                         Envelope envelope = envelopeFactory.createEnvelopeEditor(
-                                150,
-                                30,
-                                item,
-                                ((oldData, newData) -> {}),
-                                true);
+                                150, 30, item, scaler,true);
                         Group envelopeGroup = new Group(background, envelope.getElement());
                         envelopeGroup.setMouseTransparent(true);
                         Button closeButton = new Button("X");
@@ -351,11 +347,7 @@ public class BulkEditor {
                     return;
                 }
                 currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                        editorWidth.get(),
-                        editorHeight.get(),
-                        curData,
-                        ((oldData, newData) -> {}),
-                        true);
+                        editorWidth.get(), editorHeight.get(), curData, scaler,true);
                 envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
             });
             return listCell;

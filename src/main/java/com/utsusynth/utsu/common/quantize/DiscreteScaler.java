@@ -77,6 +77,16 @@ public class DiscreteScaler implements Scaler {
         return unscaleMe / verticalScale.get();
     }
 
+    /**
+     * Create a derivative scaler by applying multipliers to the current scales.
+     */
+    @Override
+    public ContinuousScaler derive(double horizontalMultiplier, double verticalMultiplier) {
+        return new ContinuousScaler(
+                horizontalScale.get() * horizontalMultiplier,
+                verticalScale.get() * verticalMultiplier);
+    }
+
     public int getHorizontalRank() {
         return horizontalRank.get();
     }
