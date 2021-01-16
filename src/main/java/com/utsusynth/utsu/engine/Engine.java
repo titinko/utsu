@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.Optional;
 
+import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.PreferencesManager.CacheMode;
@@ -86,6 +87,39 @@ public class Engine {
 
     public void setWavtoolPath(File wavtoolPath) {
         wavtoolPath = wavtoolPath;
+    }
+
+    /**
+     * Play a note from VoiceBank, using the resampler
+     * @param lyricData
+     * @param modulation if true, modulation=100, else modulation=0
+     */
+    public void playLyricWithResampler(LyricConfigData lyricData, boolean modulation) {
+        File renderedNote;
+        Note note= new Note();
+        note.setLyric(lyricData.getLyric());
+        note.setNoteNum(60);
+        note.setDuration(2000); // unnecessary
+        note.setModulation(modulation ? 100:0);
+        renderedNote = cacheManager.createNoteCache();
+        resampler.resampleNote(
+                getResamplerPath(),
+                note,
+                2000.0,
+                lyricData,
+                renderedNote,
+                "",
+                120);
+
+        try {
+            Media media = new Media(renderedNote.toURI().toString());
+            mediaPlayer = new MediaPlayer(media);
+            mediaPlayer.setOnReady(() -> {
+                mediaPlayer.play();
+            });
+        } catch(IllegalArgumentException e) {
+            System.out.println("Not correct parameter for file");
+        }
     }
 
     /**

@@ -12,7 +12,6 @@ import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.Resampler;
 import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.voicebank.SoundFileReader;
-import com.utsusynth.utsu.model.song.Note;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Side;
@@ -40,9 +39,6 @@ public class LyricConfigEditor {
     private final SoundFileReader soundFileReader;
     private final Localizer localizer;
 
-    private final Resampler resampler;
-    private final Engine engine;
-    private final CacheManager cacheManager;
 
     private Optional<LyricConfigData> configData;
     private LyricConfigCallback model;
@@ -58,16 +54,10 @@ public class LyricConfigEditor {
     @Inject
     public LyricConfigEditor(
             SoundFileReader soundFileReader,
-            Localizer localizer,
-            Resampler resampler,
-            Engine engine,
-            CacheManager cacheManager
+            Localizer localizer
     ) {
         this.soundFileReader = soundFileReader;
         this.localizer = localizer;
-        this.resampler = resampler;
-        this.engine = engine;
-        this.cacheManager = cacheManager;
         // Initialize with dummy data.
         configData = Optional.empty();
         background = new GridPane();
@@ -253,39 +243,13 @@ public class LyricConfigEditor {
         if (!configData.isPresent()) {
             return;
         }
-        File renderedNote;
-        LyricConfigData curConfigData = configData.get();
 
-        Note note= new Note();
-        note.setLyric(curConfigData.getLyric());
-        note.setNoteNum(60);
-        note.setDuration(2000); // unnecessary
-        note.setModulation(modulation ? 100:0);
-        renderedNote = cacheManager.createNoteCache();
-        resampler.resampleNote(
-                    engine.getResamplerPath(),
-                    note,
-                    2000.0,
-                    curConfigData,
-                    renderedNote,
-                    "",
-                    120);
-
-        try {
-            Media media = new Media(renderedNote.toURI().toString());
-            mediaPlayer = new MediaPlayer(media);
-            mediaPlayer.setOnReady(() -> {
-                mediaPlayer.play();
-            });
-        } catch(IllegalArgumentException e) {
-            System.out.println("Not correct parameter for file");
-        }
+        model.playLyricWithResampler(configData.get(), modulation);
     }
     public void playSound() {
         if (!configData.isPresent()) {
             return;
         }
-        //System.out.println("Path to play: "+configData.get().getPathToFile().toURI().toString());
         Media media = new Media(configData.get().getPathToFile().toURI().toString());
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setOnReady(() -> {

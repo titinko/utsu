@@ -13,6 +13,7 @@ import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
+import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.files.voicebank.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import com.utsusynth.utsu.view.voicebank.*;
@@ -60,6 +61,8 @@ public class VoicebankController implements EditorController, Localizable {
     private final StatusBar statusBar;
     private final VoicebankWriter voicebankWriter;
 
+    // Engine to play resampler
+    private final Engine engine;
     @FXML // fx:id="pitchPane"
     private ScrollPane pitchPane; // Value injected by FXMLLoader
 
@@ -94,7 +97,8 @@ public class VoicebankController implements EditorController, Localizable {
             UndoService undoService,
             MenuItemManager menuItemManager,
             StatusBar statusBar,
-            VoicebankWriter voicebankWriter) {
+            VoicebankWriter voicebankWriter,
+            Engine engine) {
         this.voicebank = voicebankContainer;
         this.voiceEditor = voiceEditor;
         this.pitchEditor = pitchEditor;
@@ -105,6 +109,7 @@ public class VoicebankController implements EditorController, Localizable {
         this.statusBar = statusBar;
         this.voicebankWriter = voicebankWriter;
 
+        this.engine = engine;
     }
 
     // Provide setup for other frontend song management.
@@ -207,6 +212,10 @@ public class VoicebankController implements EditorController, Localizable {
                 anchorBottom.getChildren().add(configEditor.getControlElement());
                 anchorBottom.getChildren().add(configEditor.getChartElement());
                 bindLabelsAndControlBars(configEditor.getControlElement());
+            }
+            @Override
+            public void playLyricWithResampler(LyricConfigData lyricData, boolean modulation) {
+                engine.playLyricWithResampler(lyricData,modulation);
             }
         });
 
