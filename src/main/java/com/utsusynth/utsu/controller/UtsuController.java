@@ -386,6 +386,8 @@ public class UtsuController implements Localizable {
                             deleteItem.disableProperty(),
                             notePropertiesItem.disableProperty(),
                             propertiesItem.disableProperty(),
+                            portamentoEditorItem.disableProperty(),
+                            vibratoEditorItem.disableProperty(),
                             envelopeEditorItem.disableProperty());
                 }
             });

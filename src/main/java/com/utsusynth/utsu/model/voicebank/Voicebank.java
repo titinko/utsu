@@ -124,6 +124,10 @@ public class Voicebank {
      * Should be called when lyric is expected to have an exact match in voicebank.
      */
     public Optional<LyricConfig> getLyricConfig(String trueLyric) {
+        // If the lyric matches here, don't bother searching any further.
+        if (lyricConfigs.hasLyric(trueLyric)) {
+            return Optional.of(lyricConfigs.getConfig(trueLyric));
+        }
         return getLyricConfig("", trueLyric, "");
     }
 
@@ -161,13 +165,16 @@ public class Voicebank {
 
     // Finds the vowel sound of a lyric by converting to ASCII and taking the last character.
     private char getVowel(String prevLyric) {
+        if (prevLyric.isEmpty()) {
+            return '-'; // Return dash if there appears to be no previous note.
+        }
         for (String convertedLyric : conversionSet.getGroup(prevLyric)) {
             if (CharMatcher.ascii().matchesAllOf(convertedLyric)) {
                 return convertedLyric.toLowerCase().charAt(convertedLyric.length() - 1);
             }
         }
-        // Return this if no vowel found.
-        return '-';
+        // Return dummy character if no vowel found.
+        return ' ';
     }
 
     private List<String> allCombinations(String prefix, String lyric, String suffix) {

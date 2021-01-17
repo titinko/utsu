@@ -201,18 +201,18 @@ public class PitchCurve {
         }
         // Make sure convertMe is between 0 and 4095.
         convertMe = Math.max(0, Math.min(4095, convertMe));
-        String result = ""; // Set to 0 by default.
+        StringBuilder result = new StringBuilder(); // Set to 0 by default.
         for (int sixBitNumber : ImmutableList.of(convertMe / 64, convertMe % 64)) {
             if (sixBitNumber >= 0 && sixBitNumber < 26) {
-                result += (char) (sixBitNumber + 'A');
+                result.append((char) (sixBitNumber + 'A'));
             } else if (sixBitNumber >= 26 && sixBitNumber < 52) {
-                result += (char) (sixBitNumber - 26 + 'a');
+                result.append((char) (sixBitNumber - 26 + 'a'));
             } else if (sixBitNumber >= 52 && sixBitNumber < 62) {
-                result += (char) (sixBitNumber - 52 + '0');
+                result.append((char) (sixBitNumber - 52 + '0'));
             } else if (sixBitNumber == 62) {
-                result += '+';
+                result.append('+');
             } else if (sixBitNumber == 63) {
-                result += '/';
+                result.append('/');
             } else {
                 // Return 0 if the number is not in range [0, 64).
                 return "AA";
@@ -221,7 +221,7 @@ public class PitchCurve {
         if (result.length() != 2) {
             return "AA";
         }
-        return result;
+        return result.toString();
     }
 
     // Finds the pitch step just after this position.

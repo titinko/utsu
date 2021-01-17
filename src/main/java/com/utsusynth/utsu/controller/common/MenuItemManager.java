@@ -16,6 +16,8 @@ public class MenuItemManager {
     private final BooleanProperty deleteEnabled;
     private final BooleanProperty notePropertiesEnabled;
     private final BooleanProperty propertiesEnabled;
+    private final BooleanProperty portamentoEditorEnabled;
+    private final BooleanProperty vibratoEditorEnabled;
     private final BooleanProperty envelopeEditorEnabled;
 
     public MenuItemManager() {
@@ -30,6 +32,8 @@ public class MenuItemManager {
         deleteEnabled = new SimpleBooleanProperty(false);
         notePropertiesEnabled = new SimpleBooleanProperty(false);
         propertiesEnabled = new SimpleBooleanProperty(false);
+        portamentoEditorEnabled = new SimpleBooleanProperty(false);
+        vibratoEditorEnabled = new SimpleBooleanProperty(false);
         envelopeEditorEnabled = new SimpleBooleanProperty(false);
     }
 
@@ -50,6 +54,8 @@ public class MenuItemManager {
         deleteEnabled.bind(somethingIsHighlighted);
         notePropertiesEnabled.bind(somethingIsHighlighted);
         propertiesEnabled.set(true);
+        portamentoEditorEnabled.set(true);
+        vibratoEditorEnabled.set(true);
         envelopeEditorEnabled.set(true);
     }
 
@@ -66,6 +72,8 @@ public class MenuItemManager {
         deleteEnabled.set(false);
         notePropertiesEnabled.set(false);
         propertiesEnabled.set(false);
+        portamentoEditorEnabled.set(false);
+        vibratoEditorEnabled.set(false);
         envelopeEditorEnabled.set(false);
     }
 
@@ -81,6 +89,8 @@ public class MenuItemManager {
             BooleanProperty deleteDisabled,
             BooleanProperty notePropertiesDisabled,
             BooleanProperty propertiesDisabled,
+            BooleanProperty portamentoEditorDisabled,
+            BooleanProperty vibratoEditorDisabled,
             BooleanProperty envelopeEditorDisabled) {
         saveDisabled.unbind();
         saveDisabled.bind(saveEnabled.not());
@@ -104,6 +114,10 @@ public class MenuItemManager {
         propertiesDisabled.bind(propertiesEnabled.not());
         notePropertiesDisabled.unbind();
         notePropertiesDisabled.bind(notePropertiesEnabled.not());
+        portamentoEditorDisabled.unbind();
+        portamentoEditorDisabled.bind(portamentoEditorEnabled.not());
+        vibratoEditorDisabled.unbind();
+        vibratoEditorDisabled.bind(vibratoEditorEnabled.not());
         envelopeEditorDisabled.unbind();
         envelopeEditorDisabled.bind(envelopeEditorEnabled.not());
     }
