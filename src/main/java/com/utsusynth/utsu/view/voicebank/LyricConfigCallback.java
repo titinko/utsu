@@ -7,4 +7,7 @@ public interface LyricConfigCallback {
     void recordAction(Runnable redoAction, Runnable undoAction);
 
     void refreshEditor(LyricConfigData lyricData);
+
+    void playLyricWithResampler(LyricConfigData lyricData, boolean modulation);
+
 }

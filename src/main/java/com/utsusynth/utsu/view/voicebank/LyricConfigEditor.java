@@ -8,6 +8,9 @@ import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import com.utsusynth.utsu.engine.Engine;
+import com.utsusynth.utsu.engine.Resampler;
+import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.voicebank.SoundFileReader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -36,27 +39,32 @@ public class LyricConfigEditor {
     private final SoundFileReader soundFileReader;
     private final Localizer localizer;
 
+
     private Optional<LyricConfigData> configData;
     private LyricConfigCallback model;
     private GridPane background;
     private LineChart<Number, Number> chart;
     private Group controlBars;
 
+
     // Temporary cache values.
     private boolean changed = false;
     private double[] cachedConfig;
 
     @Inject
-    public LyricConfigEditor(SoundFileReader soundFileReader, Localizer localizer) {
+    public LyricConfigEditor(
+            SoundFileReader soundFileReader,
+            Localizer localizer
+    ) {
         this.soundFileReader = soundFileReader;
         this.localizer = localizer;
-
         // Initialize with dummy data.
         configData = Optional.empty();
         background = new GridPane();
         chart = new LineChart<>(new NumberAxis(), new NumberAxis());
         chart.setOpacity(0);
         controlBars = new Group();
+
     }
 
     /** Initialize editor with data from the controller. */
@@ -109,12 +117,28 @@ public class LyricConfigEditor {
                 .setAll(offsetBar, overlapBar, preutterBar, consonantBar, cutoffBar);
 
         // Context menu for config editor.
+
         MenuItem playItem = new MenuItem("Play");
         playItem.setOnAction(event -> {
             playSound();
         });
-        ContextMenu contextMenu = new ContextMenu(playItem);
-        contextMenu.setOnShowing(event -> playItem.setText(localizer.getMessage("song.play")));
+
+
+        MenuItem playItemWithResampler = new MenuItem("Play with resampler");
+        playItemWithResampler.setOnAction(event -> {
+            playSoundWithResampler(true);
+        });
+
+        MenuItem playItemWithResamplerNoModulation = new MenuItem("Play with resampler (no modulation)");
+        playItemWithResamplerNoModulation.setOnAction(event -> {
+            playSoundWithResampler(false);
+        });
+
+        ContextMenu contextMenu = new ContextMenu();
+        contextMenu.getItems().addAll(playItem, playItemWithResampler,playItemWithResamplerNoModulation);
+        contextMenu.setOnShowing(event -> playItem.setText(localizer.getMessage("voice.play")));
+        contextMenu.setOnShowing(event -> playItemWithResampler.setText(localizer.getMessage("voice.playWithResampler")));
+        contextMenu.setOnShowing(event -> playItemWithResamplerNoModulation.setText(localizer.getMessage("voice.playWithResamplerNoModulation")));
         background.setOnContextMenuRequested(event -> {
             contextMenu.show(background, event.getScreenX(), event.getScreenY());
         });
@@ -209,6 +233,19 @@ public class LyricConfigEditor {
         return controlBars;
     }
 
+    /**
+     * Play a note using the resampler
+     * The note is played using pitch C4 (midi 60) during 2 seconds
+     *
+     * @param modulation if false, modulation on resampler is set to 0
+     */
+    public void playSoundWithResampler(boolean modulation) {
+        if (!configData.isPresent()) {
+            return;
+        }
+
+        model.playLyricWithResampler(configData.get(), modulation);
+    }
     public void playSound() {
         if (!configData.isPresent()) {
             return;
@@ -217,6 +254,7 @@ public class LyricConfigEditor {
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setOnReady(() -> {
             double lengthMs = media.getDuration().toMillis();
+
             double offsetLengthMs =
                     Math.max(Math.min(configData.get().offsetProperty().get(), lengthMs), 0);
             double cutoffLengthMs = configData.get().cutoffProperty().get();
@@ -227,6 +265,7 @@ public class LyricConfigEditor {
             }
             mediaPlayer.setStartTime(Duration.millis(offsetLengthMs));
             mediaPlayer.setStopTime(Duration.millis(lengthMs - cutoffLengthMs));
+
             mediaPlayer.play();
         });
     }
@@ -290,7 +329,7 @@ public class LyricConfigEditor {
         yAxis.setAutoRanging(false);
         yAxis.setLowerBound(-maxAmplitude);
         yAxis.setUpperBound(maxAmplitude);
-        yAxis.setTickUnit(maxAmplitude / 5);
+        yAxis.setTickUnit(maxAmplitude / 5.0);
         yAxis.setSide(Side.RIGHT);
         yAxis.setOpacity(0);
         yAxis.setTickLabelsVisible(false);
