@@ -69,6 +69,8 @@ import java.nio.charset.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
+
 /**
  * 'SongScene.fxml' Controller Class
  */
@@ -424,7 +426,7 @@ public class SongController implements EditorController, Localizable {
             flickerIcon(playPauseIcon);
             playOrPause();
             return true;
-        } else if (new KeyCodeCombination( KeyCode.SPACE, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
+        } else if (new KeyCodeCombination(KeyCode.SPACE, SHORTCUT_DOWN).match(keyEvent)) {
             flickerIcon(playPauseIcon);
             stopPlayback();
             startPlayback();
@@ -470,7 +472,7 @@ public class SongController implements EditorController, Localizable {
             }
             return true;
         } else if (new KeyCodeCombination(KeyCode.LEFT).match(keyEvent)
-        || new KeyCodeCombination( KeyCode.TAB, KeyCombination.SHIFT_DOWN).match(keyEvent)) {
+                || new KeyCodeCombination(KeyCode.TAB, KeyCombination.SHIFT_DOWN).match(keyEvent)) {
             Optional<Integer> focusNote = songEditor.getFocusNote();
             if (focusNote.isPresent()) {
                 Optional<Integer> newFocus = song.get().getPrevNote(focusNote.get());
@@ -1010,60 +1012,60 @@ public class SongController implements EditorController, Localizable {
             BulkEditorController controller = loader.getController();
             controller.openEditor(
                     editorType, songEditor.getSelectedTrack(), new BulkEditorCallback() {
-                @Override
-                public void updatePortamento(
-                        PitchbendData newPortamento,
-                        RegionBounds regionToUpdate,
-                        List<FilterType> filters) {
-                    Function<NoteData, NoteData> transformNote = noteData -> {
-                        if (noteData == null) {
-                            return noteData;
+                        @Override
+                        public void updatePortamento(
+                                PitchbendData newPortamento,
+                                RegionBounds regionToUpdate,
+                                List<FilterType> filters) {
+                            Function<NoteData, NoteData> transformNote = noteData -> {
+                                if (noteData == null) {
+                                    return noteData;
+                                }
+                                if (noteData.getPitchbend().isPresent()) {
+                                    PitchbendData newPitchbend = newPortamento.withVibrato(
+                                            Optional.of(noteData.getPitchbend().get().getVibrato()));
+                                    return noteData.withPitchbend(newPitchbend);
+                                } else {
+                                    return noteData;
+                                }
+                            };
+                            modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
                         }
-                        if (noteData.getPitchbend().isPresent()) {
-                            PitchbendData newPitchbend = newPortamento.withVibrato(
-                                    Optional.of(noteData.getPitchbend().get().getVibrato()));
-                            return noteData.withPitchbend(newPitchbend);
-                        } else {
-                            return noteData;
-                        }
-                    };
-                    modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
-                }
 
-                @Override
-                public void updateVibrato(
-                        PitchbendData newVibrato,
-                        RegionBounds regionToUpdate,
-                        List<FilterType> filters) {
-                    Function<NoteData, NoteData> transformNote = noteData -> {
-                        if (noteData == null) {
-                            return noteData;
+                        @Override
+                        public void updateVibrato(
+                                PitchbendData newVibrato,
+                                RegionBounds regionToUpdate,
+                                List<FilterType> filters) {
+                            Function<NoteData, NoteData> transformNote = noteData -> {
+                                if (noteData == null) {
+                                    return noteData;
+                                }
+                                if (noteData.getPitchbend().isPresent()) {
+                                    PitchbendData newPitchbend = noteData.getPitchbend().get().withVibrato(
+                                            Optional.of(newVibrato.getVibrato()));
+                                    return noteData.withPitchbend(newPitchbend);
+                                } else {
+                                    return noteData;
+                                }
+                            };
+                            modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
                         }
-                        if (noteData.getPitchbend().isPresent()) {
-                            PitchbendData newPitchbend = noteData.getPitchbend().get().withVibrato(
-                                    Optional.of(newVibrato.getVibrato()));
-                            return noteData.withPitchbend(newPitchbend);
-                        } else {
-                            return noteData;
-                        }
-                    };
-                    modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
-                }
 
-                @Override
-                public void updateEnvelope(
-                        EnvelopeData newEnvelope,
-                        RegionBounds regionToUpdate,
-                        List<FilterType> filters) {
-                    Function<NoteData, NoteData> transformNote = noteData -> {
-                        if (noteData == null) {
-                            return noteData;
+                        @Override
+                        public void updateEnvelope(
+                                EnvelopeData newEnvelope,
+                                RegionBounds regionToUpdate,
+                                List<FilterType> filters) {
+                            Function<NoteData, NoteData> transformNote = noteData -> {
+                                if (noteData == null) {
+                                    return noteData;
+                                }
+                                return noteData.withEnvelope(newEnvelope);
+                            };
+                            modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
                         }
-                        return noteData.withEnvelope(newEnvelope);
-                    };
-                    modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
-                }
-            });
+                    });
             Scene scene = new Scene(editorPane);
             themeManager.applyToScene(scene);
             editorWindow.setScene(scene);

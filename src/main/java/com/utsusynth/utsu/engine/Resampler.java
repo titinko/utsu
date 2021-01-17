@@ -75,7 +75,7 @@ public class Resampler {
      * @param pitchString Pitch changes
      * @param tempo Tempo in BPM at which pitch changes are established
      */
-    public void resampleNote(
+    void resampleNote(
             File resamplerPath,
             Note note,
             double noteLength,

@@ -8,6 +8,5 @@ public interface LyricConfigCallback {
 
     void refreshEditor(LyricConfigData lyricData);
 
-    void playLyricWithResampler(LyricConfigData lyricData, boolean modulation);
-
+    void playLyricWithResampler(LyricConfigData lyricData, int modulation);
 }

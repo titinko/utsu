@@ -26,7 +26,10 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Line;
@@ -39,6 +42,9 @@ import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.ResourceBundle;
+
+import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
+import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
 
 /**
  * 'VoicebankScene.fxml' Controller Class
@@ -60,9 +66,8 @@ public class VoicebankController implements EditorController, Localizable {
     private final MenuItemManager menuItemManager;
     private final StatusBar statusBar;
     private final VoicebankWriter voicebankWriter;
-
-    // Engine to play resampler
     private final Engine engine;
+
     @FXML // fx:id="pitchPane"
     private ScrollPane pitchPane; // Value injected by FXMLLoader
 
@@ -108,7 +113,6 @@ public class VoicebankController implements EditorController, Localizable {
         this.menuItemManager = menuItemManager;
         this.statusBar = statusBar;
         this.voicebankWriter = voicebankWriter;
-
         this.engine = engine;
     }
 
@@ -213,9 +217,10 @@ public class VoicebankController implements EditorController, Localizable {
                 anchorBottom.getChildren().add(configEditor.getChartElement());
                 bindLabelsAndControlBars(configEditor.getControlElement());
             }
+
             @Override
-            public void playLyricWithResampler(LyricConfigData lyricData, boolean modulation) {
-                engine.playLyricWithResampler(lyricData,modulation);
+            public void playLyricWithResampler(LyricConfigData lyricData, int modulation) {
+                engine.playLyricWithResampler(lyricData, modulation);
             }
         });
 
@@ -321,11 +326,11 @@ public class VoicebankController implements EditorController, Localizable {
         if (new KeyCodeCombination(KeyCode.SPACE).match(keyEvent)) {
             configEditor.playSound(); // Does nothing if config editor not loaded.
             return true;
-        } else if (new KeyCodeCombination( KeyCode.SPACE, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
-            configEditor.playSoundWithResampler(true);
+        } else if (new KeyCodeCombination(KeyCode.SPACE, SHORTCUT_DOWN).match(keyEvent)) {
+            configEditor.playSoundWithResampler(100);
             return true;
-        } else if (new KeyCodeCombination( KeyCode.SPACE, KeyCombination.SHIFT_DOWN, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
-            configEditor.playSoundWithResampler(false);
+        } else if (new KeyCodeCombination(KeyCode.SPACE, SHIFT_DOWN, SHORTCUT_DOWN).match(keyEvent)) {
+            configEditor.playSoundWithResampler(0);
             return true;
         } else {
             // No need to override default key behavior.
@@ -364,12 +369,10 @@ public class VoicebankController implements EditorController, Localizable {
                             localizer.getMessage("status.loadedVoicebank"), file.getName()));
                 });
             } catch (Exception e) {
-                Platform.runLater(
-                        () -> statusBar.setStatus(
-                        //        "Error: Unable to load voicebank: " + file.getName()
-                            MessageFormat.format(
-                                localizer.getMessage("status.unableToLoadVoicebank"), file.getName())
-                        ));
+                Platform.runLater(() ->
+                        statusBar.setStatus(MessageFormat.format(
+                                localizer.getMessage("status.unableToLoadVoicebank"),
+                                file.getName())));
             }
         }).start();
     }

@@ -8,9 +8,6 @@ import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.common.i18n.Localizer;
-import com.utsusynth.utsu.engine.Engine;
-import com.utsusynth.utsu.engine.Resampler;
-import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.voicebank.SoundFileReader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,40 +28,35 @@ import javafx.scene.shape.Line;
 import javafx.util.Duration;
 
 public class LyricConfigEditor {
-    private static final int maxAmplitude = 32767;
-    private static final double scaleX = 0.8;
-    private static final int height = 150;
+    private static final int MAX_AMPLITUDE = 32767;
+    private static final double SCALE_X = 0.8;
+    private static final int HEIGHT = 150;
     private static MediaPlayer mediaPlayer; // Used for audio playback.
 
+    private final Group controlBars;
     private final SoundFileReader soundFileReader;
     private final Localizer localizer;
-
 
     private Optional<LyricConfigData> configData;
     private LyricConfigCallback model;
     private GridPane background;
     private LineChart<Number, Number> chart;
-    private Group controlBars;
-
 
     // Temporary cache values.
     private boolean changed = false;
     private double[] cachedConfig;
 
     @Inject
-    public LyricConfigEditor(
-            SoundFileReader soundFileReader,
-            Localizer localizer
-    ) {
+    public LyricConfigEditor(SoundFileReader soundFileReader, Localizer localizer) {
         this.soundFileReader = soundFileReader;
         this.localizer = localizer;
+
         // Initialize with dummy data.
         configData = Optional.empty();
         background = new GridPane();
         chart = new LineChart<>(new NumberAxis(), new NumberAxis());
         chart.setOpacity(0);
         controlBars = new Group();
-
     }
 
     /** Initialize editor with data from the controller. */
@@ -89,15 +81,15 @@ public class LyricConfigEditor {
         curLength -= cutoffLength;
         double consonantLength = Math.max(Math.min(config.consonantProperty().get(), curLength), 0);
 
-        double totalX = lengthMs * scaleX;
-        double offsetBarX = offsetLength * scaleX;
-        double consonantBarX = (offsetLength + consonantLength) * scaleX;
-        double cutoffBarX = (lengthMs - cutoffLength) * scaleX;
+        double totalX = lengthMs * SCALE_X;
+        double offsetBarX = offsetLength * SCALE_X;
+        double consonantBarX = (offsetLength + consonantLength) * SCALE_X;
+        double cutoffBarX = (lengthMs - cutoffLength) * SCALE_X;
         double preutterBarX = Math.min(
-                Math.max((offsetLength + config.preutterProperty().get()) * scaleX, 0),
+                Math.max((offsetLength + config.preutterProperty().get()) * SCALE_X, 0),
                 totalX);
         double overlapBarX = Math
-                .min(Math.max((offsetLength + config.overlapProperty().get()) * scaleX, 0), totalX);
+                .min(Math.max((offsetLength + config.overlapProperty().get()) * SCALE_X, 0), totalX);
 
         // Background colors.
         Pane offsetPane = createBackground(offsetBarX, "offset");
@@ -117,28 +109,23 @@ public class LyricConfigEditor {
                 .setAll(offsetBar, overlapBar, preutterBar, consonantBar, cutoffBar);
 
         // Context menu for config editor.
-
         MenuItem playItem = new MenuItem("Play");
-        playItem.setOnAction(event -> {
-            playSound();
-        });
-
-
+        playItem.setOnAction(event -> playSound());
         MenuItem playItemWithResampler = new MenuItem("Play with resampler");
-        playItemWithResampler.setOnAction(event -> {
-            playSoundWithResampler(true);
-        });
+        playItemWithResampler.setOnAction(event -> playSoundWithResampler(100));
 
-        MenuItem playItemWithResamplerNoModulation = new MenuItem("Play with resampler (no modulation)");
-        playItemWithResamplerNoModulation.setOnAction(event -> {
-            playSoundWithResampler(false);
-        });
+        MenuItem playItemWithResamplerNoModulation =
+                new MenuItem("Play with resampler (no modulation)");
+        playItemWithResamplerNoModulation.setOnAction(event -> playSoundWithResampler(0));
 
         ContextMenu contextMenu = new ContextMenu();
-        contextMenu.getItems().addAll(playItem, playItemWithResampler,playItemWithResamplerNoModulation);
+        contextMenu.getItems().addAll(
+                playItem, playItemWithResampler, playItemWithResamplerNoModulation);
         contextMenu.setOnShowing(event -> playItem.setText(localizer.getMessage("voice.play")));
-        contextMenu.setOnShowing(event -> playItemWithResampler.setText(localizer.getMessage("voice.playWithResampler")));
-        contextMenu.setOnShowing(event -> playItemWithResamplerNoModulation.setText(localizer.getMessage("voice.playWithResamplerNoModulation")));
+        contextMenu.setOnShowing(event -> playItemWithResampler.setText(
+                localizer.getMessage("voice.playWithResampler")));
+        contextMenu.setOnShowing(event -> playItemWithResamplerNoModulation.setText(
+                localizer.getMessage("voice.playWithResamplerNoModulation")));
         background.setOnContextMenuRequested(event -> {
             contextMenu.show(background, event.getScreenX(), event.getScreenY());
         });
@@ -165,7 +152,7 @@ public class LyricConfigEditor {
             consonantBar.setEndX(consonantBar.getEndX() + addedX);
             offsetPane.setPrefWidth(offsetPane.getPrefWidth() + addedX);
             vowelPane.setPrefWidth(vowelPane.getPrefWidth() - addedX);
-            config.offsetProperty().set(newX / scaleX);
+            config.offsetProperty().set(newX / SCALE_X);
 
             // Move preutter bar along with offset bar.
             double rawPreutterX = preutterBar.getStartX() + addedX;
@@ -173,7 +160,7 @@ public class LyricConfigEditor {
             preutterBar.setStartX(preutterX);
             preutterBar.setEndX(preutterX);
             if (rawPreutterX != preutterX) {
-                config.preutterProperty().set((preutterX - newX) / scaleX);
+                config.preutterProperty().set((preutterX - newX) / SCALE_X);
             }
             // Move overlap bar along with offset bar.
             double rawOverlapX = overlapBar.getStartX() + addedX;
@@ -181,7 +168,7 @@ public class LyricConfigEditor {
             overlapBar.setStartX(overlapX);
             overlapBar.setEndX(overlapX);
             if (rawOverlapX != overlapX) {
-                config.overlapProperty().set((overlapX - newX) / scaleX);
+                config.overlapProperty().set((overlapX - newX) / SCALE_X);
             }
         });
         consonantBar.setOnMouseDragged(event -> {
@@ -193,7 +180,7 @@ public class LyricConfigEditor {
             consonantBar.setEndX(newX);
             consonantPane.setPrefWidth(consonantPane.getPrefWidth() + addedX);
             vowelPane.setPrefWidth(vowelPane.getPrefWidth() - addedX);
-            config.consonantProperty().set(consonantPane.getPrefWidth() / scaleX);
+            config.consonantProperty().set(consonantPane.getPrefWidth() / SCALE_X);
         });
         cutoffBar.setOnMouseDragged(event -> {
             changed = true;
@@ -203,7 +190,7 @@ public class LyricConfigEditor {
             cutoffBar.setEndX(newX);
             vowelPane.setPrefWidth(vowelPane.getPrefWidth() + addedX);
             cutoffPane.setPrefWidth(cutoffPane.getPrefWidth() - addedX);
-            config.cutoffProperty().set(cutoffPane.getPrefWidth() / scaleX);
+            config.cutoffProperty().set(cutoffPane.getPrefWidth() / SCALE_X);
         });
         preutterBar.setOnMouseDragged(event -> {
             changed = true;
@@ -211,7 +198,7 @@ public class LyricConfigEditor {
             preutterBar.setStartX(newX);
             preutterBar.setEndX(newX);
             double newPreutterX = newX - offsetBar.getStartX();
-            config.preutterProperty().set(newPreutterX / scaleX);
+            config.preutterProperty().set(newPreutterX / SCALE_X);
         });
         overlapBar.setOnMouseDragged(event -> {
             changed = true;
@@ -219,7 +206,7 @@ public class LyricConfigEditor {
             overlapBar.setStartX(newX);
             overlapBar.setEndX(newX);
             double newOverlapX = newX - offsetBar.getStartX();
-            config.overlapProperty().set(newOverlapX / scaleX);
+            config.overlapProperty().set(newOverlapX / SCALE_X);
         });
 
         return background;
@@ -234,27 +221,25 @@ public class LyricConfigEditor {
     }
 
     /**
-     * Play a note using the resampler
-     * The note is played using pitch C4 (midi 60) during 2 seconds
-     *
-     * @param modulation if false, modulation on resampler is set to 0
+     * Play a note using the resampler.
+     * The note is played using pitch C4 (midi 60) for 2 seconds.
      */
-    public void playSoundWithResampler(boolean modulation) {
+    public void playSoundWithResampler(int modulation) {
         if (!configData.isPresent()) {
             return;
         }
-
         model.playLyricWithResampler(configData.get(), modulation);
     }
+
     public void playSound() {
         if (!configData.isPresent()) {
             return;
         }
+        // TODO: Consider moving this code to the engine.
         Media media = new Media(configData.get().getPathToFile().toURI().toString());
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setOnReady(() -> {
             double lengthMs = media.getDuration().toMillis();
-
             double offsetLengthMs =
                     Math.max(Math.min(configData.get().offsetProperty().get(), lengthMs), 0);
             double cutoffLengthMs = configData.get().cutoffProperty().get();
@@ -265,7 +250,6 @@ public class LyricConfigEditor {
             }
             mediaPlayer.setStartTime(Duration.millis(offsetLengthMs));
             mediaPlayer.setStopTime(Duration.millis(lengthMs - cutoffLengthMs));
-
             mediaPlayer.play();
         });
     }
@@ -273,7 +257,7 @@ public class LyricConfigEditor {
     private Pane createBackground(double widthX, String style) {
         Pane pane = new Pane();
         pane.setPrefWidth(widthX);
-        pane.setPrefHeight(height);
+        pane.setPrefHeight(HEIGHT);
         pane.getStyleClass().addAll("background", style);
         return pane;
     }
@@ -283,7 +267,7 @@ public class LyricConfigEditor {
             double xPos,
             double totalX,
             String style) {
-        Line bar = new Line(xPos, 0, xPos, height);
+        Line bar = new Line(xPos, 0, xPos, HEIGHT);
         bar.getStyleClass().add(style);
         bar.setOnMouseEntered(event -> {
             if (Math.abs(event.getX() - bar.getStartX()) <= 3) {
@@ -327,9 +311,9 @@ public class LyricConfigEditor {
         xAxis.setMinorTickVisible(false);
         NumberAxis yAxis = new NumberAxis();
         yAxis.setAutoRanging(false);
-        yAxis.setLowerBound(-maxAmplitude);
-        yAxis.setUpperBound(maxAmplitude);
-        yAxis.setTickUnit(maxAmplitude / 5.0);
+        yAxis.setLowerBound(-MAX_AMPLITUDE);
+        yAxis.setUpperBound(MAX_AMPLITUDE);
+        yAxis.setTickUnit(MAX_AMPLITUDE / 5.0);
         yAxis.setSide(Side.RIGHT);
         yAxis.setOpacity(0);
         yAxis.setTickLabelsVisible(false);
@@ -341,7 +325,7 @@ public class LyricConfigEditor {
         chart.setVerticalGridLinesVisible(false);
         chart.setVerticalZeroLineVisible(false);
         chart.setCreateSymbols(false);
-        chart.setPrefHeight(height);
+        chart.setPrefHeight(HEIGHT);
 
         // Initialize chart data sets.
         ObservableList<Data<Number, Number>> wavSamples = FXCollections.observableArrayList();
@@ -369,7 +353,7 @@ public class LyricConfigEditor {
                 currentTimeMs += msPerSample;
             }
             // Preferred width is 800 pixels per second.
-            chart.setPrefWidth(wavData.get().getLengthMs() * scaleX);
+            chart.setPrefWidth(wavData.get().getLengthMs() * SCALE_X);
         } else {
             // Make chart invisible if wav file can't be read.
             chart.setOpacity(0);
@@ -405,8 +389,8 @@ public class LyricConfigEditor {
                 // Scale to a value of [-10, 10] to make a good logistic function input.
                 double scaledFrq = (frqValue - avgFreq) * 10 / avgFreq;
                 // Apply logistic function to enhance central values.
-                double squashedFrq = (maxAmplitude * 2 / (1 + Math.exp(-scaledFrq)));
-                frqSamples.add(new Data<>(currentTimeMs, squashedFrq - maxAmplitude));
+                double squashedFrq = (MAX_AMPLITUDE * 2 / (1 + Math.exp(-scaledFrq)));
+                frqSamples.add(new Data<>(currentTimeMs, squashedFrq - MAX_AMPLITUDE));
                 currentTimeMs += msPerFrqValue;
             }
         }

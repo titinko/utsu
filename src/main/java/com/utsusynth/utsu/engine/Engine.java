@@ -1,25 +1,15 @@
 package com.utsusynth.utsu.engine;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.Optional;
-
-import com.utsusynth.utsu.common.data.LyricConfigData;
-import com.utsusynth.utsu.files.CacheManager;
-import com.utsusynth.utsu.files.PreferencesManager;
-import com.utsusynth.utsu.files.PreferencesManager.CacheMode;
-import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
+import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.files.CacheManager;
+import com.utsusynth.utsu.files.PreferencesManager;
+import com.utsusynth.utsu.files.PreferencesManager.CacheMode;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.Song;
@@ -30,6 +20,16 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
 import javafx.util.Duration;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Engine {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
@@ -86,45 +86,12 @@ public class Engine {
     }
 
     public void setWavtoolPath(File wavtoolPath) {
-        wavtoolPath = wavtoolPath;
-    }
-
-    /**
-     * Play a note from VoiceBank, using the resampler
-     * @param lyricData
-     * @param modulation if true, modulation=100, else modulation=0
-     */
-    public void playLyricWithResampler(LyricConfigData lyricData, boolean modulation) {
-        File renderedNote;
-        Note note= new Note();
-        note.setLyric(lyricData.getLyric());
-        note.setNoteNum(60);
-        note.setDuration(2000); // unnecessary
-        note.setModulation(modulation ? 100:0);
-        renderedNote = cacheManager.createNoteCache();
-        resampler.resampleNote(
-                getResamplerPath(),
-                note,
-                2000.0,
-                lyricData,
-                renderedNote,
-                "",
-                120);
-
-        try {
-            Media media = new Media(renderedNote.toURI().toString());
-            mediaPlayer = new MediaPlayer(media);
-            mediaPlayer.setOnReady(() -> {
-                mediaPlayer.play();
-            });
-        } catch(IllegalArgumentException e) {
-            System.out.println("Not correct parameter for file");
-        }
+        this.wavtoolPath = wavtoolPath;
     }
 
     /**
      * Exports of region of a song to a WAV file.
-     * 
+     *
      * @return Whether or not there is any sound to export.
      */
     public boolean renderWav(Song song, File finalDestination) {
@@ -141,7 +108,7 @@ public class Engine {
 
     /**
      * Starts playback for a region of a song.
-     * 
+     *
      * @return Whether or not there is any sound to play.
      */
     public boolean startPlayback(
@@ -216,6 +183,37 @@ public class Engine {
         return PlaybackStatus.STOPPED;
     }
 
+    /**
+     * Play a note from a voicebank, using the current resampler.
+     */
+    public void playLyricWithResampler(LyricConfigData lyricData, int modulation) {
+        File renderedNote;
+        Note note = new Note();
+        note.setLyric(lyricData.getLyric());
+        note.setNoteNum(60);
+        note.setDuration(2000); // Unnecessary.
+        note.setModulation(modulation);
+        renderedNote = cacheManager.createNoteCache();
+        resampler.resampleNote(
+                getResamplerPath(),
+                note,
+                2000.0,
+                lyricData,
+                renderedNote,
+                "",
+                120);
+
+        try {
+            Media media = new Media(renderedNote.toURI().toString());
+            mediaPlayer = new MediaPlayer(media);
+            mediaPlayer.setOnReady(() -> {
+                mediaPlayer.play();
+            });
+        } catch (IllegalArgumentException e) {
+            System.out.println("Not correct parameter for file");
+        }
+    }
+
     private Optional<File> render(Song song, RegionBounds bounds) {
         // Use cached render if it exists and cache is enabled.
         if (preferencesManager.getCache().equals(CacheMode.DISABLED)) {
@@ -238,7 +236,7 @@ public class Engine {
         int startPosition = bounds.getMinMs();
         int totalDelta = notes.getCurDelta(); // Absolute position of current note.
         Voicebank voicebank = song.getVoicebank();
-        boolean isFirstNote = true;        
+        boolean isFirstNote = true;
         final File finalSong = cacheManager.createRenderedCache();
 
         while (notes.hasNext()) {
