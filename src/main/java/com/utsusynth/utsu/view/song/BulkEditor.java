@@ -92,42 +92,66 @@ public class BulkEditor {
     }
 
     private Group createNotesAndPortamento(PitchbendData portamentoData) {
-        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
-        return createNotesAndPortamento(portamentoData, currentFilters, rowHeight);
+        return createNotesAndPortamento(
+                portamentoData, editorWidth, editorHeight, currentFilters, scaler, true);
     }
 
     private Group createNotesAndPortamento(
-            PitchbendData portamentoData, List<FilterType> filters, double rowHeight) {
+            PitchbendData portamentoData,
+            DoubleExpression width,
+            DoubleExpression height,
+            List<FilterType> filters,
+            Scaler noteScaler,
+            boolean mainEditor) {
         Group notesAndPortamento = new Group();
-        int noteWidth = (int) Math.max(1, editorWidth.get() / 2);
-        int numRows = (int) (editorHeight.get() / rowHeight);
-        double verticalScale = rowHeight / Quantizer.ROW_HEIGHT;
-        Scaler noteScaler = scaler.derive(1, verticalScale);
+        Portamento newPortamento;
+        int noteWidth = (int) Math.max(1, width.get() / 2);
+        int numRows = (int) (height.get() / noteScaler.scaleY(Quantizer.ROW_HEIGHT).get());
         if (filters.contains(FilterType.RISING_NOTE)) {
             Note first = noteFactory.createBackgroundNote(
                     numRows / 3 * 2, 0, noteWidth, noteScaler);
             Note second = noteFactory.createBackgroundNote(
                     numRows / 3, noteWidth, noteWidth, noteScaler);
-            currentPortamento = pitchbendFactory.createPortamento(
-                    second, numRows / 3 * 2, portamentoData, null);
+            newPortamento = pitchbendFactory.createPortamentoEditor(
+                    width.get(),
+                    height.get(),
+                    second,
+                    numRows / 3 * 2,
+                    portamentoData,
+                    noteScaler,
+                    !mainEditor);
             notesAndPortamento.getChildren().addAll(
-                    first.getElement(), second.getElement(), currentPortamento.getElement());
+                    first.getElement(), second.getElement(), newPortamento.getElement());
         } else if (filters.contains(FilterType.FALLING_NOTE)) {
             Note first = noteFactory.createBackgroundNote(
                     numRows / 3, 0, noteWidth, noteScaler);
             Note second = noteFactory.createBackgroundNote(
                     numRows / 3 * 2, noteWidth, noteWidth, noteScaler);
-            currentPortamento = pitchbendFactory.createPortamento(
-                    second, numRows / 3, portamentoData, null);
+            newPortamento = pitchbendFactory.createPortamentoEditor(
+                    width.get(),
+                    height.get(),
+                    second,
+                    numRows / 3,
+                    portamentoData,
+                    noteScaler,
+                    !mainEditor);
             notesAndPortamento.getChildren().addAll(
-                    first.getElement(), second.getElement(), currentPortamento.getElement());
+                    first.getElement(), second.getElement(), newPortamento.getElement());
         } else {
             Note note = noteFactory.createBackgroundNote(
                     numRows / 2, noteWidth, noteWidth, noteScaler);
-            currentPortamento = pitchbendFactory.createPortamento(
-                    note, numRows / 2, portamentoData, null);
-            notesAndPortamento.getChildren().addAll(
-                    note.getElement(), currentPortamento.getElement());
+            newPortamento = pitchbendFactory.createPortamentoEditor(
+                    width.get(),
+                    height.get(),
+                    note,
+                    numRows / 2,
+                    portamentoData,
+                    noteScaler,
+                    !mainEditor);
+            notesAndPortamento.getChildren().addAll(note.getElement(), newPortamento.getElement());
+        }
+        if (mainEditor) {
+            currentPortamento = newPortamento;
         }
         return notesAndPortamento;
     }
@@ -152,12 +176,18 @@ public class BulkEditor {
                         setGraphic(null);
                     } else {
                         HBox graphic = new HBox(5);
+                        double rowHeight = 5;
+                        DoubleExpression width = new SimpleDoubleProperty(150);
+                        DoubleProperty height = new SimpleDoubleProperty(30);
                         ListView<String> background = createPitchbendBackground(
-                                new SimpleDoubleProperty(150),
-                                new SimpleDoubleProperty(30),
-                                5);
-                        // TODO: Draw pitchbend.
-                        Group portamentoGroup = new Group(background);
+                                width, height, rowHeight);
+                        double yScale = rowHeight / scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+                        double xScale = (yScale + 1) / 2.0;
+                        Scaler miniScaler = scaler.derive(xScale, yScale);
+                        Group notesAndPortamento = createNotesAndPortamento(
+                                item, width, height, ImmutableList.of(), miniScaler, false);
+
+                        Group portamentoGroup = new Group(background, notesAndPortamento);
                         portamentoGroup.setMouseTransparent(true);
                         Button closeButton = new Button("X");
                         closeButton.setOnAction(event -> {
@@ -321,10 +351,12 @@ public class BulkEditor {
                         setGraphic(null);
                     } else {
                         HBox graphic = new HBox(5);
-                        VBox background = createEnvelopeBackground(
-                                new SimpleDoubleProperty(150), new SimpleDoubleProperty(30));
+                        DoubleExpression width = new SimpleDoubleProperty(150);
+                        DoubleProperty height = new SimpleDoubleProperty(30);
+                        Scaler miniScaler = scaler.derive(0.5, 1);
+                        VBox background = createEnvelopeBackground(width, height);
                         Envelope envelope = envelopeFactory.createEnvelopeEditor(
-                                150, 30, item, scaler,true);
+                                width.get(), height.get(), item, miniScaler, true);
                         Group envelopeGroup = new Group(background, envelope.getElement());
                         envelopeGroup.setMouseTransparent(true);
                         Button closeButton = new Button("X");
