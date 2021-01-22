@@ -1,6 +1,8 @@
 package com.utsusynth.utsu.view.song.note.pitch;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.PitchbendData;
@@ -38,7 +40,7 @@ public class PitchbendFactory {
         return new Pitchbend(portamento, vibrato, showPitchbend);
     }
 
-    public Portamento createPortamento(
+    private Portamento createPortamento(
             Note note,
             String prevPitch,
             PitchbendData pitchbend,
@@ -77,38 +79,84 @@ public class PitchbendFactory {
 
     public Portamento createPortamentoEditor(
             double editorWidth,
-            double editorheight,
+            double editorHeight,
             Note note,
             int prevRowNum,
             PitchbendData pitchbend,
             Scaler editorScaler,
             boolean scaleToFit) {
-        double finalY = (note.getRow() + .5) * Quantizer.ROW_HEIGHT;
+        // X scaling is editorWidth is a real width.
+        if (editorWidth > 0) {
+            double minMs =
+                    note.getAbsPositionMs() + (Quantizer.COL_WIDTH * 4) + pitchbend.getPBS().get(0);
+            double minX = editorScaler.scaleX(minMs).get();
+            double maxX = editorScaler.scaleX(
+                    minMs + pitchbend.getPBW().stream().reduce(Double::sum).get()).get();
+            double halfWidth = editorWidth / 2.0;
+            double excessX = 0;
+            if (minX < 0) {
+                excessX = Math.max(excessX, Math.abs(minX));
+            }
+            if (maxX > editorWidth) {
+                excessX = Math.max(excessX, Math.abs(maxX - editorWidth));
+            }
+            if (excessX > 0) {
+                double xMultiplier = halfWidth / (halfWidth + excessX);
+                if (scaleToFit) {
+                    editorScaler = editorScaler.derive(xMultiplier, 1);
+                } else {
+                    ImmutableList<Double> newPbs =
+                            ImmutableList.of(pitchbend.getPBS().get(0) * xMultiplier, 0.0);
+                    ImmutableList<Double> newPbw = ImmutableList.copyOf(
+                            pitchbend.getPBW().stream()
+                                    .map(width -> width * xMultiplier)
+                                    .collect(Collectors.toList()));
+                    pitchbend = new PitchbendData(
+                            newPbs, newPbw, pitchbend.getPBY(), pitchbend.getPBM());
+                }
+            }
+        }
 
-        double curX = note.getAbsPositionMs() + pitchbend.getPBS().get(0);
-        double curY = (prevRowNum + .5) * Quantizer.ROW_HEIGHT;
+        // Y scaling if editorHeight is a real value and there are Y values to scale.
+        if (!pitchbend.getPBY().isEmpty() && editorHeight > 0) {
+            double excessY = 0;
+            double curY = editorScaler.scaleY((prevRowNum + .5) * Quantizer.ROW_HEIGHT).get();
+            for (double height : pitchbend.getPBY()) {
+                double newY = curY + editorScaler.scaleY(height).get();
+                if (curY < 0) {
+
+                }
+
+            }
+        }
+
+        // Calculate curves with current pitchbend/scaler.
+        double noteMs = note.getAbsPositionMs() + (Quantizer.COL_WIDTH * 4);
+        double curMs = noteMs + pitchbend.getPBS().get(0);
+        double curCents = (prevRowNum + .5) * Quantizer.ROW_HEIGHT;
+        double finalCents = (note.getRow() + .5) * Quantizer.ROW_HEIGHT;
 
         ArrayList<Curve> pitchCurves = new ArrayList<>();
         ImmutableList<Double> widths = pitchbend.getPBW();
         for (int i = 0; i < widths.size(); i++) {
-            double tempX = curX;
-            curX += widths.get(i);
-            double tempY = curY;
+            double tempMs = curMs;
+            curMs += widths.get(i);
+            double tempCents = curCents;
             if (i == widths.size() - 1) {
-                curY = finalY;
+                curCents = finalCents;
             } else {
                 if (pitchbend.getPBY().size() > i) {
-                    // Leave curY as-is if PBY has no value for this width.
-                    curY = finalY - (pitchbend.getPBY().get(i) / 10) * Quantizer.ROW_HEIGHT;
+                    // Leave curCents as-is if PBY has no value for this width.
+                    curCents = finalCents - (pitchbend.getPBY().get(i) / 10) * Quantizer.ROW_HEIGHT;
                 }
             }
             String type = pitchbend.getPBM().size() > i ? pitchbend.getPBM().get(i) : "";
             pitchCurves.add(
                     curveFactory.createCurve(
-                            editorScaler.scalePos(tempX).get(),
-                            editorScaler.scaleY(tempY).get(),
-                            editorScaler.scalePos(curX).get(),
-                            editorScaler.scaleY(curY).get(),
+                            editorScaler.scaleX(tempMs).get(),
+                            editorScaler.scaleY(tempCents).get(),
+                            editorScaler.scaleX(curMs).get(),
+                            editorScaler.scaleY(curCents).get(),
                             type));
         }
 

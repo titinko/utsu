@@ -91,69 +91,79 @@ public class BulkEditor {
         return portamentoGroup;
     }
 
-    private Group createNotesAndPortamento(PitchbendData portamentoData) {
-        return createNotesAndPortamento(
-                portamentoData, editorWidth, editorHeight, currentFilters, scaler, true);
-    }
-
     private Group createNotesAndPortamento(
-            PitchbendData portamentoData,
-            DoubleExpression width,
-            DoubleExpression height,
-            List<FilterType> filters,
-            Scaler noteScaler,
-            boolean mainEditor) {
+            PitchbendData portamentoData) {
         Group notesAndPortamento = new Group();
-        Portamento newPortamento;
-        int noteWidth = (int) Math.max(1, width.get() / 2);
-        int numRows = (int) (height.get() / noteScaler.scaleY(Quantizer.ROW_HEIGHT).get());
-        if (filters.contains(FilterType.RISING_NOTE)) {
+        int noteWidth = (int) Math.max(1, editorWidth.get() / 2);
+        int numRows = (int) (editorHeight.get() / scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        if (currentFilters.contains(FilterType.RISING_NOTE)) {
             Note first = noteFactory.createBackgroundNote(
-                    numRows / 3 * 2, 0, noteWidth, noteScaler);
+                    numRows / 3 * 2, 0, noteWidth, scaler);
             Note second = noteFactory.createBackgroundNote(
-                    numRows / 3, noteWidth, noteWidth, noteScaler);
-            newPortamento = pitchbendFactory.createPortamentoEditor(
-                    width.get(),
-                    height.get(),
+                    numRows / 3, noteWidth, noteWidth, scaler);
+            currentPortamento = pitchbendFactory.createPortamentoEditor(
+                    editorWidth.get(),
+                    editorHeight.get(),
                     second,
                     numRows / 3 * 2,
                     portamentoData,
-                    noteScaler,
-                    !mainEditor);
+                    scaler,
+                    false);
             notesAndPortamento.getChildren().addAll(
-                    first.getElement(), second.getElement(), newPortamento.getElement());
-        } else if (filters.contains(FilterType.FALLING_NOTE)) {
+                    first.getElement(), second.getElement(), currentPortamento.getElement());
+        } else if (currentFilters.contains(FilterType.FALLING_NOTE)) {
             Note first = noteFactory.createBackgroundNote(
-                    numRows / 3, 0, noteWidth, noteScaler);
+                    numRows / 3, 0, noteWidth, scaler);
             Note second = noteFactory.createBackgroundNote(
-                    numRows / 3 * 2, noteWidth, noteWidth, noteScaler);
-            newPortamento = pitchbendFactory.createPortamentoEditor(
-                    width.get(),
-                    height.get(),
+                    numRows / 3 * 2, noteWidth, noteWidth, scaler);
+            currentPortamento = pitchbendFactory.createPortamentoEditor(
+                    editorWidth.get(),
+                    editorHeight.get(),
                     second,
                     numRows / 3,
                     portamentoData,
-                    noteScaler,
-                    !mainEditor);
+                    scaler,
+                    false);
             notesAndPortamento.getChildren().addAll(
-                    first.getElement(), second.getElement(), newPortamento.getElement());
+                    first.getElement(), second.getElement(), currentPortamento.getElement());
         } else {
             Note note = noteFactory.createBackgroundNote(
-                    numRows / 2, noteWidth, noteWidth, noteScaler);
-            newPortamento = pitchbendFactory.createPortamentoEditor(
-                    width.get(),
-                    height.get(),
+                    numRows / 2, noteWidth, noteWidth, scaler);
+            currentPortamento = pitchbendFactory.createPortamentoEditor(
+                    editorWidth.get(),
+                    editorHeight.get(),
                     note,
                     numRows / 2,
                     portamentoData,
-                    noteScaler,
-                    !mainEditor);
-            notesAndPortamento.getChildren().addAll(note.getElement(), newPortamento.getElement());
-        }
-        if (mainEditor) {
-            currentPortamento = newPortamento;
+                    scaler,
+                    false);
+            notesAndPortamento.getChildren().addAll(
+                    note.getElement(), currentPortamento.getElement());
         }
         return notesAndPortamento;
+    }
+
+    /** Mini portamento view to be used in portamento config list. */
+    private Group createMiniNotesAndPortamento(
+            PitchbendData portamentoData, double width, double height, double rowHeight) {
+        double yScale = rowHeight / scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        double xScale = (yScale + 1) / 2.0;
+        Scaler miniScaler = scaler.derive(xScale, yScale);
+
+        int noteWidth = (int) Math.max(1, width / 2);
+        int numRows = (int) (height / miniScaler.scaleY(Quantizer.ROW_HEIGHT).get());
+
+        Note note = noteFactory.createBackgroundNote(
+                numRows / 2, noteWidth, noteWidth, miniScaler);
+        Portamento newPortamento = pitchbendFactory.createPortamentoEditor(
+                width,
+                height,
+                note,
+                numRows / 2,
+                portamentoData,
+                miniScaler,
+                true);
+        return new Group(note.getElement(), newPortamento.getElement());
     }
 
     public PitchbendData getPortamentoData() {
@@ -176,16 +186,13 @@ public class BulkEditor {
                         setGraphic(null);
                     } else {
                         HBox graphic = new HBox(5);
-                        double rowHeight = 5;
                         DoubleExpression width = new SimpleDoubleProperty(150);
                         DoubleProperty height = new SimpleDoubleProperty(30);
+                        double rowHeight = 5;
                         ListView<String> background = createPitchbendBackground(
                                 width, height, rowHeight);
-                        double yScale = rowHeight / scaler.scaleY(Quantizer.ROW_HEIGHT).get();
-                        double xScale = (yScale + 1) / 2.0;
-                        Scaler miniScaler = scaler.derive(xScale, yScale);
-                        Group notesAndPortamento = createNotesAndPortamento(
-                                item, width, height, ImmutableList.of(), miniScaler, false);
+                        Group notesAndPortamento = createMiniNotesAndPortamento(
+                                item, width.get(), height.get(), rowHeight);
 
                         Group portamentoGroup = new Group(background, notesAndPortamento);
                         portamentoGroup.setMouseTransparent(true);
