@@ -17,7 +17,11 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.shape.Rectangle;
 
 public class Portamento {
+    private static final double RADIUS = 2;
+
     private final int noteStartMs;
+    private final double maxX; // Maximum x-position.
+    private final double maxY; // Maximum y-position.
     private final ArrayList<Curve> curves; // Curves, ordered.
     private final ArrayList<Rectangle> squares; // Control points, ordered.
     private final Group curveGroup; // Curves, unordered.
@@ -34,12 +38,16 @@ public class Portamento {
 
     public Portamento(
             int noteStartMs,
+            double maxX,
+            double maxY,
             ArrayList<Curve> curves,
             PitchbendCallback callback,
             CurveFactory factory,
             Localizer localizer,
             Scaler scaler) {
         this.noteStartMs = noteStartMs;
+        this.maxX = maxX;
+        this.maxY = maxY;
         this.callback = callback;
         this.curveFactory = factory;
         this.localizer = localizer;
@@ -48,7 +56,11 @@ public class Portamento {
         // Add control points.
         for (int i = 0; i < curves.size(); i++) {
             Curve curve = curves.get(i);
-            Rectangle square = new Rectangle(curve.getStartX() - 2, curve.getStartY() - 2, 4, 4);
+            Rectangle square = new Rectangle(
+                    curve.getStartX() - RADIUS,
+                    curve.getStartY() - RADIUS,
+                    RADIUS * 2,
+                    RADIUS * 2);
             curve.bindStart(square);
             if (i > 0) {
                 curves.get(i - 1).bindEnd(square);
@@ -57,7 +69,11 @@ public class Portamento {
 
             // Add last control point.
             if (i == curves.size() - 1) {
-                Rectangle end = new Rectangle(curve.getEndX() - 2, curve.getEndY() - 2, 4, 4);
+                Rectangle end = new Rectangle(
+                        curve.getEndX() - RADIUS,
+                        curve.getEndY() - RADIUS,
+                        RADIUS * 2,
+                        RADIUS * 2);
                 curve.bindEnd(end);
                 squares.add(end);
             }
@@ -98,26 +114,28 @@ public class Portamento {
             int index = squares.indexOf(square);
             double newX = event.getX();
             if (index == 0) {
-                if (newX > 0 && newX < squares.get(index + 1).getX() + 2) {
+                if (newX > RADIUS && newX < Math.min(
+                        maxX - RADIUS, squares.get(index + 1).getX() + RADIUS)) {
                     changed = true;
-                    square.setX(newX - 2);
+                    square.setX(newX - RADIUS);
                 }
             } else if (index == squares.size() - 1) {
-                if (newX > squares.get(index - 1).getX() + 2) {
+                if (newX > squares.get(index - 1).getX() + RADIUS
+                        && newX < maxX - RADIUS) {
                     changed = true;
-                    square.setX(newX - 2);
+                    square.setX(newX - RADIUS);
                 }
-            } else if (newX > squares.get(index - 1).getX() + 2
-                    && newX < squares.get(index + 1).getX() + 2) {
+            } else if (newX > squares.get(index - 1).getX() + RADIUS
+                    && newX < Math.min(maxX, squares.get(index + 1).getX() + RADIUS)) {
                 changed = true;
-                square.setX(newX - 2);
+                square.setX(newX - RADIUS);
             }
 
             if (index > 0 && index < squares.size() - 1) {
                 double newY = event.getY();
-                if (newY > 0 && newY < scaler.scaleY(Quantizer.ROW_HEIGHT * 12 * 7).get()) {
+                if (newY > RADIUS && newY < maxY - RADIUS) {
                     changed = true;
-                    square.setY(newY - 2);
+                    square.setY(newY - RADIUS);
                 }
             }
         });
