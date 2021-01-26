@@ -1011,7 +1011,10 @@ public class SongController implements EditorController, Localizable {
             BorderPane editorPane = loader.load(fxml);
             BulkEditorController controller = loader.getController();
             controller.openEditor(
-                    editorType, songEditor.getSelectedTrack(), new BulkEditorCallback() {
+                    editorType,
+                    songEditor.getSelectedTrack(),
+                    editorWindow,
+                    new BulkEditorCallback() {
                         @Override
                         public void updatePortamento(
                                 PitchbendData newPortamento,

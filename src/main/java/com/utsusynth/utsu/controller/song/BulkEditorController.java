@@ -10,6 +10,8 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.files.BulkEditorConfigManager;
 import com.utsusynth.utsu.view.song.BulkEditor;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -38,6 +40,9 @@ public class BulkEditorController implements Localizable {
 
     private BulkEditorCallback callback;
     private RegionBounds highlightedRegion;
+    private DoubleProperty editorWidth;
+    private DoubleProperty editorHeight;
+    private DoubleProperty listHeight;
 
     /* Common elements. */
     @FXML
@@ -136,6 +141,10 @@ public class BulkEditorController implements Localizable {
     }
 
     public void initialize() {
+        editorWidth = new SimpleDoubleProperty(300);
+        editorHeight = new SimpleDoubleProperty(200);
+        listHeight = new SimpleDoubleProperty(240);
+
         // Initialize common elements.
         initializeNoteLengthChoiceBox();
 
@@ -153,12 +162,12 @@ public class BulkEditorController implements Localizable {
                 view.createPortamentoEditor(
                         portamentoConfig.get(0),
                         getFilters(),
-                        portamentoVBox.widthProperty().subtract(20),
-                        portamentoVBox.heightProperty().subtract(50)));
+                        editorWidth,
+                        editorHeight));
         portamentoListAnchor.getChildren().add(
                 view.createPortamentoList(
                         portamentoConfig,
-                        portamentoListAnchor.heightProperty().subtract(3)));
+                        listHeight));
 
         // Initialize vibrato elements.
         initializeVibratoField(vibratoLengthTF, 0, 100); // Vibrato length (% of note)
@@ -174,12 +183,12 @@ public class BulkEditorController implements Localizable {
                 0,
                 view.createVibratoEditor(
                         vibratoConfig.get(0),
-                        vibratoVBox.widthProperty().subtract(20),
-                        vibratoVBox.heightProperty().subtract(50)));
+                        editorWidth,
+                        editorHeight));
         vibratoListAnchor.getChildren().add(
                 view.createVibratoList(
                         vibratoConfig,
-                        vibratoListAnchor.heightProperty().subtract(3)));
+                        listHeight));
 
         // Initialize envelope elements.
         ToggleGroup silenceToggle = new ToggleGroup();
@@ -192,12 +201,12 @@ public class BulkEditorController implements Localizable {
                 0,
                 view.createEnvelopeEditor(
                         envelopeConfig.get(0),
-                        envelopeVBox.widthProperty().subtract(20),
-                        envelopeVBox.heightProperty().subtract(50)));
+                        editorWidth,
+                        editorHeight));
         envelopeListAnchor.getChildren().add(
                 view.createEnvelopeList(
                         envelopeConfig,
-                        envelopeListAnchor.heightProperty().subtract(3)));
+                        listHeight));
 
         localizer.localize(this);
     }
@@ -257,7 +266,14 @@ public class BulkEditorController implements Localizable {
         portamentoFallingNotes.setText(bundle.getString("bulkEditor.portamento.fallingNotes"));
     }
 
-    void openEditor(BulkEditorType editorType, RegionBounds region, BulkEditorCallback callback) {
+    void openEditor(
+            BulkEditorType editorType,
+            RegionBounds region,
+            Stage window,
+            BulkEditorCallback callback) {
+        editorWidth.bind(window.widthProperty().subtract(413));
+        editorHeight.bind(window.heightProperty().subtract(186));
+        listHeight.bind(window.heightProperty().subtract(146));
         this.callback = callback;
         highlightedRegion = region;
         if (editorType.equals(BulkEditorType.PORTAMENTO)) {
