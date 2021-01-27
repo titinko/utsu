@@ -19,10 +19,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.input.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -314,6 +311,31 @@ public class UtsuController implements Localizable {
         // No need to override default key behavior.
         return false;
 
+    }
+
+    /**
+     * Called whenever the mouse wheel is used to scroll, Can override default scroll
+     * behaviors.
+     *
+     * @return true if an override behavior was found, false otherwise
+     */
+    public boolean OnScroll(ScrollEvent scrollEvent) {
+        if (!scrollEvent.isShortcutDown()) return false;
+        double value = scrollEvent.getDeltaY();
+        if (scrollEvent.isAltDown()) {
+            if (value < 0) {
+                zoomOutH(null);
+            } else if (value > 0) {
+                zoomInH(null);
+            }
+        } else {
+            if (value < 0) {
+                zoomOutV(null);
+            } else if (value > 0) {
+                zoomInV(null);
+            }
+        }
+        return true;
     }
 
     /**

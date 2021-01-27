@@ -20,6 +20,7 @@ import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
@@ -103,6 +104,13 @@ public class UtsuApp extends Application {
                 if (controller.onKeyPressed(keyEvent)) {
                     keyEvent.consume();
                 }
+            }
+        });
+
+        // Set up an event that runs every time a mouse scroll occurs.
+        primaryStage.addEventFilter(ScrollEvent.SCROLL, scrollEvent ->{
+            if (controller.OnScroll(scrollEvent)){
+                scrollEvent.consume();
             }
         });
 
