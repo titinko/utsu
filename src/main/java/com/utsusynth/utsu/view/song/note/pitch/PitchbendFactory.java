@@ -132,20 +132,21 @@ public class PitchbendFactory {
         // Y-scaling if editorHeight is a real value and there are Y values to scale.
         if (!pitchbend.getPBY().isEmpty() && editorHeight > 0) {
             double excessY = 0;
-            double finalY = editorScaler.scaleY((prevRowNum + .5) * Quantizer.ROW_HEIGHT).get();
-            double halfHeight = editorHeight / 2.0;
+            double finalY = editorScaler.scaleY((note.getRow() + .5) * Quantizer.ROW_HEIGHT).get();
+            double topHeight = editorHeight - finalY;
+            double bottomHeight = finalY;
             ImmutableList.Builder<Double> newPby = ImmutableList.builder();
             for (double pby : pitchbend.getPBY()) {
                 double curY =
                         finalY - editorScaler.scaleY((pby / 10) * Quantizer.ROW_HEIGHT).get();
                 if (curY < buffer) {
                     excessY = Math.max(excessY, Math.abs(curY) + buffer);
-                    double multiplier = halfHeight / (halfHeight + Math.abs(curY) + buffer);
+                    double multiplier = bottomHeight / (bottomHeight + Math.abs(curY) + buffer);
                     newPby.add(pby * multiplier);
                 } else if (curY > editorHeight - buffer) {
                     excessY = Math.max(excessY, Math.abs(curY - editorHeight) + buffer);
                     double multiplier =
-                            halfHeight / (halfHeight + Math.abs(curY - editorHeight) + buffer);
+                            topHeight / (topHeight + Math.abs(curY - editorHeight) + buffer);
                     newPby.add(pby * multiplier);
                 } else {
                     newPby.add(pby);
@@ -153,6 +154,7 @@ public class PitchbendFactory {
             }
             if (excessY > 0) {
                 if (scaleToFit) {
+                    double halfHeight = editorHeight / 2;
                     double yMultiplier = halfHeight / (halfHeight + excessY);
                     editorScaler = editorScaler.derive(1, yMultiplier);
                 } else {
