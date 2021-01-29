@@ -11,12 +11,14 @@ import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
+import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
 import com.utsusynth.utsu.view.song.note.pitch.Vibrato;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -83,16 +85,14 @@ public class BulkEditor {
         // Create notes and portamento curve.
         portamentoGroup.getChildren().add(createNotesAndPortamento(portamentoData));
         InvalidationListener updateSize = obs -> {
-            PitchbendData currentData = currentPortamento.getData();
-            portamentoGroup.getChildren().set(1, createNotesAndPortamento(currentData));
+            portamentoGroup.getChildren().set(1, createNotesAndPortamento(getPortamentoData()));
         };
         editorWidth.addListener(updateSize);
         editorHeight.addListener(updateSize);
         return portamentoGroup;
     }
 
-    private Group createNotesAndPortamento(
-            PitchbendData portamentoData) {
+    private Group createNotesAndPortamento(PitchbendData portamentoData) {
         Group notesAndPortamento = new Group();
         int noteWidth = (int) Math.max(1, editorWidth.get() / 2);
         int numRows = (int) (editorHeight.get() / scaler.scaleY(Quantizer.ROW_HEIGHT).get());
@@ -239,8 +239,39 @@ public class BulkEditor {
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
         ListView<String> background =
                 createPitchbendBackground(editorWidth, editorHeight.divide(2), rowHeight);
-        vibratoGroup = new Group(background);
+
+        vibratoGroup = new Group(background, createNoteAndVibrato(vibratoData));
+        InvalidationListener updateSize = obs -> {
+            vibratoGroup.getChildren().set(1, createNoteAndVibrato(getVibratoData()));
+        };
+        editorWidth.addListener(updateSize);
+        editorHeight.addListener(updateSize);
         return vibratoGroup;
+    }
+
+    private Group createNoteAndVibrato(PitchbendData vibratoData) {
+        int noteStart = (int) Math.max(1, editorWidth.get() / 4);
+        int numRows = (int) (editorHeight.get() * .5 / scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        Note note = noteFactory.createBackgroundNote(
+                numRows / 2, noteStart, editorWidth.get() - noteStart, scaler);
+        currentVibrato = pitchbendFactory.createVibrato(
+                note, vibratoData, new PitchbendCallback() {
+                    @Override
+                    public void modifySongPitchbend(PitchbendData oldData, PitchbendData newData) {
+                        // Do nothing.
+                    }
+
+                    @Override
+                    public void modifySongVibrato(int[] oldVibrato, int[] newVibrato) {
+                        // Do nothing.
+                    }
+                }, new SimpleBooleanProperty(false));
+        currentVibrato.addDefaultVibrato();
+        return new Group(note.getElement(), currentVibrato.getVibratoElement());
+    }
+
+    private Group createVisualVibratoEditor() {
+        return new Group();
     }
 
     public PitchbendData getVibratoData() {

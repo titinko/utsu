@@ -217,7 +217,7 @@ public class PitchbendFactory {
                 editorScaler);
     }
 
-    private Vibrato createVibrato(
+    public Vibrato createVibrato(
             Note note,
             PitchbendData pitchbend,
             PitchbendCallback callback,

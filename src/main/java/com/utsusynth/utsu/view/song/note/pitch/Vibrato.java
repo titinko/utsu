@@ -90,8 +90,18 @@ public class Vibrato {
         vibratoGroup = new Group(vibratoPath, editorGroup);
     }
 
-    Group getElement() {
+    public Group getElement() {
         return vibratoGroup;
+    }
+
+    /** Fetch just the vibrato, never showing the editor. */
+    public Path getVibratoElement() {
+        return vibratoPath;
+    }
+
+    /** Fetch just the editor, never showing the vibrato. */
+    public Group getEditorElement() {
+        return editorGroup;
     }
 
     public Optional<int[]> getVibrato() {
