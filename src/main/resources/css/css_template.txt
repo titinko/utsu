@@ -303,3 +303,8 @@
 .theme-settings.highlighted {
     -fx-background-color: derive(-fx-color,-18%);
 }
+
+.vibrato-background {
+    -fx-background-color: $[TRACK_BORDER_THIN], $[TRACK_CELL_LIGHT];
+    -fx-background-insets: 0, 0 1 1 1;
+}

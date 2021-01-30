@@ -148,6 +148,9 @@ public class BulkEditorController implements Localizable {
         // Initialize common elements.
         initializeNoteLengthChoiceBox();
 
+        // Common setup for all bulk editors.
+        view.initialize(editorWidth, editorHeight);
+
         // Initialize portamento elements.
         ToggleGroup risingOrFallingToggle = new ToggleGroup();
         portamentoAllNotes.setToggleGroup(risingOrFallingToggle);
@@ -158,16 +161,9 @@ public class BulkEditorController implements Localizable {
                 obs -> view.setCurrentFilters(getFilters()));
         ObservableList<PitchbendData> portamentoConfig = configManager.getPortamentoConfig();
         portamentoVBox.getChildren().add(
-                0,
-                view.createPortamentoEditor(
-                        portamentoConfig.get(0),
-                        getFilters(),
-                        editorWidth,
-                        editorHeight));
+                0, view.createPortamentoEditor(portamentoConfig.get(0), getFilters()));
         portamentoListAnchor.getChildren().add(
-                view.createPortamentoList(
-                        portamentoConfig,
-                        listHeight));
+                view.createPortamentoList(portamentoConfig, listHeight));
 
         // Initialize vibrato elements.
         initializeVibratoField(vibratoLengthTF, 0, 100); // Vibrato length (% of note)
@@ -179,16 +175,8 @@ public class BulkEditorController implements Localizable {
         initializeVibratoField(vibratoHeightTF, -100, 100); // Pitch shift (cents)
         initializeVibratoField(vibratoPhaseTF, 0, 100); // Phase shift (% of cycle)
         ObservableList<PitchbendData> vibratoConfig = configManager.getVibratoConfig();
-        vibratoVBox.getChildren().add(
-                0,
-                view.createVibratoEditor(
-                        vibratoConfig.get(0),
-                        editorWidth,
-                        editorHeight));
-        vibratoListAnchor.getChildren().add(
-                view.createVibratoList(
-                        vibratoConfig,
-                        listHeight));
+        vibratoVBox.getChildren().add(0, view.createVibratoEditor(vibratoConfig.get(0)));
+        vibratoListAnchor.getChildren().add(view.createVibratoList(vibratoConfig, listHeight));
 
         // Initialize envelope elements.
         ToggleGroup silenceToggle = new ToggleGroup();
@@ -197,16 +185,8 @@ public class BulkEditorController implements Localizable {
         envelopeSilenceAfter.setToggleGroup(silenceToggle);
         envelopeAllNotes.setSelected(true); // Consider saving user's setting.
         ObservableList<EnvelopeData> envelopeConfig = configManager.getEnvelopeConfig();
-        envelopeVBox.getChildren().add(
-                0,
-                view.createEnvelopeEditor(
-                        envelopeConfig.get(0),
-                        editorWidth,
-                        editorHeight));
-        envelopeListAnchor.getChildren().add(
-                view.createEnvelopeList(
-                        envelopeConfig,
-                        listHeight));
+        envelopeVBox.getChildren().add(0, view.createEnvelopeEditor(envelopeConfig.get(0)));
+        envelopeListAnchor.getChildren().add(view.createEnvelopeList(envelopeConfig, listHeight));
 
         localizer.localize(this);
     }

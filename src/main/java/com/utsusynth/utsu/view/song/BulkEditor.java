@@ -22,6 +22,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
@@ -46,7 +47,8 @@ public class BulkEditor {
     private List<FilterType> currentFilters;
     private ListView<PitchbendData> portamentoList;
 
-    private Group vibratoGroup;
+    private Group vibratoGroupUpper;
+    private Group vibratoGroupLower;
     private Vibrato currentVibrato;
     private ListView<PitchbendData> vibratoList;
 
@@ -69,13 +71,13 @@ public class BulkEditor {
         currentFilters = ImmutableList.of();
     }
 
-    public Group createPortamentoEditor(
-            PitchbendData portamentoData,
-            List<FilterType> filters,
-            DoubleExpression width,
-            DoubleExpression height) {
+    /** Call this when first initializing BulkEditor class from parent. */
+    public void initialize(DoubleExpression width, DoubleExpression height) {
         editorWidth.bind(width);
         editorHeight.bind(height);
+    }
+
+    public Group createPortamentoEditor(PitchbendData portamentoData, List<FilterType> filters) {
         currentFilters = filters;
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
         ListView<String> background =
@@ -232,21 +234,24 @@ public class BulkEditor {
         portamentoGroup.getChildren().set(1, createNotesAndPortamento(currentPortamento.getData()));
     }
 
-    public Group createVibratoEditor(
-            PitchbendData vibratoData, DoubleExpression width, DoubleExpression height) {
-        editorWidth.bind(width);
-        editorHeight.bind(height);
+    public VBox createVibratoEditor(PitchbendData vibratoData) {
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
-        ListView<String> background =
+        ListView<String> backgroundUpper =
                 createPitchbendBackground(editorWidth, editorHeight.divide(2), rowHeight);
+        vibratoGroupUpper = new Group(backgroundUpper, createNoteAndVibrato(vibratoData));
+        AnchorPane backgroundLower = new AnchorPane();
+        backgroundLower.getStyleClass().add("vibrato-background");
+        backgroundLower.prefWidthProperty().bind(editorWidth);
+        backgroundLower.prefHeightProperty().bind(editorHeight.divide(2));
+        vibratoGroupLower = new Group(backgroundLower, currentVibrato.getEditorElement());
 
-        vibratoGroup = new Group(background, createNoteAndVibrato(vibratoData));
         InvalidationListener updateSize = obs -> {
-            vibratoGroup.getChildren().set(1, createNoteAndVibrato(getVibratoData()));
+            vibratoGroupUpper.getChildren().set(1, createNoteAndVibrato(getVibratoData()));
+            vibratoGroupLower.getChildren().set(1, currentVibrato.getEditorElement());
         };
         editorWidth.addListener(updateSize);
         editorHeight.addListener(updateSize);
-        return vibratoGroup;
+        return new VBox(vibratoGroupUpper, vibratoGroupLower);
     }
 
     private Group createNoteAndVibrato(PitchbendData vibratoData) {
@@ -265,13 +270,9 @@ public class BulkEditor {
                     public void modifySongVibrato(int[] oldVibrato, int[] newVibrato) {
                         // Do nothing.
                     }
-                }, new SimpleBooleanProperty(false));
+                }, new SimpleBooleanProperty(true));
         currentVibrato.addDefaultVibrato();
         return new Group(note.getElement(), currentVibrato.getVibratoElement());
-    }
-
-    private Group createVisualVibratoEditor() {
-        return new Group();
     }
 
     public PitchbendData getVibratoData() {
@@ -323,7 +324,8 @@ public class BulkEditor {
                     return;
                 }
                 // Populate group with current data.
-                // vibratoGroup.getChildren().set(1, ...);
+                vibratoGroupUpper.getChildren().set(1, createNoteAndVibrato(curData));
+                vibratoGroupLower.getChildren().set(1, currentVibrato.getEditorElement());
             });
             return listCell;
         });
@@ -348,10 +350,7 @@ public class BulkEditor {
         return background;
     }
 
-    public Group createEnvelopeEditor(
-            EnvelopeData envelopeData, DoubleExpression width, DoubleExpression height) {
-        editorWidth.bind(width);
-        editorHeight.bind(height);
+    public Group createEnvelopeEditor(EnvelopeData envelopeData) {
         VBox background = createEnvelopeBackground(editorWidth, editorHeight);
 
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
