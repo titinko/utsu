@@ -271,8 +271,24 @@ public class BulkEditor {
                         // Do nothing.
                     }
                 }, new SimpleBooleanProperty(true));
-        currentVibrato.addDefaultVibrato();
+        if (currentVibrato.getVibrato().isEmpty()) {
+            currentVibrato.addDefaultVibrato();
+        }
         return new Group(note.getElement(), currentVibrato.getVibratoElement());
+    }
+
+    private Group createMiniNoteAndVibrato(PitchbendData vibratoData, double width, double height, double rowHeight) {
+        double yScale = rowHeight / scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        double xScale = (yScale + 1) / 2.0;
+        Scaler miniScaler = scaler.derive(xScale, yScale);
+
+        int noteStart = (int) Math.max(1, width / 4);
+        int numRows = (int) (height / miniScaler.scaleY(Quantizer.ROW_HEIGHT).get());
+
+        Note note = noteFactory.createBackgroundNote(
+                numRows / 2, noteStart, width - noteStart, miniScaler);
+        Vibrato newVibrato = pitchbendFactory.createViewOnlyVibrato(note, vibratoData, miniScaler);
+        return new Group(note.getElement(), newVibrato.getElement());
     }
 
     public PitchbendData getVibratoData() {
@@ -297,12 +313,15 @@ public class BulkEditor {
                         setGraphic(null);
                     } else {
                         HBox graphic = new HBox(5);
+                        DoubleExpression width = new SimpleDoubleProperty(150);
+                        DoubleProperty height = new SimpleDoubleProperty(30);
+                        double rowHeight = 5;
                         ListView<String> background = createPitchbendBackground(
-                                new SimpleDoubleProperty(150),
-                                new SimpleDoubleProperty(30),
-                                5);
-                        // TODO: Add vibrato visualization.
-                        Group vibratoGroup = new Group(background);
+                                width, height, rowHeight);
+                        Group noteAndVibrato = createMiniNoteAndVibrato(
+                                item, width.get(), height.get(), rowHeight);
+
+                        Group vibratoGroup = new Group(background, noteAndVibrato);
                         vibratoGroup.setMouseTransparent(true);
                         Button closeButton = new Button("X");
                         closeButton.setOnAction(event -> {

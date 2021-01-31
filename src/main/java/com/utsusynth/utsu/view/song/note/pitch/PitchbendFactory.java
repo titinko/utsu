@@ -15,6 +15,7 @@ import com.utsusynth.utsu.view.song.note.pitch.portamento.Curve;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.CurveFactory;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
 public class PitchbendFactory {
     private final CurveFactory curveFactory;
@@ -231,5 +232,27 @@ public class PitchbendFactory {
                 scaler,
                 pitchbend.getVibrato(),
                 vibratoEditor);
+    }
+
+    public Vibrato createViewOnlyVibrato(Note note, PitchbendData pitchbend, Scaler scaler) {
+        return new Vibrato(
+                note.getAbsPositionMs(),
+                note.getAbsPositionMs() + note.getDurationMs(),
+                scaler.scaleY((note.getRow() + .5) * Quantizer.ROW_HEIGHT).get(),
+                new PitchbendCallback() {
+                    @Override
+                    public void modifySongPitchbend(PitchbendData oldData, PitchbendData newData) {
+                        // Do nothing.
+                    }
+
+                    @Override
+                    public void modifySongVibrato(int[] oldVibrato, int[] newVibrato) {
+                        // Do nothing.
+                    }
+                },
+                localizer,
+                scaler,
+                pitchbend.getVibrato(),
+                new SimpleBooleanProperty(false));
     }
 }
