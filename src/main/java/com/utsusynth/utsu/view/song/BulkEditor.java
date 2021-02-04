@@ -17,12 +17,12 @@ import com.utsusynth.utsu.view.song.note.pitch.Vibrato;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.DoubleExpression;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
@@ -251,6 +251,7 @@ public class BulkEditor {
         };
         editorWidth.addListener(updateSize);
         editorHeight.addListener(updateSize);
+
         return new VBox(vibratoGroupUpper, vibratoGroupLower);
     }
 
@@ -268,12 +269,9 @@ public class BulkEditor {
 
                     @Override
                     public void modifySongVibrato(int[] oldVibrato, int[] newVibrato) {
-                        // Do nothing.
+                        // TODO: Pass values back to editor.
                     }
                 }, new SimpleBooleanProperty(true));
-        if (currentVibrato.getVibrato().isEmpty()) {
-            currentVibrato.addDefaultVibrato();
-        }
         return new Group(note.getElement(), currentVibrato.getVibratoElement());
     }
 
@@ -289,6 +287,17 @@ public class BulkEditor {
                 numRows / 2, noteStart, width - noteStart, miniScaler);
         Vibrato newVibrato = pitchbendFactory.createViewOnlyVibrato(note, vibratoData, miniScaler);
         return new Group(note.getElement(), newVibrato.getElement());
+    }
+
+    public void toggleVibrato(boolean hasVibrato) {
+        if (currentVibrato == null) {
+            return;
+        }
+        if (hasVibrato && currentVibrato.getVibrato().isEmpty()) {
+            currentVibrato.addDefaultVibrato();
+        } else if (!hasVibrato && currentVibrato.getVibrato().isPresent()) {
+            currentVibrato.clearVibrato();
+        }
     }
 
     public PitchbendData getVibratoData() {

@@ -80,6 +80,10 @@ public class BulkEditorController implements Localizable {
     @FXML
     private Tab vibratoTab;
     @FXML
+    private Label vibratoCheckboxLabel;
+    @FXML
+    private CheckBox vibratoCheckbox;
+    @FXML
     private Label vibratoLengthLabel;
     @FXML
     private TextField vibratoLengthTF;
@@ -166,6 +170,8 @@ public class BulkEditorController implements Localizable {
                 view.createPortamentoList(portamentoConfig, listHeight));
 
         // Initialize vibrato elements.
+        vibratoCheckbox.selectedProperty().addListener(
+                obs -> view.toggleVibrato(vibratoCheckbox.isSelected()));
         initializeVibratoField(vibratoLengthTF, 0, 100); // Vibrato length (% of note)
         initializeVibratoField(vibratoAmplitudeTF, 5, 200); // Amplitude (cents)
         initializeVibratoField(vibratoPhaseInTF, 0, 100); // Phase in (% of vibrato)
@@ -237,13 +243,19 @@ public class BulkEditorController implements Localizable {
     public void localize(ResourceBundle bundle) {
         applySelectionButton.setText(bundle.getString("bulkEditor.applySelection"));
         applyAllButton.setText(bundle.getString("bulkEditor.applyAll"));
-        envelopeApplyToLabel.setText(bundle.getString("bulkEditor.applyTo"));
-        portamentoApplyToLabel.setText(bundle.getString("bulkEditor.applyTo"));
         cancelButton.setText(bundle.getString("general.cancel"));
 
+        portamentoTab.setText(bundle.getString("menu.tools.bulkEditor.portamento"));
+        portamentoApplyToLabel.setText(bundle.getString("bulkEditor.applyTo"));
         portamentoAllNotes.setText(bundle.getString("bulkEditor.portamento.allNotes"));
         portamentoRisingNotes.setText(bundle.getString("bulkEditor.portamento.risingNotes"));
         portamentoFallingNotes.setText(bundle.getString("bulkEditor.portamento.fallingNotes"));
+
+        vibratoTab.setText(bundle.getString("song.note.vibrato"));
+        vibratoCheckboxLabel.setText(bundle.getString("song.note.vibrato"));
+
+        envelopeTab.setText(bundle.getString("menu.tools.bulkEditor.envelope"));
+        envelopeApplyToLabel.setText(bundle.getString("bulkEditor.applyTo"));
     }
 
     void openEditor(
