@@ -106,7 +106,7 @@ public class Vibrato {
 
     public Optional<int[]> getVibrato() {
         // Return absent if vibrato cannot render properly.
-        if (vibrato.length != 10 || vibrato[1] == 0) {
+        if (vibrato.length != 10 || vibrato[0] == 0) {
             return Optional.empty();
         }
         for (int value : vibrato) {
@@ -145,13 +145,24 @@ public class Vibrato {
         redrawEditor();
     }
 
-    private void adjustVibrato(int index, int newValue) {
+    public void adjustVibrato(int index, int newValue) {
         if (index < 0 || index >= vibrato.length || vibrato[index] == newValue) {
             return;
         }
         vibrato[index] = newValue;
         redrawVibrato();
-        // This method should be called from the editor, so no need to redraw editor.
+        // This method does not include redrawing the editor.
+    }
+
+    public void redrawEditor() {
+        // Only use when vibrato is edited by something besides the editor.
+        if (showEditor.get() && getVibrato().isPresent()) {
+            editor = Optional.of(new Editor());
+            editorGroup.getChildren().setAll(editor.get().render());
+        } else {
+            editor = Optional.empty();
+            editorGroup.getChildren().clear();
+        }
     }
 
     private void redrawVibrato() {
@@ -237,17 +248,6 @@ public class Vibrato {
         for (VibratoCurve hump : humps) {
             hump.addToPath(vibratoPath, curStartMs);
             curStartMs += hump.getWidthMs();
-        }
-    }
-
-    private void redrawEditor() {
-        // Only use when vibrato is edited by something besides the editor.
-        if (showEditor.get() && getVibrato().isPresent()) {
-            editor = Optional.of(new Editor());
-            editorGroup.getChildren().setAll(editor.get().render());
-        } else {
-            editor = Optional.empty();
-            editorGroup.getChildren().clear();
         }
     }
 

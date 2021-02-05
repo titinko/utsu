@@ -172,16 +172,29 @@ public class BulkEditorController implements Localizable {
         // Initialize vibrato elements.
         vibratoCheckbox.selectedProperty().addListener(
                 obs -> view.toggleVibrato(vibratoCheckbox.isSelected()));
-        initializeVibratoField(vibratoLengthTF, 0, 100); // Vibrato length (% of note)
-        initializeVibratoField(vibratoAmplitudeTF, 5, 200); // Amplitude (cents)
-        initializeVibratoField(vibratoPhaseInTF, 0, 100); // Phase in (% of vibrato)
-        initializeVibratoField(vibratoPhaseOutTF, 0, 100); // Phase out (% of vibrato)
-        initializeVibratoField(vibratoFrequencyTF, 10, 512); // Cycle length (ms)
-        initializeVibratoField(vibratoFreqSlopeTF, -100, 100); // Frequency slope
-        initializeVibratoField(vibratoHeightTF, -100, 100); // Pitch shift (cents)
-        initializeVibratoField(vibratoPhaseTF, 0, 100); // Phase shift (% of cycle)
+        initializeVibratoField(vibratoLengthTF, 0, 1, 100); // Vibrato length (% of note)
+        initializeVibratoField(vibratoAmplitudeTF, 2, 5, 200); // Amplitude (cents)
+        initializeVibratoField(vibratoPhaseInTF, 3, 0, 100); // Phase in (% of vibrato)
+        initializeVibratoField(vibratoPhaseOutTF, 4, 0, 100); // Phase out (% of vibrato)
+        initializeVibratoField(vibratoFrequencyTF, 1, 10, 512); // Cycle length (ms)
+        initializeVibratoField(vibratoFreqSlopeTF, 8, -100, 100); // Frequency slope
+        initializeVibratoField(vibratoHeightTF, 6, -100, 100); // Pitch shift (cents)
+        initializeVibratoField(vibratoPhaseTF, 5, 0, 100); // Phase shift (% of cycle)
+        Runnable vibratoCallback = () -> {
+            int[] newVibrato = view.getVibratoData().getVibrato();
+            vibratoLengthTF.setText(Integer.toString(newVibrato[0]));
+            vibratoAmplitudeTF.setText(Integer.toString(newVibrato[2]));
+            vibratoPhaseInTF.setText(Integer.toString(newVibrato[3]));
+            vibratoPhaseOutTF.setText(Integer.toString(newVibrato[4]));
+            vibratoFrequencyTF.setText(Integer.toString(newVibrato[1]));
+            vibratoFreqSlopeTF.setText(Integer.toString(newVibrato[8]));
+            vibratoHeightTF.setText(Integer.toString(newVibrato[6]));
+            vibratoPhaseTF.setText(Integer.toString(newVibrato[5]));
+            vibratoCheckbox.setSelected(newVibrato[0] > 0);
+        };
         ObservableList<PitchbendData> vibratoConfig = configManager.getVibratoConfig();
-        vibratoVBox.getChildren().add(0, view.createVibratoEditor(vibratoConfig.get(0)));
+        vibratoVBox.getChildren().add(
+                0, view.createVibratoEditor(vibratoConfig.get(0), vibratoCallback));
         vibratoListAnchor.getChildren().add(view.createVibratoList(vibratoConfig, listHeight));
 
         // Initialize envelope elements.
@@ -223,20 +236,22 @@ public class BulkEditorController implements Localizable {
         });
     }
 
-    private void initializeVibratoField(TextField textField, int min, int max) {
+    private void initializeVibratoField(TextField textField, int index, int min, int max) {
         textField.focusedProperty().addListener(event -> {
-            if (!textField.isFocused()) {
+            if (!textField.isFocused() && textField.isEditable()) {
                 // Round data.
                 try {
                     double value = Double.parseDouble(textField.getText());
                     int adjusted = Math.max(min, Math.min(max, RoundUtils.round(value)));
                     textField.setText(Integer.toString(adjusted));
+                    view.setVibratoValue(index, adjusted);
                 } catch (NullPointerException | NumberFormatException e) {
-                    // TODO: Reset from visual editor.
-                    textField.setText("0");
+                    int vibratoValue = view.getVibratoData().getVibrato(index);
+                    textField.setText(Integer.toString(vibratoValue));
                 }
             }
         });
+        textField.disableProperty().bind(vibratoCheckbox.selectedProperty().not());
     }
 
     @Override

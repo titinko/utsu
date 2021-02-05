@@ -50,6 +50,7 @@ public class BulkEditor {
     private Group vibratoGroupUpper;
     private Group vibratoGroupLower;
     private Vibrato currentVibrato;
+    private Runnable vibratoCallback;
     private ListView<PitchbendData> vibratoList;
 
     private Group envelopeGroup;
@@ -234,7 +235,8 @@ public class BulkEditor {
         portamentoGroup.getChildren().set(1, createNotesAndPortamento(currentPortamento.getData()));
     }
 
-    public VBox createVibratoEditor(PitchbendData vibratoData) {
+    public VBox createVibratoEditor(PitchbendData vibratoData, Runnable vibratoCallback) {
+        this.vibratoCallback = vibratoCallback;
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
         ListView<String> backgroundUpper =
                 createPitchbendBackground(editorWidth, editorHeight.divide(2), rowHeight);
@@ -252,6 +254,7 @@ public class BulkEditor {
         editorWidth.addListener(updateSize);
         editorHeight.addListener(updateSize);
 
+        vibratoCallback.run(); // Initialize with starting values.
         return new VBox(vibratoGroupUpper, vibratoGroupLower);
     }
 
@@ -269,13 +272,16 @@ public class BulkEditor {
 
                     @Override
                     public void modifySongVibrato(int[] oldVibrato, int[] newVibrato) {
-                        // TODO: Pass values back to editor.
+                        if (vibratoCallback != null) {
+                            vibratoCallback.run();
+                        }
                     }
                 }, new SimpleBooleanProperty(true));
         return new Group(note.getElement(), currentVibrato.getVibratoElement());
     }
 
-    private Group createMiniNoteAndVibrato(PitchbendData vibratoData, double width, double height, double rowHeight) {
+    private Group createMiniNoteAndVibrato(
+            PitchbendData vibratoData, double width, double height, double rowHeight) {
         double yScale = rowHeight / scaler.scaleY(Quantizer.ROW_HEIGHT).get();
         double xScale = (yScale + 1) / 2.0;
         Scaler miniScaler = scaler.derive(xScale, yScale);
@@ -295,9 +301,19 @@ public class BulkEditor {
         }
         if (hasVibrato && currentVibrato.getVibrato().isEmpty()) {
             currentVibrato.addDefaultVibrato();
+            vibratoCallback.run();
         } else if (!hasVibrato && currentVibrato.getVibrato().isPresent()) {
             currentVibrato.clearVibrato();
+            vibratoCallback.run();
         }
+    }
+
+    public void setVibratoValue(int index, int newValue) {
+        if (currentVibrato == null) {
+            return;
+        }
+        currentVibrato.adjustVibrato(index, newValue);
+        currentVibrato.redrawEditor();
     }
 
     public PitchbendData getVibratoData() {
@@ -354,6 +370,7 @@ public class BulkEditor {
                 // Populate group with current data.
                 vibratoGroupUpper.getChildren().set(1, createNoteAndVibrato(curData));
                 vibratoGroupLower.getChildren().set(1, currentVibrato.getEditorElement());
+                vibratoCallback.run();
             });
             return listCell;
         });
