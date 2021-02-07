@@ -10,6 +10,9 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.files.BulkEditorConfigManager;
 import com.utsusynth.utsu.view.song.BulkEditor;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
@@ -33,6 +36,10 @@ public class BulkEditorController implements Localizable {
         VIBRATO,
         ENVELOPE,
     }
+
+    private static final double EDITOR_WIDTH = 320;
+    private static final double EDITOR_HEIGHT = 220;
+    private static final double LIST_HEIGHT = 260;
 
     private final BulkEditorConfigManager configManager;
     private final BulkEditor view;
@@ -145,9 +152,9 @@ public class BulkEditorController implements Localizable {
     }
 
     public void initialize() {
-        editorWidth = new SimpleDoubleProperty(300);
-        editorHeight = new SimpleDoubleProperty(200);
-        listHeight = new SimpleDoubleProperty(240);
+        editorWidth = new SimpleDoubleProperty(EDITOR_WIDTH);
+        editorHeight = new SimpleDoubleProperty(EDITOR_HEIGHT);
+        listHeight = new SimpleDoubleProperty(LIST_HEIGHT);
 
         // Initialize common elements.
         initializeNoteLengthChoiceBox();
@@ -273,16 +280,16 @@ public class BulkEditorController implements Localizable {
         envelopeApplyToLabel.setText(bundle.getString("bulkEditor.applyTo"));
     }
 
+    /** Secondary initialization. */
     void openEditor(
             BulkEditorType editorType,
             RegionBounds region,
             Stage window,
             BulkEditorCallback callback) {
-        editorWidth.bind(window.widthProperty().subtract(413));
-        editorHeight.bind(window.heightProperty().subtract(186));
-        listHeight.bind(window.heightProperty().subtract(146));
         this.callback = callback;
         highlightedRegion = region;
+
+        // Open the correct tab.
         if (editorType.equals(BulkEditorType.PORTAMENTO)) {
             tabPane.getSelectionModel().select(portamentoTab);
         } else if (editorType.equals(BulkEditorType.VIBRATO)) {
@@ -290,7 +297,42 @@ public class BulkEditorController implements Localizable {
         } else if (editorType.equals(BulkEditorType.ENVELOPE)) {
             tabPane.getSelectionModel().select(envelopeTab);
         }
-        view.getEnvelopeData();
+
+        // Bind editor width strictly to window size.
+        InvalidationListener widthUpdate = new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                if (window.getWidth() > 0) {
+                    double widthDifference = window.getWidth() - EDITOR_WIDTH;
+                    editorWidth.bind(Bindings.max(
+                            EDITOR_WIDTH, window.widthProperty().subtract(widthDifference)));
+                    window.widthProperty().removeListener(this);
+                }
+            }
+        };
+        window.widthProperty().addListener(widthUpdate);
+
+        // Bind editor/list heights strictly to window size.
+        InvalidationListener heightUpdate = new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                if (window.getHeight() > 0) {
+                    double heightDifference = window.getHeight() - EDITOR_HEIGHT;
+                    editorHeight.bind(Bindings.max(
+                            EDITOR_HEIGHT, window.heightProperty().subtract(heightDifference)));
+
+                    double listHeightDifference = window.getHeight() - LIST_HEIGHT;
+                    listHeight.bind(Bindings.max(
+                            LIST_HEIGHT, window.heightProperty().subtract(listHeightDifference)));
+
+                    window.heightProperty().removeListener(this);
+                }
+            }
+        };
+        window.heightProperty().addListener(heightUpdate);
+        //editorWidth.bind(window.widthProperty().subtract(413));
+        //editorHeight.bind(window.heightProperty().subtract(186));
+        //listHeight.bind(window.heightProperty().subtract(146));
     }
 
     @FXML

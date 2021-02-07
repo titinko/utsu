@@ -108,7 +108,7 @@
             <content>
               <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <left>
-                        <GridPane prefHeight="250.0" prefWidth="170.0" BorderPane.alignment="CENTER">
+                        <GridPane prefWidth="170.0" BorderPane.alignment="CENTER">
                           <columnConstraints>
                             <ColumnConstraints hgrow="SOMETIMES" minWidth="80.0" prefWidth="80.0" />
                             <ColumnConstraints hgrow="SOMETIMES" minWidth="80.0" />
@@ -183,7 +183,7 @@
               <content>
                 <BorderPane>
                      <left>
-                          <VBox prefHeight="250.0" prefWidth="170.0" spacing="5.0" BorderPane.alignment="CENTER">
+                          <VBox prefWidth="170.0" spacing="5.0" BorderPane.alignment="CENTER">
                               <children>
                                   <Label fx:id="envelopeApplyToLabel" text="Apply to:" />
                                   <RadioButton fx:id="envelopeAllNotes" mnemonicParsing="false" text="All notes" />
