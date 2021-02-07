@@ -56,7 +56,6 @@ public class EnvelopeFactory {
             EnvelopeData envelope,
             Scaler editorScaler,
             boolean scaleToFit) {
-
         double[] widths = envelope.getWidths();
         double p1 = widths[0];
         double p2 = widths[1];

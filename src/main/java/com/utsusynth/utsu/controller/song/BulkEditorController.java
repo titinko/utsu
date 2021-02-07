@@ -290,6 +290,7 @@ public class BulkEditorController implements Localizable {
         } else if (editorType.equals(BulkEditorType.ENVELOPE)) {
             tabPane.getSelectionModel().select(envelopeTab);
         }
+        view.getEnvelopeData();
     }
 
     @FXML

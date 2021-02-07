@@ -17,7 +17,6 @@ import com.utsusynth.utsu.view.song.note.pitch.Vibrato;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.DoubleExpression;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -88,6 +87,9 @@ public class BulkEditor {
         // Create notes and portamento curve.
         portamentoGroup.getChildren().add(createNotesAndPortamento(portamentoData));
         InvalidationListener updateSize = obs -> {
+            if (!(editorWidth.get() > 0) || !(editorHeight.get() > 0)) {
+                return;
+            }
             portamentoGroup.getChildren().set(1, createNotesAndPortamento(getPortamentoData()));
         };
         editorWidth.addListener(updateSize);
@@ -248,6 +250,9 @@ public class BulkEditor {
         vibratoGroupLower = new Group(backgroundLower, currentVibrato.getEditorElement());
 
         InvalidationListener updateSize = obs -> {
+            if (!(editorWidth.get() > 0) || !(editorHeight.get() > 0)) {
+                return;
+            }
             vibratoGroupUpper.getChildren().set(1, createNoteAndVibrato(getVibratoData()));
             vibratoGroupLower.getChildren().set(1, currentVibrato.getEditorElement());
         };
@@ -397,6 +402,7 @@ public class BulkEditor {
 
     public Group createEnvelopeEditor(EnvelopeData envelopeData) {
         VBox background = createEnvelopeBackground(editorWidth, editorHeight);
+        envelopeGroup = new Group(background);
 
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
                 editorWidth.get(), editorHeight.get(), envelopeData, scaler,false);
@@ -404,6 +410,9 @@ public class BulkEditor {
 
         InvalidationListener updateSize = obs -> {
             EnvelopeData curData = currentEnvelope.getData();
+            if (!(editorWidth.get() > 0) || !(editorHeight.get() > 0)) {
+                return;
+            }
             currentEnvelope = envelopeFactory.createEnvelopeEditor(
                     editorWidth.get(), editorHeight.get(), curData, scaler,false);
             envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
@@ -461,7 +470,7 @@ public class BulkEditor {
                     return;
                 }
                 currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                        editorWidth.get(), editorHeight.get(), curData, scaler,true);
+                        editorWidth.get(), editorHeight.get(), curData, scaler,false);
                 envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
             });
             return listCell;
