@@ -26,6 +26,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
@@ -227,13 +228,16 @@ public class BulkEditorController implements Localizable {
             @Override
             public String toString(FilterType filterType) {
                 if (filterType == FilterType.GREATER_THAN_2ND) {
-                    return "All notes greater than 1/2";
+                    return MessageFormat.format(
+                            localizer.getMessage("bulkEditor.allNotesGreaterThan"), "1/2");
                 } else if (filterType == FilterType.GREATER_THAN_4TH) {
-                    return "All notes greater than 1/4";
+                    return MessageFormat.format(
+                            localizer.getMessage("bulkEditor.allNotesGreaterThan"), "1/4");
                 } else if (filterType == FilterType.GREATER_THAN_8TH) {
-                    return "All notes greater than 1/8";
+                    return MessageFormat.format(
+                            localizer.getMessage("bulkEditor.allNotesGreaterThan"), "1/8");
                 }
-                return "All notes";
+                return localizer.getMessage("bulkEditor.allNotes");
             }
 
             @Override
@@ -263,21 +267,34 @@ public class BulkEditorController implements Localizable {
 
     @Override
     public void localize(ResourceBundle bundle) {
+        noteLengthFilterLabel.setText(bundle.getString("bulkEditor.filterTo"));
+        initializeNoteLengthChoiceBox(); // Re-translate note length options.
         applySelectionButton.setText(bundle.getString("bulkEditor.applySelection"));
         applyAllButton.setText(bundle.getString("bulkEditor.applyAll"));
         cancelButton.setText(bundle.getString("general.cancel"));
 
         portamentoTab.setText(bundle.getString("menu.tools.bulkEditor.portamento"));
         portamentoApplyToLabel.setText(bundle.getString("bulkEditor.applyTo"));
-        portamentoAllNotes.setText(bundle.getString("bulkEditor.portamento.allNotes"));
+        portamentoAllNotes.setText(bundle.getString("bulkEditor.allNotes"));
         portamentoRisingNotes.setText(bundle.getString("bulkEditor.portamento.risingNotes"));
         portamentoFallingNotes.setText(bundle.getString("bulkEditor.portamento.fallingNotes"));
 
         vibratoTab.setText(bundle.getString("song.note.vibrato"));
         vibratoCheckboxLabel.setText(bundle.getString("song.note.vibrato"));
+        vibratoLengthLabel.setText(bundle.getString("bulkEditor.vibrato.length"));
+        vibratoAmplitudeLabel.setText(bundle.getString("bulkEditor.vibrato.amplitude"));
+        vibratoPhaseInLabel.setText(bundle.getString("bulkEditor.vibrato.phaseIn"));
+        vibratoPhaseOutLabel.setText(bundle.getString("bulkEditor.vibrato.phaseOut"));
+        vibratoFrequencyLabel.setText(bundle.getString("bulkEditor.vibrato.frequency"));
+        vibratoFreqSlopeLabel.setText(bundle.getString("bulkEditor.vibrato.freqSlope"));
+        vibratoHeightLabel.setText(bundle.getString("bulkEditor.vibrato.height"));
+        vibratoPhaseLabel.setText(bundle.getString("bulkEditor.vibrato.phase"));
 
         envelopeTab.setText(bundle.getString("menu.tools.bulkEditor.envelope"));
         envelopeApplyToLabel.setText(bundle.getString("bulkEditor.applyTo"));
+        envelopeAllNotes.setText(bundle.getString("bulkEditor.allNotes"));
+        envelopeSilenceBefore.setText(bundle.getString("bulkEditor.envelope.silenceBefore"));
+        envelopeSilenceAfter.setText(bundle.getString("bulkEditor.envelope.silenceAfter"));
     }
 
     /** Secondary initialization. */
@@ -330,9 +347,6 @@ public class BulkEditorController implements Localizable {
             }
         };
         window.heightProperty().addListener(heightUpdate);
-        //editorWidth.bind(window.widthProperty().subtract(413));
-        //editorHeight.bind(window.heightProperty().subtract(186));
-        //listHeight.bind(window.heightProperty().subtract(146));
     }
 
     @FXML
