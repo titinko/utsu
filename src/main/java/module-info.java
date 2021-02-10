@@ -7,6 +7,7 @@ open module com.utsusynth.utsu {
     requires jdk.charsets;
     requires jdk.localedata;
     requires com.google.guice;
+    requires java.prefs;
 
     exports com.utsusynth.utsu;
 }

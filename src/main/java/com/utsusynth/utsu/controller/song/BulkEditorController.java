@@ -28,6 +28,7 @@ import javafx.util.StringConverter;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.prefs.Preferences;
 import java.util.ResourceBundle;
 
 public class BulkEditorController implements Localizable {
@@ -168,9 +169,26 @@ public class BulkEditorController implements Localizable {
         portamentoAllNotes.setToggleGroup(risingOrFallingToggle);
         portamentoRisingNotes.setToggleGroup(risingOrFallingToggle);
         portamentoFallingNotes.setToggleGroup(risingOrFallingToggle);
-        portamentoAllNotes.setSelected(true); // Consider saving user's setting.
+        Preferences portamentoPrefs = Preferences.userRoot().node("utsu/bulkEditor/portamento");
+        String portamentoChoice = portamentoPrefs.get("applyTo", "allNotes");
+        if (portamentoChoice.equals("risingNotes")) {
+            portamentoRisingNotes.setSelected(true);
+        } else if (portamentoChoice.equals("fallingNotes")) {
+            portamentoFallingNotes.setSelected(true);
+        } else {
+            portamentoAllNotes.setSelected(true);
+        }
         risingOrFallingToggle.selectedToggleProperty().addListener(
-                obs -> view.setCurrentFilters(getFilters()));
+                obs -> {
+                    if (portamentoRisingNotes.isSelected()) {
+                        portamentoPrefs.put("applyTo", "risingNotes");
+                    } else if (portamentoFallingNotes.isSelected()) {
+                        portamentoPrefs.put("applyTo", "fallingNotes");
+                    } else {
+                        portamentoPrefs.put("applyTo", "allNotes");
+                    }
+                    view.setCurrentFilters(getFilters());
+                });
         ObservableList<PitchbendData> portamentoConfig = configManager.getPortamentoConfig();
         portamentoVBox.getChildren().add(
                 0, view.createPortamentoEditor(portamentoConfig.get(0), getFilters()));
@@ -210,7 +228,25 @@ public class BulkEditorController implements Localizable {
         envelopeAllNotes.setToggleGroup(silenceToggle);
         envelopeSilenceBefore.setToggleGroup(silenceToggle);
         envelopeSilenceAfter.setToggleGroup(silenceToggle);
-        envelopeAllNotes.setSelected(true); // Consider saving user's setting.
+        Preferences envelopePrefs = Preferences.userRoot().node("utsu/bulkEditor/envelope");
+        String envelopeChoice = envelopePrefs.get("applyTo", "allNotes");
+        if (envelopeChoice.equals("silenceBefore")) {
+            envelopeSilenceBefore.setSelected(true);
+        } else if (envelopeChoice.equals("silenceAfter")) {
+            envelopeSilenceAfter.setSelected(true);
+        } else {
+            envelopeAllNotes.setSelected(true);
+        }
+        silenceToggle.selectedToggleProperty().addListener(
+                obs -> {
+                    if (envelopeSilenceBefore.isSelected()) {
+                        envelopePrefs.put("applyTo", "silenceBefore");
+                    } else if (envelopeSilenceAfter.isSelected()) {
+                        envelopePrefs.put("applyTo", "silenceAfter");
+                    } else {
+                        envelopePrefs.put("applyTo", "allNotes");
+                    }
+                });
         ObservableList<EnvelopeData> envelopeConfig = configManager.getEnvelopeConfig();
         envelopeVBox.getChildren().add(0, view.createEnvelopeEditor(envelopeConfig.get(0)));
         envelopeListAnchor.getChildren().add(view.createEnvelopeList(envelopeConfig, listHeight));
