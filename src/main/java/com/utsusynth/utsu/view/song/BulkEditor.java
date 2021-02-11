@@ -32,6 +32,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
+import java.util.prefs.Preferences;
 
 public class BulkEditor {
     private final NoteFactory noteFactory;
@@ -177,6 +178,8 @@ public class BulkEditor {
 
     public ListView<PitchbendData> createPortamentoList(
             ObservableList<PitchbendData> portamentoData, DoubleExpression height) {
+        Preferences portamentoPreferences =
+                Preferences.userRoot().node("utsu/bulkEditor/portamento");
         portamentoList = new ListView<>();
         portamentoList.prefHeightProperty().bind(height);
         portamentoList.setPrefWidth(220);
@@ -205,6 +208,7 @@ public class BulkEditor {
                         closeButton.setOnAction(event -> {
                             if (getIndex() != 0) {
                                 getListView().getItems().remove(getIndex());
+                                portamentoPreferences.putInt("listIndex", 0); // Reset cache.
                             }
                         });
                         if (getIndex() == 0) {
@@ -216,20 +220,38 @@ public class BulkEditor {
                 }
             };
             listCell.setOnMouseClicked(event -> {
-                PitchbendData curData = listCell.getItem();
-                if (curData == null) {
-                    return;
+                int index = listCell.getIndex();
+                if (selectFromPortamentoList(index)) {
+                    // Cache selected index.
+                    portamentoPreferences.putInt("listIndex", listCell.getIndex());
                 }
-                portamentoGroup.getChildren().set(1, createNotesAndPortamento(curData));
             });
             return listCell;
         });
         portamentoList.setItems(portamentoData);
+        // Select cached index if possible.
+        int cachedIndex = portamentoPreferences.getInt("listIndex", 0);
+        if (selectFromPortamentoList(cachedIndex)) {
+            portamentoList.getSelectionModel().select(cachedIndex);
+        }
         return portamentoList;
     }
 
     public void saveToPortamentoList() {
         portamentoList.getItems().add(getPortamentoData());
+    }
+
+    // Returns whether the selection succeeded.
+    private boolean selectFromPortamentoList(int index) {
+        if (portamentoList == null || portamentoList.getItems().size() <= index) {
+            return false;
+        }
+        PitchbendData newData = portamentoList.getItems().get(index);
+        if (newData == null) {
+            return false;
+        }
+        portamentoGroup.getChildren().set(1, createNotesAndPortamento(newData));
+        return true;
     }
 
     public void setCurrentFilters(List<FilterType> filters) {
@@ -329,6 +351,7 @@ public class BulkEditor {
 
     public ListView<PitchbendData> createVibratoList(
             ObservableList<PitchbendData> vibratoData, DoubleExpression height) {
+        Preferences vibratoPreferences = Preferences.userRoot().node("/utsu/bulkEditor/vibrato");
         vibratoList = new ListView<>();
         vibratoList.prefHeightProperty().bind(height);
         vibratoList.setPrefWidth(220);
@@ -357,6 +380,7 @@ public class BulkEditor {
                         closeButton.setOnAction(event -> {
                             if (getIndex() != 0) {
                                 getListView().getItems().remove(getIndex());
+                                vibratoPreferences.putInt("listIndex", 0); // Reset cache.
                             }
                         });
                         if (getIndex() == 0) {
@@ -368,23 +392,40 @@ public class BulkEditor {
                 }
             };
             listCell.setOnMouseClicked(event -> {
-                PitchbendData curData = listCell.getItem();
-                if (curData == null) {
-                    return;
+                // Cache selected index.
+                int index = listCell.getIndex();
+                if (selectFromVibratoList(index)) {
+                    vibratoPreferences.putInt("listIndex", listCell.getIndex());
                 }
-                // Populate group with current data.
-                vibratoGroupUpper.getChildren().set(1, createNoteAndVibrato(curData));
-                vibratoGroupLower.getChildren().set(1, currentVibrato.getEditorElement());
-                vibratoCallback.run();
             });
             return listCell;
         });
         vibratoList.setItems(vibratoData);
+        // Select cached index if possible.
+        int cachedIndex = vibratoPreferences.getInt("listIndex", 0);
+        if (selectFromVibratoList(cachedIndex)) {
+            vibratoList.getSelectionModel().select(cachedIndex);
+        }
         return vibratoList;
     }
 
     public void saveToVibratoList() {
         vibratoList.getItems().add(getVibratoData());
+    }
+
+    // Returns whether the selection succeeded.
+    private boolean selectFromVibratoList(int index) {
+        if (vibratoList == null || vibratoList.getItems().size() <= index) {
+            return false;
+        }
+        PitchbendData newData = vibratoList.getItems().get(index);
+        if (newData == null) {
+            return false;
+        }
+        vibratoGroupUpper.getChildren().set(1, createNoteAndVibrato(newData));
+        vibratoGroupLower.getChildren().set(1, currentVibrato.getEditorElement());
+        vibratoCallback.run();
+        return true;
     }
 
     private ListView<String> createPitchbendBackground(
@@ -428,6 +469,7 @@ public class BulkEditor {
 
     public ListView<EnvelopeData> createEnvelopeList(
             ObservableList<EnvelopeData> envelopeData, DoubleExpression height) {
+        Preferences envelopePreferences = Preferences.userRoot().node("/utsu/bulkEditor/envelope");
         envelopeList = new ListView<>();
         envelopeList.prefHeightProperty().bind(height);
         envelopeList.setPrefWidth(220);
@@ -454,6 +496,7 @@ public class BulkEditor {
                         closeButton.setOnAction(event -> {
                             if (getIndex() != 0) {
                                 getListView().getItems().remove(getIndex());
+                                envelopePreferences.putInt("listIndex", 0); // Reset cache.
                             }
                         });
                         if (getIndex() == 0) {
@@ -465,22 +508,40 @@ public class BulkEditor {
                 }
             };
             listCell.setOnMouseClicked(event -> {
-                EnvelopeData curData = listCell.getItem();
-                if (curData == null) {
-                    return;
+                // Cache selected index.
+                int index = listCell.getIndex();
+                if (selectFromEnvelopeList(index)) {
+                    envelopePreferences.putInt("listIndex", listCell.getIndex());
                 }
-                currentEnvelope = envelopeFactory.createEnvelopeEditor(
-                        editorWidth.get(), editorHeight.get(), curData, scaler,false);
-                envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
             });
             return listCell;
         });
         envelopeList.setItems(envelopeData);
+        // Select cached index if possible.
+        int cachedIndex = envelopePreferences.getInt("listIndex", 0);
+        if (selectFromEnvelopeList(cachedIndex)) {
+            envelopeList.getSelectionModel().select(cachedIndex);
+        }
         return envelopeList;
     }
 
     public void saveToEnvelopeList() {
         envelopeList.getItems().add(getEnvelopeData());
+    }
+
+    // Returns whether the selection succeeded.
+    private boolean selectFromEnvelopeList(int index) {
+        if (envelopeList == null || envelopeList.getItems().size() <= index) {
+            return false;
+        }
+        EnvelopeData newData = envelopeList.getItems().get(index);
+        if (newData == null) {
+            return false;
+        }
+        currentEnvelope = envelopeFactory.createEnvelopeEditor(
+                editorWidth.get(), editorHeight.get(), newData, scaler,false);
+        envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
+        return true;
     }
 
     private VBox createEnvelopeBackground(DoubleExpression width, DoubleExpression height) {
