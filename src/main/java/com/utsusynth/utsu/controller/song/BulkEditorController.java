@@ -159,7 +159,37 @@ public class BulkEditorController implements Localizable {
         listHeight = new SimpleDoubleProperty(LIST_HEIGHT);
 
         // Initialize common elements.
-        initializeNoteLengthChoiceBox();
+        Preferences bulkEditorPreferences = Preferences.userRoot().node("utsu/bulkEditor");
+        FilterType noteLengthChoice = null;
+        switch (bulkEditorPreferences.get("filterTo", "allNotes")) {
+            case "1/2":
+                noteLengthChoice = FilterType.GREATER_THAN_2ND;
+                break;
+            case "1/4":
+                noteLengthChoice = FilterType.GREATER_THAN_4TH;
+                break;
+            case "1/8":
+                noteLengthChoice = FilterType.GREATER_THAN_8TH;
+                break;
+        }
+        initializeNoteLengthChoiceBox(noteLengthChoice);
+        noteLengthChoiceBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null) {
+                bulkEditorPreferences.put("filterTo", "allNotes");
+            } else {
+                switch (newVal) {
+                    case GREATER_THAN_2ND:
+                        bulkEditorPreferences.put("filterTo", "1/2");
+                        break;
+                    case GREATER_THAN_4TH:
+                        bulkEditorPreferences.put("filterTo", "1/4");
+                        break;
+                    case GREATER_THAN_8TH:
+                        bulkEditorPreferences.put("filterTo", "1/8");
+                        break;
+                }
+            }
+        });
 
         // Common setup for all bulk editors.
         view.initialize(editorWidth, editorHeight);
@@ -254,7 +284,7 @@ public class BulkEditorController implements Localizable {
         localizer.localize(this);
     }
 
-    private void initializeNoteLengthChoiceBox() {
+    private void initializeNoteLengthChoiceBox(FilterType initialValue) {
         noteLengthChoiceBox.setItems(FXCollections.observableArrayList(
                 null,
                 FilterType.GREATER_THAN_2ND,
@@ -281,6 +311,7 @@ public class BulkEditorController implements Localizable {
                 return null; // Never used.
             }
         });
+        noteLengthChoiceBox.setValue(initialValue);
     }
 
     private void initializeVibratoField(TextField textField, int index, int min, int max) {
@@ -304,7 +335,7 @@ public class BulkEditorController implements Localizable {
     @Override
     public void localize(ResourceBundle bundle) {
         noteLengthFilterLabel.setText(bundle.getString("bulkEditor.filterTo"));
-        initializeNoteLengthChoiceBox(); // Re-translate note length options.
+        initializeNoteLengthChoiceBox(noteLengthChoiceBox.getValue()); // Re-translate options.
         applySelectionButton.setText(bundle.getString("bulkEditor.applySelection"));
         applyAllButton.setText(bundle.getString("bulkEditor.applyAll"));
         cancelButton.setText(bundle.getString("general.cancel"));
