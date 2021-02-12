@@ -72,6 +72,8 @@ public class EnginePreferencesEditor extends PreferencesEditor implements Locali
     @Override
     protected Node initializeInternal() {
         cacheLabel = new Label("Cache render output");
+        cacheLabel.setWrapText(true);
+        cacheLabel.setMaxWidth(170);
         GridPane.setValignment(cacheLabel, VPos.TOP);
         ToggleGroup cacheGroup = new ToggleGroup();
         VBox cacheVBox = new VBox(5);
@@ -89,6 +91,8 @@ public class EnginePreferencesEditor extends PreferencesEditor implements Locali
         }
 
         defaultResamplerLabel = new Label("Default resampler");
+        defaultResamplerLabel.setWrapText(true);
+        defaultResamplerLabel.setMaxWidth(170);
         GridPane.setValignment(defaultResamplerLabel, VPos.TOP);
         VBox resamplerVBox = new VBox(5);
         TextField resamplerName = new TextField();
@@ -113,6 +117,8 @@ public class EnginePreferencesEditor extends PreferencesEditor implements Locali
         resamplerVBox.getChildren().addAll(resamplerName, resamplerHBox);
 
         defaultWavtoolLabel = new Label("Default wavtool");
+        defaultWavtoolLabel.setWrapText(true);
+        defaultWavtoolLabel.setMaxWidth(170);
         GridPane.setValignment(defaultWavtoolLabel, VPos.TOP);
         VBox wavtoolVBox = new VBox(5);
         TextField wavtoolName = new TextField();
@@ -137,6 +143,8 @@ public class EnginePreferencesEditor extends PreferencesEditor implements Locali
         wavtoolVBox.getChildren().addAll(wavtoolName, wavtoolHBox);
 
         defaultVoicebankLabel = new Label("Default voicebank");
+        defaultVoicebankLabel.setWrapText(true);
+        defaultVoicebankLabel.setMaxWidth(170);
         GridPane.setValignment(defaultVoicebankLabel, VPos.TOP);
         VBox voicebankVBox = new VBox(5);
         TextField voicebankName = new TextField();

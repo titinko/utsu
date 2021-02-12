@@ -66,6 +66,8 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
     @Override
     protected Node initializeInternal() {
         autoscrollLabel = new Label("Autoscroll during playback");
+        autoscrollLabel.setWrapText(true);
+        autoscrollLabel.setMaxWidth(170);
         GridPane.setValignment(autoscrollLabel, VPos.TOP);
         ToggleGroup autoscrollGroup = new ToggleGroup();
         VBox autoscrollVBox = new VBox(5);
@@ -89,6 +91,8 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         }
 
         autoscrollCancelLabel = new Label("Cancel playback autoscroll");
+        autoscrollCancelLabel.setWrapText(true);
+        autoscrollCancelLabel.setMaxWidth(170);
         GridPane.setValignment(autoscrollCancelLabel, VPos.TOP);
         ToggleGroup autoscrollCancelGroup = new ToggleGroup();
         VBox autoscrollCancelVBox = new VBox(5);
@@ -107,6 +111,8 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         }
 
         languageLabel = new Label("Language");
+        languageLabel.setWrapText(true);
+        languageLabel.setMaxWidth(170);
         languageChoiceBox = new ChoiceBox<>();
         languageChoiceBox.setItems(FXCollections.observableArrayList(localizer.getAllLocales()));
         languageChoiceBox

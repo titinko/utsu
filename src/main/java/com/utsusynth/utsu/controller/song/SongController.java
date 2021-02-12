@@ -1106,7 +1106,7 @@ public class SongController implements EditorController, Localizable {
                     minMs = noteData.getPosition();
                 }
                 if (maxMs < noteData.getPosition()) {
-                    maxMs = noteData.getPosition();
+                    maxMs = noteData.getPosition() + noteData.getDuration();
                 }
             }
             onSongChange();

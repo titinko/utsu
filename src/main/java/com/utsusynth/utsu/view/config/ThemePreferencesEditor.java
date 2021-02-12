@@ -207,7 +207,7 @@ public class ThemePreferencesEditor extends PreferencesEditor implements Localiz
     private void initializeThemeChoiceBox() {
         themeChoiceBox = new ChoiceBox<>();
         themeManager.populateChoiceBox(themeChoiceBox);
-        themeChoiceBox.setPrefWidth(150);
+        themeChoiceBox.setMinWidth(150);
         themeChoiceBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Theme theme) {
