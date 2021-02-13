@@ -577,10 +577,13 @@ public class UtsuController implements Localizable {
     @FXML
     void openPreferences(ActionEvent event) {
         // Open preferences modal.
+        Stage currentStage = (Stage) tabs.getScene().getWindow();
+        if (!currentStage.isFocused()) {
+            return; // Only one modal at a time!
+        }
         InputStream fxml = getClass().getResourceAsStream("/fxml/PreferencesScene.fxml");
         FXMLLoader loader = fxmlLoaderProvider.get();
         try {
-            Stage currentStage = (Stage) tabs.getScene().getWindow();
             Stage preferencesWindow = new Stage();
             preferencesWindow.setTitle(localizer.getMessage("preferences.title"));
             preferencesWindow.initModality(Modality.APPLICATION_MODAL);

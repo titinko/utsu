@@ -713,10 +713,13 @@ public class SongController implements EditorController, Localizable {
      */
     private void openNotePropertiesEditor(RegionBounds regionBounds) {
         // Open note properties modal.
+        Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
+        if (!currentStage.isFocused()) {
+            return; // Only one modal at a time!
+        }
         InputStream fxml = getClass().getResourceAsStream("/fxml/NotePropertiesScene.fxml");
         FXMLLoader loader = fxmlLoaderProvider.get();
         try {
-            Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
             Stage propertiesWindow = new Stage();
             propertiesWindow.setTitle(localizer.getMessage("menu.edit.noteProperties"));
             propertiesWindow.initModality(Modality.APPLICATION_MODAL);
@@ -917,10 +920,13 @@ public class SongController implements EditorController, Localizable {
     @Override
     public void openProperties() {
         // Open song properties modal.
+        Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
+        if (!currentStage.isFocused()) {
+            return; // Only one modal at a time!
+        }
         InputStream fxml = getClass().getResourceAsStream("/fxml/SongPropertiesScene.fxml");
         FXMLLoader loader = fxmlLoaderProvider.get();
         try {
-            Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
             Stage propertiesWindow = new Stage();
             propertiesWindow.setTitle(localizer.getMessage("menu.project.properties"));
             propertiesWindow.initModality(Modality.APPLICATION_MODAL);
@@ -1000,10 +1006,13 @@ public class SongController implements EditorController, Localizable {
     @Override
     public void openBulkEditor(BulkEditorType editorType) {
         // Open bulk editor modal.
+        Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
+        if (!currentStage.isFocused()) {
+            return; // Only one modal at a time!
+        }
         InputStream fxml = getClass().getResourceAsStream("/fxml/BulkEditorScene.fxml");
         FXMLLoader loader = fxmlLoaderProvider.get();
         try {
-            Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
             Stage editorWindow = new Stage();
             editorWindow.setTitle(localizer.getMessage("menu.tools.bulkEditor"));
             editorWindow.initModality(Modality.APPLICATION_MODAL);
