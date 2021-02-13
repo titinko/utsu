@@ -44,6 +44,9 @@ public class Localizer {
      * This method should be used to translate ephemeral UI elements like context menus.
      */
     public String getMessage(String key) {
+        if (!bundle.containsKey(key)) {
+            return key;
+        }
         return bundle.getString(key);
     }
 

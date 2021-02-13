@@ -503,7 +503,7 @@ public class UtsuController implements Localizable {
                 closeTab(newTab);
             }
         } catch (FileAlreadyOpenException e) {
-            statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
+            statusBar.setText("Error: Cannot have the same file open in two tabs.");
             switchToExistingFile(e.getAlreadyOpenFile());
             closeTab(newTab);
         }
@@ -520,7 +520,7 @@ public class UtsuController implements Localizable {
                 closeTab(newTab);
             }
         } catch (FileAlreadyOpenException e) {
-            statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
+            statusBar.setText("Error: Cannot have the same file open in two tabs.");
             switchToExistingFile(e.getAlreadyOpenFile());
             closeTab(newTab);
         }
@@ -597,7 +597,7 @@ public class UtsuController implements Localizable {
             });
             preferencesWindow.showAndWait();
         } catch (IOException e) {
-            statusBar.setStatus("Error: Unable to open preferences.");
+            statusBar.setText("Error: Unable to open preferences.");
             errorLogger.logError(e);
         }
     }

@@ -220,7 +220,7 @@ public class SongController implements EditorController, Localizable {
                 Optional<String> trueLyric = noteData.getTrueLyric();
                 if (trueLyric.isEmpty() || trueLyric.get().isEmpty()) {
                     String displayLyric = noteData.getLyric();
-                    statusBar.setStatus("Error: no lyric config for \"" + displayLyric + "\"");
+                    statusBar.setText("Error: no lyric config for \"" + displayLyric + "\"");
                     return;
                 }
                 callback.openVoicebank(song.get().getVoiceDir(), trueLyric.get());
@@ -555,7 +555,7 @@ public class SongController implements EditorController, Localizable {
     @Override
     public void open(File file) throws FileAlreadyOpenException {
         song.setLocation(file);
-        statusBar.setStatus("Opening " + file.getName() + "...");
+        statusBar.setText("Opening " + file.getName() + "...");
         new Thread(() -> {
             try {
                 String saveFormat; // Format to save this song in the future.
@@ -587,7 +587,7 @@ public class SongController implements EditorController, Localizable {
                     refreshView();
                     callback.markChanged(false);
                     menuItemManager.disableSave();
-                    statusBar.setStatus("Opened " + file.getName());
+                    statusBar.setText("Opened " + file.getName());
                     // Do scrolling after a short pause for viewport to establish itself.
                     PauseTransition briefPause = new PauseTransition(Duration.millis(10));
                     briefPause.setOnFinished(event -> scrollToPosition(0));
@@ -595,7 +595,7 @@ public class SongController implements EditorController, Localizable {
                 });
             } catch (Exception e) {
                 Platform.runLater(
-                        () -> statusBar.setStatus("Error: Unable to open " + file.getName()));
+                        () -> statusBar.setText("Error: Unable to open " + file.getName()));
                 errorLogger.logError(e);
             }
         }).start();
@@ -607,7 +607,7 @@ public class SongController implements EditorController, Localizable {
             String saveFormat = song.getSaveFormat();
             String charset = saveFormat.contains("Shift JIS") ? "SJIS" : "UTF-8";
             File saveLocation = song.getLocation();
-            statusBar.setStatus("Saving...");
+            statusBar.setText("Saving...");
             new Thread(() -> {
                 try (PrintStream ps = new PrintStream(saveLocation, charset)) {
                     if (saveFormat.contains("UST 1.2")) {
@@ -621,12 +621,12 @@ public class SongController implements EditorController, Localizable {
                     Platform.runLater(() -> {
                         callback.markChanged(false);
                         menuItemManager.disableSave();
-                        statusBar.setStatus("Saved changes to " + saveLocation.getName());
+                        statusBar.setText("Saved changes to " + saveLocation.getName());
                     });
                 } catch (Exception e) {
                     Platform.runLater(
                             () -> statusBar
-                                    .setStatus("Error: Unable to save " + saveLocation.getName()));
+                                    .setText("Error: Unable to save " + saveLocation.getName()));
                     errorLogger.logError(e);
                 }
             }).start();
@@ -655,11 +655,11 @@ public class SongController implements EditorController, Localizable {
         }
         File file = fc.showSaveDialog(null);
         if (file != null) {
-            statusBar.setStatus("Saving...");
+            statusBar.setText("Saving...");
             try {
                 song.setLocation(file);
             } catch (FileAlreadyOpenException e) {
-                statusBar.setStatus("Error: Cannot have the same file open in two tabs.");
+                statusBar.setText("Error: Cannot have the same file open in two tabs.");
                 return Optional.empty();
             }
             ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
@@ -678,12 +678,12 @@ public class SongController implements EditorController, Localizable {
                     Platform.runLater(() -> {
                         callback.markChanged(false);
                         menuItemManager.disableSave();
-                        statusBar.setStatus("Saved as " + file.getName());
+                        statusBar.setText("Saved as " + file.getName());
                     });
                 } catch (Exception e) {
                     Platform.runLater(
                             () -> statusBar
-                                    .setStatus("Error: Unable to save as " + file.getName()));
+                                    .setText("Error: Unable to save as " + file.getName()));
                     errorLogger.logError(e);
                 }
             }).start();
@@ -753,7 +753,7 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.setScene(scene);
             propertiesWindow.showAndWait();
         } catch (IOException e) {
-            statusBar.setStatus("Error: Unable to open note properties editor.");
+            statusBar.setText("Error: Unable to open note properties editor.");
             errorLogger.logError(e);
         }
     }
@@ -859,16 +859,16 @@ public class SongController implements EditorController, Localizable {
         // Disable the play button while rendering.
         playPauseIcon.setDisable(true);
 
-        statusBar.setStatus("Rendering...");
+        statusBar.setText("Rendering...");
         new Thread(() ->
         {
             if (engine.startPlayback(song.get(), regionToPlay, startPlaybackFn, endPlaybackFn)) {
                 Platform.runLater(() -> {
                     iconManager.setPauseIcon(playPauseIcon);
-                    statusBar.setStatus("Render complete.");
+                    statusBar.setText("Render complete.");
                 });
             } else {
-                Platform.runLater(() -> statusBar.setStatus("Render produced no output."));
+                Platform.runLater(() -> statusBar.setText("Render produced no output."));
             }
             playPauseIcon.setDisable(false);
         }).
@@ -902,13 +902,13 @@ public class SongController implements EditorController, Localizable {
         fc.getExtensionFilters().addAll(new ExtensionFilter(".wav files", "*.wav"));
         File file = fc.showSaveDialog(null);
         if (file != null) {
-            statusBar.setStatus("Exporting...");
+            statusBar.setText("Exporting...");
             new Thread(() -> {
                 if (engine.renderWav(song.get(), file)) {
                     Platform.runLater(
-                            () -> statusBar.setStatus("Exported to file: " + file.getName()));
+                            () -> statusBar.setText("Exported to file: " + file.getName()));
                 } else {
-                    Platform.runLater(() -> statusBar.setStatus("Export produced no output."));
+                    Platform.runLater(() -> statusBar.setText("Export produced no output."));
                 }
             }).start();
         }
@@ -935,7 +935,7 @@ public class SongController implements EditorController, Localizable {
                 Platform.runLater(() -> {
                     onSongChange();
                     refreshView();
-                    statusBar.setStatus("Property changes applied.");
+                    statusBar.setText("Property changes applied.");
                 });
                 return null;
             });
@@ -944,7 +944,7 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.setScene(scene);
             propertiesWindow.showAndWait();
         } catch (IOException e) {
-            statusBar.setStatus("Error: Unable to open note properties editor.");
+            statusBar.setText("Error: Unable to open note properties editor.");
             errorLogger.logError(e);
         }
     }
@@ -1074,7 +1074,7 @@ public class SongController implements EditorController, Localizable {
             editorWindow.setScene(scene);
             editorWindow.showAndWait();
         } catch (IOException e) {
-            statusBar.setStatus("Error: Unable to open bulk editor.");
+            statusBar.setText("Error: Unable to open bulk editor.");
             errorLogger.logError(e);
         }
     }

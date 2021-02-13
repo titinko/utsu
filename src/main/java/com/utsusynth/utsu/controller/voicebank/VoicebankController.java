@@ -173,10 +173,10 @@ public class VoicebankController implements EditorController, Localizable {
 
             @Override
             public void generateFrqFiles(Iterator<LyricConfigData> lyricIterator) {
-                statusBar.setStatus("Generating .frq files...");
+                statusBar.setText("Generating .frq files...");
                 new Thread(() -> {
                     voicebank.get().generateFrqs(lyricIterator);
-                    Platform.runLater(() -> statusBar.setStatus("Finished generating .frq files."));
+                    Platform.runLater(() -> statusBar.setText("Finished generating .frq files."));
                     // Change cannot be saved or undone, so don't call onVoicebankChange.
                 }).start();
             }
@@ -354,7 +354,7 @@ public class VoicebankController implements EditorController, Localizable {
     public void open(File file) throws FileAlreadyOpenException {
         voicebank.setVoicebankForEdit(file);
         openForEdit = true;
-        statusBar.setStatus("Loading " + file.getName() + "...");
+        statusBar.setText("Loading " + file.getName() + "...");
         new Thread(() -> {
             try {
                 undoService.clearActions();
@@ -365,33 +365,30 @@ public class VoicebankController implements EditorController, Localizable {
                     callback.markChanged(false);
                     menuItemManager.disableSave();
 
-                    statusBar.setStatus(MessageFormat.format(
-                            localizer.getMessage("status.loadedVoicebank"), file.getName()));
+                    statusBar.setStatus("status.loadedVoicebank", file.getName());
                 });
             } catch (Exception e) {
                 Platform.runLater(() ->
-                        statusBar.setStatus(MessageFormat.format(
-                                localizer.getMessage("status.unableToLoadVoicebank"),
-                                file.getName())));
+                        statusBar.setStatus("status.unableToLoadVoicebank", file.getName()));
             }
         }).start();
     }
 
     @Override
     public Optional<String> save() {
-        statusBar.setStatus("Saving...");
+        statusBar.setText("Saving...");
         new Thread(() -> {
             try {
                 voicebankWriter.writeVoicebankToDirectory(voicebank.get(), voicebank.getLocation());
                 Platform.runLater(() -> {
-                    statusBar.setStatus(
+                    statusBar.setText(
                             "Saved changes to voicebank: " + voicebank.getLocation().getName());
                     callback.markChanged(false);
                     menuItemManager.disableSave();
                 });
             } catch (Exception e) {
                 Platform.runLater(
-                        () -> statusBar.setStatus("Error: Unable to save changes to voicebank."));
+                        () -> statusBar.setText("Error: Unable to save changes to voicebank."));
             }
         }).start();
         return Optional.empty();
