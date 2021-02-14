@@ -31,7 +31,9 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.prefs.Preferences;
 
 public class BulkEditor {
@@ -422,7 +424,9 @@ public class BulkEditor {
         if (newData == null) {
             return false;
         }
-        vibratoGroupUpper.getChildren().set(1, createNoteAndVibrato(newData));
+        PitchbendData clonedData = newData.withVibrato(
+                Optional.of(Arrays.copyOf(newData.getVibrato(), newData.getVibrato().length)));
+        vibratoGroupUpper.getChildren().set(1, createNoteAndVibrato(clonedData));
         vibratoGroupLower.getChildren().set(1, currentVibrato.getEditorElement());
         vibratoCallback.run();
         return true;

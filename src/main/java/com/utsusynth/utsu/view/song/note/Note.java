@@ -119,9 +119,6 @@ public class Note implements Comparable<Note> {
         MenuItem deleteMenuItem = new MenuItem("Delete");
         deleteMenuItem.setOnAction(action -> deleteNote());
         CheckMenuItem vibratoMenuItem = new CheckMenuItem("Vibrato");
-        if (track != null) {
-            vibratoMenuItem.setSelected(track.hasVibrato(getAbsPositionMs()));
-        }
         vibratoMenuItem.setOnAction(action -> {
             track.setHasVibrato(getAbsPositionMs(), vibratoMenuItem.isSelected());
         });
@@ -147,6 +144,10 @@ public class Note implements Comparable<Note> {
                 new SeparatorMenuItem(),
                 clearCacheItem);
         contextMenu.setOnShowing(event -> {
+            // Need to refresh whether vibrato is there.
+            if (track != null) {
+                vibratoMenuItem.setSelected(track.hasVibrato(getAbsPositionMs()));
+            }
             cutMenuItem.setText(localizer.getMessage("menu.edit.cut"));
             copyMenuItem.setText(localizer.getMessage("menu.edit.copy"));
             deleteMenuItem.setText(localizer.getMessage("menu.edit.delete"));
