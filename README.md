@@ -4,6 +4,8 @@ Compatible (in theory) with all voicebanks, files, and engines created with or f
 
 Supported languages: English, Español, Français, 日本語, 中文, Italiano, Bahasa Indonesia, Português Brasileiro, русский, հայերեն
 
+Discord: https://discord.gg/c7PMdzM972
+
 ## Installation instructions
 
 ### Windows
