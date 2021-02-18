@@ -12,7 +12,7 @@ import com.utsusynth.utsu.model.song.Song;
  */
 public class Ust12Reader {
     private static final Pattern HEADER_PATTERN = Pattern.compile("\\[#[A-Z0-9]+\\]");
-    private static final Pattern NOTE_PATTERN = Pattern.compile("\\[#[0-9]{4,}\\]");
+    private static final Pattern NOTE_PATTERN = Pattern.compile("\\[#[0-9]{1,4}\\]");
     private final Provider<Song> songProvider;
     private final VoicebankReader voicebankReader;
 
