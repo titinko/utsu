@@ -12,6 +12,7 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.DiscreteScaler;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.files.ThemeManager;
+import de.jangassen.MenuToolkit;
 import javafx.animation.PauseTransition;
 import javafx.beans.property.BooleanProperty;
 import javafx.event.ActionEvent;
@@ -95,7 +96,7 @@ public class UtsuController implements Localizable {
         createMenuKeyboardShortcuts();
 
         // TODO: Resurrect Mac-specific preferences code once nsmenufx supports jlink.
-        /*String os = System.getProperty("os.name").toLowerCase();
+        String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("mac")) {
             MenuToolkit macToolkit = MenuToolkit.toolkit();
             fileMenu.getItems().remove(preferencesItem);
@@ -104,7 +105,7 @@ public class UtsuController implements Localizable {
             preferencesItem.setAccelerator(new KeyCodeCombination(KeyCode.COMMA, META_DOWN));
             appMenu.getItems().add(3, new SeparatorMenuItem());
             macToolkit.setApplicationMenu(appMenu);
-        }*/
+        }
 
         // Set up status bar.
         statusBar.initialize(statusLabel.textProperty(), loadingBar.progressProperty());

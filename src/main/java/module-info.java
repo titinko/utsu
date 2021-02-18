@@ -8,6 +8,7 @@ open module com.utsusynth.utsu {
     requires jdk.localedata;
     requires com.google.guice;
     requires java.prefs;
+    requires nsmenufx;
 
     exports com.utsusynth.utsu;
 }
