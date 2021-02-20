@@ -72,7 +72,7 @@ public class LyricConfigEditor {
         double curLength = lengthMs;
         double offsetLength = Math.max(Math.min(config.offsetProperty().get(), curLength), 0);
         curLength -= offsetLength;
-        double cutoffLength = 0;
+        double cutoffLength;
         if (config.cutoffProperty().get() >= 0) {
             cutoffLength = Math.max(Math.min(config.cutoffProperty().get(), curLength), 0);
         } else {
@@ -81,8 +81,10 @@ public class LyricConfigEditor {
         curLength -= cutoffLength;
         double consonantLength = Math.max(Math.min(config.consonantProperty().get(), curLength), 0);
 
+        System.out.println(chart.getTranslateX() + " and width = " + chart.getWidth());
         double totalX = lengthMs * SCALE_X;
         double offsetBarX = offsetLength * SCALE_X;
+        System.out.println("Offset: " + offsetLength);
         double consonantBarX = (offsetLength + consonantLength) * SCALE_X;
         double cutoffBarX = (lengthMs - cutoffLength) * SCALE_X;
         double preutterBarX = Math.min(
@@ -100,11 +102,11 @@ public class LyricConfigEditor {
 
         // Control bars.
         controlBars.getChildren().clear();
-        Line offsetBar = createControlBar(config, offsetBarX, totalX, "offset");
-        Line consonantBar = createControlBar(config, consonantBarX, totalX, "consonant");
-        Line cutoffBar = createControlBar(config, cutoffBarX, totalX, "cutoff");
-        Line preutterBar = createControlBar(config, preutterBarX, totalX, "preutterance");
-        Line overlapBar = createControlBar(config, overlapBarX, totalX, "overlap");
+        Line offsetBar = createControlBar(config, offsetBarX, "offset");
+        Line consonantBar = createControlBar(config, consonantBarX, "consonant");
+        Line cutoffBar = createControlBar(config, cutoffBarX, "cutoff");
+        Line preutterBar = createControlBar(config, preutterBarX, "preutterance");
+        Line overlapBar = createControlBar(config, overlapBarX, "overlap");
         controlBars.getChildren()
                 .setAll(offsetBar, overlapBar, preutterBar, consonantBar, cutoffBar);
 
@@ -265,7 +267,6 @@ public class LyricConfigEditor {
     private Line createControlBar(
             LyricConfigData config,
             double xPos,
-            double totalX,
             String style) {
         Line bar = new Line(xPos, 0, xPos, HEIGHT);
         bar.getStyleClass().add(style);
@@ -304,11 +305,47 @@ public class LyricConfigEditor {
     }
 
     private double createLineChart(LyricConfigData config) {
+        // Initialize chart data sets.
+        ObservableList<Data<Number, Number>> wavSamples = FXCollections.observableArrayList();
+        Series<Number, Number> waveform = new Series<>(wavSamples);
+        ObservableList<Data<Number, Number>> frqSamples = FXCollections.observableArrayList();
+        Series<Number, Number> frequency = new Series<>(frqSamples);
+
+        // Populate wav chart data.
+        File pathToWav = config.getPathToFile();
+        Optional<WavData> wavData = soundFileReader.loadWavData(pathToWav);
+        double msPerSample;
+        if (wavData.isEmpty()) {
+            chart = new LineChart<>(new NumberAxis(), new NumberAxis());
+            chart.setMouseTransparent(true);
+            chart.setOpacity(0); // Make chart invisible if wav file can't be read.
+            return 0.0;
+        }
+        msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
+        System.out.println("Sound length " + wavData.get().getLengthMs());
+        double currentTimeMs = msPerSample / 2; // Data point is halfway through sample.
+        double ampSum = 0;
+        for (int i = 0; i < wavData.get().getSamples().length; i++) {
+            ampSum += Math.abs(wavData.get().getSamples()[i]);
+            if (i % 100 == 0) {
+                // Only render every 100th sample to avoid overloading the frontend.
+                double ampValue = i % 200 == 0 ? ampSum / 100.0 : ampSum / -100.0;
+                wavSamples.add(new Data<>(currentTimeMs, ampValue));
+                ampSum = 0;
+            }
+            currentTimeMs += msPerSample;
+        }
+        // Preferred width is 800 pixels per second.
         NumberAxis xAxis = new NumberAxis();
-        xAxis.setOpacity(0);
-        xAxis.setTickLabelsVisible(false);
+        xAxis.setAutoRanging(false);
+        xAxis.setLowerBound(0);
+        xAxis.setUpperBound(wavData.get().getLengthMs());
+        xAxis.setTickUnit(100);
+        xAxis.setSide(Side.TOP);
+        xAxis.setTickLabelsVisible(true);
         xAxis.setTickMarkVisible(false);
         xAxis.setMinorTickVisible(false);
+        xAxis.setTickLabelGap(-15);
         NumberAxis yAxis = new NumberAxis();
         yAxis.setAutoRanging(false);
         yAxis.setLowerBound(-MAX_AMPLITUDE);
@@ -326,43 +363,13 @@ public class LyricConfigEditor {
         chart.setVerticalZeroLineVisible(false);
         chart.setCreateSymbols(false);
         chart.setPrefHeight(HEIGHT);
-
-        // Initialize chart data sets.
-        ObservableList<Data<Number, Number>> wavSamples = FXCollections.observableArrayList();
-        Series<Number, Number> waveform = new Series<>(wavSamples);
-        ObservableList<Data<Number, Number>> frqSamples = FXCollections.observableArrayList();
-        Series<Number, Number> frequency = new Series<>(frqSamples);
+        chart.setPrefWidth(wavData.get().getLengthMs() * SCALE_X);
         chart.getData().setAll(ImmutableList.of(waveform, frequency));
-
-        // Populate wav chart data.
-        File pathToWav = config.getPathToFile();
-        Optional<WavData> wavData = soundFileReader.loadWavData(pathToWav);
-        double msPerSample = 0;
-        if (wavData.isPresent()) {
-            msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
-            double currentTimeMs = msPerSample / 2; // Data point is halfway through sample.
-            double ampSum = 0;
-            for (int i = 0; i < wavData.get().getSamples().length; i++) {
-                ampSum += Math.abs(wavData.get().getSamples()[i]);
-                if (i % 100 == 0) {
-                    // Only render every 100th sample to avoid overloading the frontend.
-                    double ampValue = i % 200 == 0 ? ampSum / 100.0 : ampSum / -100.0;
-                    wavSamples.add(new Data<>(currentTimeMs, ampValue));
-                    ampSum = 0;
-                }
-                currentTimeMs += msPerSample;
-            }
-            // Preferred width is 800 pixels per second.
-            chart.setPrefWidth(wavData.get().getLengthMs() * SCALE_X);
-        } else {
-            // Make chart invisible if wav file can't be read.
-            chart.setOpacity(0);
-        }
 
         // Populate frequency chart data.
         populateFrqValues(frqSamples, pathToWav, wavData);
 
-        return wavData.isPresent() ? wavData.get().getLengthMs() : 0.0;
+        return wavData.get().getLengthMs();
     }
 
     private void populateFrqValues(
@@ -370,7 +377,7 @@ public class LyricConfigEditor {
             File wavFile,
             Optional<WavData> wavData) {
         if (!wavData.isPresent()) {
-            return;
+            return; // Don't bother populating frq data if there is no wav data.
         }
         double msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
 
@@ -380,7 +387,7 @@ public class LyricConfigEditor {
         File frqFile = wavFile.getParentFile().toPath().resolve(frqName).toFile();
         Optional<FrequencyData> frqData = soundFileReader.loadFrqData(frqFile);
         // Don't bother populating frq data if there is no wav data.
-        if (wavData.isPresent() && frqData.isPresent()) {
+        if (frqData.isPresent()) {
             frqSamples.clear();
             double avgFreq = frqData.get().getAverageFreq();
             double msPerFrqValue = frqData.get().getSamplesPerFreqValue() * msPerSample;
