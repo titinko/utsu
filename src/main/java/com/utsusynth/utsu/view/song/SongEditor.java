@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class SongEditor {
+    private final Track track;
     private final PlaybackBarManager playbackManager;
     private final ContextMenu editorContextMenu;
     private final SongClipboard clipboard;
@@ -43,6 +44,7 @@ public class SongEditor {
 
     // Whether the vibrato editor is active for this song editor.
     private final BooleanProperty vibratoEditor;
+    private final DoubleProperty trackWidth;
 
     private HBox measures;
     private HBox dynamics;
@@ -61,6 +63,7 @@ public class SongEditor {
 
     @Inject
     public SongEditor(
+            Track track,
             PlaybackBarManager playbackManager,
             SongClipboard clipboard,
             NoteFactory trackNoteFactory,
@@ -68,6 +71,7 @@ public class SongEditor {
             Localizer localizer,
             Quantizer quantizer,
             Scaler scaler) {
+        this.track = track;
         this.playbackManager = playbackManager;
         this.clipboard = clipboard;
         this.noteFactory = trackNoteFactory;
@@ -76,6 +80,7 @@ public class SongEditor {
         this.scaler = scaler;
 
         vibratoEditor = new SimpleBooleanProperty(false);
+        trackWidth = new SimpleDoubleProperty(0);
 
         // Initialize context menu here so we can reuse it everywhere.
         editorContextMenu = new ContextMenu();
@@ -100,6 +105,7 @@ public class SongEditor {
      */
     public void initialize(SongCallback callback) {
         this.model = callback;
+        track.initialize(trackWidth);
     }
 
     /**
@@ -109,6 +115,7 @@ public class SongEditor {
         clearTrack();
         if (notes.isEmpty()) {
             return measures;
+            //return new HBox(track.getNoteTrack());
         }
 
         // Add as many octaves as needed.
@@ -150,6 +157,7 @@ public class SongEditor {
             prevNote = note;
         }
         return measures;
+        //return new HBox(track.getNoteTrack());
     }
 
     public Group getNotesElement() {
@@ -162,6 +170,7 @@ public class SongEditor {
             System.out.println("Dynamics element is empty!");
         }
         return dynamics;
+        //return new HBox(track.getDynamicsTrack());
     }
 
     public Group getEnvelopesElement() {
@@ -555,6 +564,10 @@ public class SongEditor {
     }
 
     private void setNumMeasures(int newNumMeasures) {
+        int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
+        int maxWidth = measureWidth * (newNumMeasures + 1); // Include pre-roll.
+        trackWidth.setValue(maxWidth);
+
         if (newNumMeasures < 0) {
             return;
         } else if (newNumMeasures > numMeasures) {
@@ -565,8 +578,6 @@ public class SongEditor {
             // Nothing needs to be done.
             return;
         } else {
-            int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
-            int maxWidth = measureWidth * (newNumMeasures + 1); // Include pre-roll.
             // Remove measures.
             measures.getChildren().removeIf(
                     child -> RoundUtils.round(child.getLayoutX()) >= maxWidth);
