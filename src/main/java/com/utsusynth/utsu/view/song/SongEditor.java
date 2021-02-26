@@ -20,10 +20,10 @@ import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import javafx.beans.property.*;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
@@ -44,10 +44,8 @@ public class SongEditor {
 
     // Whether the vibrato editor is active for this song editor.
     private final BooleanProperty vibratoEditor;
-    private final DoubleProperty trackWidth;
 
     private HBox measures;
-    private HBox dynamics;
     private Rectangle selection;
     private int numMeasures;
     private SongCallback model;
@@ -80,7 +78,6 @@ public class SongEditor {
         this.scaler = scaler;
 
         vibratoEditor = new SimpleBooleanProperty(false);
-        trackWidth = new SimpleDoubleProperty(0);
 
         // Initialize context menu here so we can reuse it everywhere.
         editorContextMenu = new ContextMenu();
@@ -105,7 +102,6 @@ public class SongEditor {
      */
     public void initialize(SongCallback callback) {
         this.model = callback;
-        track.initialize(trackWidth);
     }
 
     /**
@@ -164,13 +160,8 @@ public class SongEditor {
         return noteMap.getNotesElement();
     }
 
-    public HBox getDynamicsElement() {
-        if (dynamics == null) {
-            // TODO: Handle this;
-            System.out.println("Dynamics element is empty!");
-        }
-        return dynamics;
-        //return new HBox(track.getDynamicsTrack());
+    public ListView<String> getDynamicsElement() {
+        return track.getDynamicsTrack();
     }
 
     public Group getEnvelopesElement() {
@@ -541,7 +532,6 @@ public class SongEditor {
         playbackManager.clear();
         noteMap.clear();
         measures = new HBox();
-        dynamics = new HBox();
         selection = new Rectangle();
 
         numMeasures = 0;
@@ -550,6 +540,7 @@ public class SongEditor {
     }
 
     private void showMeasures(int startMeasure, int endMeasure) {
+        track.showMeasures(startMeasure, endMeasure);
         int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
         int startX = measureWidth * startMeasure;
         int endX = measureWidth * endMeasure;
@@ -557,16 +548,10 @@ public class SongEditor {
             int measureX = RoundUtils.round(child.getLayoutX());
             child.setVisible(measureX >= startX && measureX <= endX);
         });
-        dynamics.getChildren().forEach(child -> {
-            int dynamicsX = RoundUtils.round(child.getLayoutX());
-            child.setVisible(dynamicsX >= startX && dynamicsX <= endX);
-        });
     }
 
     private void setNumMeasures(int newNumMeasures) {
-        int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
-        int maxWidth = measureWidth * (newNumMeasures + 1); // Include pre-roll.
-        trackWidth.setValue(maxWidth);
+        track.setNumMeasures(newNumMeasures);
 
         if (newNumMeasures < 0) {
             return;
@@ -578,11 +563,10 @@ public class SongEditor {
             // Nothing needs to be done.
             return;
         } else {
+            int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
+            int maxWidth = measureWidth * (newNumMeasures + 1); // Include pre-roll.
             // Remove measures.
             measures.getChildren().removeIf(
-                    child -> RoundUtils.round(child.getLayoutX()) >= maxWidth);
-            // Remove dynamics columns.
-            dynamics.getChildren().removeIf(
                     child -> RoundUtils.round(child.getLayoutX()) >= maxWidth);
             numMeasures = newNumMeasures;
         }
@@ -621,32 +605,6 @@ public class SongEditor {
             }
         }
         measures.getChildren().add(newMeasure);
-
-        // Add new columns to dynamics.
-        double dynamicsRowHeight = 50;
-        Pane newDynamics = new Pane();
-        newDynamics.setPrefSize(colWidth * 4, dynamicsRowHeight * 2);
-        for (int colNum = 0; colNum < 4; colNum++) {
-            AnchorPane topCell = new AnchorPane();
-            topCell.setPrefSize(colWidth, dynamicsRowHeight);
-            topCell.getStyleClass().add("dynamics-top-cell");
-            if (colNum == 0) {
-                topCell.getStyleClass().add("measure-start");
-            }
-            topCell.setTranslateX(colWidth * colNum);
-
-            AnchorPane bottomCell = new AnchorPane();
-            bottomCell.setPrefSize(colWidth, dynamicsRowHeight);
-            bottomCell.getStyleClass().add("dynamics-bottom-cell");
-            if (colNum == 0) {
-                bottomCell.getStyleClass().add("measure-start");
-            }
-            bottomCell.setTranslateX(colWidth * colNum);
-            bottomCell.setTranslateY(dynamicsRowHeight);
-
-            newDynamics.getChildren().addAll(topCell, bottomCell);
-        }
-        dynamics.getChildren().add(newDynamics);
 
         if (enabled) {
             activateMeasure(newMeasure);

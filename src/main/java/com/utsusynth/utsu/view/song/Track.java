@@ -4,41 +4,79 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.common.utils.RoundUtils;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.DoubleExpression;
+import javafx.beans.binding.IntegerExpression;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Orientation;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 /** The background track of the song editor. */
 public class Track {
-    private final Quantizer quantizer;
+    private final IntegerProperty minVisibleColumn;
+    private final IntegerProperty maxVisibleColumn;
     private final Scaler scaler;
 
-    private DoubleExpression trackWidth;
+    private int numMeasures = 0;
     private ListView<String> noteTrack;
     private ListView<String> dynamicsTrack;
 
     @Inject
-    public Track(Quantizer quantizer, Scaler scaler) {
-        this.quantizer = quantizer;
+    public Track(Scaler scaler) {
+        minVisibleColumn = new SimpleIntegerProperty(Integer.MIN_VALUE);
+        maxVisibleColumn = new SimpleIntegerProperty(Integer.MAX_VALUE);
         this.scaler = scaler;
     }
 
-    public void initialize(DoubleExpression trackWidth) {
-        this.trackWidth = trackWidth;
+    public void setNumMeasures(int numMeasures) {
+        this.numMeasures = numMeasures;
+        setNumMeasures(noteTrack, numMeasures);
+        setNumMeasures(dynamicsTrack, numMeasures);
     }
 
-    public ListView<String> createNoteTrack() {
+    private void setNumMeasures(ListView<String> updateMe, int numMeasures) {
+        if (updateMe != null) {
+            int numCols = (numMeasures + 1) * 4;
+            double trackWidth = numCols * scaler.scaleX(Quantizer.COL_WIDTH).get();
+            updateMe.setPrefWidth(trackWidth);
+            updateMe.setItems(
+                    FXCollections.observableArrayList(Collections.nCopies(numCols, "")));
+        }
+    }
+
+    public void showMeasures(int minMeasure, int maxMeasure) {
+        int minColumn = minMeasure * 4;
+        int maxColumn = maxMeasure * 4 + 3;
+        if (minVisibleColumn.get() == minColumn && maxVisibleColumn.get() == maxColumn) {
+            return; // Do nothing if the rendered columns haven't changed.
+        }
+        minVisibleColumn.set(minMeasure * 4);
+        maxVisibleColumn.set(maxMeasure * 4 + 3);
+        if (noteTrack != null) {
+            noteTrack.refresh();
+        }
+        if (dynamicsTrack != null) {
+            dynamicsTrack.refresh();
+        }
+    }
+
+    private ListView<String> createNoteTrack() {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
 
         noteTrack = new ListView<>();
         noteTrack.setEditable(false);
-        noteTrack.prefWidthProperty().bind(trackWidth);
-        noteTrack.setPrefHeight(rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
+        dynamicsTrack.setFixedCellSize(colWidth);
         noteTrack.setOrientation(Orientation.HORIZONTAL);
         noteTrack.setCellFactory(source -> new ListCell<>() {
             {
@@ -47,11 +85,12 @@ public class Track {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(null);
+                if (getIndex() < minVisibleColumn.get() || getIndex() > maxVisibleColumn.get()) {
+                    return; // Only render visible measures.
+                }
 
-                Pane quarterNote = new Pane();
-                quarterNote.setPrefSize(colWidth, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
-                System.out.println(getIndex());
+                VBox column = new VBox();
+                //column.setPrefSize(colWidth, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
                 int rowNum = 0;
                 for (int octave = 7; octave > 0; octave--) {
                     for (String pitch : PitchUtils.REVERSE_PITCHES) {
@@ -71,14 +110,14 @@ public class Track {
                             newCell.getStyleClass().add("measure-end");
                         }
                         newCell.setTranslateY(rowHeight * rowNum);
-                        quarterNote.getChildren().add(newCell);
+                        column.getChildren().add(newCell);
                         rowNum++;
                     }
                 }
-                setGraphic(quarterNote);
+                setGraphic(column);
             }
         });
-        noteTrack.setItems(FXCollections.observableArrayList("")); // Force generation.
+        setNumMeasures(noteTrack, numMeasures);
         return noteTrack;
     }
 
@@ -89,14 +128,13 @@ public class Track {
         return noteTrack;
     }
 
-    public ListView<String> createDynamicsTrack() {
+    private ListView<String> createDynamicsTrack() {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         double rowHeight = 50;
 
         dynamicsTrack = new ListView<>();
         dynamicsTrack.setEditable(false);
-        dynamicsTrack.prefWidthProperty().bind(trackWidth);
-        dynamicsTrack.setPrefHeight(rowHeight * 2);
+        dynamicsTrack.setFixedCellSize(colWidth);
         dynamicsTrack.setOrientation(Orientation.HORIZONTAL);
         dynamicsTrack.setCellFactory(source -> new ListCell<>() {
             {
@@ -105,10 +143,11 @@ public class Track {
             @Override
             protected void updateItem (String item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(null);
+                if (getIndex() < minVisibleColumn.get() || getIndex() > maxVisibleColumn.get()) {
+                    return; // Only render visible measures.
+                }
 
-                Pane newDynamics = new Pane();
-                newDynamics.setPrefSize(colWidth, rowHeight * 2);
+                VBox newDynamics = new VBox();
                 AnchorPane topCell = new AnchorPane();
                 topCell.setPrefSize(colWidth, rowHeight);
                 topCell.getStyleClass().add("dynamics-top-cell");
@@ -122,12 +161,11 @@ public class Track {
                 if (getIndex() % 4 == 0) {
                     bottomCell.getStyleClass().add("measure-start");
                 }
-                bottomCell.setTranslateY(rowHeight);
                 newDynamics.getChildren().addAll(topCell, bottomCell);
                 setGraphic(newDynamics);
             }
         });
-        dynamicsTrack.setItems(FXCollections.observableArrayList("")); // Force generation.
+        setNumMeasures(dynamicsTrack, numMeasures);
         return dynamicsTrack;
     }
 
