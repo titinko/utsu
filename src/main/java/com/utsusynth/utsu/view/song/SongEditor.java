@@ -549,7 +549,6 @@ public class SongEditor {
     }
 
     private void showMeasures(int startMeasure, int endMeasure) {
-        track.showMeasures(startMeasure, endMeasure);
         /*int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
         int startX = measureWidth * startMeasure;
         int endX = measureWidth * endMeasure;

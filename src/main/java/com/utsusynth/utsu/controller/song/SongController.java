@@ -13,6 +13,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.EditorCallback;
 import com.utsusynth.utsu.controller.EditorController;
@@ -46,6 +47,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -56,6 +59,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
@@ -245,7 +249,7 @@ public class SongController implements EditorController, Localizable {
                 scrollPaneCenter.setHvalue(scrollPaneCenter.getHvalue() * newWidth / oldWidth);
             }
         });
-        scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneCenter.vvalueProperty());
+        //scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneCenter.vvalueProperty());
         scrollPaneCenter.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
         scrollPaneCenter.hvalueProperty().addListener(event -> {
             double hvalue = scrollPaneCenter.getHvalue();
@@ -259,6 +263,8 @@ public class SongController implements EditorController, Localizable {
                 songEditor.selectivelyShowRegion(hvalue, margin);
             }
         });
+        scrollPaneCenter.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPaneCenter.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         // Context menu for voicebank icon.
         ContextMenu iconContextMenu = new ContextMenu();
@@ -382,17 +388,83 @@ public class SongController implements EditorController, Localizable {
         anchorLeft.getChildren().clear();
         anchorLeft.getChildren().add(piano.initPiano());
 
+        // Cross-editor bindings.
+        ListView<String> noteTrack = songEditor.createNewTrack(song.get().getNotes());
+        noteTrack.prefWidthProperty().bind(scrollPaneCenter.widthProperty());
+        noteTrack.prefHeightProperty().bind(scrollPaneCenter.heightProperty());
+        ListView<String> dynamicsTrack = songEditor.getDynamicsElement();
+        dynamicsTrack.prefWidthProperty().bind(scrollPaneBottom.widthProperty());
+        Region trackRegion = new Region();
+        trackRegion.prefWidthProperty().bind(scrollPaneCenter.widthProperty());
+        trackRegion.prefHeightProperty().bind(scrollPaneCenter.heightProperty());
+        trackRegion.setOnScroll(event -> {
+            for (Node node : noteTrack.lookupAll(".scroll-bar")) {
+                if (node instanceof ScrollBar) {
+                    ScrollBar scrollBar = (ScrollBar) node;
+                    if (scrollBar.getOrientation() == Orientation.VERTICAL) {
+                        double newValue = scrollBar.getValue() - event.getDeltaY();
+                        double boundedValue = Math.min(
+                                scrollBar.getMax(), Math.max(scrollBar.getMin(), newValue));
+                        scrollBar.setValue(boundedValue);
+                    } else if (scrollBar.getOrientation() == Orientation.HORIZONTAL) {
+                        double deltaX = event.getDeltaX() / trackRegion.getWidth();
+                        double newValue = scrollBar.getValue() - deltaX;
+                        double boundedValue = Math.min(
+                                scrollBar.getMax(), Math.max(scrollBar.getMin(), newValue));
+                        scrollBar.setValue(boundedValue);
+                    }
+                }
+            }
+        });
+
+        // Scrollbar bindings, after scrollbars are generated.
+        PauseTransition briefPause = new PauseTransition(Duration.millis(10));
+        briefPause.setOnFinished(event -> {
+            for (Node node : noteTrack.lookupAll(".scroll-bar")) {
+                if (!(node instanceof ScrollBar)) {
+                    continue;
+                }
+                ScrollBar scrollBar = (ScrollBar) node;
+                if (scrollBar.getOrientation() == Orientation.VERTICAL) {
+                    // TODO: Call this only once.
+                    scrollPaneLeft.vvalueProperty().addListener((obs, oldValue, newValue) -> {
+                        if (!oldValue.equals(newValue)) {
+                            scrollBar.setValue(newValue.doubleValue() * scrollBar.getMax());
+                        }
+                    });
+                    scrollBar.valueProperty().addListener((obs, oldValue, newValue) -> {
+                        if (!oldValue.equals(newValue)) {
+                            scrollPaneLeft.setVvalue(newValue.doubleValue() / scrollBar.getMax());
+                        }
+                    });
+                } else if (scrollBar.getOrientation() == Orientation.HORIZONTAL) {
+                    for (Node dynamicsNode : dynamicsTrack.lookupAll(".scroll-bar")) {
+                        if (!(dynamicsNode instanceof ScrollBar)) {
+                            continue;
+                        }
+                        ScrollBar dynamicsScrollBar = (ScrollBar) dynamicsNode;
+                        if (dynamicsScrollBar.getOrientation() == Orientation.HORIZONTAL) {
+                            dynamicsScrollBar.valueProperty().bindBidirectional(
+                                    scrollBar.valueProperty());
+                        }
+                    }
+                }
+            }
+        });
+        briefPause.play();
+
         // Reloads current song.
         anchorCenter.getChildren().clear();
-        anchorCenter.getChildren().add(songEditor.createNewTrack(song.get().getNotes()));
-        anchorCenter.getChildren().add(songEditor.getCanvasElement());
-        anchorCenter.getChildren().add(songEditor.getNotesElement());
-        anchorCenter.getChildren().add(songEditor.getPitchbendsElement());
-        anchorCenter.getChildren().add(songEditor.getPlaybackElement());
-        anchorCenter.getChildren().add(songEditor.getSelectionElement());
+        anchorCenter.getChildren().add(noteTrack);
+        anchorCenter.getChildren().add(trackRegion);
+        //anchorCenter.getChildren().add(songEditor.getCanvasElement());
+        //anchorCenter.getChildren().add(songEditor.getNotesElement());
+        //anchorCenter.getChildren().add(songEditor.getPitchbendsElement());
+        //anchorCenter.getChildren().add(songEditor.getPlaybackElement());
+        //anchorCenter.getChildren().add(songEditor.getSelectionElement());
         anchorBottom.getChildren().clear();
         anchorBottom.getChildren().add(songEditor.getDynamicsElement());
-        anchorBottom.getChildren().add(songEditor.getEnvelopesElement());
+        //anchorBottom.getChildren().add(songEditor.getEnvelopesElement());
     }
 
     @Override
