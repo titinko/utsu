@@ -6,7 +6,7 @@
 }
 
 .scroll-bar {
-    -fx-background-color: derive(-fx-base,45%)
+    -fx-background-color: derive(-fx-base,45%);
 }
 
 .separator:horizontal *.line {
@@ -19,7 +19,7 @@
 }
 
 .playback-icon.selected {
-    -fx-fill: derive(steelblue,-23%);;
+    -fx-fill: derive(steelblue,-23%);
 }
 
 .start-bar, .playback-bar, .end-bar {

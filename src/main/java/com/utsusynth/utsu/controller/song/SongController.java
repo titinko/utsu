@@ -394,28 +394,6 @@ public class SongController implements EditorController, Localizable {
         noteTrack.prefHeightProperty().bind(scrollPaneCenter.heightProperty());
         ListView<String> dynamicsTrack = songEditor.getDynamicsElement();
         dynamicsTrack.prefWidthProperty().bind(scrollPaneBottom.widthProperty());
-        Region trackRegion = new Region();
-        trackRegion.prefWidthProperty().bind(scrollPaneCenter.widthProperty());
-        trackRegion.prefHeightProperty().bind(scrollPaneCenter.heightProperty());
-        trackRegion.setOnScroll(event -> {
-            for (Node node : noteTrack.lookupAll(".scroll-bar")) {
-                if (node instanceof ScrollBar) {
-                    ScrollBar scrollBar = (ScrollBar) node;
-                    if (scrollBar.getOrientation() == Orientation.VERTICAL) {
-                        double newValue = scrollBar.getValue() - event.getDeltaY();
-                        double boundedValue = Math.min(
-                                scrollBar.getMax(), Math.max(scrollBar.getMin(), newValue));
-                        scrollBar.setValue(boundedValue);
-                    } else if (scrollBar.getOrientation() == Orientation.HORIZONTAL) {
-                        double deltaX = event.getDeltaX() / trackRegion.getWidth();
-                        double newValue = scrollBar.getValue() - deltaX;
-                        double boundedValue = Math.min(
-                                scrollBar.getMax(), Math.max(scrollBar.getMin(), newValue));
-                        scrollBar.setValue(boundedValue);
-                    }
-                }
-            }
-        });
 
         // Scrollbar bindings, after scrollbars are generated.
         PauseTransition briefPause = new PauseTransition(Duration.millis(10));
@@ -456,8 +434,6 @@ public class SongController implements EditorController, Localizable {
         // Reloads current song.
         anchorCenter.getChildren().clear();
         anchorCenter.getChildren().add(noteTrack);
-        anchorCenter.getChildren().add(trackRegion);
-        //anchorCenter.getChildren().add(songEditor.getCanvasElement());
         //anchorCenter.getChildren().add(songEditor.getNotesElement());
         //anchorCenter.getChildren().add(songEditor.getPitchbendsElement());
         //anchorCenter.getChildren().add(songEditor.getPlaybackElement());

@@ -5,14 +5,17 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 import java.util.Collections;
+import java.util.Optional;
 
 /** The background track of the song editor. */
 public class Track {
@@ -48,11 +51,28 @@ public class Track {
         }
     }
 
+    private Optional<ScrollBar> getScrollBar(ListView<String> source, Orientation orientation) {
+        if (source == null) {
+            return Optional.empty();
+        }
+        for (Node node : noteTrack.lookupAll(".scroll-bar")) {
+            if (!(node instanceof ScrollBar)) {
+                continue;
+            }
+            ScrollBar scrollBar = (ScrollBar) node;
+            if (scrollBar.getOrientation() == orientation) {
+                return Optional.of(scrollBar);
+            }
+        }
+        return Optional.empty();
+    }
+
     private ListView<String> createNoteTrack() {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
 
         noteTrack = new ListView<>();
+        noteTrack.setSelectionModel(new NoSelectionModel<>());
         noteTrack.setFixedCellSize(colWidth);
         noteTrack.setOrientation(Orientation.HORIZONTAL);
         noteTrack.setCellFactory(source -> new ListCell<>() {
@@ -88,6 +108,27 @@ public class Track {
                 setGraphic(column);
             }
         });
+        // Custom scroll behavior because default behavior is stupid.
+        noteTrack.addEventFilter(ScrollEvent.ANY, event -> {
+            Optional<ScrollBar> verticalScroll = getScrollBar(noteTrack, Orientation.VERTICAL);
+            if (verticalScroll.isPresent()) {
+                double newValue = verticalScroll.get().getValue() - event.getDeltaY();
+                double boundedValue = Math.min(
+                        verticalScroll.get().getMax(),
+                        Math.max(verticalScroll.get().getMin(), newValue));
+                verticalScroll.get().setValue(boundedValue);
+            }
+            Optional<ScrollBar> horizontalScroll = getScrollBar(noteTrack, Orientation.HORIZONTAL);
+            if (horizontalScroll.isPresent()) {
+                double deltaX = event.getDeltaX() / noteTrack.getWidth();
+                double newValue = horizontalScroll.get().getValue() - deltaX;
+                double boundedValue = Math.min(
+                        horizontalScroll.get().getMax(),
+                        Math.max(horizontalScroll.get().getMin(), newValue));
+                horizontalScroll.get().setValue(boundedValue);
+            }
+            event.consume();
+        });
         setNumMeasures(noteTrack, numMeasures);
         return noteTrack;
     }
@@ -104,6 +145,7 @@ public class Track {
         double rowHeight = 50;
 
         dynamicsTrack = new ListView<>();
+        dynamicsTrack.setSelectionModel(new NoSelectionModel<>());
         dynamicsTrack.setFixedCellSize(colWidth);
         dynamicsTrack.setOrientation(Orientation.HORIZONTAL);
         dynamicsTrack.setCellFactory(source -> new ListCell<>() {
@@ -133,6 +175,20 @@ public class Track {
                 setGraphic(newDynamics);
             }
         });
+        // Custom scroll behavior because default behavior is stupid.
+        dynamicsTrack.addEventFilter(ScrollEvent.ANY, event -> {
+            Optional<ScrollBar> horizontalScroll =
+                    getScrollBar(dynamicsTrack, Orientation.HORIZONTAL);
+            if (horizontalScroll.isPresent()) {
+                double deltaX = event.getDeltaX() / dynamicsTrack.getWidth();
+                double newValue = horizontalScroll.get().getValue() - deltaX;
+                double boundedValue = Math.min(
+                        horizontalScroll.get().getMax(),
+                        Math.max(horizontalScroll.get().getMin(), newValue));
+                horizontalScroll.get().setValue(boundedValue);
+            }
+            event.consume();
+        });
         setNumMeasures(dynamicsTrack, numMeasures);
         return dynamicsTrack;
     }
@@ -142,5 +198,49 @@ public class Track {
             return createDynamicsTrack();
         }
         return dynamicsTrack;
+    }
+
+    /**
+     * No-op selection model to remove unwanted selection behavior.
+     */
+    private static class NoSelectionModel<T> extends MultipleSelectionModel<T> {
+        @Override
+        public void clearAndSelect(int i) {}
+        @Override
+        public void select(int i) {}
+        @Override
+        public void select(T t) {}
+        @Override
+        public void clearSelection(int i) {}
+        @Override
+        public void clearSelection() {}
+        @Override
+        public boolean isSelected(int i) {
+            return false;
+        }
+        @Override
+        public boolean isEmpty() {
+            return true;
+        }
+        @Override
+        public void selectPrevious() {}
+        @Override
+        public void selectNext() {}
+        @Override
+        public ObservableList<Integer> getSelectedIndices() {
+            return FXCollections.observableArrayList();
+        }
+        @Override
+        public ObservableList<T> getSelectedItems() {
+            return FXCollections.observableArrayList();
+        }
+        @Override
+        public void selectIndices(int i, int... ints) {}
+        @Override
+        public void selectAll() {}
+        @Override
+        public void selectFirst() {}
+        @Override
+        public void selectLast() {}
     }
 }
