@@ -13,7 +13,6 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.EditorCallback;
 import com.utsusynth.utsu.controller.EditorController;
@@ -37,6 +36,7 @@ import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.view.song.Piano;
 import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
+import com.utsusynth.utsu.view.song.TrackItem;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -59,7 +59,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
@@ -250,7 +249,7 @@ public class SongController implements EditorController, Localizable {
             }
         });
         //scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneCenter.vvalueProperty());
-        scrollPaneCenter.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
+        //scrollPaneCenter.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
         scrollPaneCenter.hvalueProperty().addListener(event -> {
             double hvalue = scrollPaneCenter.getHvalue();
             double margin = scrollPaneCenter.getViewportBounds().getWidth();
@@ -265,6 +264,7 @@ public class SongController implements EditorController, Localizable {
         });
         scrollPaneCenter.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPaneCenter.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPaneBottom.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         // Context menu for voicebank icon.
         ContextMenu iconContextMenu = new ContextMenu();
@@ -392,8 +392,9 @@ public class SongController implements EditorController, Localizable {
         ListView<String> noteTrack = songEditor.createNewTrack(song.get().getNotes());
         noteTrack.prefWidthProperty().bind(scrollPaneCenter.widthProperty());
         noteTrack.prefHeightProperty().bind(scrollPaneCenter.heightProperty());
-        ListView<String> dynamicsTrack = songEditor.getDynamicsElement();
-        dynamicsTrack.prefWidthProperty().bind(scrollPaneBottom.widthProperty());
+        ListView<Set<TrackItem>> dynamicsTrack = songEditor.getDynamicsElement();
+        dynamicsTrack.prefWidthProperty().bind(
+                scrollPaneBottom.widthProperty().subtract(Quantizer.SCROLL_BAR_WIDTH));
 
         // Scrollbar bindings, after scrollbars are generated.
         PauseTransition briefPause = new PauseTransition(Duration.millis(10));
@@ -405,6 +406,7 @@ public class SongController implements EditorController, Localizable {
                 ScrollBar scrollBar = (ScrollBar) node;
                 if (scrollBar.getOrientation() == Orientation.VERTICAL) {
                     // TODO: Call this only once.
+                    scrollBar.setPrefWidth(Quantizer.SCROLL_BAR_WIDTH);
                     scrollPaneLeft.vvalueProperty().addListener((obs, oldValue, newValue) -> {
                         if (!oldValue.equals(newValue)) {
                             scrollBar.setValue(newValue.doubleValue() * scrollBar.getMax());
@@ -416,6 +418,7 @@ public class SongController implements EditorController, Localizable {
                         }
                     });
                 } else if (scrollBar.getOrientation() == Orientation.HORIZONTAL) {
+                    scrollBar.setPrefHeight(Quantizer.SCROLL_BAR_WIDTH);
                     for (Node dynamicsNode : dynamicsTrack.lookupAll(".scroll-bar")) {
                         if (!(dynamicsNode instanceof ScrollBar)) {
                             continue;

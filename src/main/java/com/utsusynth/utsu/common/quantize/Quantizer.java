@@ -4,6 +4,7 @@ public class Quantizer {
     public static final int DEFAULT_NOTE_DURATION = 480;
     public static final int COL_WIDTH = DEFAULT_NOTE_DURATION;
     public static final int ROW_HEIGHT = 20;
+    public static final int SCROLL_BAR_WIDTH = 16; // Enforce a constant scroll bar size.
 
     /* The number of ms in one quant. */
     private int quantization;

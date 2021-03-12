@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.song.note.envelope;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.view.song.TrackItem;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.shape.Circle;
@@ -10,7 +11,7 @@ import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 
-public class Envelope {
+public class Envelope implements TrackItem {
     private final MoveTo start;
     private final LineTo[] lines;
     private final LineTo end;
@@ -82,6 +83,17 @@ public class Envelope {
         this.group = new Group(path, circles[0], circles[1], circles[2], circles[4], circles[3]);
     }
 
+    @Override
+    public double getStartX() {
+        return start.getX();
+    }
+
+    @Override
+    public double getWidth() {
+        return end.getX() - start.getX();
+    }
+
+    @Override
     public Group getElement() {
         return group;
     }

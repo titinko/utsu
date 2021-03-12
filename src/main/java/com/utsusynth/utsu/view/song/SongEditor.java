@@ -15,6 +15,7 @@ import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
+import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import javafx.beans.property.*;
@@ -138,6 +139,7 @@ public class SongEditor {
                             position,
                             note.getEnvelope().get(),
                             getEnvelopeCallback(position));
+                    //track.insertEnvelope(noteMap.getEnvelope(position));
                 }
                 if (note.getPitchbend().isPresent()) {
                     noteMap.putPitchbend(
@@ -163,7 +165,7 @@ public class SongEditor {
         return noteMap.getNotesElement();
     }
 
-    public ListView<String> getDynamicsElement() {
+    public ListView<Set<TrackItem>> getDynamicsElement() {
         return track.getDynamicsTrack();
     }
 

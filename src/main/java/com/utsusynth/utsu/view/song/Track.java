@@ -1,12 +1,17 @@
 package com.utsusynth.utsu.view.song;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.ScrollEvent;
@@ -14,8 +19,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 
 /** The background track of the song editor. */
 public class Track {
@@ -23,7 +27,8 @@ public class Track {
 
     private int numMeasures = 0;
     private ListView<String> noteTrack;
-    private ListView<String> dynamicsTrack;
+    private ScrollBar noteVScrollBar;
+    private ListView<Set<TrackItem>> dynamicsTrack;
 
     @Inject
     public Track(Scaler scaler) {
@@ -40,7 +45,7 @@ public class Track {
         }
         this.numMeasures = numMeasures;
         setNumMeasures(noteTrack, numMeasures);
-        setNumMeasures(dynamicsTrack, numMeasures);
+        setNumDynamicsMeasures(dynamicsTrack, numMeasures);
     }
 
     private void setNumMeasures(ListView<String> updateMe, int numMeasures) {
@@ -51,11 +56,21 @@ public class Track {
         }
     }
 
+    private void setNumDynamicsMeasures(ListView<Set<TrackItem>> updateMe, int numMeasures) {
+        if (updateMe != null) {
+            int numCols = (numMeasures + 1) * 4;
+            updateMe.setItems(FXCollections.observableArrayList());
+            for (int i = 0; i < numCols; i++) {
+                updateMe.getItems().add(ImmutableSet.of());
+            }
+        }
+    }
+
     private Optional<ScrollBar> getScrollBar(ListView<String> source, Orientation orientation) {
         if (source == null) {
             return Optional.empty();
         }
-        for (Node node : noteTrack.lookupAll(".scroll-bar")) {
+        for (Node node : source.lookupAll(".scroll-bar")) {
             if (!(node instanceof ScrollBar)) {
                 continue;
             }
@@ -72,6 +87,7 @@ public class Track {
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
 
         noteTrack = new ListView<>();
+        noteVScrollBar = null;
         noteTrack.setSelectionModel(new NoSelectionModel<>());
         noteTrack.setFixedCellSize(colWidth);
         noteTrack.setOrientation(Orientation.HORIZONTAL);
@@ -110,22 +126,18 @@ public class Track {
         });
         // Custom scroll behavior because default behavior is stupid.
         noteTrack.addEventFilter(ScrollEvent.ANY, event -> {
-            Optional<ScrollBar> verticalScroll = getScrollBar(noteTrack, Orientation.VERTICAL);
+            if (event.getDeltaX() != 0) {
+                return; // Vertical scrolling should be left to default behavior.
+            }
+            Optional<ScrollBar> verticalScroll = noteVScrollBar != null
+                    ? Optional.of(noteVScrollBar) : getScrollBar(noteTrack, Orientation.VERTICAL);
             if (verticalScroll.isPresent()) {
+                noteVScrollBar = verticalScroll.get();
                 double newValue = verticalScroll.get().getValue() - event.getDeltaY();
                 double boundedValue = Math.min(
                         verticalScroll.get().getMax(),
                         Math.max(verticalScroll.get().getMin(), newValue));
                 verticalScroll.get().setValue(boundedValue);
-            }
-            Optional<ScrollBar> horizontalScroll = getScrollBar(noteTrack, Orientation.HORIZONTAL);
-            if (horizontalScroll.isPresent()) {
-                double deltaX = event.getDeltaX() / noteTrack.getWidth();
-                double newValue = horizontalScroll.get().getValue() - deltaX;
-                double boundedValue = Math.min(
-                        horizontalScroll.get().getMax(),
-                        Math.max(horizontalScroll.get().getMin(), newValue));
-                horizontalScroll.get().setValue(boundedValue);
             }
             event.consume();
         });
@@ -140,7 +152,7 @@ public class Track {
         return noteTrack;
     }
 
-    private ListView<String> createDynamicsTrack() {
+    private ListView<Set<TrackItem>> createDynamicsTrack() {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         double rowHeight = 50;
 
@@ -151,11 +163,15 @@ public class Track {
         dynamicsTrack.setCellFactory(source -> new ListCell<>() {
             {
                 setPrefHeight(rowHeight * 2);
+                setPrefWidth(colWidth);
                 setStyle("-fx-padding: 0px;");
             }
             @Override
-            protected void updateItem (String item, boolean empty) {
+            protected void updateItem (Set<TrackItem> item, boolean empty) {
                 super.updateItem(item, empty);
+
+                Pane graphic = new Pane();
+                graphic.setPrefSize(colWidth, rowHeight * 2);
 
                 VBox newDynamics = new VBox();
                 AnchorPane topCell = new AnchorPane();
@@ -172,32 +188,49 @@ public class Track {
                     bottomCell.getStyleClass().add("measure-start");
                 }
                 newDynamics.getChildren().addAll(topCell, bottomCell);
-                setGraphic(newDynamics);
+
+                graphic.getChildren().addAll(newDynamics);
+                if (item != null) {
+                    for (TrackItem trackItem : item) {
+                        double offset = getIndex() * colWidth;
+                        Node node = trackItem.getElement();
+                        node.setTranslateX(-offset);
+                        graphic.getChildren().add(node);
+                    }
+                }
+                setGraphic(graphic);
             }
         });
         // Custom scroll behavior because default behavior is stupid.
         dynamicsTrack.addEventFilter(ScrollEvent.ANY, event -> {
-            Optional<ScrollBar> horizontalScroll =
-                    getScrollBar(dynamicsTrack, Orientation.HORIZONTAL);
-            if (horizontalScroll.isPresent()) {
-                double deltaX = event.getDeltaX() / dynamicsTrack.getWidth();
-                double newValue = horizontalScroll.get().getValue() - deltaX;
-                double boundedValue = Math.min(
-                        horizontalScroll.get().getMax(),
-                        Math.max(horizontalScroll.get().getMin(), newValue));
-                horizontalScroll.get().setValue(boundedValue);
+            if (event.getDeltaX() == 0) {
+                event.consume();
             }
-            event.consume();
         });
-        setNumMeasures(dynamicsTrack, numMeasures);
+        setNumDynamicsMeasures(dynamicsTrack, numMeasures);
         return dynamicsTrack;
     }
 
-    public ListView<String> getDynamicsTrack() {
+    public ListView<Set<TrackItem>> getDynamicsTrack() {
         if (dynamicsTrack == null) {
             return createDynamicsTrack();
         }
         return dynamicsTrack;
+    }
+
+    public void insertEnvelope(TrackItem trackItem) {
+        double startX = trackItem.getStartX();
+        double endX = trackItem.getStartX() + trackItem.getWidth();
+        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
+        int startColNum = RoundUtils.round(startX / colWidth);
+        int endColNum = RoundUtils.round(endX / colWidth);
+        for (int colNum = startColNum; colNum <= endColNum; colNum++) {
+            ImmutableSet<TrackItem> items = new ImmutableSet.Builder<TrackItem>()
+                    .addAll(dynamicsTrack.getItems().get(colNum))
+                    .add(trackItem)
+                    .build();
+            dynamicsTrack.getItems().set(colNum, items);
+        }
     }
 
     /**
