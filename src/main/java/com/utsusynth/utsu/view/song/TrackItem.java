@@ -12,4 +12,7 @@ public interface TrackItem {
 
     /** Element to render for this item. */
     Node getElement();
+
+    /** Redraw this item with a certain offset. */
+    Node redraw(int colNum, double offsetX);
 }

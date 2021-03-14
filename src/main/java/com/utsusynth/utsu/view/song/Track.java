@@ -99,6 +99,9 @@ public class Track {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+                if (getIndex() < 0) {
+                    return; // Don't bother rendering if there is no item.
+                }
 
                 VBox column = new VBox();
                 for (int octave = 7; octave > 0; octave--) {
@@ -169,6 +172,9 @@ public class Track {
             @Override
             protected void updateItem (Set<TrackItem> item, boolean empty) {
                 super.updateItem(item, empty);
+                if (getIndex() < 0) {
+                    return; // Don't bother rendering if there is no item.
+                }
 
                 Pane graphic = new Pane();
                 graphic.setPrefSize(colWidth, rowHeight * 2);
@@ -193,9 +199,7 @@ public class Track {
                 if (item != null) {
                     for (TrackItem trackItem : item) {
                         double offset = getIndex() * colWidth;
-                        Node node = trackItem.getElement();
-                        node.setTranslateX(-offset);
-                        graphic.getChildren().add(node);
+                        graphic.getChildren().add(trackItem.redraw(getIndex(), offset));
                     }
                 }
                 setGraphic(graphic);
@@ -222,8 +226,8 @@ public class Track {
         double startX = trackItem.getStartX();
         double endX = trackItem.getStartX() + trackItem.getWidth();
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
-        int startColNum = RoundUtils.round(startX / colWidth);
-        int endColNum = RoundUtils.round(endX / colWidth);
+        int startColNum = (int) (startX / colWidth);
+        int endColNum = (int) (endX / colWidth);
         for (int colNum = startColNum; colNum <= endColNum; colNum++) {
             ImmutableSet<TrackItem> items = new ImmutableSet.Builder<TrackItem>()
                     .addAll(dynamicsTrack.getItems().get(colNum))

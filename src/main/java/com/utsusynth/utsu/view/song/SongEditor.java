@@ -139,7 +139,7 @@ public class SongEditor {
                             position,
                             note.getEnvelope().get(),
                             getEnvelopeCallback(position));
-                    //track.insertEnvelope(noteMap.getEnvelope(position));
+                    track.insertEnvelope(noteMap.getEnvelope(position));
                 }
                 if (note.getPitchbend().isPresent()) {
                     noteMap.putPitchbend(
