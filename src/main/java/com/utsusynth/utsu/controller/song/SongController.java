@@ -389,7 +389,7 @@ public class SongController implements EditorController, Localizable {
         anchorLeft.getChildren().add(piano.initPiano());
 
         // Cross-editor bindings.
-        ListView<String> noteTrack = songEditor.createNewTrack(song.get().getNotes());
+        ListView<Set<TrackItem>> noteTrack = songEditor.createNewTrack(song.get().getNotes());
         noteTrack.prefWidthProperty().bind(scrollPaneCenter.widthProperty());
         noteTrack.prefHeightProperty().bind(scrollPaneCenter.heightProperty());
         ListView<Set<TrackItem>> dynamicsTrack = songEditor.getDynamicsElement();

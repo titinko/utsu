@@ -23,6 +23,7 @@ import javafx.scene.Group;
 public class NoteMap {
     private final EnvelopeFactory envelopeFactory;
     private final PitchbendFactory pitchbendFactory;
+    private final Track track;
 
     // Maps absolute position (in ms) to track note's data.
     private Map<Integer, Note> noteMap;
@@ -36,9 +37,11 @@ public class NoteMap {
     private Group visiblePitchbends; // Only includes pitchbends in the visible region.
 
     @Inject
-    public NoteMap(EnvelopeFactory envelopeFactory, PitchbendFactory pitchbendFactory) {
+    public NoteMap(
+            EnvelopeFactory envelopeFactory, PitchbendFactory pitchbendFactory, Track track) {
         this.envelopeFactory = envelopeFactory;
         this.pitchbendFactory = pitchbendFactory;
+        this.track = track;
         clear();
     }
 
@@ -163,6 +166,7 @@ public class NoteMap {
         }
         if (envelopeMap.containsKey(position)) {
             visibleEnvelopes.getChildren().remove(envelopeMap.get(position).getElement());
+            track.removeItem(track.getDynamicsTrack(), envelopeMap.get(position));
             envelopeMap.remove(position);
         }
         if (pitchbendMap.containsKey(position)) {
@@ -179,11 +183,13 @@ public class NoteMap {
             // Overrides are expected here.
             if (envelopeMap.containsKey(position)) {
                 visibleEnvelopes.getChildren().remove(envelopeMap.get(position).getElement());
+                track.removeItem(track.getDynamicsTrack(), envelopeMap.get(position));
             }
             envelopeMap.put(position, envelope);
             if (visibleRegion.intersects(noteMap.get(position).getBounds())) {
                 visibleEnvelopes.getChildren().add(envelope.getElement());
             }
+            track.insertItem(track.getDynamicsTrack(), envelope);
         }
     }
 

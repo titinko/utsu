@@ -1,17 +1,14 @@
 package com.utsusynth.utsu.view.song;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
-import com.utsusynth.utsu.common.utils.RoundUtils;
-import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.ScrollEvent;
@@ -26,7 +23,7 @@ public class Track {
     private final Scaler scaler;
 
     private int numMeasures = 0;
-    private ListView<String> noteTrack;
+    private ListView<Set<TrackItem>> noteTrack;
     private ScrollBar noteVScrollBar;
     private ListView<Set<TrackItem>> dynamicsTrack;
 
@@ -45,18 +42,10 @@ public class Track {
         }
         this.numMeasures = numMeasures;
         setNumMeasures(noteTrack, numMeasures);
-        setNumDynamicsMeasures(dynamicsTrack, numMeasures);
+        setNumMeasures(dynamicsTrack, numMeasures);
     }
 
-    private void setNumMeasures(ListView<String> updateMe, int numMeasures) {
-        if (updateMe != null) {
-            int numCols = (numMeasures + 1) * 4;
-            updateMe.setItems(
-                    FXCollections.observableArrayList(Collections.nCopies(numCols, "")));
-        }
-    }
-
-    private void setNumDynamicsMeasures(ListView<Set<TrackItem>> updateMe, int numMeasures) {
+    private void setNumMeasures(ListView<Set<TrackItem>> updateMe, int numMeasures) {
         if (updateMe != null) {
             int numCols = (numMeasures + 1) * 4;
             updateMe.setItems(FXCollections.observableArrayList());
@@ -66,7 +55,8 @@ public class Track {
         }
     }
 
-    private Optional<ScrollBar> getScrollBar(ListView<String> source, Orientation orientation) {
+    private Optional<ScrollBar> getScrollBar(
+            ListView<Set<TrackItem>> source, Orientation orientation) {
         if (source == null) {
             return Optional.empty();
         }
@@ -82,7 +72,7 @@ public class Track {
         return Optional.empty();
     }
 
-    private ListView<String> createNoteTrack() {
+    private ListView<Set<TrackItem>> createNoteTrack() {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
 
@@ -97,7 +87,7 @@ public class Track {
                 setStyle("-fx-padding: 0px;");
             }
             @Override
-            protected void updateItem(String item, boolean empty) {
+            protected void updateItem(Set<TrackItem> item, boolean empty) {
                 super.updateItem(item, empty);
                 if (getIndex() < 0) {
                     return; // Don't bother rendering if there is no item.
@@ -148,7 +138,7 @@ public class Track {
         return noteTrack;
     }
 
-    public ListView<String> getNoteTrack() {
+    public ListView<Set<TrackItem>> getNoteTrack() {
         if (noteTrack == null) {
             return createNoteTrack();
         }
@@ -211,7 +201,7 @@ public class Track {
                 event.consume();
             }
         });
-        setNumDynamicsMeasures(dynamicsTrack, numMeasures);
+        setNumMeasures(dynamicsTrack, numMeasures);
         return dynamicsTrack;
     }
 
@@ -222,7 +212,7 @@ public class Track {
         return dynamicsTrack;
     }
 
-    public void insertEnvelope(TrackItem trackItem) {
+    public void insertItem(ListView<Set<TrackItem>> track, TrackItem trackItem) {
         double startX = trackItem.getStartX();
         double endX = trackItem.getStartX() + trackItem.getWidth();
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
@@ -230,10 +220,21 @@ public class Track {
         int endColNum = (int) (endX / colWidth);
         for (int colNum = startColNum; colNum <= endColNum; colNum++) {
             ImmutableSet<TrackItem> items = new ImmutableSet.Builder<TrackItem>()
-                    .addAll(dynamicsTrack.getItems().get(colNum))
+                    .addAll(track.getItems().get(colNum))
                     .add(trackItem)
                     .build();
-            dynamicsTrack.getItems().set(colNum, items);
+            track.getItems().set(colNum, items);
+        }
+    }
+
+    public void removeItem(ListView<Set<TrackItem>> track, TrackItem trackItem) {
+        for (Integer colNum : trackItem.getColumns()) {
+            if (colNum < 0) {
+                continue;
+            }
+            ImmutableSet<TrackItem> items = Sets.difference(
+                    track.getItems().get(colNum), ImmutableSet.of(trackItem)).immutableCopy();
+            track.getItems().set(colNum, items);
         }
     }
 

@@ -111,10 +111,9 @@ public class SongEditor {
     /**
      * Initialize track with data for a specific song.
      */
-    public ListView<String> createNewTrack(List<NoteData> notes) {
+    public ListView<Set<TrackItem>> createNewTrack(List<NoteData> notes) {
         clearTrack();
         if (notes.isEmpty()) {
-            //return measures;
             return track.getNoteTrack();
         }
 
@@ -139,7 +138,6 @@ public class SongEditor {
                             position,
                             note.getEnvelope().get(),
                             getEnvelopeCallback(position));
-                    track.insertEnvelope(noteMap.getEnvelope(position));
                 }
                 if (note.getPitchbend().isPresent()) {
                     noteMap.putPitchbend(
@@ -623,7 +621,7 @@ public class SongEditor {
     }
 
     private void initializeCanvas() {
-        ListView<String> noteTrack = track.getNoteTrack(); // Creates it if not present.
+        ListView<Set<TrackItem>> noteTrack = track.getNoteTrack(); // Creates it if not present.
         double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
         canvas = new Region();
         canvas.prefWidthProperty().bind(noteTrack.prefWidthProperty());

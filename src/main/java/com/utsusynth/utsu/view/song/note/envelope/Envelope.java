@@ -8,6 +8,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
@@ -15,6 +16,7 @@ import javafx.scene.shape.Path;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class Envelope implements TrackItem {
     private final MoveTo start;
@@ -159,6 +161,11 @@ public class Envelope implements TrackItem {
                 pathClone, circles[0], circles[1], circles[2], circles[4], circles[3]);
         drawnCache.put(colNum, groupClone);
         return groupClone;
+    }
+
+    @Override
+    public Set<Integer> getColumns() {
+        return drawnCache.keySet();
     }
 
     public int getStartMs() {

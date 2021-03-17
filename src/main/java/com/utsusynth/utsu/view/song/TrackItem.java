@@ -2,6 +2,8 @@ package com.utsusynth.utsu.view.song;
 
 import javafx.scene.Node;
 
+import java.util.Set;
+
 /** Represents a single item that can be drawn in the track. */
 public interface TrackItem {
     /** Start position of this item. */
@@ -15,4 +17,7 @@ public interface TrackItem {
 
     /** Redraw this item with a certain offset. */
     Node redraw(int colNum, double offsetX);
+
+    /** Return every column where this item is currently drawn. */
+    Set<Integer> getColumns();
 }
