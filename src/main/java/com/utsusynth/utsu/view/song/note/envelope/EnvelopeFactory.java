@@ -4,8 +4,10 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.note.Note;
+import javafx.beans.property.DoubleProperty;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
+import javafx.util.Pair;
 
 public class EnvelopeFactory {
     private final Scaler scaler;
@@ -37,17 +39,17 @@ public class EnvelopeFactory {
         double v5 = 100 - (heights[4] / 2.0);
 
         // Do not scale y axis for envelopes.
-        return new Envelope(
-                new MoveTo(scaler.scalePos(startPos).get(), 100),
-                new LineTo(scaler.scalePos(startPos + p1).get(), v1),
-                new LineTo(scaler.scalePos(startPos + p1 + p2).get(), v2),
-                new LineTo(scaler.scalePos(startPos + p1 + p2 + p5).get(), v5),
-                new LineTo(scaler.scalePos(endPos - p4 - p3).get(), v3),
-                new LineTo(scaler.scalePos(endPos - p4).get(), v4),
-                new LineTo(scaler.scalePos(endPos).get(), 100),
-                callback,
-                100,
-                scaler);
+        double[] xValues = new double[] {
+                scaler.scalePos(startPos).get(),
+                scaler.scalePos(startPos + p1).get(),
+                scaler.scalePos(startPos + p1 + p2).get(),
+                scaler.scalePos(startPos + p1 + p2 + p5).get(),
+                scaler.scalePos(endPos - p4 - p3).get(),
+                scaler.scalePos(endPos - p4).get(),
+                scaler.scalePos(endPos).get()};
+        double[] yValues = new double[] {100, v1, v2, v5, v3, v4, 100};
+
+        return new Envelope(xValues, yValues, callback, 100, scaler);
     }
 
     public Envelope createEnvelopeEditor(
@@ -86,16 +88,17 @@ public class EnvelopeFactory {
         double v5 = editorHeight - (heights[4] * multiplier);
 
         // Do not scale y axis for envelopes.
+        double[] xValues = new double[] {
+                0,
+                editorScaler.scaleX(p1).get(),
+                editorScaler.scaleX(p1 + p2).get(),
+                editorScaler.scaleX(p1 + p2 + p5).get(),
+                editorWidth - editorScaler.scaleX(p4 + p3).get(),
+                editorWidth - editorScaler.scaleX(p4).get(),
+                editorWidth};
+        double[] yValues = new double[] {editorHeight, v1, v2, v5, v3, v4, editorHeight};
+
         return new Envelope(
-                new MoveTo(0, editorHeight),
-                new LineTo(editorScaler.scaleX(p1).get(), v1),
-                new LineTo(editorScaler.scaleX(p1 + p2).get(), v2),
-                new LineTo(editorScaler.scaleX(p1 + p2 + p5).get(), v5),
-                new LineTo(editorWidth - editorScaler.scaleX(p4 + p3).get(), v3),
-                new LineTo(editorWidth - editorScaler.scaleX(p4).get(), v4),
-                new LineTo(editorWidth, editorHeight),
-                ((oldData, newData) -> {}),
-                editorHeight,
-                editorScaler);
+                xValues, yValues, ((oldData, newData) -> {}), editorHeight, editorScaler);
     }
 }

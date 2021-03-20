@@ -2,16 +2,26 @@ package com.utsusynth.utsu.view.song.note;
 
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.view.song.TrackItem;
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 
-public class Lyric {
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+public class Lyric implements TrackItem {
     private LyricCallback trackNote;
+
+    private final String defaultLyric;
+    private final Scaler scaler;
     private final Group activeNode;
+    private final Map<Integer, Group> drawnCache;
 
     private final HBox lyricAndAlias;
     private final Label lyricText;
@@ -19,6 +29,8 @@ public class Lyric {
     private final TextField textField;
 
     public Lyric(String defaultLyric, Scaler scaler) {
+        this.defaultLyric = defaultLyric;
+        this.scaler = scaler;
         lyricText = new Label(defaultLyric);
         lyricText.getStyleClass().add("track-note-text");
 
@@ -44,6 +56,8 @@ public class Lyric {
         // Initialize with text active.
         activeNode = new Group();
         activeNode.getChildren().add(lyricAndAlias);
+
+        drawnCache = new HashMap<>();
     }
 
     /** Connect this lyric to a track note. */
@@ -64,8 +78,58 @@ public class Lyric {
         }
     }
 
-    Group getElement() {
+    @Override
+    public double getStartX() {
+        return 0;
+    }
+
+    @Override
+    public double getWidth() {
+        return 0;
+    }
+
+    @Override
+    public Group getElement() {
         return activeNode;
+    }
+
+    @Override
+    public Group redraw(int colNum, double offsetX) {
+        if (drawnCache.containsKey(colNum)) {
+            return drawnCache.get(colNum);
+        }
+        Label lyricText = new Label(defaultLyric);
+        lyricText.getStyleClass().add("track-note-text");
+
+        Label aliasText = new Label("");
+        aliasText.getStyleClass().add("track-note-text");
+
+        HBox lyricAndAlias = new HBox(lyricText, aliasText);
+        lyricAndAlias.setMouseTransparent(true);
+
+        TextField textField = new TextField();
+        textField.setFont(Font.font(9));
+        textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 2);
+        textField.setMaxWidth(scaler.scaleX(Quantizer.COL_WIDTH).get() - 2);
+        textField.setOnAction((event) -> {
+            closeTextFieldIfNeeded();
+        });
+        textField.focusedProperty().addListener(event -> {
+            if (!textField.isFocused()) {
+                closeTextFieldIfNeeded();
+            }
+        });
+
+        // Initialize with text active.
+        Group activeNode = new Group();
+        activeNode.getChildren().add(lyricAndAlias);
+        drawnCache.put(colNum, activeNode);
+        return activeNode;
+    }
+
+    @Override
+    public Set<Integer> getColumns() {
+        return drawnCache.keySet();
     }
 
     String getLyric() {

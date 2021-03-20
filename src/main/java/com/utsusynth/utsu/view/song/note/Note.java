@@ -1,6 +1,8 @@
 package com.utsusynth.utsu.view.song.note;
 
 import java.util.Optional;
+import java.util.Set;
+
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
@@ -12,10 +14,12 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.view.song.TrackItem;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -27,14 +31,15 @@ import javafx.scene.shape.Rectangle;
 /**
  * Frontend representation of a note. The backend representation is found in the model's Note class.
  */
-public class Note implements Comparable<Note> {
+public class Note implements TrackItem, Comparable<Note> {
     private final StackPane layout;
     private final Rectangle note;
     private final Rectangle dragEdge;
     private final Rectangle overlap;
-    private final ContextMenu contextMenu;
     private final NoteCallback track;
+    private final BooleanProperty vibratoEditor;
     private final Lyric lyric;
+    private final Localizer localizer;
     private final Quantizer quantizer;
     private final Scaler scaler;
 
@@ -43,6 +48,7 @@ public class Note implements Comparable<Note> {
     }
 
     // Temporary cache values.
+    private ContextMenu contextMenu;
     private SubMode subMode = SubMode.CLICKING;
     private int positionInNote = 0;
     private int startPos = 0;
@@ -68,6 +74,8 @@ public class Note implements Comparable<Note> {
         this.dragEdge = dragEdge;
         this.overlap = overlap;
         this.track = callback;
+        this.vibratoEditor = vibratoEditor;
+        this.localizer = localizer;
         this.quantizer = quantizer;
         this.scaler = scaler;
         this.lyric = lyric;
@@ -108,58 +116,11 @@ public class Note implements Comparable<Note> {
         }, showLyrics, showAliases);
 
         // Create context menu.
-        this.contextMenu = new ContextMenu();
-        MenuItem cutMenuItem = new MenuItem("Cut");
-        cutMenuItem.setOnAction(action -> {
-            track.copyNote(thisNote);
-            deleteNote();
-        });
-        MenuItem copyMenuItem = new MenuItem("Copy");
-        copyMenuItem.setOnAction(action -> track.copyNote(thisNote));
-        MenuItem deleteMenuItem = new MenuItem("Delete");
-        deleteMenuItem.setOnAction(action -> deleteNote());
-        CheckMenuItem vibratoMenuItem = new CheckMenuItem("Vibrato");
-        vibratoMenuItem.setOnAction(action -> {
-            track.setHasVibrato(getAbsPositionMs(), vibratoMenuItem.isSelected());
-        });
-        CheckMenuItem vibratoEditorMenuItem = new CheckMenuItem("Vibrato Editor");
-        vibratoEditorMenuItem.selectedProperty().bindBidirectional(vibratoEditor);
-        MenuItem lyricConfigItem = new MenuItem("Open Lyric Config");
-        lyricConfigItem.setOnAction(action -> track.openLyricConfig(this));
-        MenuItem notePropertiesItem = new MenuItem("Note Properties");
-        notePropertiesItem.setOnAction(action -> track.openNoteProperties(this));
-        MenuItem clearCacheItem = new MenuItem("Clear Cache");
-        clearCacheItem.setOnAction(action -> track.clearCache(this));
-        contextMenu.getItems().addAll(
-                cutMenuItem,
-                copyMenuItem,
-                deleteMenuItem,
-                new SeparatorMenuItem(),
-                vibratoMenuItem,
-                vibratoEditorMenuItem,
-                new SeparatorMenuItem(),
-                lyricConfigItem,
-                new SeparatorMenuItem(),
-                notePropertiesItem,
-                new SeparatorMenuItem(),
-                clearCacheItem);
-        contextMenu.setOnShowing(event -> {
-            // Need to refresh whether vibrato is there.
-            if (track != null) {
-                vibratoMenuItem.setSelected(track.hasVibrato(getAbsPositionMs()));
-            }
-            cutMenuItem.setText(localizer.getMessage("menu.edit.cut"));
-            copyMenuItem.setText(localizer.getMessage("menu.edit.copy"));
-            deleteMenuItem.setText(localizer.getMessage("menu.edit.delete"));
-            vibratoMenuItem.setText(localizer.getMessage("song.note.vibrato"));
-            vibratoEditorMenuItem.setText(localizer.getMessage("song.note.vibratoEditor"));
-            lyricConfigItem.setText(localizer.getMessage("song.note.openLyricConfig"));
-            notePropertiesItem.setText(localizer.getMessage("menu.edit.noteProperties"));
-            clearCacheItem.setText(localizer.getMessage("song.note.clearCache"));
-        });
         layout.setOnContextMenuRequested(event -> {
-            contextMenu.hide();
-            contextMenu.show(layout, event.getScreenX(), event.getScreenY());
+            if (contextMenu != null) {
+                contextMenu.hide(); // Hide any existing context menu.
+            }
+            createContextMenu().show(layout, event.getScreenX(), event.getScreenY());
         });
 
         layout.setOnMouseReleased(event -> {
@@ -187,7 +148,9 @@ public class Note implements Comparable<Note> {
                     this.track.realignHighlights();
                 }
             } else {
-                contextMenu.hide();
+                if (contextMenu != null) {
+                    contextMenu.hide();
+                }
                 if (event.isShiftDown()) {
                     this.track.highlightInclusive(this);
                 } else if (this.track.isExclusivelyHighlighted(this)) {
@@ -203,7 +166,7 @@ public class Note implements Comparable<Note> {
                 // Find quantized mouse position.
                 int quantSize = quantizer.getQuant();
                 int newQuant = (int) Math.floor(
-                        (scaler.unscaleX(event.getX()) * 1.0 + getAbsPositionMs()) / quantSize);
+                        (scaler.unscaleX(event.getX()) + getAbsPositionMs()) / quantSize);
 
                 // Find what to compare quantized mouse position to.
                 int oldEndPos = getAbsPositionMs() + getDurationMs();
@@ -225,7 +188,7 @@ public class Note implements Comparable<Note> {
                 // Handle vertical movement.
                 int oldRow = getRow();
                 int newRow = ((int) Math
-                        .floor(scaler.unscaleY(event.getY()) * 1.0 / Quantizer.ROW_HEIGHT))
+                        .floor(scaler.unscaleY(event.getY()) / Quantizer.ROW_HEIGHT))
                         + oldRow;
                 // Check whether new row is in bounds for every highlighted note.
                 int lowestNewRow = track.getLowestRow(thisNote) + (newRow - oldRow);
@@ -240,7 +203,7 @@ public class Note implements Comparable<Note> {
                 boolean aligned = getAbsPositionMs() % curQuantSize == 0;
                 int oldQuantInNote = positionInNote / curQuantSize;
                 int newQuantInNote =
-                        (int) Math.floor(scaler.unscaleX(event.getX()) * 1.0 / curQuantSize);
+                        (int) Math.floor(scaler.unscaleX(event.getX()) / curQuantSize);
                 int quantChange = newQuantInNote - oldQuantInNote;
                 if (!aligned) {
                     // Possibly increase quantChange by 1.
@@ -304,8 +267,109 @@ public class Note implements Comparable<Note> {
         });
     }
 
+    @Override
+    public double getStartX() {
+        return layout.getTranslateX();
+    }
+
+    @Override
+    public double getWidth() {
+        return 0;
+    }
+
+    @Override
     public StackPane getElement() {
         return layout;
+    }
+
+    @Override
+    public Node redraw(int colNum, double offsetX) {
+        int position = 5;
+        int duration = 5;
+        String pitch = "C4";
+        int absStart = position;
+        int absDuration = duration;
+        Rectangle rect = new Rectangle();
+        rect.setWidth(scaler.scaleX(absDuration).get() - 1);
+        rect.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
+        rect.getStyleClass().addAll("track-note", "valid", "not-highlighted");
+
+        Rectangle edge = new Rectangle();
+        edge.setWidth(3);
+        edge.setHeight(rect.getHeight());
+        edge.setOpacity(0.0);
+
+        Rectangle overlap = new Rectangle();
+        overlap.setWidth(0);
+        overlap.setHeight(rect.getHeight());
+        overlap.getStyleClass().add("note-overlap");
+
+        StackPane layout = new StackPane();
+        layout.setPickOnBounds(false);
+        layout.setAlignment(Pos.CENTER_LEFT);
+        layout.setTranslateY(scaler.scaleY(
+                PitchUtils.pitchToRowNum(pitch) * Quantizer.ROW_HEIGHT).get());
+        layout.setTranslateX(scaler.scalePos(absStart).get());
+        return layout;
+    }
+
+    private ContextMenu createContextMenu() {
+        Note thisNote = this;
+        contextMenu = new ContextMenu();
+        MenuItem cutMenuItem = new MenuItem("Cut");
+        cutMenuItem.setOnAction(action -> {
+            track.copyNote(thisNote);
+            deleteNote();
+        });
+        MenuItem copyMenuItem = new MenuItem("Copy");
+        copyMenuItem.setOnAction(action -> track.copyNote(thisNote));
+        MenuItem deleteMenuItem = new MenuItem("Delete");
+        deleteMenuItem.setOnAction(action -> deleteNote());
+        CheckMenuItem vibratoMenuItem = new CheckMenuItem("Vibrato");
+        vibratoMenuItem.setSelected(track.hasVibrato(getAbsPositionMs()));
+        vibratoMenuItem.setOnAction(action -> {
+            track.setHasVibrato(getAbsPositionMs(), vibratoMenuItem.isSelected());
+        });
+        CheckMenuItem vibratoEditorMenuItem = new CheckMenuItem("Vibrato Editor");
+        vibratoEditorMenuItem.setSelected(vibratoEditor.get());
+        vibratoEditorMenuItem.setOnAction(event -> {
+            vibratoEditor.set(vibratoEditorMenuItem.isSelected());
+        });
+        MenuItem lyricConfigItem = new MenuItem("Open Lyric Config");
+        lyricConfigItem.setOnAction(action -> track.openLyricConfig(this));
+        MenuItem notePropertiesItem = new MenuItem("Note Properties");
+        notePropertiesItem.setOnAction(action -> track.openNoteProperties(this));
+        MenuItem clearCacheItem = new MenuItem("Clear Cache");
+        clearCacheItem.setOnAction(action -> track.clearCache(this));
+        contextMenu.getItems().addAll(
+                cutMenuItem,
+                copyMenuItem,
+                deleteMenuItem,
+                new SeparatorMenuItem(),
+                vibratoMenuItem,
+                vibratoEditorMenuItem,
+                new SeparatorMenuItem(),
+                lyricConfigItem,
+                new SeparatorMenuItem(),
+                notePropertiesItem,
+                new SeparatorMenuItem(),
+                clearCacheItem);
+        contextMenu.setOnShowing(event -> {
+            cutMenuItem.setText(localizer.getMessage("menu.edit.cut"));
+            copyMenuItem.setText(localizer.getMessage("menu.edit.copy"));
+            deleteMenuItem.setText(localizer.getMessage("menu.edit.delete"));
+            vibratoMenuItem.setText(localizer.getMessage("song.note.vibrato"));
+            vibratoEditorMenuItem.setText(localizer.getMessage("song.note.vibratoEditor"));
+            lyricConfigItem.setText(localizer.getMessage("song.note.openLyricConfig"));
+            notePropertiesItem.setText(localizer.getMessage("menu.edit.noteProperties"));
+            clearCacheItem.setText(localizer.getMessage("song.note.clearCache"));
+        });
+        return contextMenu;
+    }
+
+    @Override
+    public Set<Integer> getColumns() {
+        return null;
     }
 
     public int getRow() {

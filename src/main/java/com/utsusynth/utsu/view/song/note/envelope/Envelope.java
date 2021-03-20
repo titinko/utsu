@@ -13,74 +13,71 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import javafx.util.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class Envelope implements TrackItem {
-    private final MoveTo start;
-    private final LineTo[] lines;
-    private final LineTo end;
-    private final double maxHeight;
-    private final EnvelopeCallback callback;
-    private final Scaler scaler;
-
-    private final Map<Integer, Group> drawnCache;
+    private final double startX;
+    private final double startY;
     private final DoubleProperty[] xValues;
     private final DoubleProperty[] yValues;
+    private final double endX;
+    private final double endY;
+    private final double maxHeight;
+    private final Map<Integer, Group> drawnCache;
+    private final EnvelopeCallback callback;
+    private final Scaler scaler;
 
     // Temporary cache values.
     private boolean changed = false;
     private EnvelopeData startData;
 
     Envelope(
-            MoveTo start,
-            LineTo l1,
-            LineTo l2,
-            LineTo l3,
-            LineTo l4,
-            LineTo l5,
-            LineTo end,
+            double[] allXValues,
+            double[] allYValues,
             EnvelopeCallback callback,
             double maxHeight,
             Scaler scaler) {
         this.maxHeight = maxHeight;
         this.scaler = scaler;
         this.callback = callback;
-        this.start = start;
-        lines = new LineTo[] {l1, l2, l3, l4, l5};
-        xValues = new DoubleProperty[] {
-                new SimpleDoubleProperty(l1.getX()),
-                new SimpleDoubleProperty(l2.getX()),
-                new SimpleDoubleProperty(l3.getX()),
-                new SimpleDoubleProperty(l4.getX()),
-                new SimpleDoubleProperty(l5.getX())
+        this.startX = allXValues[0];
+        this.startY = allYValues[0];
+        this.xValues = new DoubleProperty[] {
+                new SimpleDoubleProperty(allXValues[1]),
+                new SimpleDoubleProperty(allXValues[2]),
+                new SimpleDoubleProperty(allXValues[3]),
+                new SimpleDoubleProperty(allXValues[4]),
+                new SimpleDoubleProperty(allXValues[5])
         };
-        yValues = new DoubleProperty[] {
-                new SimpleDoubleProperty(l1.getY()),
-                new SimpleDoubleProperty(l2.getY()),
-                new SimpleDoubleProperty(l3.getY()),
-                new SimpleDoubleProperty(l4.getY()),
-                new SimpleDoubleProperty(l5.getY())
+        this.yValues = new DoubleProperty[] {
+                new SimpleDoubleProperty(allYValues[1]),
+                new SimpleDoubleProperty(allYValues[2]),
+                new SimpleDoubleProperty(allYValues[3]),
+                new SimpleDoubleProperty(allYValues[4]),
+                new SimpleDoubleProperty(allYValues[5])
         };
         drawnCache = new HashMap<>();
-        this.end = end;
+        this.endX = allXValues[6];
+        this.endY = allYValues[6];
     }
 
     @Override
     public double getStartX() {
-        return start.getX();
+        return startX;
     }
 
     @Override
     public double getWidth() {
-        return end.getX() - start.getX();
+        return endX - startX;
     }
 
     @Override
     public Group getElement() {
-        return redraw(-1, 0); // Grap element without any positioning.
+        return redraw(-1, 0); // Grab element without any positioning.
     }
 
     @Override
@@ -88,21 +85,21 @@ public class Envelope implements TrackItem {
         if (drawnCache.containsKey(colNum)) {
             return drawnCache.get(colNum);
         }
-        MoveTo startClone = new MoveTo(start.getX() - offsetX, start.getY());
-        LineTo l1Clone = new LineTo(lines[0].getX() - offsetX, lines[0].getY());
-        LineTo l2Clone = new LineTo(lines[1].getX() - offsetX, lines[1].getY());
-        LineTo l3Clone = new LineTo(lines[2].getX() - offsetX, lines[2].getY());
-        LineTo l4Clone = new LineTo(lines[3].getX() - offsetX, lines[3].getY());
-        LineTo l5Clone = new LineTo(lines[4].getX() - offsetX, lines[4].getY());
-        LineTo[] linesClone = new LineTo[] {l1Clone, l2Clone, l3Clone, l4Clone, l5Clone};
-        LineTo endClone = new LineTo(end.getX() - offsetX, end.getY());
-        Path pathClone = new Path(
-                startClone, l1Clone, l2Clone, l3Clone, l4Clone, l5Clone, endClone);
-        pathClone.getStyleClass().add("envelope-line");
+        MoveTo start = new MoveTo(startX - offsetX, startY);
+        LineTo[] lines = new LineTo[] {
+                new LineTo(xValues[0].get() - offsetX, yValues[0].get()),
+                new LineTo(xValues[1].get() - offsetX, yValues[1].get()),
+                new LineTo(xValues[2].get() - offsetX, yValues[2].get()),
+                new LineTo(xValues[3].get() - offsetX, yValues[3].get()),
+                new LineTo(xValues[4].get() - offsetX, yValues[4].get())};
+        LineTo end = new LineTo(endX - offsetX, endY);
+        Path path = new Path(
+                start, lines[0], lines[1], lines[2], lines[3], lines[4], end);
+        path.getStyleClass().add("envelope-line");
 
         Circle[] circles = new Circle[5]; // Control points.
         for (int i = 0; i < 5; i++) {
-            Circle circle = new Circle(linesClone[i].getX(), linesClone[i].getY(), 3);
+            Circle circle = new Circle(lines[i].getX(), lines[i].getY(), 3);
             circle.getStyleClass().add("envelope-circle");
             // Custom binding for circle x values.
             final int index = i;
@@ -123,8 +120,8 @@ public class Envelope implements TrackItem {
                 }
             });
             circle.centerYProperty().bindBidirectional(yValues[i]);
-            linesClone[i].xProperty().bind(circle.centerXProperty());
-            linesClone[i].yProperty().bind(circle.centerYProperty());
+            lines[i].xProperty().bind(circle.centerXProperty());
+            lines[i].yProperty().bind(circle.centerYProperty());
             circle.setOnMouseEntered(event -> {
                 circle.getScene().setCursor(Cursor.HAND);
             });
@@ -139,7 +136,7 @@ public class Envelope implements TrackItem {
                 // Set reasonable limits for where envelope can be dragged.
                 if (index > 0 && index < 4) {
                     double newX = event.getX();
-                    if (newX > linesClone[index - 1].getX() && newX < linesClone[index + 1].getX()) {
+                    if (newX > lines[index - 1].getX() && newX < lines[index + 1].getX()) {
                         changed = true;
                         circle.setCenterX(newX);
                     }
@@ -157,10 +154,10 @@ public class Envelope implements TrackItem {
             });
             circles[i] = circle;
         }
-        Group groupClone = new Group(
-                pathClone, circles[0], circles[1], circles[2], circles[4], circles[3]);
-        drawnCache.put(colNum, groupClone);
-        return groupClone;
+        Group group = new Group(
+                path, circles[0], circles[1], circles[2], circles[4], circles[3]);
+        drawnCache.put(colNum, group);
+        return group;
     }
 
     @Override
@@ -169,15 +166,15 @@ public class Envelope implements TrackItem {
     }
 
     public int getStartMs() {
-        return RoundUtils.round(scaler.unscalePos(start.getX()));
+        return RoundUtils.round(scaler.unscalePos(startX));
     }
 
     public EnvelopeData getData() {
         double[] widths = new double[5];
-        widths[0] = scaler.unscaleX(xValues[0].get() - start.getX());
+        widths[0] = scaler.unscaleX(xValues[0].get() - startX);
         widths[1] = scaler.unscaleX(xValues[1].get() - xValues[0].get());
         widths[2] = scaler.unscaleX(xValues[4].get() - xValues[3].get());
-        widths[3] = scaler.unscaleX(end.getX() - xValues[4].get());
+        widths[3] = scaler.unscaleX(endX - xValues[4].get());
         widths[4] = scaler.unscaleX(xValues[2].get() - xValues[1].get());
 
         double multiplier = 200 / maxHeight; // Final value should have range 0-200.
