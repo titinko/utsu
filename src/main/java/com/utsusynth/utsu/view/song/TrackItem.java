@@ -20,4 +20,7 @@ public interface TrackItem {
 
     /** Return every column where this item is currently drawn. */
     Set<Integer> getColumns();
+
+    /** Clear list of columns after erasing item from them. */
+    void clearColumns();
 }

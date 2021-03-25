@@ -8,15 +8,12 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
-import javafx.util.Pair;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 
 public class Envelope implements TrackItem {
@@ -27,7 +24,7 @@ public class Envelope implements TrackItem {
     private final double endX;
     private final double endY;
     private final double maxHeight;
-    private final Map<Integer, Group> drawnCache;
+    private final Set<Integer> drawnColumns;
     private final EnvelopeCallback callback;
     private final Scaler scaler;
 
@@ -60,7 +57,7 @@ public class Envelope implements TrackItem {
                 new SimpleDoubleProperty(allYValues[4]),
                 new SimpleDoubleProperty(allYValues[5])
         };
-        drawnCache = new HashMap<>();
+        drawnColumns = new HashSet<>();
         this.endX = allXValues[6];
         this.endY = allYValues[6];
     }
@@ -82,8 +79,12 @@ public class Envelope implements TrackItem {
 
     @Override
     public Group redraw(int colNum, double offsetX) {
-        if (drawnCache.containsKey(colNum)) {
-            return drawnCache.get(colNum);
+        drawnColumns.add(colNum);
+
+        // Refresh all x-values.
+        for (int i = 0; i < xValues.length; i++) {
+            double value = xValues[i].get();
+            xValues[i] = new SimpleDoubleProperty(value);
         }
         MoveTo start = new MoveTo(startX - offsetX, startY);
         LineTo[] lines = new LineTo[] {
@@ -156,13 +157,18 @@ public class Envelope implements TrackItem {
         }
         Group group = new Group(
                 path, circles[0], circles[1], circles[2], circles[4], circles[3]);
-        drawnCache.put(colNum, group);
+        //drawnCache.put(colNum, group);
         return group;
     }
 
     @Override
     public Set<Integer> getColumns() {
-        return drawnCache.keySet();
+        return drawnColumns;
+    }
+
+    @Override
+    public void clearColumns() {
+        drawnColumns.clear();
     }
 
     public int getStartMs() {

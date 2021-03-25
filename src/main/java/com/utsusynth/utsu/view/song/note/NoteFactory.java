@@ -65,11 +65,10 @@ public class NoteFactory {
 
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(
-                rect,
-                edge,
-                overlap,
+                PitchUtils.pitchToRowNum(note.getPitch()),
+                scaler.scalePos(absStart).get(),
+                scaler.scaleX(absDuration).get() - 1,
                 lyric,
-                layout,
                 callback,
                 vibratoEditor,
                 showLyrics,
@@ -127,11 +126,10 @@ public class NoteFactory {
 
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(
-                note,
-                edge,
-                overlap,
+                row,
+                scaler.scalePos(positionMs).get(),
+                scaler.scaleX(durationMs).get() - 1,
                 lyric,
-                layout,
                 callback,
                 vibratoEditor,
                 showLyrics,
@@ -156,12 +154,12 @@ public class NoteFactory {
         layout.setTranslateY(noteScaler.scaleY(row * Quantizer.ROW_HEIGHT).get());
         layout.setTranslateX(startX);
 
+        // Should remove drag edge.
         Note trackNote = new Note(
-                note,
-                new Rectangle(0, 0),
-                new Rectangle(0, 0),
+                row,
+                startX,
+                widthX,
                 lyricProvider.get(),
-                layout,
                 null,
                 new SimpleBooleanProperty(false),
                 new SimpleBooleanProperty(false),

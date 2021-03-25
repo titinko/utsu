@@ -15,7 +15,7 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.view.song.TrackItem;
-import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -32,10 +32,6 @@ import javafx.scene.shape.Rectangle;
  * Frontend representation of a note. The backend representation is found in the model's Note class.
  */
 public class Note implements TrackItem, Comparable<Note> {
-    private final StackPane layout;
-    private final Rectangle note;
-    private final Rectangle dragEdge;
-    private final Rectangle overlap;
     private final NoteCallback track;
     private final BooleanProperty vibratoEditor;
     private final Lyric lyric;
@@ -46,6 +42,19 @@ public class Note implements TrackItem, Comparable<Note> {
     private enum SubMode {
         CLICKING, DRAGGING, RESIZING,
     }
+
+    private final IntegerProperty currentRow;
+    private final DoubleProperty startX;
+    private final DoubleProperty widthX;
+    private final DoubleProperty overlapWidthX;
+
+    private boolean isValid = false;
+    private boolean isHighlighted = false;
+
+    private StackPane layout;
+    private Rectangle note;
+    private Rectangle dragEdge;
+    private Rectangle overlap;
 
     // Temporary cache values.
     private ContextMenu contextMenu;
@@ -58,11 +67,10 @@ public class Note implements TrackItem, Comparable<Note> {
     private NoteUpdateData backupData; // Cache of backend song data for re-adding backend note.
 
     Note(
-            Rectangle note,
-            Rectangle dragEdge,
-            Rectangle overlap,
+            int currentRow,
+            double startX,
+            double widthX,
             Lyric lyric,
-            StackPane layout,
             NoteCallback callback,
             BooleanProperty vibratoEditor,
             BooleanProperty showLyrics,
@@ -70,19 +78,16 @@ public class Note implements TrackItem, Comparable<Note> {
             Localizer localizer,
             Quantizer quantizer,
             Scaler scaler) {
-        this.note = note;
-        this.dragEdge = dragEdge;
-        this.overlap = overlap;
         this.track = callback;
         this.vibratoEditor = vibratoEditor;
         this.localizer = localizer;
         this.quantizer = quantizer;
         this.scaler = scaler;
         this.lyric = lyric;
-        this.layout = layout;
-        layout.getChildren()
-                .addAll(this.note, this.overlap, this.lyric.getElement(), this.dragEdge);
-        StackPane.setAlignment(this.note, Pos.TOP_LEFT);
+        this.currentRow = new SimpleIntegerProperty(0);
+        this.startX = new SimpleDoubleProperty(0);
+        this.widthX = new SimpleDoubleProperty(0);
+        overlapWidthX = new SimpleDoubleProperty(0);
 
         Note thisNote = this;
         lyric.initialize(new LyricCallback() {
@@ -114,16 +119,79 @@ public class Note implements TrackItem, Comparable<Note> {
                 thisNote.getElement().toFront();
             }
         }, showLyrics, showAliases);
+    }
 
-        // Create context menu.
-        layout.setOnContextMenuRequested(event -> {
+    @Override
+    public double getStartX() {
+        return startX.get();
+    }
+
+    @Override
+    public double getWidth() {
+        return widthX.get();
+    }
+
+    @Override
+    public StackPane getElement() {
+        return redraw(-1, 0);
+    }
+
+    @Override
+    public StackPane redraw(int colNum, double offsetX) {
+        if (layout != null) {
+            layout.translateXProperty().unbindBidirectional(startX);
+        }
+        if (note != null) {
+            note.widthProperty().unbindBidirectional(widthX);
+        }
+        if (overlap != null) {
+            overlap.widthProperty().unbindBidirectional(overlapWidthX);
+        }
+        note = new Rectangle();
+        note.widthProperty().bindBidirectional(widthX);
+        note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
+        note.getStyleClass().addAll(
+                "track-note",
+                isValid ? "valid" : "invalid",
+                isHighlighted ? "highlighted" : "not-highlighted");
+
+        dragEdge = new Rectangle();
+        dragEdge.setWidth(3);
+        dragEdge.setHeight(note.getHeight());
+        dragEdge.setOpacity(0.0);
+        dragEdge.setOnMouseEntered(event -> {
+            dragEdge.getScene().setCursor(Cursor.W_RESIZE);
+        });
+        dragEdge.setOnMouseExited(event -> {
+            dragEdge.getScene().setCursor(Cursor.DEFAULT);
+        });
+
+        overlap = new Rectangle();
+        overlap.widthProperty().bindBidirectional(overlapWidthX);
+        overlap.setHeight(note.getHeight());
+        overlap.getStyleClass().add("note-overlap");
+
+        layout = new StackPane();
+        layout.setPickOnBounds(false);
+        layout.setAlignment(Pos.CENTER_LEFT);
+        layout.setTranslateY(scaler.scaleY(currentRow.get() * Quantizer.ROW_HEIGHT).get());
+        layout.translateXProperty().bindBidirectional(startX);
+        layout.getChildren().addAll(note, overlap, lyric.getElement(), dragEdge);
+        StackPane.setAlignment(note, Pos.TOP_LEFT);
+        initializeLayout(layout);
+        return layout;
+    }
+
+    private void initializeLayout(StackPane newLayout) {
+        Note thisNote = this;
+        newLayout.setOnContextMenuRequested(event -> {
             if (contextMenu != null) {
                 contextMenu.hide(); // Hide any existing context menu.
             }
-            createContextMenu().show(layout, event.getScreenX(), event.getScreenY());
+            createContextMenu().show(newLayout, event.getScreenX(), event.getScreenY());
         });
 
-        layout.setOnMouseReleased(event -> {
+        newLayout.setOnMouseReleased(event -> {
             if (event.getButton() != MouseButton.PRIMARY) {
                 return;
             }
@@ -131,37 +199,37 @@ public class Note implements TrackItem, Comparable<Note> {
                 int newPos = getAbsPositionMs();
                 int newRow = getRow();
                 if (newPos != startPos || newRow != startRow) {
-                    this.track.recordNoteMovement(this, newPos - startPos, newRow - startRow);
+                    track.recordNoteMovement(this, newPos - startPos, newRow - startRow);
                 }
-                if (note.getStyleClass().contains("highlighted")) {
-                    this.track.realignHighlights();
+                if (isHighlighted) {
+                    track.realignHighlights();
                 }
             } else if (subMode == SubMode.RESIZING) {
                 final int oldDuration = startDuration;
                 final int newDuration = getDurationMs();
                 if (newDuration != oldDuration) {
-                    this.track.recordAction(
+                    track.recordAction(
                             () -> resizeNote(newDuration),
                             () -> resizeNote(oldDuration));
                 }
-                if (note.getStyleClass().contains("highlighted")) {
-                    this.track.realignHighlights();
+                if (isHighlighted) {
+                    track.realignHighlights();
                 }
             } else {
                 if (contextMenu != null) {
                     contextMenu.hide();
                 }
                 if (event.isShiftDown()) {
-                    this.track.highlightInclusive(this);
-                } else if (this.track.isExclusivelyHighlighted(this)) {
-                    this.lyric.openTextField();
+                    track.highlightInclusive(this);
+                } else if (track.isExclusivelyHighlighted(this)) {
+                    lyric.openTextField();
                 } else {
-                    this.track.highlightExclusive(this);
+                    track.highlightExclusive(this);
                 }
             }
             subMode = SubMode.CLICKING;
         });
-        layout.setOnMouseDragged(event -> {
+        newLayout.setOnMouseDragged(event -> {
             if (subMode == SubMode.RESIZING) {
                 // Find quantized mouse position.
                 int quantSize = quantizer.getQuant();
@@ -233,7 +301,7 @@ public class Note implements TrackItem, Comparable<Note> {
 
                 // Check column bounds of leftmost note.
                 int positionChange = (newQuant - oldQuant) * curQuantSize;
-                if (this.track.getBounds(thisNote).getMinMs() + positionChange < 0) {
+                if (track.getBounds(thisNote).getMinMs() + positionChange < 0) {
                     newQuant = oldQuant;
                 }
 
@@ -241,20 +309,14 @@ public class Note implements TrackItem, Comparable<Note> {
                 if (oldRow != newRow || oldQuant != newQuant) {
                     int oldPosition = oldQuant * curQuantSize;
                     int newPosition = newQuant * curQuantSize;
-                    this.track.moveNote(thisNote, newPosition - oldPosition, newRow - oldRow);
+                    track.moveNote(thisNote, newPosition - oldPosition, newRow - oldRow);
                     hasMoved = true;
                 }
                 subMode = SubMode.DRAGGING;
             }
         });
-        dragEdge.setOnMouseEntered(event -> {
-            dragEdge.getScene().setCursor(Cursor.W_RESIZE);
-        });
-        dragEdge.setOnMouseExited(event -> {
-            dragEdge.getScene().setCursor(Cursor.DEFAULT);
-        });
-        layout.setOnMousePressed(event -> {
-            if (layout.getScene().getCursor() == Cursor.W_RESIZE) {
+        newLayout.setOnMousePressed(event -> {
+            if (newLayout.getScene().getCursor() == Cursor.W_RESIZE) {
                 subMode = SubMode.RESIZING;
                 startDuration = getDurationMs();
             } else {
@@ -265,52 +327,6 @@ public class Note implements TrackItem, Comparable<Note> {
                 hasMoved = false;
             }
         });
-    }
-
-    @Override
-    public double getStartX() {
-        return layout.getTranslateX();
-    }
-
-    @Override
-    public double getWidth() {
-        return 0;
-    }
-
-    @Override
-    public StackPane getElement() {
-        return layout;
-    }
-
-    @Override
-    public Node redraw(int colNum, double offsetX) {
-        int position = 5;
-        int duration = 5;
-        String pitch = "C4";
-        int absStart = position;
-        int absDuration = duration;
-        Rectangle rect = new Rectangle();
-        rect.setWidth(scaler.scaleX(absDuration).get() - 1);
-        rect.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
-        rect.getStyleClass().addAll("track-note", "valid", "not-highlighted");
-
-        Rectangle edge = new Rectangle();
-        edge.setWidth(3);
-        edge.setHeight(rect.getHeight());
-        edge.setOpacity(0.0);
-
-        Rectangle overlap = new Rectangle();
-        overlap.setWidth(0);
-        overlap.setHeight(rect.getHeight());
-        overlap.getStyleClass().add("note-overlap");
-
-        StackPane layout = new StackPane();
-        layout.setPickOnBounds(false);
-        layout.setAlignment(Pos.CENTER_LEFT);
-        layout.setTranslateY(scaler.scaleY(
-                PitchUtils.pitchToRowNum(pitch) * Quantizer.ROW_HEIGHT).get());
-        layout.setTranslateX(scaler.scalePos(absStart).get());
-        return layout;
     }
 
     private ContextMenu createContextMenu() {
@@ -372,16 +388,21 @@ public class Note implements TrackItem, Comparable<Note> {
         return null;
     }
 
+    @Override
+    public void clearColumns() {
+        // blah
+    }
+
     public int getRow() {
-        return (int) scaler.unscaleY(layout.getTranslateY()) / Quantizer.ROW_HEIGHT;
+        return currentRow.get();
     }
 
     public int getAbsPositionMs() {
-        return RoundUtils.round(scaler.unscalePos(layout.getTranslateX()));
+        return RoundUtils.round(scaler.unscalePos(getStartX()));
     }
 
     public int getDurationMs() {
-        return RoundUtils.round(scaler.unscaleX(note.getWidth() + 1));
+        return RoundUtils.round(scaler.unscaleX(getWidth() + 1));
     }
 
     public String getLyric() {
@@ -394,11 +415,11 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     public RegionBounds getValidBounds() {
-        if (note.getStyleClass().contains("invalid")) {
+        if (!isValid()) {
             return RegionBounds.INVALID;
         }
         int absPosition = getAbsPositionMs();
-        int validDur = (int) Math.round(scaler.unscaleX(note.getWidth() - overlap.getWidth()));
+        int validDur = (int) Math.round(scaler.unscaleX(getWidth() - overlapWidthX.get()));
         return new RegionBounds(absPosition, absPosition + validDur);
     }
 
@@ -408,19 +429,25 @@ public class Note implements TrackItem, Comparable<Note> {
      * @param highlighted Whether the note should be highlighted.
      */
     public void setHighlighted(boolean highlighted) {
-        note.getStyleClass().set(2, highlighted ? "highlighted" : "not-highlighted");
+        isHighlighted = highlighted;
+        if (note != null) {
+            note.getStyleClass().set(2, highlighted ? "highlighted" : "not-highlighted");
+        }
 
-        if (!highlighted) {
+        if (!isHighlighted) {
             lyric.closeTextFieldIfNeeded();
         }
     }
 
     public boolean isValid() {
-        return note.getStyleClass().contains("valid");
+        return isValid;
     }
 
     public void setValid(boolean isValid) {
-        note.getStyleClass().set(1, isValid ? "valid" : "invalid");
+        this.isValid = isValid;
+        if (note != null) {
+            note.getStyleClass().set(1, isValid ? "valid" : "invalid");
+        }
         if (!isValid) {
             lyric.setVisibleAlias("");
             adjustForOverlap(Integer.MAX_VALUE);
@@ -438,15 +465,15 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     public void adjustForOverlap(int distanceToNextNote) {
-        double oldOverlap = overlap.getWidth();
-        double noteWidth = scaler.unscaleX(this.note.getWidth());
-        if (noteWidth > distanceToNextNote) {
-            overlap.setWidth(scaler.scaleX(noteWidth - distanceToNextNote).get());
+        double oldOverlap = overlapWidthX.get();
+        double noteWidthMs = scaler.unscaleX(getWidth());
+        if (noteWidthMs > distanceToNextNote) {
+            overlapWidthX.set(scaler.scaleX(noteWidthMs - distanceToNextNote).get());
         } else {
-            overlap.setWidth(0);
+            overlapWidthX.set(0);
         }
         // Resize note if necessary.
-        if (overlap.getWidth() < oldOverlap) {
+        if (overlapWidthX.get() < oldOverlap) {
             resizeNote(getDurationMs());
         }
         adjustDragEdge(getDurationMs());
@@ -460,9 +487,12 @@ public class Note implements TrackItem, Comparable<Note> {
     /** Only moves the visual note. */
     public void moveNoteElement(int positionMsDelta, int rowDelta) {
         int newPositionMs = getAbsPositionMs() + positionMsDelta;
-        layout.setTranslateX(scaler.scalePos(newPositionMs).get());
+        startX.set(scaler.scalePos(newPositionMs).get());
         int newRow = getRow() + rowDelta;
-        layout.setTranslateY(scaler.scaleY(newRow * Quantizer.ROW_HEIGHT).get());
+        currentRow.set(newRow);
+        if (layout != null) {
+            layout.setTranslateY(scaler.scaleY(newRow * Quantizer.ROW_HEIGHT).get());
+        }
     }
 
     public void setBackupData(NoteUpdateData backupData) {
@@ -496,12 +526,15 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     private void resizeNote(int newDuration) {
-        note.setWidth(scaler.scaleX(newDuration).get() - 1);
+        widthX.set(scaler.scaleX(newDuration).get() - 1);
         adjustDragEdge(newDuration);
         track.updateNote(this);
     }
 
     private void adjustDragEdge(double newDuration) {
+        if (dragEdge == null || overlap == null) {
+            return;
+        }
         double scaledDuration = scaler.scaleX(newDuration).get();
         StackPane
                 .setMargin(dragEdge, new Insets(0, 0, 0, scaledDuration - dragEdge.getWidth() - 1));

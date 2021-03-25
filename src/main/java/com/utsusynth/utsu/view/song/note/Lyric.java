@@ -4,60 +4,39 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.TrackItem;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 
 public class Lyric implements TrackItem {
+    private final Set<Integer> drawnColumns;
+    private final Scaler scaler;
+    private final SimpleBooleanProperty editMode;
+
+    private String lyric;
+    private String alias;
+
     private LyricCallback trackNote;
 
-    private final String defaultLyric;
-    private final Scaler scaler;
-    private final Group activeNode;
-    private final Map<Integer, Group> drawnCache;
-
-    private final HBox lyricAndAlias;
-    private final Label lyricText;
-    private final Label aliasText; // Defaults to empty string if there is no alias.
-    private final TextField textField;
+    private Group activeNode;
+    private HBox lyricAndAlias;
+    private Label lyricText;
+    private Label aliasText; // Defaults to empty string if there is no alias.
+    private TextField textField;
 
     public Lyric(String defaultLyric, Scaler scaler) {
-        this.defaultLyric = defaultLyric;
         this.scaler = scaler;
-        lyricText = new Label(defaultLyric);
-        lyricText.getStyleClass().add("track-note-text");
+        editMode = new SimpleBooleanProperty(false);
+        lyric = defaultLyric;
+        alias = "";
 
-        aliasText = new Label("");
-        aliasText.getStyleClass().add("track-note-text");
-
-        lyricAndAlias = new HBox(lyricText, aliasText);
-        lyricAndAlias.setMouseTransparent(true);
-
-        textField = new TextField();
-        textField.setFont(Font.font(9));
-        textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 2);
-        textField.setMaxWidth(scaler.scaleX(Quantizer.COL_WIDTH).get() - 2);
-        textField.setOnAction((event) -> {
-            closeTextFieldIfNeeded();
-        });
-        textField.focusedProperty().addListener(event -> {
-            if (!textField.isFocused()) {
-                closeTextFieldIfNeeded();
-            }
-        });
-
-        // Initialize with text active.
-        activeNode = new Group();
-        activeNode.getChildren().add(lyricAndAlias);
-
-        drawnCache = new HashMap<>();
+        drawnColumns = new HashSet<>();
     }
 
     /** Connect this lyric to a track note. */
@@ -69,8 +48,8 @@ public class Lyric implements TrackItem {
     }
 
     void setVisibleLyric(String newLyric) {
-        String oldLyric = lyricText.getText();
-        if (!newLyric.equals(oldLyric)) {
+        if (!newLyric.equals(lyric)) {
+            lyric = newLyric;
             lyricText.setText(newLyric);
             textField.setText(newLyric);
             adjustLyricAndAlias();
@@ -90,27 +69,26 @@ public class Lyric implements TrackItem {
 
     @Override
     public Group getElement() {
-        return activeNode;
+        return redraw(-1, 0);
     }
 
     @Override
     public Group redraw(int colNum, double offsetX) {
-        if (drawnCache.containsKey(colNum)) {
-            return drawnCache.get(colNum);
-        }
-        Label lyricText = new Label(defaultLyric);
+        drawnColumns.add(colNum);
+        lyricText = new Label(lyric);
         lyricText.getStyleClass().add("track-note-text");
 
-        Label aliasText = new Label("");
+        aliasText = new Label(alias);
         aliasText.getStyleClass().add("track-note-text");
 
-        HBox lyricAndAlias = new HBox(lyricText, aliasText);
+        lyricAndAlias = new HBox(lyricText, aliasText);
         lyricAndAlias.setMouseTransparent(true);
 
-        TextField textField = new TextField();
+        textField = new TextField();
         textField.setFont(Font.font(9));
         textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 2);
         textField.setMaxWidth(scaler.scaleX(Quantizer.COL_WIDTH).get() - 2);
+        textField.setText(lyric);
         textField.setOnAction((event) -> {
             closeTextFieldIfNeeded();
         });
@@ -121,29 +99,33 @@ public class Lyric implements TrackItem {
         });
 
         // Initialize with text active.
-        Group activeNode = new Group();
-        activeNode.getChildren().add(lyricAndAlias);
-        drawnCache.put(colNum, activeNode);
+        activeNode = new Group();
+            activeNode.getChildren().add(editMode.get() ? lyricAndAlias : textField);
         return activeNode;
     }
 
     @Override
     public Set<Integer> getColumns() {
-        return drawnCache.keySet();
+        return drawnColumns;
+    }
+
+    @Override
+    public void clearColumns() {
+        drawnColumns.clear();
     }
 
     String getLyric() {
-        return lyricText.getText();
+        return lyric;
     }
 
     void setVisibleAlias(String newAlias) {
-        String oldAlias = aliasText.getText();
-        if (!newAlias.equals(oldAlias)) {
+        if (!newAlias.equals(alias)) {
             if (newAlias.length() > 0) {
-                aliasText.setText(" (" + newAlias + ")");
+                alias = " (" + newAlias + ")";
             } else {
-                aliasText.setText(newAlias);
+                alias = newAlias;
             }
+            aliasText.setText(alias);
             adjustLyricAndAlias();
             trackNote.adjustColumnSpan();
         }
@@ -151,6 +133,7 @@ public class Lyric implements TrackItem {
 
     void openTextField() {
         trackNote.bringToFront(); // Don't let this text field be hidden by other notes.
+        editMode.set(true);
         activeNode.getChildren().clear();
         activeNode.getChildren().add(textField);
         textField.requestFocus();
@@ -158,14 +141,15 @@ public class Lyric implements TrackItem {
     }
 
     boolean isTextFieldOpen() {
-        return activeNode.getChildren().contains(textField);
+        return editMode.get();
     }
 
     void closeTextFieldIfNeeded() {
         if (isTextFieldOpen()) {
+            editMode.set(false);
             activeNode.getChildren().clear();
             activeNode.getChildren().add(lyricAndAlias);
-            String oldLyric = lyricText.getText();
+            String oldLyric = lyric;
             String newLyric = textField.getText();
             setVisibleLyric(newLyric);
             trackNote.replaceSongLyric(oldLyric, newLyric);
@@ -173,7 +157,7 @@ public class Lyric implements TrackItem {
     }
 
     void registerLyric() {
-        trackNote.setSongLyric(lyricText.getText());
+        trackNote.setSongLyric(lyric);
     }
 
     private void adjustLyricAndAlias() {
