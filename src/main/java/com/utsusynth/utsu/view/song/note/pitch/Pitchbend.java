@@ -1,25 +1,59 @@
 package com.utsusynth.utsu.view.song.note.pitch;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.view.song.TrackItem;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.Group;
+import javafx.scene.Node;
 
-public class Pitchbend {
+public class Pitchbend implements TrackItem {
     private final Portamento portamento;
     private final Vibrato vibrato;
     private final Group group;
+    private final Set<Integer> drawnColumns;
 
     Pitchbend(Portamento portamento, Vibrato vibrato, BooleanProperty showPitchbend) {
         this.portamento = portamento;
         this.vibrato = vibrato;
         group = new Group(portamento.getElement(), vibrato.getElement());
         group.visibleProperty().bind(showPitchbend);
+        drawnColumns = new HashSet<>();
     }
 
+    @Override
+    public double getStartX() {
+        return 0;
+    }
+
+    @Override
+    public double getWidth() {
+        return 0;
+    }
+
+    @Override
     public Group getElement() {
+        return redraw(-1, 0);
+    }
+
+    @Override
+    public Group redraw(int colNum, double offsetX) {
+        drawnColumns.add(colNum);
         return group;
+    }
+
+    @Override
+    public Set<Integer> getColumns() {
+        return drawnColumns;
+    }
+
+    @Override
+    public void clearColumns() {
+        drawnColumns.clear();
     }
 
     public boolean hasVibrato() {

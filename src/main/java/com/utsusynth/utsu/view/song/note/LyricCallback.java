@@ -7,6 +7,4 @@ public interface LyricCallback {
     void replaceSongLyric(String oldLyric, String newLyric);
 
     void adjustColumnSpan();
-
-    void bringToFront();
 }

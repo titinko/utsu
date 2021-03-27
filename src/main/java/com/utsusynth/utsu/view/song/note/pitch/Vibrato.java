@@ -1,13 +1,12 @@
 package com.utsusynth.utsu.view.song.note.pitch;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.function.Function;
-import java.util.Optional;
 
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.view.song.TrackItem;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -30,7 +29,7 @@ import javafx.scene.text.Text;
 /**
  * Visual representation of the vibrato of a single note.
  */
-public class Vibrato {
+public class Vibrato implements TrackItem {
     private final int noteStartMs;
     private final int noteEndMs;
     private final double noteY;
@@ -40,6 +39,7 @@ public class Vibrato {
     private final Path vibratoPath;
     private final Group editorGroup;
     private final PitchbendCallback callback;
+    private final Set<Integer> drawnColumns;
     private final Scaler scaler;
 
     private Optional<Editor> editor;
@@ -61,6 +61,7 @@ public class Vibrato {
         this.callback = callback;
         this.scaler = scaler;
         this.vibrato = startVibrato;
+        drawnColumns = new HashSet<>();
 
         vibratoPath = new Path();
         vibratoPath.getStyleClass().add("pitchbend");
@@ -90,8 +91,34 @@ public class Vibrato {
         vibratoGroup = new Group(vibratoPath, editorGroup);
     }
 
+    @Override
+    public double getStartX() {
+        return vibratoPath.getTranslateX(); // Not sure if this will work.
+    }
+
+    @Override
+    public double getWidth() {
+        return 0;
+    }
+
     public Group getElement() {
+        return redraw(-1, 0);
+    }
+
+    @Override
+    public Group redraw(int colNum, double offsetX) {
+        drawnColumns.add(colNum);
         return vibratoGroup;
+    }
+
+    @Override
+    public Set<Integer> getColumns() {
+        return drawnColumns;
+    }
+
+    @Override
+    public void clearColumns() {
+        drawnColumns.clear();
     }
 
     /** Fetch just the vibrato, never showing the editor. */

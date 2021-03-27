@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -38,23 +39,26 @@ public class Note implements TrackItem, Comparable<Note> {
     private final Localizer localizer;
     private final Quantizer quantizer;
     private final Scaler scaler;
+    private final Set<Integer> drawnColumns;
 
-    private enum SubMode {
-        CLICKING, DRAGGING, RESIZING,
-    }
-
+    // UI-independent state.
     private final IntegerProperty currentRow;
     private final DoubleProperty startX;
     private final DoubleProperty widthX;
     private final DoubleProperty overlapWidthX;
-
-    private boolean isValid = false;
+    private boolean isValid = true;
     private boolean isHighlighted = false;
+    private boolean isDisplayOnly = false;
 
+    // UI-dependent state.
     private StackPane layout;
     private Rectangle note;
     private Rectangle dragEdge;
     private Rectangle overlap;
+
+    private enum SubMode {
+        CLICKING, DRAGGING, RESIZING,
+    }
 
     // Temporary cache values.
     private ContextMenu contextMenu;
@@ -84,10 +88,11 @@ public class Note implements TrackItem, Comparable<Note> {
         this.quantizer = quantizer;
         this.scaler = scaler;
         this.lyric = lyric;
-        this.currentRow = new SimpleIntegerProperty(0);
-        this.startX = new SimpleDoubleProperty(0);
-        this.widthX = new SimpleDoubleProperty(0);
+        this.currentRow = new SimpleIntegerProperty(currentRow);
+        this.startX = new SimpleDoubleProperty(startX);
+        this.widthX = new SimpleDoubleProperty(widthX);
         overlapWidthX = new SimpleDoubleProperty(0);
+        drawnColumns = new HashSet<>();
 
         Note thisNote = this;
         lyric.initialize(new LyricCallback() {
@@ -113,11 +118,6 @@ public class Note implements TrackItem, Comparable<Note> {
                 // TODO: Factor lyric width into this.
                 thisNote.adjustDragEdge(thisNote.getDurationMs());
             }
-
-            @Override
-            public void bringToFront() {
-                thisNote.getElement().toFront();
-            }
         }, showLyrics, showAliases);
     }
 
@@ -138,8 +138,9 @@ public class Note implements TrackItem, Comparable<Note> {
 
     @Override
     public StackPane redraw(int colNum, double offsetX) {
+        drawnColumns.add(colNum);
         if (layout != null) {
-            layout.translateXProperty().unbindBidirectional(startX);
+            layout.translateXProperty().unbind();
         }
         if (note != null) {
             note.widthProperty().unbindBidirectional(widthX);
@@ -156,7 +157,7 @@ public class Note implements TrackItem, Comparable<Note> {
                 isHighlighted ? "highlighted" : "not-highlighted");
 
         dragEdge = new Rectangle();
-        dragEdge.setWidth(3);
+        dragEdge.setWidth(isDisplayOnly ? 0 : 3);
         dragEdge.setHeight(note.getHeight());
         dragEdge.setOpacity(0.0);
         dragEdge.setOnMouseEntered(event -> {
@@ -175,8 +176,13 @@ public class Note implements TrackItem, Comparable<Note> {
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
         layout.setTranslateY(scaler.scaleY(currentRow.get() * Quantizer.ROW_HEIGHT).get());
-        layout.translateXProperty().bindBidirectional(startX);
-        layout.getChildren().addAll(note, overlap, lyric.getElement(), dragEdge);
+        layout.translateXProperty().bind(startX.subtract(offsetX));
+        if (isDisplayOnly) {
+            layout.getChildren().add(note);
+            layout.setMouseTransparent(true);
+        } else {
+            layout.getChildren().addAll(note, overlap, lyric.getElement(), dragEdge);
+        }
         StackPane.setAlignment(note, Pos.TOP_LEFT);
         initializeLayout(layout);
         return layout;
@@ -385,12 +391,12 @@ public class Note implements TrackItem, Comparable<Note> {
 
     @Override
     public Set<Integer> getColumns() {
-        return null;
+        return drawnColumns;
     }
 
     @Override
     public void clearColumns() {
-        // blah
+        drawnColumns.clear();
     }
 
     public int getRow() {
@@ -452,6 +458,11 @@ public class Note implements TrackItem, Comparable<Note> {
             lyric.setVisibleAlias("");
             adjustForOverlap(Integer.MAX_VALUE);
         }
+    }
+
+    /** Make note non-interactable and only a background object. Irreversible. */
+    public void setToDisplayOnly() {
+        isDisplayOnly = true;
     }
 
     public boolean isLyricInputOpen() {

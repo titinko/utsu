@@ -93,6 +93,9 @@ public class Track {
                     return; // Don't bother rendering if there is no item.
                 }
 
+                Pane graphic = new Pane();
+                graphic.setPrefSize(colWidth, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
+
                 VBox column = new VBox();
                 for (int octave = 7; octave > 0; octave--) {
                     for (String pitch : PitchUtils.REVERSE_PITCHES) {
@@ -114,7 +117,14 @@ public class Track {
                         column.getChildren().add(newCell);
                     }
                 }
-                setGraphic(column);
+                graphic.getChildren().add(column);
+                if (item != null) {
+                    for (TrackItem trackItem : item) {
+                        double offset = getIndex() * colWidth;
+                        graphic.getChildren().add(trackItem.redraw(getIndex(), offset));
+                    }
+                }
+                setGraphic(graphic);
             }
         });
         // Custom scroll behavior because default behavior is stupid.
@@ -236,6 +246,7 @@ public class Track {
                     track.getItems().get(colNum), ImmutableSet.of(trackItem)).immutableCopy();
             track.getItems().set(colNum, items);
         }
+        trackItem.clearColumns();
     }
 
     /**

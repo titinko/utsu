@@ -17,18 +17,22 @@ import java.util.Set;
 public class Lyric implements TrackItem {
     private final Set<Integer> drawnColumns;
     private final Scaler scaler;
-    private final SimpleBooleanProperty editMode;
 
+    // UI-independent state.
+    private final SimpleBooleanProperty editMode;
     private String lyric;
     private String alias;
 
-    private LyricCallback trackNote;
-
+    // UI-dependent state.
     private Group activeNode;
     private HBox lyricAndAlias;
     private Label lyricText;
     private Label aliasText; // Defaults to empty string if there is no alias.
     private TextField textField;
+
+    private LyricCallback trackNote;
+    private BooleanProperty showLyrics;
+    private BooleanProperty showAliases;
 
     public Lyric(String defaultLyric, Scaler scaler) {
         this.scaler = scaler;
@@ -43,15 +47,19 @@ public class Lyric implements TrackItem {
     void initialize(
             LyricCallback callback, BooleanProperty showLyrics, BooleanProperty showAliases) {
         trackNote = callback;
-        lyricAndAlias.visibleProperty().bind(showLyrics);
-        aliasText.visibleProperty().bind(showAliases);
+        this.showLyrics = showLyrics;
+        this.showAliases = showAliases;
     }
 
     void setVisibleLyric(String newLyric) {
         if (!newLyric.equals(lyric)) {
             lyric = newLyric;
-            lyricText.setText(newLyric);
-            textField.setText(newLyric);
+            if (lyricText != null) {
+                lyricText.setText(newLyric);
+            }
+            if (textField != null) {
+                textField.setText(newLyric);
+            }
             adjustLyricAndAlias();
             trackNote.adjustColumnSpan();
         }
@@ -80,9 +88,11 @@ public class Lyric implements TrackItem {
 
         aliasText = new Label(alias);
         aliasText.getStyleClass().add("track-note-text");
+        aliasText.visibleProperty().bind(showAliases);
 
         lyricAndAlias = new HBox(lyricText, aliasText);
         lyricAndAlias.setMouseTransparent(true);
+        lyricAndAlias.visibleProperty().bind(showLyrics);
 
         textField = new TextField();
         textField.setFont(Font.font(9));
@@ -100,7 +110,7 @@ public class Lyric implements TrackItem {
 
         // Initialize with text active.
         activeNode = new Group();
-            activeNode.getChildren().add(editMode.get() ? lyricAndAlias : textField);
+            activeNode.getChildren().add(editMode.get() ? textField : lyricAndAlias);
         return activeNode;
     }
 
@@ -125,19 +135,22 @@ public class Lyric implements TrackItem {
             } else {
                 alias = newAlias;
             }
-            aliasText.setText(alias);
+            if (aliasText != null) {
+                aliasText.setText(alias);
+            }
             adjustLyricAndAlias();
             trackNote.adjustColumnSpan();
         }
     }
 
     void openTextField() {
-        trackNote.bringToFront(); // Don't let this text field be hidden by other notes.
         editMode.set(true);
-        activeNode.getChildren().clear();
-        activeNode.getChildren().add(textField);
-        textField.requestFocus();
-        textField.selectAll();
+        if (activeNode != null && textField != null) {
+            activeNode.getChildren().clear();
+            activeNode.getChildren().add(textField);
+            textField.requestFocus();
+            textField.selectAll();
+        }
     }
 
     boolean isTextFieldOpen() {
@@ -145,7 +158,7 @@ public class Lyric implements TrackItem {
     }
 
     void closeTextFieldIfNeeded() {
-        if (isTextFieldOpen()) {
+        if (isTextFieldOpen() && activeNode != null && textField != null) {
             editMode.set(false);
             activeNode.getChildren().clear();
             activeNode.getChildren().add(lyricAndAlias);
@@ -161,6 +174,9 @@ public class Lyric implements TrackItem {
     }
 
     private void adjustLyricAndAlias() {
+        if (lyricAndAlias == null || lyricText == null || aliasText == null) {
+            return;
+        }
         lyricAndAlias.getChildren().clear();
         if (!lyricText.getText().isEmpty()) {
             lyricAndAlias.getChildren().add(lyricText);
