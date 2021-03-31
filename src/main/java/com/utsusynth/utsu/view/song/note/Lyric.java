@@ -76,7 +76,7 @@ public class Lyric implements TrackItem {
     }
 
     @Override
-    public Group getElement() {
+    public Group redraw() {
         return redraw(-1, 0);
     }
 

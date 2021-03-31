@@ -73,7 +73,7 @@ public class Envelope implements TrackItem {
     }
 
     @Override
-    public Group getElement() {
+    public Group redraw() {
         return redraw(-1, 0); // Grab element without any positioning.
     }
 

@@ -49,15 +49,15 @@ public class VibratoCurve {
         return positionMs + getWidthMs();
     }
 
-    public void addToPath(Path path, double startMs) {
-        CubicCurveTo start = renderStart(startMs);
-        CubicCurveTo end = renderEnd(startMs + startWidthMs);
+    public void addToPath(Path path, double startMs, double offsetX) {
+        CubicCurveTo start = renderStart(startMs, offsetX);
+        CubicCurveTo end = renderEnd(startMs + startWidthMs, offsetX);
         path.getElements().addAll(start, end);
     }
 
-    private CubicCurveTo renderStart(double startMs) {
-        double startX = scaler.scalePos(startMs).get();
-        double endX = scaler.scalePos(startMs + startWidthMs).get();
+    private CubicCurveTo renderStart(double startMs, double offsetX) {
+        double startX = scaler.scalePos(startMs).get() - offsetX;
+        double endX = scaler.scalePos(startMs + startWidthMs).get() - offsetX;
         double startY = -scaler.scaleY(startShiftCents / 100 * Quantizer.ROW_HEIGHT).get() + noteY;
         double endY = -scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT).get() + noteY;
         double controlX_1 = startX + ((endX - startX) * 0.32613); // Sine approximation.
@@ -67,9 +67,9 @@ public class VibratoCurve {
         return new CubicCurveTo(controlX_1, controlY_1, controlX_2, controlY_2, endX, endY);
     }
 
-    private CubicCurveTo renderEnd(double startMs) {
-        double startX = scaler.scalePos(startMs).get();
-        double endX = scaler.scalePos(startMs + endWidthMs).get();
+    private CubicCurveTo renderEnd(double startMs, double offsetX) {
+        double startX = scaler.scalePos(startMs).get() - offsetX;
+        double endX = scaler.scalePos(startMs + endWidthMs).get() - offsetX;
         double startY = -scaler.scaleY(amplitudeCents / 100 * Quantizer.ROW_HEIGHT).get() + noteY;
         double endY = -scaler.scaleY(endShiftCents / 100 * Quantizer.ROW_HEIGHT).get() + noteY;
         double controlX_1 = startX + ((endX - startX) * 0.36191); // Sine approximation.

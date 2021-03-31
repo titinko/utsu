@@ -222,11 +222,11 @@ public class NoteMap {
                     showPitchbend);
             // Overrides are expected here.
             if (pitchbendMap.containsKey(position)) {
-                visiblePitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
+                visiblePitchbends.getChildren().remove(pitchbendMap.get(position).redraw());
             }
             pitchbendMap.put(position, pitchbend);
             if (visibleRegion.intersects(noteMap.get(position).getBounds())) {
-                visiblePitchbends.getChildren().add(pitchbend.getElement());
+                visiblePitchbends.getChildren().add(pitchbend.redraw());
             }
         }
     }

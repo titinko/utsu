@@ -12,8 +12,8 @@ public interface TrackItem {
     /** Width, in pixels, of this item. */
     double getWidth();
 
-    /** Element to render for this item. */
-    Node getElement();
+    /** Draw the item outside the track, with default settings. */
+    Node redraw();
 
     /** Redraw this item with a certain offset. */
     Node redraw(int colNum, double offsetX);

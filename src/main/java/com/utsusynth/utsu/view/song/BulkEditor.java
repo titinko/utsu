@@ -118,7 +118,7 @@ public class BulkEditor {
                     scaler,
                     false);
             notesAndPortamento.getChildren().addAll(
-                    first.getElement(), second.getElement(), currentPortamento.getElement());
+                    first.redraw(), second.redraw(), currentPortamento.getElement());
         } else if (currentFilters.contains(FilterType.FALLING_NOTE)) {
             Note first = noteFactory.createBackgroundNote(
                     numRows / 3, 0, noteWidth, scaler);
@@ -133,7 +133,7 @@ public class BulkEditor {
                     scaler,
                     false);
             notesAndPortamento.getChildren().addAll(
-                    first.getElement(), second.getElement(), currentPortamento.getElement());
+                    first.redraw(), second.redraw(), currentPortamento.getElement());
         } else {
             Note note = noteFactory.createBackgroundNote(
                     numRows / 2, noteWidth, noteWidth, scaler);
@@ -146,7 +146,7 @@ public class BulkEditor {
                     scaler,
                     false);
             notesAndPortamento.getChildren().addAll(
-                    note.getElement(), currentPortamento.getElement());
+                    note.redraw(), currentPortamento.getElement());
         }
         return notesAndPortamento;
     }
@@ -171,7 +171,7 @@ public class BulkEditor {
                 portamentoData,
                 miniScaler,
                 true);
-        return new Group(note.getElement(), newPortamento.getElement());
+        return new Group(note.redraw(), newPortamento.getElement());
     }
 
     public PitchbendData getPortamentoData() {
@@ -306,7 +306,7 @@ public class BulkEditor {
                         }
                     }
                 }, new SimpleBooleanProperty(true));
-        return new Group(note.getElement(), currentVibrato.getVibratoElement());
+        return new Group(note.redraw(), currentVibrato.getVibratoElement());
     }
 
     private Group createMiniNoteAndVibrato(
@@ -321,7 +321,7 @@ public class BulkEditor {
         Note note = noteFactory.createBackgroundNote(
                 numRows / 2, noteStart, width - noteStart, miniScaler);
         Vibrato newVibrato = pitchbendFactory.createViewOnlyVibrato(note, vibratoData, miniScaler);
-        return new Group(note.getElement(), newVibrato.getElement());
+        return new Group(note.redraw(), newVibrato.redraw());
     }
 
     public void toggleVibrato(boolean hasVibrato) {
@@ -451,7 +451,7 @@ public class BulkEditor {
 
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
                 editorWidth.get(), editorHeight.get(), envelopeData, scaler,false);
-        envelopeGroup = new Group(background, currentEnvelope.getElement());
+        envelopeGroup = new Group(background, currentEnvelope.redraw());
 
         InvalidationListener updateSize = obs -> {
             EnvelopeData curData = currentEnvelope.getData();
@@ -460,7 +460,7 @@ public class BulkEditor {
             }
             currentEnvelope = envelopeFactory.createEnvelopeEditor(
                     editorWidth.get(), editorHeight.get(), curData, scaler,false);
-            envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
+            envelopeGroup.getChildren().set(1, currentEnvelope.redraw());
         };
         editorWidth.addListener(updateSize);
         editorHeight.addListener(updateSize);
@@ -494,7 +494,7 @@ public class BulkEditor {
                         VBox background = createEnvelopeBackground(width, height);
                         Envelope envelope = envelopeFactory.createEnvelopeEditor(
                                 width.get(), height.get(), item, miniScaler, true);
-                        Group envelopeGroup = new Group(background, envelope.getElement());
+                        Group envelopeGroup = new Group(background, envelope.redraw());
                         envelopeGroup.setMouseTransparent(true);
                         Button closeButton = new Button("X");
                         closeButton.setOnAction(event -> {
@@ -544,7 +544,7 @@ public class BulkEditor {
         }
         currentEnvelope = envelopeFactory.createEnvelopeEditor(
                 editorWidth.get(), editorHeight.get(), newData, scaler,false);
-        envelopeGroup.getChildren().set(1, currentEnvelope.getElement());
+        envelopeGroup.getChildren().set(1, currentEnvelope.redraw());
         return true;
     }
 

@@ -132,7 +132,7 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     @Override
-    public StackPane getElement() {
+    public StackPane redraw() {
         return redraw(-1, 0);
     }
 
@@ -181,7 +181,7 @@ public class Note implements TrackItem, Comparable<Note> {
             layout.getChildren().add(note);
             layout.setMouseTransparent(true);
         } else {
-            layout.getChildren().addAll(note, overlap, lyric.getElement(), dragEdge);
+            layout.getChildren().addAll(note, overlap, lyric.redraw(), dragEdge);
         }
         StackPane.setAlignment(note, Pos.TOP_LEFT);
         initializeLayout(layout);

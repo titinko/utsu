@@ -35,15 +35,20 @@ public class Vibrato implements TrackItem {
     private final double noteY;
     private final BooleanProperty showEditor;
 
-    private final Group vibratoGroup;
-    private final Path vibratoPath;
-    private final Group editorGroup;
     private final PitchbendCallback callback;
     private final Set<Integer> drawnColumns;
+    private final Localizer localizer;
     private final Scaler scaler;
 
+    // UI-independent state.
     private Optional<Editor> editor;
     private int[] vibrato;
+
+    // UI-dependent state.
+    private Path vibratoPath;
+    private Group editorGroup;
+    private ContextMenu contextMenu;
+    private double offsetX = 0;
 
     Vibrato(
             int noteStartMs,
@@ -59,56 +64,56 @@ public class Vibrato implements TrackItem {
         this.noteY = noteY;
         this.showEditor = showEditor;
         this.callback = callback;
+        this.localizer = localizer;
         this.scaler = scaler;
         this.vibrato = startVibrato;
         drawnColumns = new HashSet<>();
-
-        vibratoPath = new Path();
-        vibratoPath.getStyleClass().add("pitchbend");
-        vibratoPath.setMouseTransparent(true);
-        redrawVibrato();
-
         editor = Optional.empty();
-        editorGroup = new Group();
-        // editorGroup.setOnMouseExited(event -> editorGroup.getScene().setCursor(Cursor.DEFAULT));
-        redrawEditor();
+
         showEditor.addListener((event, oldValue, newValue) -> {
             if (newValue != oldValue) {
                 redrawEditor();
             }
         });
-
-        // Vibrato editor has its own context menu.
-        CheckMenuItem vibratoEditorMenuItem = new CheckMenuItem("Vibrato Editor");
-        vibratoEditorMenuItem.selectedProperty().bindBidirectional(showEditor);
-        ContextMenu menu = new ContextMenu(vibratoEditorMenuItem);
-        menu.setOnShowing(event ->
-                vibratoEditorMenuItem.setText(localizer.getMessage("song.note.vibratoEditor")));
-        editorGroup.setOnContextMenuRequested(
-                event -> menu.show(editorGroup, event.getScreenX(), event.getScreenY()));
-
-        // Create final group.
-        vibratoGroup = new Group(vibratoPath, editorGroup);
     }
 
     @Override
     public double getStartX() {
-        return vibratoPath.getTranslateX(); // Not sure if this will work.
+        double lengthMs = (noteEndMs - noteStartMs) * (vibrato[0] / 100.0); // Vibrato length.
+        return scaler.scalePos(noteEndMs - lengthMs).get();
     }
 
     @Override
     public double getWidth() {
-        return 0;
+        return scaler.scaleX((noteEndMs - noteStartMs) * (vibrato[0] / 100.0)).get();
     }
 
-    public Group getElement() {
+    public Group redraw() {
         return redraw(-1, 0);
     }
 
     @Override
     public Group redraw(int colNum, double offsetX) {
         drawnColumns.add(colNum);
-        return vibratoGroup;
+        this.offsetX = offsetX;
+
+        vibratoPath = new Path();
+        vibratoPath.getStyleClass().add("pitchbend");
+        vibratoPath.setMouseTransparent(true);
+        redrawVibrato(vibratoPath);
+
+        editorGroup = new Group();
+        // Vibrato editor has its own context menu.
+        editorGroup.setOnContextMenuRequested(event -> {
+            if (contextMenu != null) {
+                contextMenu.hide(); // Hide any existing context menu.
+            }
+            createContextMenu().show(editorGroup, event.getScreenX(), event.getScreenY());
+        });
+        redrawEditor();
+
+        // Create final group.
+        return new Group(vibratoPath, editorGroup);
     }
 
     @Override
@@ -123,11 +128,17 @@ public class Vibrato implements TrackItem {
 
     /** Fetch just the vibrato, never showing the editor. */
     public Path getVibratoElement() {
+        if (vibratoPath == null) {
+            redraw();
+        }
         return vibratoPath;
     }
 
     /** Fetch just the editor, never showing the vibrato. */
     public Group getEditorElement() {
+        if (editorGroup == null) {
+            redraw();
+        }
         return editorGroup;
     }
 
@@ -159,7 +170,9 @@ public class Vibrato implements TrackItem {
         vibrato[8] = 0; // Frequency slope (range of -100 to 100)
         vibrato[9] = 0; // Unused.
         callback.modifySongVibrato(oldVibrato, Arrays.copyOf(vibrato, vibrato.length));
-        redrawVibrato();
+        if (vibratoPath != null) {
+            redrawVibrato(vibratoPath);
+        }
         redrawEditor();
     }
 
@@ -168,7 +181,9 @@ public class Vibrato implements TrackItem {
         int[] newVibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         callback.modifySongVibrato(oldVibrato, newVibrato);
         vibrato = Arrays.copyOf(newVibrato, newVibrato.length);
-        redrawVibrato();
+        if (vibratoPath != null) {
+            redrawVibrato(vibratoPath);
+        }
         redrawEditor();
     }
 
@@ -177,7 +192,9 @@ public class Vibrato implements TrackItem {
             return;
         }
         vibrato[index] = newValue;
-        redrawVibrato();
+        if (vibratoPath != null) {
+            redrawVibrato(vibratoPath);
+        }
         // This method does not include redrawing the editor.
     }
 
@@ -185,14 +202,28 @@ public class Vibrato implements TrackItem {
         // Only use when vibrato is edited by something besides the editor.
         if (showEditor.get() && getVibrato().isPresent()) {
             editor = Optional.of(new Editor());
-            editorGroup.getChildren().setAll(editor.get().render());
+            if (editorGroup != null) {
+                editorGroup.getChildren().setAll(editor.get().render());
+            }
         } else {
             editor = Optional.empty();
-            editorGroup.getChildren().clear();
+            if (editorGroup != null) {
+                editorGroup.getChildren().clear();
+            }
         }
     }
 
-    private void redrawVibrato() {
+    private ContextMenu createContextMenu() {
+        // Vibrato editor has its own context menu.
+        CheckMenuItem vibratoEditorMenuItem = new CheckMenuItem("Vibrato Editor");
+        vibratoEditorMenuItem.selectedProperty().bindBidirectional(showEditor);
+        contextMenu = new ContextMenu(vibratoEditorMenuItem);
+        contextMenu.setOnShowing(event ->
+                vibratoEditorMenuItem.setText(localizer.getMessage("song.note.vibratoEditor")));
+        return contextMenu;
+    }
+
+    private void redrawVibrato(Path vibratoPath) {
         // TODO: Validate that vibrato values are within correct ranges.
         vibratoPath.getElements().clear();
         if (vibrato.length != 10) {
@@ -271,9 +302,10 @@ public class Vibrato implements TrackItem {
 
         // Draw path.
         double curStartMs = noteEndMs - lengthMs;
-        vibratoPath.getElements().add(new MoveTo(scaler.scalePos(curStartMs).get(), noteY));
+        vibratoPath.getElements().add(
+                new MoveTo(scaler.scalePos(curStartMs).get() - offsetX, noteY));
         for (VibratoCurve hump : humps) {
-            hump.addToPath(vibratoPath, curStartMs);
+            hump.addToPath(vibratoPath, curStartMs, offsetX);
             curStartMs += hump.getWidthMs();
         }
     }
@@ -302,8 +334,8 @@ public class Vibrato implements TrackItem {
 
         public Editor() {
             // Values that don't change.
-            this.minX = new SimpleDoubleProperty(scaler.scalePos(noteStartMs).get());
-            this.maxX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs).get());
+            this.minX = new SimpleDoubleProperty(scaler.scalePos(noteStartMs).get() - offsetX);
+            this.maxX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs).get() - offsetX);
             this.baseY = new SimpleDoubleProperty(noteY);
 
             this.centerY = new SimpleDoubleProperty(
@@ -313,12 +345,11 @@ public class Vibrato implements TrackItem {
 
             double lengthMs = (noteEndMs - noteStartMs) * (vibrato[0] / 100.0); // Vibrato length.
             this.startX = new SimpleDoubleProperty(
-                    scaler.scalePos(noteEndMs - lengthMs).get());
-            this.fadeInX = new SimpleDoubleProperty(
-                    scaler.scalePos(
-                            noteEndMs - lengthMs + (lengthMs * (vibrato[3] / 100.0))).get());
-            this.fadeOutX = new SimpleDoubleProperty(
-                    scaler.scalePos(noteEndMs - (lengthMs * (vibrato[4] / 100.0))).get());
+                    scaler.scalePos(noteEndMs - lengthMs).get() - offsetX);
+            double fadeInMs = noteEndMs - lengthMs + (lengthMs * (vibrato[3] / 100.0));
+            this.fadeInX = new SimpleDoubleProperty(scaler.scalePos(fadeInMs).get() - offsetX);
+            double fadeOutMs = noteEndMs - (lengthMs * (vibrato[4] / 100.0));
+            this.fadeOutX = new SimpleDoubleProperty(scaler.scalePos(fadeOutMs).get() - offsetX);
 
             this.maxSliderX = new SimpleDoubleProperty(
                     Math.min(maxX.get(), startX.get() + scaler.scaleX(Quantizer.COL_WIDTH).get()));
