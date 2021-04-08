@@ -20,7 +20,7 @@ public class Pitchbend implements TrackItem {
     Pitchbend(Portamento portamento, Vibrato vibrato, BooleanProperty showPitchbend) {
         this.portamento = portamento;
         this.vibrato = vibrato;
-        group = new Group(portamento.getElement(), vibrato.redraw());
+        group = new Group(portamento.redraw(), vibrato.redraw());
         group.visibleProperty().bind(showPitchbend);
         drawnColumns = new HashSet<>();
     }

@@ -118,7 +118,7 @@ public class BulkEditor {
                     scaler,
                     false);
             notesAndPortamento.getChildren().addAll(
-                    first.redraw(), second.redraw(), currentPortamento.getElement());
+                    first.redraw(), second.redraw(), currentPortamento.redraw());
         } else if (currentFilters.contains(FilterType.FALLING_NOTE)) {
             Note first = noteFactory.createBackgroundNote(
                     numRows / 3, 0, noteWidth, scaler);
@@ -133,7 +133,7 @@ public class BulkEditor {
                     scaler,
                     false);
             notesAndPortamento.getChildren().addAll(
-                    first.redraw(), second.redraw(), currentPortamento.getElement());
+                    first.redraw(), second.redraw(), currentPortamento.redraw());
         } else {
             Note note = noteFactory.createBackgroundNote(
                     numRows / 2, noteWidth, noteWidth, scaler);
@@ -146,7 +146,7 @@ public class BulkEditor {
                     scaler,
                     false);
             notesAndPortamento.getChildren().addAll(
-                    note.redraw(), currentPortamento.getElement());
+                    note.redraw(), currentPortamento.redraw());
         }
         return notesAndPortamento;
     }
@@ -171,7 +171,7 @@ public class BulkEditor {
                 portamentoData,
                 miniScaler,
                 true);
-        return new Group(note.redraw(), newPortamento.getElement());
+        return new Group(note.redraw(), newPortamento.redraw());
     }
 
     public PitchbendData getPortamentoData() {

@@ -1,14 +1,19 @@
 package com.utsusynth.utsu.view.song.note.pitch.portamento;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.view.song.TrackItem;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -16,7 +21,7 @@ import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.shape.Rectangle;
 
-public class Portamento {
+public class Portamento implements TrackItem {
     private static final double RADIUS = 2;
 
     private final int noteStartMs;
@@ -24,6 +29,7 @@ public class Portamento {
     private final double maxY; // Maximum y-position.
     private final ArrayList<Curve> curves; // Curves, ordered.
     private final ArrayList<Rectangle> squares; // Control points, ordered.
+    private final Set<Integer> drawnColumns;
     private final Group curveGroup; // Curves, unordered.
     private final Group squareGroup; // Control points, unordered.
     private final Group group;
@@ -53,6 +59,7 @@ public class Portamento {
         this.localizer = localizer;
         this.scaler = scaler;
         this.squares = new ArrayList<>();
+        drawnColumns = new HashSet<>();
         // Add control points.
         for (int i = 0; i < curves.size(); i++) {
             Curve curve = curves.get(i);
@@ -91,8 +98,35 @@ public class Portamento {
         this.group = new Group(curveGroup, squareGroup);
     }
 
-    public Group getElement() {
+    @Override
+    public double getStartX() {
+        return 0;
+    }
+
+    @Override
+    public double getWidth() {
+        return 0;
+    }
+
+    @Override
+    public Group redraw() {
+        return redraw(-1, 0);
+    }
+
+    @Override
+    public Group redraw(int colNum, double offsetX) {
+        drawnColumns.add(colNum);
         return group;
+    }
+
+    @Override
+    public Set<Integer> getColumns() {
+        return drawnColumns;
+    }
+
+    @Override
+    public void clearColumns() {
+        drawnColumns.clear();
     }
 
     private void initializeControlPoint(Rectangle square) {
