@@ -5,7 +5,7 @@ import javafx.scene.shape.Shape;
 
 /** Portamento-specific wrapper for a line/curve. */
 public interface Curve {
-	Shape getElement();
+	Shape redraw(double offsetX);
 
 	double getStartX();
 
@@ -15,9 +15,9 @@ public interface Curve {
 
 	double getEndY();
 
-	void bindStart(Rectangle controlPoint);
+	void bindStart(Rectangle controlPoint, double offsetX);
 
-	void bindEnd(Rectangle controlPoint);
+	void bindEnd(Rectangle controlPoint, double offsetX);
 
 	// TODO: Make this an enum.
 	String getType();

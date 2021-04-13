@@ -17,7 +17,7 @@ public class RCurve implements Curve {
     }
 
     @Override
-    public Shape getElement() {
+    public Shape redraw(double offsetX) {
         return curve;
     }
 
@@ -42,7 +42,7 @@ public class RCurve implements Curve {
     }
 
     @Override
-    public void bindStart(Rectangle controlPoint) {
+    public void bindStart(Rectangle controlPoint, double offsetX) {
         controlPoint.xProperty().addListener(event -> {
             double centerX = controlPoint.getX() + 2;
             curve.setStartX(centerX);
@@ -57,7 +57,7 @@ public class RCurve implements Curve {
     }
 
     @Override
-    public void bindEnd(Rectangle controlPoint) {
+    public void bindEnd(Rectangle controlPoint, double offsetX) {
         controlPoint.xProperty().addListener(event -> {
             double centerX = controlPoint.getX() + 2;
             curve.setEndX(centerX);

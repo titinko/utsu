@@ -1,5 +1,8 @@
 package com.utsusynth.utsu.view.song.note.pitch.portamento;
 
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CubicCurve;
 import javafx.scene.shape.Rectangle;
@@ -7,69 +10,64 @@ import javafx.scene.shape.Shape;
 
 /** Represents a portamento that is an s-shaped curve. */
 public class SCurve implements Curve {
-    private final CubicCurve curve;
+    private final DoubleProperty startX;
+    private final DoubleProperty startY;
+    private final DoubleProperty endX;
+    private final DoubleProperty endY;
 
     SCurve(double startX, double startY, double endX, double endY) {
-        double halfX = (startX + endX) / 2;
-        curve = new CubicCurve(startX, startY, halfX, startY, halfX, endY, endX, endY);
-        this.curve.getStyleClass().add("pitchbend");
+        this.startX = new SimpleDoubleProperty(startX);
+        this.startY = new SimpleDoubleProperty(startY);
+        this.endX = new SimpleDoubleProperty(endX);
+        this.endY = new SimpleDoubleProperty(endY);
     }
 
     @Override
-    public Shape getElement() {
+    public Shape redraw(double offsetX) {
+        DoubleBinding halfX = startX.add(endX).divide(2).subtract(offsetX);
+        CubicCurve curve = new CubicCurve();
+        curve.getStyleClass().add("pitchbend");
+        curve.startXProperty().bind(startX.subtract(offsetX));
+        curve.startYProperty().bind(startY);
+        curve.controlX1Property().bind(halfX);
+        curve.controlY1Property().bind(startY);
+        curve.controlX2Property().bind(halfX);
+        curve.controlY2Property().bind(endY);
+        curve.endXProperty().bind(endX);
+        curve.endYProperty().bind(endY);
         return curve;
     }
 
     @Override
     public double getStartX() {
-        return curve.getStartX();
+        return startX.get();
     }
 
     @Override
     public double getStartY() {
-        return curve.getStartY();
+        return startY.get();
     }
 
     @Override
     public double getEndX() {
-        return curve.getEndX();
+        return endX.get();
     }
 
     @Override
     public double getEndY() {
-        return curve.getEndY();
+        return endY.get();
     }
 
     @Override
-    public void bindStart(Rectangle controlPoint) {
-        controlPoint.xProperty().addListener(event -> {
-            double centerX = controlPoint.getX() + 2;
-            curve.setStartX(centerX);
-            double halfX = (centerX + curve.getEndX()) / 2;
-            curve.setControlX1(halfX);
-            curve.setControlX2(halfX);
-        });
-        controlPoint.yProperty().addListener(event -> {
-            double centerY = controlPoint.getY() + 2;
-            curve.setStartY(centerY);
-            curve.setControlY1(centerY);
-        });
+    public void bindStart(Rectangle controlPoint, double offsetX) {
+        startX.bind(controlPoint.xProperty().add(2 + offsetX));
+        startY.bind(controlPoint.yProperty().add(2));
     }
 
     @Override
-    public void bindEnd(Rectangle controlPoint) {
-        controlPoint.xProperty().addListener(event -> {
-            double centerX = controlPoint.getX() + 2;
-            curve.setEndX(centerX);
-            double halfX = (curve.getStartX() + centerX) / 2;
-            curve.setControlX1(halfX);
-            curve.setControlX2(halfX);
-        });
-        controlPoint.yProperty().addListener(event -> {
-            double centerY = controlPoint.getY() + 2;
-            curve.setEndY(centerY);
-            curve.setControlY2(centerY);
-        });
+    public void bindEnd(Rectangle controlPoint, double offsetX) {
+        endX.bind(controlPoint.xProperty().add(2 + offsetX));
+        endY.bind(controlPoint.yProperty().add(2));
     }
 
     @Override

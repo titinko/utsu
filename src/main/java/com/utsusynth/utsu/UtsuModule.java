@@ -55,7 +55,7 @@ public class UtsuModule extends AbstractModule {
     @Provides
     private FXMLLoader provideFXMLLoader(final Injector injector) {
         FXMLLoader loader = new FXMLLoader();
-        loader.setControllerFactory(p -> injector.getInstance(p));
+        loader.setControllerFactory(injector::getInstance);
         return loader;
     }
 

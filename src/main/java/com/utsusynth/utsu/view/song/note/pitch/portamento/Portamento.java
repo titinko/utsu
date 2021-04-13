@@ -30,17 +30,19 @@ public class Portamento implements TrackItem {
     private final ArrayList<Curve> curves; // Curves, ordered.
     private final ArrayList<Rectangle> squares; // Control points, ordered.
     private final Set<Integer> drawnColumns;
-    private final Group curveGroup; // Curves, unordered.
-    private final Group squareGroup; // Control points, unordered.
-    private final Group group;
     private final PitchbendCallback callback;
     private final CurveFactory curveFactory;
     private final Localizer localizer;
     private final Scaler scaler;
 
-    // Temporary cache values.
+    // UI-independent state.
     private boolean changed = false;
     private PitchbendData startData;
+
+    // UI-dependent state.
+    private Group curveGroup; // Curves, unordered.
+    private Group squareGroup; // Control points, unordered.
+    private double offsetX = 0;
 
     public Portamento(
             int noteStartMs,
@@ -54,58 +56,29 @@ public class Portamento implements TrackItem {
         this.noteStartMs = noteStartMs;
         this.maxX = maxX;
         this.maxY = maxY;
+        this.curves = curves;
         this.callback = callback;
         this.curveFactory = factory;
         this.localizer = localizer;
         this.scaler = scaler;
         this.squares = new ArrayList<>();
         drawnColumns = new HashSet<>();
-        // Add control points.
-        for (int i = 0; i < curves.size(); i++) {
-            Curve curve = curves.get(i);
-            Rectangle square = new Rectangle(
-                    curve.getStartX() - RADIUS,
-                    curve.getStartY() - RADIUS,
-                    RADIUS * 2,
-                    RADIUS * 2);
-            curve.bindStart(square);
-            if (i > 0) {
-                curves.get(i - 1).bindEnd(square);
-            }
-            squares.add(square);
-
-            // Add last control point.
-            if (i == curves.size() - 1) {
-                Rectangle end = new Rectangle(
-                        curve.getEndX() - RADIUS,
-                        curve.getEndY() - RADIUS,
-                        RADIUS * 2,
-                        RADIUS * 2);
-                curve.bindEnd(end);
-                squares.add(end);
-            }
-        }
-        this.curves = curves;
-        this.curveGroup = new Group();
-        for (Curve curve : this.curves) {
-            this.curveGroup.getChildren().add(curve.getElement());
-        }
-        this.squareGroup = new Group();
-        for (Rectangle square : squares) {
-            initializeControlPoint(square);
-            this.squareGroup.getChildren().add(square);
-        }
-        this.group = new Group(curveGroup, squareGroup);
     }
 
     @Override
     public double getStartX() {
-        return 0;
+        if (curves.isEmpty()) {
+            return -1;
+        }
+        return curves.get(0).getStartX();
     }
 
     @Override
     public double getWidth() {
-        return 0;
+        if (curves.isEmpty()) {
+            return 0;
+        }
+        return curves.get(curves.size() - 1).getEndX() - curves.get(0).getStartX();
     }
 
     @Override
@@ -116,7 +89,43 @@ public class Portamento implements TrackItem {
     @Override
     public Group redraw(int colNum, double offsetX) {
         drawnColumns.add(colNum);
-        return group;
+        this.offsetX = offsetX;
+
+        // Add control points.
+        for (int i = 0; i < curves.size(); i++) {
+            Curve curve = curves.get(i);
+            Rectangle square = new Rectangle(
+                    curve.getStartX() - RADIUS,
+                    curve.getStartY() - RADIUS,
+                    RADIUS * 2,
+                    RADIUS * 2);
+            curve.bindStart(square, offsetX);
+            if (i > 0) {
+                curves.get(i - 1).bindEnd(square, offsetX);
+            }
+            squares.add(square);
+
+            // Add last control point.
+            if (i == curves.size() - 1) {
+                Rectangle end = new Rectangle(
+                        curve.getEndX() - RADIUS,
+                        curve.getEndY() - RADIUS,
+                        RADIUS * 2,
+                        RADIUS * 2);
+                curve.bindEnd(end, offsetX);
+                squares.add(end);
+            }
+        }
+        curveGroup = new Group();
+        for (Curve curve : this.curves) {
+            curveGroup.getChildren().add(curve.redraw(offsetX));
+        }
+        squareGroup = new Group();
+        for (Rectangle square : squares) {
+            initializeControlPoint(square);
+            squareGroup.getChildren().add(square);
+        }
+        return new Group(curveGroup, squareGroup);
     }
 
     @Override
@@ -198,7 +207,7 @@ public class Portamento implements TrackItem {
                     halfX,
                     halfY,
                     curveToSplit.getType());
-            firstCurve.bindStart(squares.get(curveIndex));
+            firstCurve.bindStart(squares.get(curveIndex), offsetX);
             curves.add(curveIndex, firstCurve);
             Curve secondCurve = curveFactory.createCurve(
                     halfX,
@@ -206,15 +215,17 @@ public class Portamento implements TrackItem {
                     curveToSplit.getEndX(),
                     curveToSplit.getEndY(),
                     curveToSplit.getType());
-            secondCurve.bindEnd(squares.get(curveIndex + 1));
+            secondCurve.bindEnd(squares.get(curveIndex + 1), offsetX);
             curves.add(curveIndex + 1, secondCurve);
-            curveGroup.getChildren().remove(curveToSplit.getElement());
-            curveGroup.getChildren().addAll(firstCurve.getElement(), secondCurve.getElement());
+            curveGroup.getChildren().clear();
+            for (Curve curve : curves) {
+                curveGroup.getChildren().add(curve.redraw(offsetX));
+            }
 
             // Insert a new control point between the two new curves.
             Rectangle newSquare = new Rectangle(halfX - 2, halfY - 2, 4, 4);
-            firstCurve.bindEnd(newSquare);
-            secondCurve.bindStart(newSquare);
+            firstCurve.bindEnd(newSquare, offsetX);
+            secondCurve.bindStart(newSquare, offsetX);
             int insertIndex = squareIndex == squares.size() - 1 ? squareIndex : squareIndex + 1;
             squares.add(insertIndex, newSquare);
             initializeControlPoint(newSquare);
@@ -237,11 +248,13 @@ public class Portamento implements TrackItem {
                     secondCurve.getEndX(),
                     secondCurve.getEndY(),
                     firstCurve.getType());
-            combined.bindStart(squares.get(squareIndex - 1));
-            combined.bindEnd(squares.get(squareIndex + 1));
+            combined.bindStart(squares.get(squareIndex - 1), offsetX);
+            combined.bindEnd(squares.get(squareIndex + 1), offsetX);
             curves.add(curveIndex - 1, combined);
-            curveGroup.getChildren().removeAll(firstCurve.getElement(), secondCurve.getElement());
-            curveGroup.getChildren().add(combined.getElement());
+            curveGroup.getChildren().clear();
+            for (Curve curve : curves) {
+                curveGroup.getChildren().add(curve.redraw(offsetX));
+            }
 
             // Remove the control point between the two curves.
             squares.remove(squareIndex);
@@ -289,11 +302,13 @@ public class Portamento implements TrackItem {
                     oldCurve.getEndX(),
                     oldCurve.getEndY(),
                     curveType);
-            newCurve.bindStart(squares.get(curveIndex));
-            newCurve.bindEnd(squares.get(curveIndex + 1));
+            newCurve.bindStart(squares.get(curveIndex), offsetX);
+            newCurve.bindEnd(squares.get(curveIndex + 1), offsetX);
             curves.set(curveIndex, newCurve);
-            curveGroup.getChildren().remove(oldCurve.getElement());
-            curveGroup.getChildren().add(newCurve.getElement());
+            curveGroup.getChildren().clear();
+            for (Curve curve : curves) {
+                curveGroup.getChildren().add(curve.redraw(offsetX));
+            }
             if (callback != null) {
                 callback.modifySongPitchbend(oldData, getData());
             }
