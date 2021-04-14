@@ -95,7 +95,7 @@ public class Portamento implements TrackItem {
         for (int i = 0; i < curves.size(); i++) {
             Curve curve = curves.get(i);
             Rectangle square = new Rectangle(
-                    curve.getStartX() - RADIUS,
+                    curve.getStartX() - offsetX - RADIUS,
                     curve.getStartY() - RADIUS,
                     RADIUS * 2,
                     RADIUS * 2);
@@ -108,7 +108,7 @@ public class Portamento implements TrackItem {
             // Add last control point.
             if (i == curves.size() - 1) {
                 Rectangle end = new Rectangle(
-                        curve.getEndX() - RADIUS,
+                        curve.getEndX() - offsetX - RADIUS,
                         curve.getEndY() - RADIUS,
                         RADIUS * 2,
                         RADIUS * 2);

@@ -24,16 +24,17 @@ public class SCurve implements Curve {
 
     @Override
     public Shape redraw(double offsetX) {
-        DoubleBinding halfX = startX.add(endX).divide(2).subtract(offsetX);
+        DoubleBinding halfX = startX.add(endX).divide(2);
+
         CubicCurve curve = new CubicCurve();
         curve.getStyleClass().add("pitchbend");
         curve.startXProperty().bind(startX.subtract(offsetX));
         curve.startYProperty().bind(startY);
-        curve.controlX1Property().bind(halfX);
+        curve.controlX1Property().bind(halfX.subtract(offsetX));
         curve.controlY1Property().bind(startY);
-        curve.controlX2Property().bind(halfX);
+        curve.controlX2Property().bind(halfX.subtract(offsetX));
         curve.controlY2Property().bind(endY);
-        curve.endXProperty().bind(endX);
+        curve.endXProperty().bind(endX.subtract(offsetX));
         curve.endYProperty().bind(endY);
         return curve;
     }
