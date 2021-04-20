@@ -175,6 +175,7 @@ public class NoteMap {
         }
         if (pitchbendMap.containsKey(position)) {
             //visiblePitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
+            track.removeItem(track.getNoteTrack(), pitchbendMap.get(position));
             pitchbendMap.remove(position);
         }
     }
@@ -222,12 +223,14 @@ public class NoteMap {
                     showPitchbend);
             // Overrides are expected here.
             if (pitchbendMap.containsKey(position)) {
-                visiblePitchbends.getChildren().remove(pitchbendMap.get(position).redraw());
+                // visiblePitchbends.getChildren().remove(pitchbendMap.get(position).redraw());
+                track.removeItem(track.getNoteTrack(), pitchbendMap.get(position));
             }
             pitchbendMap.put(position, pitchbend);
             if (visibleRegion.intersects(noteMap.get(position).getBounds())) {
-                visiblePitchbends.getChildren().add(pitchbend.redraw());
+                // visiblePitchbends.getChildren().add(pitchbend.redraw());
             }
+            track.insertItem(track.getNoteTrack(), pitchbend);
         }
     }
 

@@ -14,25 +14,24 @@ import javafx.scene.Node;
 public class Pitchbend implements TrackItem {
     private final Portamento portamento;
     private final Vibrato vibrato;
-    private final Group group;
+    private final BooleanProperty showPitchbend;
     private final Set<Integer> drawnColumns;
 
     Pitchbend(Portamento portamento, Vibrato vibrato, BooleanProperty showPitchbend) {
         this.portamento = portamento;
         this.vibrato = vibrato;
-        group = new Group(portamento.redraw(), vibrato.redraw());
-        group.visibleProperty().bind(showPitchbend);
+        this.showPitchbend = showPitchbend;
         drawnColumns = new HashSet<>();
     }
 
     @Override
     public double getStartX() {
-        return 0;
+        return Math.min(portamento.getStartX(), vibrato.getStartX());
     }
 
     @Override
     public double getWidth() {
-        return 0;
+        return getStartX() + Math.max(portamento.getWidth(), vibrato.getWidth());
     }
 
     @Override
@@ -43,6 +42,9 @@ public class Pitchbend implements TrackItem {
     @Override
     public Group redraw(int colNum, double offsetX) {
         drawnColumns.add(colNum);
+        Group group =
+                new Group(portamento.redraw(colNum, offsetX), vibrato.redraw(colNum, offsetX));
+        group.visibleProperty().bind(showPitchbend);
         return group;
     }
 
