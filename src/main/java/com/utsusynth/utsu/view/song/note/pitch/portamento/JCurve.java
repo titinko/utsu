@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.song.note.pitch.portamento;
 
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CubicCurve;
@@ -61,15 +62,15 @@ public class JCurve implements Curve {
     }
 
     @Override
-    public void bindStart(Rectangle controlPoint, double offsetX) {
-        startX.bind(controlPoint.xProperty().add(2 + offsetX));
-        startY.bind(controlPoint.yProperty().add(2));
+    public void bindStart(ReadOnlyDoubleProperty xProperty, ReadOnlyDoubleProperty yProperty) {
+        startX.bind(xProperty);
+        startY.bind(yProperty);
     }
 
     @Override
-    public void bindEnd(Rectangle controlPoint, double offsetX) {
-        endX.bind(controlPoint.xProperty().add(2 + offsetX));
-        endY.bind(controlPoint.yProperty().add(2));
+    public void bindEnd(ReadOnlyDoubleProperty xProperty, ReadOnlyDoubleProperty yProperty) {
+        endX.bind(xProperty);
+        endY.bind(yProperty);
     }
 
     @Override

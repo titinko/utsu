@@ -1,5 +1,8 @@
 package com.utsusynth.utsu.view.song.note.pitch.portamento;
 
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 
@@ -15,9 +18,9 @@ public interface Curve {
 
 	double getEndY();
 
-	void bindStart(Rectangle controlPoint, double offsetX);
+	void bindStart(ReadOnlyDoubleProperty xProperty, ReadOnlyDoubleProperty yProperty);
 
-	void bindEnd(Rectangle controlPoint, double offsetX);
+	void bindEnd(ReadOnlyDoubleProperty xProperty, ReadOnlyDoubleProperty yProperty);
 
 	// TODO: Make this an enum.
 	String getType();

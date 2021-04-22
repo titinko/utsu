@@ -22,13 +22,11 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.shape.Rectangle;
 
 public class Portamento implements TrackItem {
-    private static final double RADIUS = 2;
-
     private final int noteStartMs;
     private final double maxX; // Maximum x-position.
     private final double maxY; // Maximum y-position.
     private final ArrayList<Curve> curves; // Curves, ordered.
-    private final ArrayList<Rectangle> squares; // Control points, ordered.
+    private final ArrayList<ControlPoint> controlPoints; // Control points, ordered.
     private final Set<Integer> drawnColumns;
     private final PitchbendCallback callback;
     private final CurveFactory curveFactory;
@@ -61,8 +59,26 @@ public class Portamento implements TrackItem {
         this.curveFactory = factory;
         this.localizer = localizer;
         this.scaler = scaler;
-        this.squares = new ArrayList<>();
         drawnColumns = new HashSet<>();
+
+        controlPoints = new ArrayList<>();
+        // Add control points
+        for (int i = 0; i < curves.size(); i++) {
+            Curve curve = curves.get(i);
+            ControlPoint point = new ControlPoint(curve.getStartX(), curve.getStartY());
+            curve.bindStart(point.centerXProperty(), point.centerYProperty());
+            if (i > 0) {
+                curves.get(i - 1).bindEnd(point.centerXProperty(), point.centerYProperty());
+            }
+            controlPoints.add(point);
+
+            // Add last control point.
+            if (i == curves.size() - 1) {
+                ControlPoint end = new ControlPoint(curve.getEndX(), curve.getEndY());
+                curve.bindEnd(end.centerXProperty(), end.centerYProperty());
+                controlPoints.add(end);
+            }
+        }
     }
 
     @Override
@@ -91,39 +107,13 @@ public class Portamento implements TrackItem {
         drawnColumns.add(colNum);
         this.offsetX = offsetX;
 
-        // Add control points.
-        for (int i = 0; i < curves.size(); i++) {
-            Curve curve = curves.get(i);
-            Rectangle square = new Rectangle(
-                    curve.getStartX() - offsetX - RADIUS,
-                    curve.getStartY() - RADIUS,
-                    RADIUS * 2,
-                    RADIUS * 2);
-            curve.bindStart(square, offsetX);
-            if (i > 0) {
-                curves.get(i - 1).bindEnd(square, offsetX);
-            }
-            squares.add(square);
-
-            // Add last control point.
-            if (i == curves.size() - 1) {
-                Rectangle end = new Rectangle(
-                        curve.getEndX() - offsetX - RADIUS,
-                        curve.getEndY() - RADIUS,
-                        RADIUS * 2,
-                        RADIUS * 2);
-                curve.bindEnd(end, offsetX);
-                squares.add(end);
-            }
-        }
         curveGroup = new Group();
         for (Curve curve : this.curves) {
             curveGroup.getChildren().add(curve.redraw(offsetX));
         }
         squareGroup = new Group();
-        for (Rectangle square : squares) {
-            initializeControlPoint(square);
-            squareGroup.getChildren().add(square);
+        for (ControlPoint point : controlPoints) {
+            squareGroup.getChildren().add(initializeControlPoint(point, offsetX));
         }
         return new Group(curveGroup, squareGroup);
     }
@@ -138,47 +128,44 @@ public class Portamento implements TrackItem {
         drawnColumns.clear();
     }
 
-    private void initializeControlPoint(Rectangle square) {
-        square.getStyleClass().add("pitchbend");
-        square.setOnMouseEntered(event -> {
-            square.getScene().setCursor(Cursor.HAND);
-        });
-        square.setOnMouseExited(event -> {
-            square.getScene().setCursor(Cursor.DEFAULT);
-        });
+    private Rectangle initializeControlPoint(ControlPoint point, double offsetX) {
+        Rectangle square = point.redraw(offsetX);
         square.setOnContextMenuRequested(event -> {
-            createContextMenu(square).show(square, event.getScreenX(), event.getScreenY());
+            createContextMenu(point).show(square, event.getScreenX(), event.getScreenY());
         });
         square.setOnMousePressed(event -> {
             changed = false;
             startData = getData();
         });
         square.setOnMouseDragged(event -> {
-            int index = squares.indexOf(square);
-            double newX = event.getX();
+            int index = controlPoints.indexOf(point);
+            double xDiff = event.getX() - (square.getX() + square.getWidth() / 2.0);
+            double newX = point.getCenterX() + xDiff;
+            // First point.
             if (index == 0) {
-                if (newX > RADIUS && newX < Math.min(
-                        maxX - RADIUS, squares.get(index + 1).getX() + RADIUS)) {
+                if (newX > 0 && newX < Math.min(maxX, controlPoints.get(index + 1).getCenterX())) {
                     changed = true;
-                    square.setX(newX - RADIUS);
+                    point.setCenterX(newX);
                 }
-            } else if (index == squares.size() - 1) {
-                if (newX > squares.get(index - 1).getX() + RADIUS
-                        && newX < maxX - RADIUS) {
+            // Last point.
+            } else if (index == controlPoints.size() - 1) {
+                if (newX > controlPoints.get(index - 1).getCenterX() && newX < maxX) {
                     changed = true;
-                    square.setX(newX - RADIUS);
+                    point.setCenterX(newX);
                 }
-            } else if (newX > squares.get(index - 1).getX() + RADIUS
-                    && newX < Math.min(maxX, squares.get(index + 1).getX() + RADIUS)) {
+            // Middle point.
+            } else if (newX > controlPoints.get(index - 1).getCenterX()
+                    && newX < Math.min(maxX, controlPoints.get(index + 1).getCenterX())) {
                 changed = true;
-                square.setX(newX - RADIUS);
+                point.setCenterX(newX);
             }
 
-            if (index > 0 && index < squares.size() - 1) {
+            // y-values.
+            if (index > 0 && index < controlPoints.size() - 1) {
                 double newY = event.getY();
-                if (newY > RADIUS && newY < maxY - RADIUS) {
+                if (newY > 0 && newY < maxY) {
                     changed = true;
-                    square.setY(newY - RADIUS);
+                    point.setCenterY(newY);
                 }
             }
         });
@@ -187,11 +174,12 @@ public class Portamento implements TrackItem {
                 callback.modifySongPitchbend(startData, getData());
             }
         });
+        return square;
     }
 
-    private ContextMenu createContextMenu(Rectangle square) {
-        int squareIndex = squares.indexOf(square);
-        int curveIndex = Math.min(squareIndex, curves.size() - 1);
+    private ContextMenu createContextMenu(ControlPoint point) {
+        int pointIndex = controlPoints.indexOf(point);
+        int curveIndex = Math.min(pointIndex, curves.size() - 1);
         ContextMenu contextMenu = new ContextMenu();
 
         MenuItem addControlPoint = new MenuItem("Add control point");
@@ -207,7 +195,8 @@ public class Portamento implements TrackItem {
                     halfX,
                     halfY,
                     curveToSplit.getType());
-            firstCurve.bindStart(squares.get(curveIndex), offsetX);
+            ControlPoint startPoint = controlPoints.get(curveIndex);
+            firstCurve.bindStart(startPoint.centerXProperty(), startPoint.centerYProperty());
             curves.add(curveIndex, firstCurve);
             Curve secondCurve = curveFactory.createCurve(
                     halfX,
@@ -215,7 +204,8 @@ public class Portamento implements TrackItem {
                     curveToSplit.getEndX(),
                     curveToSplit.getEndY(),
                     curveToSplit.getType());
-            secondCurve.bindEnd(squares.get(curveIndex + 1), offsetX);
+            ControlPoint endPoint = controlPoints.get(curveIndex + 1);
+            secondCurve.bindEnd(endPoint.centerXProperty(), endPoint.centerYProperty());
             curves.add(curveIndex + 1, secondCurve);
             curveGroup.getChildren().clear();
             for (Curve curve : curves) {
@@ -223,18 +213,17 @@ public class Portamento implements TrackItem {
             }
 
             // Insert a new control point between the two new curves.
-            Rectangle newSquare = new Rectangle(halfX - 2, halfY - 2, 4, 4);
-            firstCurve.bindEnd(newSquare, offsetX);
-            secondCurve.bindStart(newSquare, offsetX);
-            int insertIndex = squareIndex == squares.size() - 1 ? squareIndex : squareIndex + 1;
-            squares.add(insertIndex, newSquare);
-            initializeControlPoint(newSquare);
-            squareGroup.getChildren().add(newSquare);
+            ControlPoint newPoint = new ControlPoint(halfX, halfY);
+            firstCurve.bindEnd(newPoint.centerXProperty(), newPoint.centerYProperty());
+            secondCurve.bindStart(newPoint.centerXProperty(), newPoint.centerYProperty());
+            int insertIndex = pointIndex == controlPoints.size() - 1 ? pointIndex : pointIndex + 1;
+            controlPoints.add(insertIndex, newPoint);
+            squareGroup.getChildren().add(initializeControlPoint(newPoint, offsetX));
             if (callback != null) {
                 callback.modifySongPitchbend(oldData, getData());
             }
         });
-        addControlPoint.setDisable(squares.size() >= 50); // Arbitrary control point limit.
+        addControlPoint.setDisable(controlPoints.size() >= 50); // Arbitrary control point limit.
         MenuItem removeControlPoint = new MenuItem("Remove control point");
         removeControlPoint.setOnAction(event -> {
             // Combine two curves into one.
@@ -248,8 +237,10 @@ public class Portamento implements TrackItem {
                     secondCurve.getEndX(),
                     secondCurve.getEndY(),
                     firstCurve.getType());
-            combined.bindStart(squares.get(squareIndex - 1), offsetX);
-            combined.bindEnd(squares.get(squareIndex + 1), offsetX);
+            ControlPoint startPoint = controlPoints.get(pointIndex - 1);
+            combined.bindStart(startPoint.centerXProperty(), startPoint.centerYProperty());
+            ControlPoint endPoint = controlPoints.get(pointIndex + 1);
+            combined.bindEnd(endPoint.centerXProperty(), endPoint.centerYProperty());
             curves.add(curveIndex - 1, combined);
             curveGroup.getChildren().clear();
             for (Curve curve : curves) {
@@ -257,13 +248,16 @@ public class Portamento implements TrackItem {
             }
 
             // Remove the control point between the two curves.
-            squares.remove(squareIndex);
-            squareGroup.getChildren().remove(square);
+            controlPoints.remove(pointIndex);
+            squareGroup.getChildren().clear();
+            for (ControlPoint newPoint : controlPoints) {
+                squareGroup.getChildren().add(initializeControlPoint(newPoint, offsetX));
+            }
             if (callback != null) {
                 callback.modifySongPitchbend(oldData, getData());
             }
         });
-        removeControlPoint.setDisable(squareIndex == 0 || squareIndex == squares.size() - 1);
+        removeControlPoint.setDisable(pointIndex == 0 || pointIndex == controlPoints.size() - 1);
 
         Menu curveType = new Menu("Curve");
         RadioMenuItem sCurve = createCurveChoice("S curve", "", curveIndex);
@@ -302,8 +296,10 @@ public class Portamento implements TrackItem {
                     oldCurve.getEndX(),
                     oldCurve.getEndY(),
                     curveType);
-            newCurve.bindStart(squares.get(curveIndex), offsetX);
-            newCurve.bindEnd(squares.get(curveIndex + 1), offsetX);
+            ControlPoint startPoint = controlPoints.get(curveIndex);
+            newCurve.bindStart(startPoint.centerXProperty(), startPoint.centerYProperty());
+            ControlPoint endPoint = controlPoints.get(curveIndex + 1);
+            newCurve.bindEnd(endPoint.centerXProperty(), endPoint.centerYProperty());
             curves.set(curveIndex, newCurve);
             curveGroup.getChildren().clear();
             for (Curve curve : curves) {

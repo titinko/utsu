@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.song.note.pitch.portamento;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.scene.Cursor;
 import javafx.scene.shape.Rectangle;
 
 public class ControlPoint {
@@ -21,7 +22,30 @@ public class ControlPoint {
         square.yProperty().bind(centerY.subtract(RADIUS));
         square.setWidth(RADIUS * 2);
         square.setHeight(RADIUS * 2);
+        square.getStyleClass().add("pitchbend");
+        square.setOnMouseEntered(event -> {
+            square.getScene().setCursor(Cursor.HAND);
+        });
+        square.setOnMouseExited(event -> {
+            square.getScene().setCursor(Cursor.DEFAULT);
+        });
         return square;
+    }
+
+    double getCenterX() {
+        return centerX.get();
+    }
+
+    void setCenterX(double newX) {
+        centerX.set(newX);
+    }
+
+    double getCenterY() {
+        return centerY.get();
+    }
+
+    void setCenterY(double newY) {
+        centerY.set(newY);
     }
 
     ReadOnlyDoubleProperty centerXProperty() {
