@@ -155,10 +155,8 @@ public class Envelope implements TrackItem {
             });
             circles[i] = circle;
         }
-        Group group = new Group(
+        return new Group(
                 path, circles[0], circles[1], circles[2], circles[4], circles[3]);
-        //drawnCache.put(colNum, group);
-        return group;
     }
 
     @Override

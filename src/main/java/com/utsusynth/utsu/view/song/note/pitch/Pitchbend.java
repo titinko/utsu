@@ -26,12 +26,14 @@ public class Pitchbend implements TrackItem {
 
     @Override
     public double getStartX() {
-        return Math.min(portamento.getStartX(), vibrato.getStartX());
+        return portamento.getStartX();
+        //return Math.min(portamento.getStartX(), vibrato.getStartX());
     }
 
     @Override
     public double getWidth() {
-        return getStartX() + Math.max(portamento.getWidth(), vibrato.getWidth());
+        return portamento.getWidth();
+        //return getStartX() + Math.max(portamento.getWidth(), vibrato.getWidth());
     }
 
     @Override
