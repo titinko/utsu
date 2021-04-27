@@ -94,7 +94,6 @@ public class Track {
                     return; // Don't bother rendering if there is no item.
                 }
 
-                System.out.println("Refreshing at index " + getIndex());
                 Pane graphic = new Pane();
                 graphic.setPrefSize(colWidth, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
 
@@ -201,9 +200,6 @@ public class Track {
                 if (item != null) {
                     for (TrackItem trackItem : item) {
                         double offset = getIndex() * colWidth;
-                        if (trackItem instanceof Pitchbend) {
-                            System.out.println("Actually redrawing pitchbend.");
-                        }
                         graphic.getChildren().add(trackItem.redraw(getIndex(), offset));
                     }
                 }
@@ -234,9 +230,6 @@ public class Track {
         int startColNum = (int) (startX / colWidth);
         int endColNum = (int) (endX / colWidth);
         for (int colNum = startColNum; colNum <= endColNum; colNum++) {
-            if (trackItem instanceof Pitchbend) {
-                System.out.println("Adding pitchbend to column " + colNum);
-            }
             ImmutableSet<TrackItem> items = new ImmutableSet.Builder<TrackItem>()
                     .addAll(track.getItems().get(colNum))
                     .add(trackItem)

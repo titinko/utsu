@@ -78,14 +78,9 @@ public class Envelope implements TrackItem {
     }
 
     @Override
-    public Group redraw(int colNum, double offsetX) {
+    public Group redraw(int colNum, final double offsetX) {
         drawnColumns.add(colNum);
 
-        // Refresh all x-values.
-        for (int i = 0; i < xValues.length; i++) {
-            double value = xValues[i].get();
-            xValues[i] = new SimpleDoubleProperty(value);
-        }
         MoveTo start = new MoveTo(startX - offsetX, startY);
         LineTo[] lines = new LineTo[] {
                 new LineTo(xValues[0].get() - offsetX, yValues[0].get()),
@@ -100,29 +95,14 @@ public class Envelope implements TrackItem {
 
         Circle[] circles = new Circle[5]; // Control points.
         for (int i = 0; i < 5; i++) {
-            Circle circle = new Circle(lines[i].getX(), lines[i].getY(), 3);
+            Circle circle = new Circle(3);
             circle.getStyleClass().add("envelope-circle");
-            // Custom binding for circle x values.
-            final int index = i;
-            circle.centerXProperty().addListener((obs, oldX, newX) -> {
-                if (!oldX.equals(newX)) {
-                    double adjustedX = newX.doubleValue() + offsetX;
-                    if (RoundUtils.round(adjustedX) != RoundUtils.round(xValues[index].get())) {
-                        xValues[index].set(adjustedX);
-                    }
-                }
-            });
-            xValues[i].addListener((obs, oldX, newX) -> {
-                if (!oldX.equals(newX)) {
-                    double adjustedX = newX.doubleValue() - offsetX;
-                    if (RoundUtils.round(adjustedX) != RoundUtils.round(circle.getCenterX())) {
-                        circle.setCenterX(adjustedX);
-                    }
-                }
-            });
-            circle.centerYProperty().bindBidirectional(yValues[i]);
-            lines[i].xProperty().bind(circle.centerXProperty());
-            lines[i].yProperty().bind(circle.centerYProperty());
+
+            circle.centerXProperty().bind(xValues[i].subtract(offsetX));
+            circle.centerYProperty().bind(yValues[i]);
+            lines[i].xProperty().bind(xValues[i].subtract(offsetX));
+            lines[i].yProperty().bind(yValues[i]);
+
             circle.setOnMouseEntered(event -> {
                 circle.getScene().setCursor(Cursor.HAND);
             });
@@ -133,19 +113,21 @@ public class Envelope implements TrackItem {
                 changed = false;
                 startData = getData();
             });
+
+            final int index = i;
             circle.setOnMouseDragged(event -> {
                 // Set reasonable limits for where envelope can be dragged.
                 if (index > 0 && index < 4) {
                     double newX = event.getX();
                     if (newX > lines[index - 1].getX() && newX < lines[index + 1].getX()) {
                         changed = true;
-                        circle.setCenterX(newX);
+                        xValues[index].set(newX + offsetX);
                     }
                 }
                 double newY = event.getY();
                 if (newY >= 0 && newY <= maxHeight) {
                     changed = true;
-                    circle.setCenterY(newY);
+                    yValues[index].set(newY);
                 }
             });
             circle.setOnMouseReleased(event -> {

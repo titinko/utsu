@@ -101,7 +101,6 @@ public class Portamento implements TrackItem {
 
     @Override
     public Group redraw(int colNum, double offsetX) {
-        System.out.println("Redrawing portamento");
         drawnColumns.add(colNum);
 
         Group curveGroup = new Group();
