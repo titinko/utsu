@@ -15,9 +15,9 @@ import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
-import com.utsusynth.utsu.view.song.note.envelope.Envelope;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
+import com.utsusynth.utsu.view.song.playback.PlaybackManager;
 import javafx.beans.property.*;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
@@ -25,7 +25,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
@@ -36,7 +35,7 @@ import java.util.stream.Collectors;
 
 public class SongEditor {
     private final Track track;
-    private final PlaybackBarManager playbackManager;
+    private final PlaybackManager playbackManager;
     private final ContextMenu editorContextMenu;
     private final SongClipboard clipboard;
     private final NoteFactory noteFactory;
@@ -65,7 +64,7 @@ public class SongEditor {
     @Inject
     public SongEditor(
             Track track,
-            PlaybackBarManager playbackManager,
+            PlaybackManager playbackManager,
             SongClipboard clipboard,
             NoteFactory trackNoteFactory,
             NoteMap noteMap,

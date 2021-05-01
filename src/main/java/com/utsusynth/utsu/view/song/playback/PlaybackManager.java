@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.song;
+package com.utsusynth.utsu.view.song.playback;
 
 import java.util.Collection;
 import java.util.TreeSet;
@@ -25,7 +25,7 @@ import javafx.util.Duration;
 /**
  * Keeps track of what notes are currently highlighted.
  */
-public class PlaybackBarManager {
+public class PlaybackManager {
     private static final int TOTAL_HEIGHT = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
 
     private final Scaler scaler;
@@ -38,7 +38,7 @@ public class PlaybackBarManager {
     private Group bars;
 
     @Inject
-    public PlaybackBarManager(Scaler scaler) {
+    public PlaybackManager(Scaler scaler) {
         this.scaler = scaler;
         highlighted = new TreeSet<>();
         isAnythingHighlighted = new SimpleBooleanProperty(false);
@@ -46,7 +46,7 @@ public class PlaybackBarManager {
         clear();
     }
 
-    Group getElement() {
+    public Group getElement() {
         return bars;
     }
 
@@ -55,7 +55,7 @@ public class PlaybackBarManager {
      *
      * @return A double binding of the playback bar's current x-value.
      */
-    DoubleProperty startPlayback(Duration duration, RegionBounds playRegion) {
+    public DoubleProperty startPlayback(Duration duration, RegionBounds playRegion) {
         if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             // Create a playback bar.
             double barX = scaler.scalePos(playRegion.getMinMs()).get();
@@ -92,25 +92,25 @@ public class PlaybackBarManager {
         return null;
     }
 
-    void pausePlayback() {
+    public void pausePlayback() {
         playback.pause(); // Does nothing if animation not playing.
     }
 
-    void resumePlayback() {
+    public void resumePlayback() {
         if (playback.getStatus() == Status.PAUSED) {
             playback.play(); // Does nothing if animation not paused.
         }
     }
 
     // Removes the playback bar.
-    void stopPlayback() {
+    public void stopPlayback() {
         playback.stop();
     }
 
     /**
      * Adds a specific note to highlighted set and adjust playback bars.
      */
-    void highlightNote(Note highlightMe) {
+    public void highlightNote(Note highlightMe) {
         highlighted.add(highlightMe);
         isAnythingHighlighted.set(true);
         highlightMe.setHighlighted(true);
@@ -119,7 +119,7 @@ public class PlaybackBarManager {
     /**
      * Highlight an exact region and any notes within that region.
      */
-    void highlightRegion(RegionBounds region, Collection<Note> allNotes) {
+    public void highlightRegion(RegionBounds region, Collection<Note> allNotes) {
         clearHighlights();
         if (region.equals(RegionBounds.INVALID)) {
             return;
@@ -144,7 +144,7 @@ public class PlaybackBarManager {
     /**
      * Highlights all notes and places playback bars at their edges.
      */
-    void highlightAll(Collection<Note> allNotes) {
+    public void highlightAll(Collection<Note> allNotes) {
         clearHighlights();
         if (allNotes.isEmpty()) {
             return;
@@ -166,7 +166,7 @@ public class PlaybackBarManager {
     /**
      * Aligns playback bar to reflect actual highlighted notes.
      */
-    void realign() {
+    public void realign() {
         if (highlighted.isEmpty()) {
             clearHighlights();
         } else {
@@ -184,7 +184,7 @@ public class PlaybackBarManager {
         }
     }
 
-    void clear() {
+    public void clear() {
         playback.stop(); // Stop any ongoing playback.
         bars = new Group();
         clearHighlights();
@@ -198,7 +198,7 @@ public class PlaybackBarManager {
         endBar.setMouseTransparent(true);
     }
 
-    void clearHighlights() {
+    public void clearHighlights() {
         for (Note note : highlighted) {
             note.setHighlighted(false);
         }
@@ -207,20 +207,20 @@ public class PlaybackBarManager {
         bars.getChildren().removeAll(startBar, endBar);
     }
 
-    void setCursor(int positionMs) {
+    public void setCursor(int positionMs) {
         clearHighlights();
         bars.getChildren().add(startBar);
         startBar.setTranslateX(scaler.scalePos(positionMs).get());
     }
 
-    int getCursorPosition() {
+    public int getCursorPosition() {
         if (bars.getChildren().contains(startBar)) {
             return Math.max(0, RoundUtils.round(scaler.unscalePos(startBar.getTranslateX())));
         }
         return 0;
     }
 
-    RegionBounds getPlayableRegion() {
+    public RegionBounds getPlayableRegion() {
         int endPosition = Integer.MAX_VALUE;
         if (bars.getChildren().contains(endBar)) {
             endPosition = RoundUtils.round(scaler.unscalePos(endBar.getTranslateX()));
@@ -228,14 +228,14 @@ public class PlaybackBarManager {
         return new RegionBounds(getCursorPosition(), endPosition);
     }
 
-    RegionBounds getSelectedRegion() {
+    public RegionBounds getSelectedRegion() {
         if (highlighted.isEmpty()) {
             return RegionBounds.INVALID;
         }
         return highlighted.first().getValidBounds().mergeWith(highlighted.last().getValidBounds());
     }
 
-    int getLowestRow() {
+    public int getLowestRow() {
         int lowest = 7 * PitchUtils.PITCHES.size() - 1;
         for (Note note : highlighted) {
             if (note.getRow() < lowest) {
@@ -245,7 +245,7 @@ public class PlaybackBarManager {
         return lowest;
     }
 
-    int getHighestRow() {
+    public int getHighestRow() {
         int highest = 0;
         for (Note note : highlighted) {
             if (note.getRow() > highest) {
@@ -255,19 +255,19 @@ public class PlaybackBarManager {
         return highest;
     }
 
-    boolean isExclusivelyHighlighted(Note note) {
+    public boolean isExclusivelyHighlighted(Note note) {
         return highlighted.size() == 1 && highlighted.contains(note);
     }
 
-    boolean isHighlighted(Note note) {
+    public boolean isHighlighted(Note note) {
         return highlighted.contains(note);
     }
 
-    BooleanProperty isAnythingHighlightedProperty() {
+    public BooleanProperty isAnythingHighlightedProperty() {
         return isAnythingHighlighted;
     }
 
-    ImmutableList<Note> getHighlightedNotes() {
+    public ImmutableList<Note> getHighlightedNotes() {
         return ImmutableList.copyOf(highlighted);
     }
 }
