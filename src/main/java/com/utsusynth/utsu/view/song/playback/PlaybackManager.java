@@ -33,17 +33,26 @@ public class PlaybackManager {
     private final BooleanProperty isAnythingHighlighted;
     private final TranslateTransition playback;
 
-    private Line startBar;
-    private Line endBar;
+    private final StartBar startBarItem;
+    private final EndBar endBarItem;
+    private PlaybackCallback callback;
+
     private Group bars;
 
     @Inject
-    public PlaybackManager(Scaler scaler) {
+    public PlaybackManager(StartBar startBarItem, EndBar endBarItem, Scaler scaler) {
+        this.startBarItem = startBarItem;
+        this.endBarItem = endBarItem;
+
         this.scaler = scaler;
         highlighted = new TreeSet<>();
         isAnythingHighlighted = new SimpleBooleanProperty(false);
         playback = new TranslateTransition();
         clear();
+    }
+
+    public void initialize(PlaybackCallback callback) {
+        this.callback = callback;
     }
 
     public Group getElement() {
@@ -126,9 +135,12 @@ public class PlaybackManager {
         }
 
         // Add start and stop bars to the track at the correct location.
-        bars.getChildren().addAll(startBar, endBar);
-        startBar.setTranslateX(scaler.scalePos(region.getMinMs()).get());
-        endBar.setTranslateX(scaler.scalePos(region.getMaxMs()).get());
+        if (callback != null) {
+            startBarItem.setX(scaler.scalePos(region.getMinMs()).get());
+            callback.setBar(startBarItem);
+            endBarItem.setX(scaler.scalePos(region.getMaxMs()).get());
+            callback.setBar(endBarItem);
+        }
 
         // Highlight all notes within the add region.
         for (Note note : allNotes) {
@@ -157,10 +169,13 @@ public class PlaybackManager {
         isAnythingHighlighted.set(!highlighted.isEmpty());
 
         // Add start and stop bars to the track at the correct location.
-        bars.getChildren().addAll(startBar, endBar);
-        startBar.setTranslateX(
-                scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
-        endBar.setTranslateX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
+        if (callback != null) {
+            startBarItem.setX(
+                    scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
+            callback.setBar(startBarItem);
+            endBarItem.setX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
+            callback.setBar(endBarItem);
+        }
     }
 
     /**
@@ -171,16 +186,14 @@ public class PlaybackManager {
             clearHighlights();
         } else {
             // Add start and stop bars to the track if necessary.
-            if (!bars.getChildren().contains(startBar)) {
-                bars.getChildren().add(startBar);
+            if (callback != null) {
+                startBarItem.setX(
+                        scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
+                callback.setBar(startBarItem);
+                endBarItem.setX(
+                        scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
+                callback.setBar(endBarItem);
             }
-            if (!bars.getChildren().contains(endBar)) {
-                bars.getChildren().add(endBar);
-            }
-            startBar.setTranslateX(
-                    scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
-            endBar.setTranslateX(
-                    scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
         }
     }
 
@@ -188,14 +201,6 @@ public class PlaybackManager {
         playback.stop(); // Stop any ongoing playback.
         bars = new Group();
         clearHighlights();
-
-        // Recreate start and end bars, as scale might have changed.
-        startBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT).get());
-        startBar.getStyleClass().add("start-bar");
-        startBar.setMouseTransparent(true);
-        endBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT).get());
-        endBar.getStyleClass().add("end-bar");
-        endBar.setMouseTransparent(true);
     }
 
     public void clearHighlights() {
@@ -204,26 +209,31 @@ public class PlaybackManager {
         }
         highlighted.clear();
         isAnythingHighlighted.set(false);
-        bars.getChildren().removeAll(startBar, endBar);
+        if (callback != null) {
+            callback.removeBar(startBarItem);
+            callback.removeBar(endBarItem);
+        }
     }
 
     public void setCursor(int positionMs) {
         clearHighlights();
-        bars.getChildren().add(startBar);
-        startBar.setTranslateX(scaler.scalePos(positionMs).get());
+        if (callback != null) {
+            startBarItem.setX(scaler.scalePos(positionMs).get());
+            callback.setBar(startBarItem);
+        }
     }
 
     public int getCursorPosition() {
-        if (bars.getChildren().contains(startBar)) {
-            return Math.max(0, RoundUtils.round(scaler.unscalePos(startBar.getTranslateX())));
+        if (!startBarItem.getColumns().isEmpty()) {
+            return Math.max(0, RoundUtils.round(scaler.unscalePos(startBarItem.getStartX())));
         }
         return 0;
     }
 
     public RegionBounds getPlayableRegion() {
         int endPosition = Integer.MAX_VALUE;
-        if (bars.getChildren().contains(endBar)) {
-            endPosition = RoundUtils.round(scaler.unscalePos(endBar.getTranslateX()));
+        if (!endBarItem.getColumns().isEmpty()) {
+            endPosition = RoundUtils.round(scaler.unscalePos(endBarItem.getStartX()));
         }
         return new RegionBounds(getCursorPosition(), endPosition);
     }

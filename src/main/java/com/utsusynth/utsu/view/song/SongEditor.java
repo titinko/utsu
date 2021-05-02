@@ -17,6 +17,7 @@ import com.utsusynth.utsu.view.song.note.NoteCallback;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
+import com.utsusynth.utsu.view.song.playback.PlaybackCallback;
 import com.utsusynth.utsu.view.song.playback.PlaybackManager;
 import javafx.beans.property.*;
 import javafx.scene.Group;
@@ -103,7 +104,19 @@ public class SongEditor {
      * Initialize track with data from the controller. Not song-specific.
      */
     public void initialize(SongCallback callback) {
-        this.model = callback;
+        model = callback;
+        playbackManager.initialize(new PlaybackCallback() {
+            @Override
+            public void setBar(TrackItem bar) {
+                track.removeItem(track.getNoteTrack(), bar);
+                track.insertItem(track.getNoteTrack(), bar);
+            }
+
+            @Override
+            public void removeBar(TrackItem bar) {
+                track.removeItem(track.getNoteTrack(), bar);
+            }
+        });
         initializeCanvas();
     }
 
