@@ -437,6 +437,7 @@ public class SongController implements EditorController, Localizable {
         // Reloads current song.
         anchorCenter.getChildren().clear();
         anchorCenter.getChildren().add(noteTrack);
+        //anchorCenter.getChildren().add(songEditor.getCanvasElement());
         //anchorCenter.getChildren().add(songEditor.getNotesElement());
         //anchorCenter.getChildren().add(songEditor.getPitchbendsElement());
         //anchorCenter.getChildren().add(songEditor.getPlaybackElement());

@@ -637,7 +637,7 @@ public class SongEditor {
         double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
         canvas = new Region();
         canvas.prefWidthProperty().bind(noteTrack.prefWidthProperty());
-        canvas.setPrefHeight(noteTrack.getPrefHeight());
+        canvas.prefHeightProperty().bind(noteTrack.prefHeightProperty());
         //canvas.setTranslateX(measureWidth);
         canvas.setOnMouseReleased(event -> {
             if (event.getX() < measureWidth) {
