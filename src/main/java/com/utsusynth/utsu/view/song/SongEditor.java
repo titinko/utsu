@@ -12,6 +12,7 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
+import com.utsusynth.utsu.view.song.note.AddNoteBox;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
@@ -19,6 +20,7 @@ import com.utsusynth.utsu.view.song.note.envelope.EnvelopeCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import com.utsusynth.utsu.view.song.playback.PlaybackCallback;
 import com.utsusynth.utsu.view.song.playback.PlaybackManager;
+import com.utsusynth.utsu.view.song.playback.SelectionBox;
 import javafx.beans.property.*;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
@@ -26,9 +28,10 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.util.*;
@@ -37,6 +40,8 @@ import java.util.stream.Collectors;
 public class SongEditor {
     private final Track track;
     private final PlaybackManager playbackManager;
+    private final SelectionBox selectionBox;
+    private final AddNoteBox addNoteBox;
     private final ContextMenu editorContextMenu;
     private final SongClipboard clipboard;
     private final NoteFactory noteFactory;
@@ -49,7 +54,7 @@ public class SongEditor {
 
     //private HBox measures;
     private Region canvas;
-    private Rectangle selection;
+    //private Rectangle selection;
     //private int numMeasures;
     private SongCallback model;
 
@@ -66,6 +71,8 @@ public class SongEditor {
     public SongEditor(
             Track track,
             PlaybackManager playbackManager,
+            SelectionBox selectionBox,
+            AddNoteBox addNoteBox,
             SongClipboard clipboard,
             NoteFactory trackNoteFactory,
             NoteMap noteMap,
@@ -74,6 +81,8 @@ public class SongEditor {
             Scaler scaler) {
         this.track = track;
         this.playbackManager = playbackManager;
+        this.selectionBox = selectionBox;
+        this.addNoteBox = addNoteBox;
         this.clipboard = clipboard;
         this.noteFactory = trackNoteFactory;
         this.noteMap = noteMap;
@@ -105,6 +114,17 @@ public class SongEditor {
      */
     public void initialize(SongCallback callback) {
         model = callback;
+        track.initialize(new TrackCallback() {
+            @Override
+            public VBox createNoteColumn(int colNum) {
+                return createNoteColumnInternal(colNum);
+            }
+
+            @Override
+            public VBox createDynamicsColumn(int colNum) {
+                return createDyanmicsColumnInternal(colNum);
+            }
+        });
         playbackManager.initialize(new PlaybackCallback() {
             @Override
             public void setBar(TrackItem bar) {
@@ -117,7 +137,6 @@ public class SongEditor {
                 track.removeItem(track.getNoteTrack(), bar);
             }
         });
-        initializeCanvas();
     }
 
     /**
@@ -193,10 +212,6 @@ public class SongEditor {
 
     public Region getCanvasElement() {
         return canvas;
-    }
-
-    public Rectangle getSelectionElement() {
-        return selection;
     }
 
     /**
@@ -368,7 +383,7 @@ public class SongEditor {
             return RegionBounds.INVALID; // If no valid song notes to remove, do nothing.
         }
         MutateResponse response = model.removeNotes(positionsToRemove);
-        // Removd all deleted notes from note map.
+        // Remove all deleted notes from note map.
         for (NoteUpdateData updateData : response.getNotes()) {
             // Should never happen but let's check just in case.
             if (noteMap.hasNote(updateData.getPosition())) {
@@ -552,11 +567,11 @@ public class SongEditor {
         // Remove current track.
         playbackManager.clear();
         noteMap.clear();
-        //measures = new HBox();
-        selection = new Rectangle();
+        // measures = new HBox();
+        // selection = new Rectangle();
 
-        //numMeasures = 0;
-        //addMeasure(false);
+        // numMeasures = 0;
+        // addMeasure(false);
         setNumMeasures(4);
     }
 
@@ -627,26 +642,50 @@ public class SongEditor {
         //measures.getChildren().add(newMeasure);
 
         if (enabled) {
-            activateMeasure(newMeasure);
+            //activateMeasure(newMeasure);
             //numMeasures++;
         }
     }
 
-    private void initializeCanvas() {
-        ListView<Set<TrackItem>> noteTrack = track.getNoteTrack(); // Creates it if not present.
-        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
-        canvas = new Region();
-        canvas.prefWidthProperty().bind(noteTrack.prefWidthProperty());
-        canvas.prefHeightProperty().bind(noteTrack.prefHeightProperty());
-        //canvas.setTranslateX(measureWidth);
-        canvas.setOnMouseReleased(event -> {
-            if (event.getX() < measureWidth) {
-                return; // Do nothing if this is pre-roll.
+    private VBox createNoteColumnInternal(int colNum) {
+        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+
+        VBox column = new VBox();
+        for (int octave = 7; octave > 0; octave--) {
+            for (String pitch : PitchUtils.REVERSE_PITCHES) {
+                // Add row to track.
+                Pane newCell = new Pane();
+                newCell.setPrefSize(colWidth, rowHeight);
+                newCell.getStyleClass().add("track-cell");
+                if (colNum >= 4) {
+                    newCell.getStyleClass()
+                            .add(pitch.endsWith("#") ? "black-key" : "white-key");
+                } else {
+                    newCell.getStyleClass().add("gray-key");
+                }
+                if (colNum % 4 == 0) {
+                    newCell.getStyleClass().add("measure-start");
+                } else if (colNum % 4 == 3) {
+                    newCell.getStyleClass().add("measure-end");
+                }
+                column.getChildren().add(newCell);
             }
-            selection.setVisible(false); // Remove selection box if present.
+        }
+        activateNoteColumn(column, colNum);
+        return column;
+    }
+
+    private void activateNoteColumn(VBox column, int colNum) {
+        column.setOnMouseReleased(event -> {
+            // Remove transient selection/add note boxes.
+            track.removeItem(track.getNoteTrack(), selectionBox);
+            track.removeItem(track.getNoteTrack(), addNoteBox);
             int quantSize = quantizer.getQuant();
+            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+            double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
             double endX = Math
-                    .min(getWidthX(), Math.max(measureWidth, event.getX()));
+                    .min(getWidthX(), Math.max(measureWidth, offsetX + event.getX()));
             int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
             int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
             if (subMode == SubMode.DRAG_CREATE) {
@@ -676,31 +715,28 @@ public class SongEditor {
                 playbackManager.realign();
             } else if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
                 if (event.getButton() == MouseButton.SECONDARY) {
-                    editorContextMenu.show(canvas, event.getScreenX(), event.getScreenY());
+                    editorContextMenu.show(
+                            track.getNoteTrack(), event.getScreenX(), event.getScreenY());
                 }
                 // Set cursor.
                 playbackManager.setCursor(endMs);
             }
         });
-        canvas.setOnMouseDragged(event -> {
-            if (event.getX() < measureWidth) {
-                return; // Do nothing if this is pre-roll.
-            }
+        column.setOnMouseDragged(event -> {
+            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+            double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
             double endX = Math
-                    .min(getWidthX(), Math.max(measureWidth, event.getX()));
+                    .min(getWidthX(), Math.max(measureWidth, offsetX + event.getX()));
             if (subMode == SubMode.DRAG_SELECT || event.isShiftDown()
                     || event.getButton() != MouseButton.PRIMARY) {
                 subMode = SubMode.DRAG_SELECT;
                 // Draw selection rectangle.
-                double totalHeight = scaler.scaleY(
-                        Quantizer.ROW_HEIGHT * PitchUtils.TOTAL_NUM_PITCHES).get();
-                double endY = Math.min(totalHeight, Math.max(0, event.getY()));
-                selection.setVisible(true);
-                selection.getStyleClass().setAll("select-box");
-                selection.setX(Math.min(curX, endX));
-                selection.setY(Math.min(curY, endY));
-                selection.setWidth(Math.abs(endX - curX));
-                selection.setHeight(Math.abs(endY - curY));
+                double endY = Math.min(column.getHeight(), Math.max(0, event.getY()));
+                selectionBox.setStartX(Math.min(curX, endX));
+                selectionBox.setStartY(Math.min(curY, endY));
+                selectionBox.setWidth(Math.abs(endX - curX));
+                selectionBox.setHeight(Math.abs(endY - curY));
+                // track.insertItem(track.getNoteTrack(), selectionBox);
                 // Update highlighted notes.
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
                 int endRow = (int) scaler.unscaleY(endY) / Quantizer.ROW_HEIGHT;
@@ -725,126 +761,47 @@ public class SongEditor {
                 int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
                 if (endMs > startMs) {
                     // Draw selection rectangle.
-                    selection.setVisible(true);
-                    selection.getStyleClass().setAll("add-note-box");
-                    selection.setX(scaler.scalePos(startMs).get());
-                    selection.setY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT).get());
-                    selection.setWidth(scaler.scaleX(endMs - startMs).get());
-                    selection.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+                    addNoteBox.setStartX(scaler.scalePos(startMs).get());
+                    addNoteBox.setStartY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT).get());
+                    addNoteBox.setWidth(scaler.scaleX(endMs - startMs).get());
+                    addNoteBox.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+                    // track.insertItem(track.getNoteTrack(), addNoteBox);
                 } else {
-                    selection.setVisible(false);
+                    track.removeItem(track.getNoteTrack(), selectionBox);
+                    track.removeItem(track.getNoteTrack(), addNoteBox);
                 }
             }
         });
-        canvas.setOnMousePressed(event -> {
-            if (event.getX() < measureWidth) {
-                return; // Do nothing if this is pre-roll.
-            }
+        column.setOnMousePressed(event -> {
+            // System.out.println("Mouse pressed");
             editorContextMenu.hide();
             subMode = SubMode.NOT_DRAGGING;
-            curX = event.getX();
+            double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
+            curX = offsetX + event.getX();
             curY = event.getY();
         });
     }
 
-    private void activateMeasure(Pane measure) {
-        measure.setOnMouseReleased(event -> {
-            selection.setVisible(false); // Remove selection box if present.
-            int quantSize = quantizer.getQuant();
-            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
-            double endX = Math
-                    .min(getWidthX(), Math.max(measureWidth, measure.getLayoutX() + event.getX()));
-            int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
-            int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
-            if (subMode == SubMode.DRAG_CREATE) {
-                int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                // Create new note if size would be nonzero.
-                if (endMs > startMs) {
-                    Note newNote = noteFactory.createDefaultNote(
-                            startRow,
-                            startMs,
-                            endMs - startMs,
-                            noteCallback,
-                            vibratoEditor,
-                            model.getCheckboxValue(CheckboxType.SHOW_LYRICS),
-                            model.getCheckboxValue(CheckboxType.SHOW_ALIASES));
-                    noteMap.addNoteElement(newNote);
-                    List<Note> noteList = ImmutableList.of(newNote);
-                    model.recordAction(() -> {
-                        playbackManager.clearHighlights();
-                        undoDeleteNotes(noteList);
-                    }, () -> {
-                        playbackManager.clearHighlights();
-                        deleteNotes(noteList);
-                    });
-                }
-            } else if (subMode == SubMode.DRAG_SELECT
-                    && !playbackManager.getHighlightedNotes().isEmpty()) {
-                playbackManager.realign();
-            } else if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
-                if (event.getButton() == MouseButton.SECONDARY) {
-                    editorContextMenu.show(measure, event.getScreenX(), event.getScreenY());
-                }
-                // Set cursor.
-                playbackManager.setCursor(endMs);
-            }
-        });
-        measure.setOnMouseDragged(event -> {
-            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
-            double endX = Math
-                    .min(getWidthX(), Math.max(measureWidth, measure.getLayoutX() + event.getX()));
-            if (subMode == SubMode.DRAG_SELECT || event.isShiftDown()
-                    || event.getButton() != MouseButton.PRIMARY) {
-                subMode = SubMode.DRAG_SELECT;
-                // Draw selection rectangle.
-                double endY = Math.min(measure.getHeight(), Math.max(0, event.getY()));
-                selection.setVisible(true);
-                selection.getStyleClass().setAll("select-box");
-                selection.setX(Math.min(curX, endX));
-                selection.setY(Math.min(curY, endY));
-                selection.setWidth(Math.abs(endX - curX));
-                selection.setHeight(Math.abs(endY - curY));
-                // Update highlighted notes.
-                int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                int endRow = (int) scaler.unscaleY(endY) / Quantizer.ROW_HEIGHT;
-                int startMs = RoundUtils.round(scaler.unscalePos(curX));
-                int endMs = RoundUtils.round(scaler.unscalePos(endX));
-                RegionBounds horizontalBounds = endMs >= startMs ? new RegionBounds(startMs, endMs)
-                        : new RegionBounds(endMs, startMs);
-                playbackManager.clearHighlights();
-                for (Note note : noteMap.getAllValidNotes()) {
-                    int noteRow = note.getRow();
-                    if (note.getValidBounds().intersects(horizontalBounds)
-                            && Math.abs(endRow - noteRow) + Math.abs(noteRow - startRow) == Math
-                            .abs(endRow - startRow)) {
-                        playbackManager.highlightNote(note);
-                    }
-                }
-            } else {
-                subMode = SubMode.DRAG_CREATE;
-                int quantSize = quantizer.getQuant();
-                int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
-                int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
-                if (endMs > startMs) {
-                    // Draw selection rectangle.
-                    selection.setVisible(true);
-                    selection.getStyleClass().setAll("add-note-box");
-                    selection.setX(scaler.scalePos(startMs).get());
-                    selection.setY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT).get());
-                    selection.setWidth(scaler.scaleX(endMs - startMs).get());
-                    selection.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
-                } else {
-                    selection.setVisible(false);
-                }
-            }
-        });
-        measure.setOnMousePressed(event -> {
-            editorContextMenu.hide();
-            subMode = SubMode.NOT_DRAGGING;
-            curX = measure.getLayoutX() + event.getX();
-            curY = event.getY();
-        });
+    private VBox createDyanmicsColumnInternal(int colNum) {
+        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
+        double rowHeight = 50;
+
+        VBox newDynamics = new VBox();
+        AnchorPane topCell = new AnchorPane();
+        topCell.setPrefSize(colWidth, rowHeight);
+        topCell.getStyleClass().add("dynamics-top-cell");
+        if (colNum % 4 == 0) {
+            topCell.getStyleClass().add("measure-start");
+        }
+
+        AnchorPane bottomCell = new AnchorPane();
+        bottomCell.setPrefSize(colWidth, rowHeight);
+        bottomCell.getStyleClass().add("dynamics-bottom-cell");
+        if (colNum % 4 == 0) {
+            bottomCell.getStyleClass().add("measure-start");
+        }
+        newDynamics.getChildren().addAll(topCell, bottomCell);
+        return newDynamics;
     }
 
     private final NoteCallback noteCallback = new NoteCallback() {

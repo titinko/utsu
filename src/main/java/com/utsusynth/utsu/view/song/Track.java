@@ -26,10 +26,15 @@ public class Track {
     private ListView<Set<TrackItem>> noteTrack;
     private ScrollBar noteVScrollBar;
     private ListView<Set<TrackItem>> dynamicsTrack;
+    private TrackCallback callback;
 
     @Inject
     public Track(Scaler scaler) {
         this.scaler = scaler;
+    }
+
+    public void initialize(TrackCallback callback) {
+        this.callback = callback;
     }
 
     public int getNumMeasures() {
@@ -96,28 +101,11 @@ public class Track {
                 Pane graphic = new Pane();
                 graphic.setPrefSize(colWidth, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
 
-                VBox column = new VBox();
-                for (int octave = 7; octave > 0; octave--) {
-                    for (String pitch : PitchUtils.REVERSE_PITCHES) {
-                        // Add row to track.
-                        Pane newCell = new Pane();
-                        newCell.setPrefSize(colWidth, rowHeight);
-                        newCell.getStyleClass().add("track-cell");
-                        if (getIndex() >= 4) {
-                            newCell.getStyleClass()
-                                    .add(pitch.endsWith("#") ? "black-key" : "white-key");
-                        } else {
-                            newCell.getStyleClass().add("gray-key");
-                        }
-                        if (getIndex() % 4 == 0) {
-                            newCell.getStyleClass().add("measure-start");
-                        } else if (getIndex() % 4 == 3) {
-                            newCell.getStyleClass().add("measure-end");
-                        }
-                        column.getChildren().add(newCell);
-                    }
+                // Background.
+                if (callback != null) {
+                    graphic.getChildren().add(callback.createNoteColumn(getIndex()));
                 }
-                graphic.getChildren().add(column);
+                // Foreground.
                 if (item != null) {
                     for (TrackItem trackItem : item) {
                         double offset = getIndex() * colWidth;
@@ -179,23 +167,11 @@ public class Track {
                 Pane graphic = new Pane();
                 graphic.setPrefSize(colWidth, rowHeight * 2);
 
-                VBox newDynamics = new VBox();
-                AnchorPane topCell = new AnchorPane();
-                topCell.setPrefSize(colWidth, rowHeight);
-                topCell.getStyleClass().add("dynamics-top-cell");
-                if (getIndex() % 4 == 0) {
-                    topCell.getStyleClass().add("measure-start");
+                // Background.
+                if (callback != null) {
+                    graphic.getChildren().addAll(callback.createDynamicsColumn(getIndex()));
                 }
-
-                AnchorPane bottomCell = new AnchorPane();
-                bottomCell.setPrefSize(colWidth, rowHeight);
-                bottomCell.getStyleClass().add("dynamics-bottom-cell");
-                if (getIndex() % 4 == 0) {
-                    bottomCell.getStyleClass().add("measure-start");
-                }
-                newDynamics.getChildren().addAll(topCell, bottomCell);
-
-                graphic.getChildren().addAll(newDynamics);
+                // Foreground.
                 if (item != null) {
                     for (TrackItem trackItem : item) {
                         double offset = getIndex() * colWidth;
@@ -229,6 +205,9 @@ public class Track {
         int startColNum = (int) (startX / colWidth);
         int endColNum = (int) (endX / colWidth);
         for (int colNum = startColNum; colNum <= endColNum; colNum++) {
+            if (track.getItems().get(colNum).contains(trackItem)) {
+                continue; // Don't add something that's already there.
+            }
             ImmutableSet<TrackItem> items = new ImmutableSet.Builder<TrackItem>()
                     .addAll(track.getItems().get(colNum))
                     .add(trackItem)

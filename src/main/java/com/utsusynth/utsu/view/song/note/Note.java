@@ -46,7 +46,7 @@ public class Note implements TrackItem, Comparable<Note> {
     private final DoubleProperty startX;
     private final DoubleProperty widthX;
     private final DoubleProperty overlapWidthX;
-    private boolean isValid = true;
+    private boolean isValid = false;
     private boolean isHighlighted = false;
     private boolean isDisplayOnly = false;
 

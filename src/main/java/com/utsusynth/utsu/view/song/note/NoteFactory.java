@@ -55,6 +55,7 @@ public class NoteFactory {
                 localizer,
                 quantizer,
                 scaler);
+        trackNote.setValid(true);
         lyric.setVisibleLyric(note.getLyric());
         if (note.getTrueLyric().isPresent()) {
             lyric.setVisibleAlias(note.getTrueLyric().get());
@@ -101,7 +102,6 @@ public class NoteFactory {
     }
 
     public Note createBackgroundNote(int row, double startX, double widthX, Scaler noteScaler) {
-
         // Should remove drag edge.
         Note trackNote = new Note(
                 row,
@@ -116,6 +116,7 @@ public class NoteFactory {
                 quantizer,
                 noteScaler);
         trackNote.setToDisplayOnly();
+        trackNote.setValid(true);
         return trackNote;
     }
 }
