@@ -12,9 +12,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 
 import java.util.*;
 
@@ -27,14 +25,16 @@ public class Track {
     private ScrollBar noteVScrollBar;
     private ListView<Set<TrackItem>> dynamicsTrack;
     private TrackCallback callback;
+    private DragHandler dragHandler;
 
     @Inject
     public Track(Scaler scaler) {
         this.scaler = scaler;
     }
 
-    public void initialize(TrackCallback callback) {
+    public void initialize(TrackCallback callback, DragHandler dragHandler) {
         this.callback = callback;
+        this.dragHandler = dragHandler;
     }
 
     public int getNumMeasures() {
@@ -112,6 +112,19 @@ public class Track {
                         graphic.getChildren().add(trackItem.redraw(getIndex(), offset));
                     }
                 }
+                // Drag behavior.
+                graphic.setOnMouseDragOver(event -> {
+                    if (dragHandler != null) {
+                        dragHandler.onDragged(
+                                event.getX() + (getIndex() * colWidth), event.getY());
+                    }
+                });
+                graphic.setOnMouseDragReleased(event -> {
+                    if (dragHandler != null) {
+                        dragHandler.onDragReleased(
+                                event.getX() + (getIndex() * colWidth), event.getY());
+                    }
+                });
                 setGraphic(graphic);
             }
         });

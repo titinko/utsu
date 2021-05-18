@@ -63,6 +63,7 @@ public class SongEditor {
         NOT_DRAGGING, DRAG_CREATE, DRAG_SELECT,
     }
 
+    private DragHandler dragHandler; // Expect this to sometimes be null.
     private SubMode subMode;
     private double curX;
     private double curY;
@@ -123,6 +124,21 @@ public class SongEditor {
             @Override
             public VBox createDynamicsColumn(int colNum) {
                 return createDyanmicsColumnInternal(colNum);
+            }
+        }, new DragHandler() {
+            @Override
+            public void onDragged(double absoluteX, double absoluteY) {
+                if (dragHandler != null) {
+                    dragHandler.onDragged(absoluteX, absoluteY);
+                }
+            }
+
+            @Override
+            public void onDragReleased(double absoluteX, double absoluteY) {
+                if (dragHandler != null) {
+                    dragHandler.onDragReleased(absoluteX, absoluteY);
+                    dragHandler = null;
+                }
             }
         });
         playbackManager.initialize(new PlaybackCallback() {
@@ -736,7 +752,7 @@ public class SongEditor {
                 selectionBox.setStartY(Math.min(curY, endY));
                 selectionBox.setWidth(Math.abs(endX - curX));
                 selectionBox.setHeight(Math.abs(endY - curY));
-                // track.insertItem(track.getNoteTrack(), selectionBox);
+                track.insertItem(track.getNoteTrack(), selectionBox);
                 // Update highlighted notes.
                 int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
                 int endRow = (int) scaler.unscaleY(endY) / Quantizer.ROW_HEIGHT;
@@ -765,7 +781,7 @@ public class SongEditor {
                     addNoteBox.setStartY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT).get());
                     addNoteBox.setWidth(scaler.scaleX(endMs - startMs).get());
                     addNoteBox.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
-                    // track.insertItem(track.getNoteTrack(), addNoteBox);
+                    track.insertItem(track.getNoteTrack(), addNoteBox);
                 } else {
                     track.removeItem(track.getNoteTrack(), selectionBox);
                     track.removeItem(track.getNoteTrack(), addNoteBox);
@@ -773,12 +789,14 @@ public class SongEditor {
             }
         });
         column.setOnMousePressed(event -> {
-            // System.out.println("Mouse pressed");
             editorContextMenu.hide();
             subMode = SubMode.NOT_DRAGGING;
             double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
             curX = offsetX + event.getX();
             curY = event.getY();
+        });
+        column.setOnDragDetected(event -> {
+            //column.startFullDrag();
         });
     }
 
