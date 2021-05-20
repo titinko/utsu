@@ -59,7 +59,7 @@ public class SelectionBox implements TrackItem {
         drawnColumns.add(colNum);
 
         Rectangle box = new Rectangle();
-        box.xProperty().bind(startX);
+        box.xProperty().bind(startX.subtract(offsetX));
         box.yProperty().bind(startY);
         box.widthProperty().bind(width);
         box.heightProperty().bind(height);

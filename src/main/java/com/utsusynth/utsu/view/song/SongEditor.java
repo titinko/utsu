@@ -693,110 +693,135 @@ public class SongEditor {
     }
 
     private void activateNoteColumn(VBox column, int colNum) {
-        column.setOnMouseReleased(event -> {
-            // Remove transient selection/add note boxes.
-            track.removeItem(track.getNoteTrack(), selectionBox);
-            track.removeItem(track.getNoteTrack(), addNoteBox);
-            int quantSize = quantizer.getQuant();
-            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
-            double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
-            double endX = Math
-                    .min(getWidthX(), Math.max(measureWidth, offsetX + event.getX()));
-            int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
-            int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
-            if (subMode == SubMode.DRAG_CREATE) {
-                int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                // Create new note if size would be nonzero.
-                if (endMs > startMs) {
-                    Note newNote = noteFactory.createDefaultNote(
-                            startRow,
-                            startMs,
-                            endMs - startMs,
-                            noteCallback,
-                            vibratoEditor,
-                            model.getCheckboxValue(CheckboxType.SHOW_LYRICS),
-                            model.getCheckboxValue(CheckboxType.SHOW_ALIASES));
-                    noteMap.addNoteElement(newNote);
-                    List<Note> noteList = ImmutableList.of(newNote);
-                    model.recordAction(() -> {
-                        playbackManager.clearHighlights();
-                        undoDeleteNotes(noteList);
-                    }, () -> {
-                        playbackManager.clearHighlights();
-                        deleteNotes(noteList);
-                    });
-                }
-            } else if (subMode == SubMode.DRAG_SELECT
-                    && !playbackManager.getHighlightedNotes().isEmpty()) {
-                playbackManager.realign();
-            } else if (event.isShiftDown() || event.getButton() != MouseButton.PRIMARY) {
-                if (event.getButton() == MouseButton.SECONDARY) {
-                    editorContextMenu.show(
-                            track.getNoteTrack(), event.getScreenX(), event.getScreenY());
-                }
-                // Set cursor.
-                playbackManager.setCursor(endMs);
-            }
-        });
-        column.setOnMouseDragged(event -> {
-            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
-            double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
-            double endX = Math
-                    .min(getWidthX(), Math.max(measureWidth, offsetX + event.getX()));
-            if (subMode == SubMode.DRAG_SELECT || event.isShiftDown()
-                    || event.getButton() != MouseButton.PRIMARY) {
-                subMode = SubMode.DRAG_SELECT;
-                // Draw selection rectangle.
-                double endY = Math.min(column.getHeight(), Math.max(0, event.getY()));
-                selectionBox.setStartX(Math.min(curX, endX));
-                selectionBox.setStartY(Math.min(curY, endY));
-                selectionBox.setWidth(Math.abs(endX - curX));
-                selectionBox.setHeight(Math.abs(endY - curY));
-                track.insertItem(track.getNoteTrack(), selectionBox);
-                // Update highlighted notes.
-                int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                int endRow = (int) scaler.unscaleY(endY) / Quantizer.ROW_HEIGHT;
-                int startMs = RoundUtils.round(scaler.unscalePos(curX));
-                int endMs = RoundUtils.round(scaler.unscalePos(endX));
-                RegionBounds horizontalBounds = endMs >= startMs ? new RegionBounds(startMs, endMs)
-                        : new RegionBounds(endMs, startMs);
-                playbackManager.clearHighlights();
-                for (Note note : noteMap.getAllValidNotes()) {
-                    int noteRow = note.getRow();
-                    if (note.getValidBounds().intersects(horizontalBounds)
-                            && Math.abs(endRow - noteRow) + Math.abs(noteRow - startRow) == Math
-                            .abs(endRow - startRow)) {
-                        playbackManager.highlightNote(note);
-                    }
-                }
-            } else {
-                subMode = SubMode.DRAG_CREATE;
-                int quantSize = quantizer.getQuant();
-                int startMs = RoundUtils.round(scaler.unscalePos(curX) / quantSize) * quantSize;
-                int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                int endMs = RoundUtils.round(scaler.unscalePos(endX) / quantSize) * quantSize;
-                if (endMs > startMs) {
-                    // Draw selection rectangle.
-                    addNoteBox.setStartX(scaler.scalePos(startMs).get());
-                    addNoteBox.setStartY(scaler.scaleY(startRow * Quantizer.ROW_HEIGHT).get());
-                    addNoteBox.setWidth(scaler.scaleX(endMs - startMs).get());
-                    addNoteBox.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
-                    track.insertItem(track.getNoteTrack(), addNoteBox);
-                } else {
-                    track.removeItem(track.getNoteTrack(), selectionBox);
-                    track.removeItem(track.getNoteTrack(), addNoteBox);
-                }
-            }
-        });
         column.setOnMousePressed(event -> {
+            double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
+            // End any leftover drag action.
+            if (dragHandler != null) {
+                dragHandler.onDragReleased(offsetX + event.getX(), event.getY());
+                dragHandler = null;
+            }
             editorContextMenu.hide();
             subMode = SubMode.NOT_DRAGGING;
-            double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
             curX = offsetX + event.getX();
             curY = event.getY();
         });
+        column.setOnMouseReleased(event -> {
+            if (event.getButton() == MouseButton.SECONDARY && !editorContextMenu.isShowing()) {
+                editorContextMenu.show(
+                        track.getNoteTrack(), event.getScreenX(), event.getScreenY());
+            }
+        });
         column.setOnDragDetected(event -> {
-            //column.startFullDrag();
+            column.startFullDrag();
+            if (event.isShiftDown() || !event.isPrimaryButtonDown()) {
+                // Select mode.
+                dragHandler = new DragHandler() {
+                    @Override
+                    public void onDragged(double absoluteX, double absoluteY) {
+                        // Draw selection rectangle.
+                        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                        double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
+                        double endY = Math.min(column.getHeight(), Math.max(0, absoluteY));
+                        selectionBox.setStartX(Math.min(curX, endX));
+                        selectionBox.setStartY(Math.min(curY, endY));
+                        selectionBox.setWidth(Math.abs(endX - curX));
+                        selectionBox.setHeight(Math.abs(endY - curY));
+                        track.insertItem(track.getNoteTrack(), selectionBox);
+                        // Update highlighted notes.
+                        int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
+                        int endRow = (int) scaler.unscaleY(endY) / Quantizer.ROW_HEIGHT;
+                        int startMs = RoundUtils.round(scaler.unscalePos(curX));
+                        int endMs = RoundUtils.round(scaler.unscalePos(endX));
+                        RegionBounds horizontalBounds = endMs >= startMs
+                                ? new RegionBounds(startMs, endMs)
+                                : new RegionBounds(endMs, startMs);
+                        playbackManager.clearHighlights();
+                        for (Note note : noteMap.getAllValidNotes()) {
+                            int noteRow = note.getRow();
+                            if (note.getValidBounds().intersects(horizontalBounds)
+                                    && Math.abs(endRow - noteRow) + Math.abs(noteRow - startRow)
+                                    == Math.abs(endRow - startRow)) {
+                                playbackManager.highlightNote(note);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onDragReleased(double absoluteX, double absoluteY) {
+                        track.removeItem(track.getNoteTrack(), selectionBox);
+                        if (!playbackManager.getHighlightedNotes().isEmpty()) {
+                            playbackManager.realign();
+                        } else {
+                            // Set cursor.
+                            int quantSize = quantizer.getQuant();
+                            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                            double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
+                            int endMs = RoundUtils.round(
+                                    scaler.unscalePos(endX) / quantSize) * quantSize;
+                            playbackManager.setCursor(endMs);
+                        }
+                    }
+                };
+            } else {
+                // Create mode.
+                dragHandler = new DragHandler() {
+                    @Override
+                    public void onDragged(double absoluteX, double absoluteY) {
+                        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                        double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
+                        int quantSize = quantizer.getQuant();
+                        int startMs = RoundUtils.round(
+                                scaler.unscalePos(curX) / quantSize) * quantSize;
+                        int endMs = RoundUtils.round(
+                                scaler.unscalePos(endX) / quantSize) * quantSize;
+                        if (endMs > startMs) {
+                            // Draw selection rectangle.
+                            int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
+                            addNoteBox.setStartX(scaler.scalePos(startMs).get());
+                            addNoteBox.setStartY(
+                                    scaler.scaleY(startRow * Quantizer.ROW_HEIGHT).get());
+                            addNoteBox.setWidth(scaler.scaleX(endMs - startMs).get());
+                            addNoteBox.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+                            track.insertItem(track.getNoteTrack(), addNoteBox);
+                        } else {
+                            track.removeItem(track.getNoteTrack(), addNoteBox);
+                        }
+                    }
+
+                    @Override
+                    public void onDragReleased(double absoluteX, double absoluteY) {
+                        track.removeItem(track.getNoteTrack(), addNoteBox);
+                        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                        double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
+                        int quantSize = quantizer.getQuant();
+                        int startMs = RoundUtils.round(
+                                scaler.unscalePos(curX) / quantSize) * quantSize;
+                        int endMs = RoundUtils.round(
+                                scaler.unscalePos(endX) / quantSize) * quantSize;
+                        // Create new note if size would be nonzero.
+                        if (endMs > startMs) {
+                            int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
+                            Note newNote = noteFactory.createDefaultNote(
+                                    startRow,
+                                    startMs,
+                                    endMs - startMs,
+                                    noteCallback,
+                                    vibratoEditor,
+                                    model.getCheckboxValue(CheckboxType.SHOW_LYRICS),
+                                    model.getCheckboxValue(CheckboxType.SHOW_ALIASES));
+                            noteMap.addNoteElement(newNote);
+                            List<Note> noteList = ImmutableList.of(newNote);
+                            model.recordAction(() -> {
+                                playbackManager.clearHighlights();
+                                undoDeleteNotes(noteList);
+                            }, () -> {
+                                playbackManager.clearHighlights();
+                                deleteNotes(noteList);
+                            });
+                        }
+                    }
+                };
+            }
         });
     }
 
