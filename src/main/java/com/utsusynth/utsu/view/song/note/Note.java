@@ -15,6 +15,7 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.view.song.DragHandler;
 import com.utsusynth.utsu.view.song.TrackItem;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -201,27 +202,7 @@ public class Note implements TrackItem, Comparable<Note> {
             if (event.getButton() != MouseButton.PRIMARY) {
                 return;
             }
-            if (subMode == SubMode.DRAGGING && hasMoved) {
-                int newPos = getAbsPositionMs();
-                int newRow = getRow();
-                if (newPos != startPos || newRow != startRow) {
-                    track.recordNoteMovement(this, newPos - startPos, newRow - startRow);
-                }
-                if (isHighlighted) {
-                    track.realignHighlights();
-                }
-            } else if (subMode == SubMode.RESIZING) {
-                final int oldDuration = startDuration;
-                final int newDuration = getDurationMs();
-                if (newDuration != oldDuration) {
-                    track.recordAction(
-                            () -> resizeNote(newDuration),
-                            () -> resizeNote(oldDuration));
-                }
-                if (isHighlighted) {
-                    track.realignHighlights();
-                }
-            } else {
+            if (subMode == SubMode.CLICKING) {
                 if (contextMenu != null) {
                     contextMenu.hide();
                 }
@@ -235,90 +216,149 @@ public class Note implements TrackItem, Comparable<Note> {
             }
             subMode = SubMode.CLICKING;
         });
-        newLayout.setOnMouseDragged(event -> {
-            if (subMode == SubMode.RESIZING) {
-                // Find quantized mouse position.
-                int quantSize = quantizer.getQuant();
-                int newQuant = (int) Math.floor(
-                        (scaler.unscaleX(event.getX()) + getAbsPositionMs()) / quantSize);
+        newLayout.setOnDragDetected(event -> {
+            if (event.getButton() != MouseButton.PRIMARY) {
+                return;
+            }
+            newLayout.startFullDrag();
+            if (subMode.equals(SubMode.RESIZING)) {
+                // Drag to resize note.
+                track.startDrag(new DragHandler() {
+                    @Override
+                    public void onDragged(double absoluteX, double absoluteY) {
+                        // Find quantized mouse position.
+                        int quantSize = quantizer.getQuant();
+                        int newQuant = (int) Math.floor(
+                                scaler.unscalePos(absoluteX) / quantSize);
 
-                // Find what to compare quantized mouse position to.
-                int oldEndPos = getAbsPositionMs() + getDurationMs();
-                int increasingQuantEnd = (int) Math.floor(oldEndPos * 1.0 / quantSize);
-                int decreasingQuantEnd = (int) (Math.ceil(oldEndPos * 1.0 / quantSize)) - 1;
+                        // Find what to compare quantized mouse position to.
+                        int oldEndPos = getAbsPositionMs() + getDurationMs();
+                        int increasingQuantEnd = (int) Math.floor(oldEndPos * 1.0 / quantSize);
+                        int decreasingQuantEnd = (int) (Math.ceil(oldEndPos * 1.0 / quantSize)) - 1;
 
-                // Calculate actual change in duration.
-                int oldPosition = getAbsPositionMs();
-                int newPosition = newQuant * quantSize;
-                int positionChange = newPosition - oldPosition;
+                        // Calculate actual change in duration.
+                        int oldPosition = getAbsPositionMs();
+                        int newPosition = newQuant * quantSize;
+                        int positionChange = newPosition - oldPosition;
 
-                // Increase or decrease duration.
-                if (newQuant > increasingQuantEnd) {
-                    resizeNote(positionChange);
-                } else if (newQuant >= getQuantizedStart() && newQuant < decreasingQuantEnd) {
-                    resizeNote(positionChange + quantSize);
-                }
+                        // Increase or decrease duration.
+                        if (newQuant > increasingQuantEnd) {
+                            resizeNote(positionChange);
+                        } else if (newQuant >= getQuantizedStart()
+                                && newQuant < decreasingQuantEnd) {
+                            resizeNote(positionChange + quantSize);
+                        }
+                    }
+
+                    @Override
+                    public void onDragReleased(double absoluteX, double absoluteY) {
+                        final int oldDuration = startDuration;
+                        final int newDuration = getDurationMs();
+                        if (newDuration != oldDuration) {
+                            track.recordAction(
+                                    () -> resizeNote(newDuration),
+                                    () -> resizeNote(oldDuration));
+                        }
+                        if (isHighlighted) {
+                            track.realignHighlights();
+                        }
+                        subMode = SubMode.CLICKING;
+                    }
+                });
             } else {
-                // Handle vertical movement.
-                int oldRow = getRow();
-                int newRow = ((int) Math
-                        .floor(scaler.unscaleY(event.getY()) / Quantizer.ROW_HEIGHT))
-                        + oldRow;
-                // Check whether new row is in bounds for every highlighted note.
-                int lowestNewRow = track.getLowestRow(thisNote) + (newRow - oldRow);
-                int highestNewRow = track.getHighestRow(thisNote) + (newRow - oldRow);
-                if (!(lowestNewRow >= 0 && highestNewRow < 7 * PitchUtils.PITCHES.size())) {
-                    newRow = oldRow;
-                }
-
-                // Handle horizontal movement.
-                int curQuantSize = quantizer.getQuant(); // Ensure constant quantization.
-                // Determine whether a note is aligned with the current quantization.
-                boolean aligned = getAbsPositionMs() % curQuantSize == 0;
-                int oldQuantInNote = positionInNote / curQuantSize;
-                int newQuantInNote =
-                        (int) Math.floor(scaler.unscaleX(event.getX()) / curQuantSize);
-                int quantChange = newQuantInNote - oldQuantInNote;
-                if (!aligned) {
-                    // Possibly increase quantChange by 1.
-                    int minBound = getDurationMs();
-                    int ceilQuantDur = (int) Math.ceil(getDurationMs() * 1.0 / curQuantSize);
-                    if (scaler.unscaleX(event.getX()) > minBound && newQuantInNote < ceilQuantDur) {
-                        quantChange++;
-                    }
-                    // Convert to smallest quantization.
-                    quantChange *= curQuantSize;
-                    // Both values are in the smallest quantization.
-                    int truncatedStart = (getAbsPositionMs() / curQuantSize) * curQuantSize;
-                    int actualStart = getAbsPositionMs();
-                    // Align start quant with true quantization.
-                    if (quantChange > 0) {
-                        // Subtract from quantChange.
-                        quantChange -= (actualStart - truncatedStart);
-                    } else if (quantChange < 0) {
-                        // Add to quantChange.
-                        quantChange += (truncatedStart + Quantizer.COL_WIDTH - actualStart);
-                    }
-                    // Adjust curQuant now that quantChange has been corrected.
-                    curQuantSize = 1;
-                }
-                int oldQuant = getQuantizedStart(curQuantSize);
-                int newQuant = oldQuant + quantChange;
-
-                // Check column bounds of leftmost note.
-                int positionChange = (newQuant - oldQuant) * curQuantSize;
-                if (track.getBounds(thisNote).getMinMs() + positionChange < 0) {
-                    newQuant = oldQuant;
-                }
-
-                // Actual movement.
-                if (oldRow != newRow || oldQuant != newQuant) {
-                    int oldPosition = oldQuant * curQuantSize;
-                    int newPosition = newQuant * curQuantSize;
-                    track.moveNote(thisNote, newPosition - oldPosition, newRow - oldRow);
-                    hasMoved = true;
-                }
+                // Drag to move note.
                 subMode = SubMode.DRAGGING;
+                track.startDrag(new DragHandler() {
+                    @Override
+                    public void onDragged(double absoluteX, double absoluteY) {
+                        // Handle vertical movement.
+                        int oldRow = getRow();
+                        int newRow = (int) Math.floor(
+                                scaler.unscaleY(absoluteY) / Quantizer.ROW_HEIGHT);
+                        // Check whether new row is in bounds for every highlighted note.
+                        int lowestNewRow = track.getLowestRow(thisNote) + (newRow - oldRow);
+                        int highestNewRow = track.getHighestRow(thisNote) + (newRow - oldRow);
+                        if (!(lowestNewRow >= 0 && highestNewRow < 7 * PitchUtils.PITCHES.size())) {
+                            newRow = oldRow;
+                        }
+
+                        // Handle horizontal movement.
+                        int curQuantSize = quantizer.getQuant(); // Ensure constant quantization.
+                        // Determine whether a note is aligned with the current quantization.
+                        boolean aligned = getAbsPositionMs() % curQuantSize == 0;
+                        int oldQuantInNote = positionInNote / curQuantSize;
+                        int newQuantInNote = (int) Math.floor(
+                                scaler.unscaleX(absoluteX - getStartX())/ curQuantSize);
+                        int quantChange = newQuantInNote - oldQuantInNote;
+                        if (!aligned) {
+                            // Possibly increase quantChange by 1.
+                            int minBound = getDurationMs();
+                            int ceilQuantDur = (int) Math.ceil(getDurationMs() * 1.0 / curQuantSize);
+                            if (scaler.unscaleX(absoluteX - getStartX()) > minBound
+                                    && newQuantInNote < ceilQuantDur) {
+                                quantChange++;
+                            }
+                            // Convert to smallest quantization.
+                            quantChange *= curQuantSize;
+                            // Both values are in the smallest quantization.
+                            int truncatedStart = (getAbsPositionMs() / curQuantSize) * curQuantSize;
+                            int actualStart = getAbsPositionMs();
+                            // Align start quant with true quantization.
+                            if (quantChange > 0) {
+                                // Subtract from quantChange.
+                                quantChange -= (actualStart - truncatedStart);
+                            } else if (quantChange < 0) {
+                                // Add to quantChange.
+                                quantChange += (truncatedStart + Quantizer.COL_WIDTH - actualStart);
+                            }
+                            // Adjust curQuant now that quantChange has been corrected.
+                            curQuantSize = 1;
+                        }
+                        int oldQuant = getQuantizedStart(curQuantSize);
+                        int newQuant = oldQuant + quantChange;
+
+                        // Check column bounds of leftmost note.
+                        int positionChange = (newQuant - oldQuant) * curQuantSize;
+                        if (track.getBounds(thisNote).getMinMs() + positionChange < 0) {
+                            newQuant = oldQuant;
+                        }
+
+                        // Actual movement.
+                        if (oldRow != newRow || oldQuant != newQuant) {
+                            int oldPosition = oldQuant * curQuantSize;
+                            int newPosition = newQuant * curQuantSize;
+                            track.moveNote(thisNote, newPosition - oldPosition, newRow - oldRow);
+                            hasMoved = true;
+                        }
+                    }
+
+                    @Override
+                    public void onDragReleased(double absoluteX, double absoluteY) {
+                        if (hasMoved) {
+                            int newPos = getAbsPositionMs();
+                            int newRow = getRow();
+                            if (newPos != startPos || newRow != startRow) {
+                                track.recordNoteMovement(
+                                        thisNote, newPos - startPos, newRow - startRow);
+                            }
+                            if (isHighlighted) {
+                                track.realignHighlights();
+                            }
+                        } else {
+                            if (contextMenu != null) {
+                                contextMenu.hide();
+                            }
+                            if (event.isShiftDown()) {
+                                track.highlightInclusive(thisNote);
+                            } else if (track.isExclusivelyHighlighted(thisNote)) {
+                                lyric.openTextField();
+                            } else {
+                                track.highlightExclusive(thisNote);
+                            }
+                        }
+                        subMode = SubMode.CLICKING;
+                    }
+                });
             }
         });
         newLayout.setOnMousePressed(event -> {

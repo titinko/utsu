@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.view.song.note;
 
 import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.view.song.DragHandler;
 
 /**
  * A way of communicating TrackNote information back to its parent Track.
@@ -47,6 +48,8 @@ public interface NoteCallback {
     void openNoteProperties(Note note);
 
     void openLyricConfig(Note note);
+
+    void startDrag(DragHandler dragHandler);
 
     void clearCache(Note note);
 }

@@ -59,12 +59,7 @@ public class SongEditor {
     private SongCallback model;
 
     // Temporary cache values.
-    private enum SubMode {
-        NOT_DRAGGING, DRAG_CREATE, DRAG_SELECT,
-    }
-
     private DragHandler dragHandler; // Expect this to sometimes be null.
-    private SubMode subMode;
     private double curX;
     private double curY;
 
@@ -701,14 +696,21 @@ public class SongEditor {
                 dragHandler = null;
             }
             editorContextMenu.hide();
-            subMode = SubMode.NOT_DRAGGING;
             curX = offsetX + event.getX();
             curY = event.getY();
         });
         column.setOnMouseReleased(event -> {
-            if (event.getButton() == MouseButton.SECONDARY && !editorContextMenu.isShowing()) {
+            if (event.getButton() == MouseButton.SECONDARY) {
                 editorContextMenu.show(
                         track.getNoteTrack(), event.getScreenX(), event.getScreenY());
+            }
+            if (event.getButton() == MouseButton.SECONDARY || event.isShiftDown()) {
+                double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                double endX = offsetX + event.getX();
+                int quantSize = quantizer.getQuant();
+                int endMs = RoundUtils.round(
+                        scaler.unscalePos(endX) / quantSize) * quantSize;
+                playbackManager.setCursor(endMs);
             }
         });
         column.setOnDragDetected(event -> {
@@ -993,6 +995,11 @@ public class SongEditor {
         @Override
         public void openLyricConfig(Note note) {
             model.openLyricConfig(note.getAbsPositionMs());
+        }
+
+        @Override
+        public void startDrag(DragHandler newDragHandler) {
+            dragHandler = newDragHandler;
         }
 
         @Override
