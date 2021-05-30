@@ -10,6 +10,7 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.view.song.DragHandler;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Curve;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.CurveFactory;
@@ -247,6 +248,16 @@ public class PitchbendFactory {
 
                     @Override
                     public void modifySongVibrato(int[] oldVibrato, int[] newVibrato) {
+                        // Do nothing.
+                    }
+
+                    @Override
+                    public void startDrag(DragHandler dragHandler) {
+                        // Do nothing.
+                    }
+
+                    @Override
+                    public void readjust() {
                         // Do nothing.
                     }
                 },

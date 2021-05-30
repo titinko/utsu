@@ -305,6 +305,16 @@ public class BulkEditor {
                             vibratoCallback.run();
                         }
                     }
+
+                    @Override
+                    public void startDrag(DragHandler dragHandler) {
+                        // Do nothing.
+                    }
+
+                    @Override
+                    public void readjust() {
+                        // Do nothing.
+                    }
                 }, new SimpleBooleanProperty(true));
         return new Group(note.redraw(), currentVibrato.getVibratoElement());
     }

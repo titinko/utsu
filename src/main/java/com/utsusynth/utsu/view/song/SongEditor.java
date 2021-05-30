@@ -1079,6 +1079,17 @@ public class SongEditor {
                 noteMap.getNote(positionMs).setBackupData(update);
             }
 
+            @Override
+            public void startDrag(DragHandler newDragHandler) {
+                dragHandler = newDragHandler;
+            }
+
+            @Override
+            public void readjust() {
+                // Just insert, do not bother to remove.
+                track.insertItem(track.getNoteTrack(), noteMap.getPitchbend(positionMs));
+            }
+
             private NoteUpdateData modifyBackend(PitchbendData updateData) {
                 Note toModify = noteMap.getNote(positionMs);
                 NoteData mutation = new NoteData(

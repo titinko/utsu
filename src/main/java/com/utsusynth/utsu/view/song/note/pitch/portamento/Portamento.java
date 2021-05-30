@@ -7,6 +7,7 @@ import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.view.song.DragHandler;
 import com.utsusynth.utsu.view.song.TrackItem;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import javafx.scene.Cursor;
@@ -138,44 +139,74 @@ public class Portamento implements TrackItem {
             changed = false;
             startData = getData();
         });
+        square.setOnDragDetected(event -> {
+            if (callback == null) {
+                return;
+            }
+            square.startFullDrag();
+            callback.startDrag(new DragHandler() {
+                @Override
+                public void onDragged(double absoluteX, double absoluteY) {
+                    dragPoint(point, absoluteX, absoluteY);
+                }
+
+                @Override
+                public void onDragReleased(double absoluteX, double absoluteY) {
+                    if (changed) {
+                        callback.modifySongPitchbend(startData, getData());
+                    }
+                }
+            });
+        });
         square.setOnMouseDragged(event -> {
-            int index = controlPoints.indexOf(point);
+            // Only use old-fashioned drag when there is no callback.
+            if (callback != null) {
+                return;
+            }
             double xDiff = event.getX() - (square.getX() + square.getWidth() / 2.0);
             double newX = point.getCenterX() + xDiff;
-            // First point.
-            if (index == 0) {
-                if (newX > 0 && newX < Math.min(maxX, controlPoints.get(index + 1).getCenterX())) {
-                    changed = true;
-                    point.setCenterX(newX);
-                }
-            // Last point.
-            } else if (index == controlPoints.size() - 1) {
-                if (newX > controlPoints.get(index - 1).getCenterX() && newX < maxX) {
-                    changed = true;
-                    point.setCenterX(newX);
-                }
-            // Middle point.
-            } else if (newX > controlPoints.get(index - 1).getCenterX()
-                    && newX < Math.min(maxX, controlPoints.get(index + 1).getCenterX())) {
-                changed = true;
-                point.setCenterX(newX);
-            }
-
-            // y-values.
-            if (index > 0 && index < controlPoints.size() - 1) {
-                double newY = event.getY();
-                if (newY > 0 && newY < maxY) {
-                    changed = true;
-                    point.setCenterY(newY);
-                }
-            }
-        });
-        square.setOnMouseReleased(event -> {
-            if (changed && callback != null) {
-                callback.modifySongPitchbend(startData, getData());
-            }
+            dragPoint(point, newX, event.getY());
         });
         return square;
+    }
+
+    private void dragPoint(ControlPoint point, double newX, double newY) {
+        int index = controlPoints.indexOf(point);
+        // First point.
+        if (index == 0) {
+            if (newX > 0 && newX < Math.min(maxX, controlPoints.get(index + 1).getCenterX())) {
+                changed = true;
+                point.setCenterX(newX);
+                if (callback != null) {
+                    callback.readjust();
+                }
+            }
+            // Last point.
+        } else if (index == controlPoints.size() - 1) {
+            if (newX > controlPoints.get(index - 1).getCenterX() && newX < maxX) {
+                changed = true;
+                point.setCenterX(newX);
+                if (callback != null) {
+                    callback.readjust();
+                }
+            }
+            // Middle point.
+        } else if (newX > controlPoints.get(index - 1).getCenterX()
+                && newX < Math.min(maxX, controlPoints.get(index + 1).getCenterX())) {
+            changed = true;
+            point.setCenterX(newX);
+            if (callback != null) {
+                callback.readjust();
+            }
+        }
+
+        // y-values.
+        if (index > 0 && index < controlPoints.size() - 1) {
+            if (newY > 0 && newY < maxY) {
+                changed = true;
+                point.setCenterY(newY);
+            }
+        }
     }
 
     private void updateCurvesInPlace() {
