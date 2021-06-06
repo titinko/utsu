@@ -8,4 +8,7 @@ public interface PlaybackCallback {
 
     // Remove a bar from the track.
     void removeBar(TrackItem bar);
+
+    // Add a bar to new columns and remove old columns if necessary.
+    void readjust(TrackItem bar);
 }

@@ -147,6 +147,15 @@ public class SongEditor {
             public void removeBar(TrackItem bar) {
                 track.removeItem(track.getNoteTrack(), bar);
             }
+
+            @Override
+            public void readjust(TrackItem bar) {
+                int numColumns = bar.getColumns().size();
+                track.insertItem(track.getNoteTrack(), bar);
+                if (bar.getColumns().size() > numColumns) {
+                    setBar(bar);
+                }
+            }
         });
     }
 
@@ -1086,8 +1095,14 @@ public class SongEditor {
 
             @Override
             public void readjust() {
-                // Just insert, do not bother to remove.
-                track.insertItem(track.getNoteTrack(), noteMap.getPitchbend(positionMs));
+                // Redraw if any changes to columns have been made.
+                TrackItem pitchbend = noteMap.getPitchbend(positionMs);
+                int numColumns = pitchbend.getColumns().size();
+                track.insertItem(track.getNoteTrack(), pitchbend);
+                if (pitchbend.getColumns().size() > numColumns) {
+                    track.removeItem(track.getNoteTrack(), pitchbend);
+                    track.insertItem(track.getNoteTrack(), pitchbend);
+                }
             }
 
             private NoteUpdateData modifyBackend(PitchbendData updateData) {

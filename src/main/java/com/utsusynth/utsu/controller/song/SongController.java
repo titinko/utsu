@@ -853,7 +853,8 @@ public class SongController implements EditorController, Localizable {
             if (playbackX == null) {
                 return null;
             }
-            AutoscrollMode autoscrollMode = preferencesManager.getAutoscroll();
+            return null;
+            /* AutoscrollMode autoscrollMode = preferencesManager.getAutoscroll();
             if (autoscrollMode.equals(AutoscrollMode.DISABLED)) {
                 return null;
             }
@@ -906,7 +907,7 @@ public class SongController implements EditorController, Localizable {
                 };
                 scrollPaneCenter.hvalueProperty().addListener(disableAutoScroll);
             }
-            return null;
+            return null; */
         };
         Runnable endPlaybackFn = () -> {
             iconManager.setPlayIcon(playPauseIcon);
@@ -927,10 +928,7 @@ public class SongController implements EditorController, Localizable {
                 Platform.runLater(() -> statusBar.setText("Render produced no output."));
             }
             playPauseIcon.setDisable(false);
-        }).
-
-                start();
-
+        }).start();
     }
 
     private void pausePlayback() {

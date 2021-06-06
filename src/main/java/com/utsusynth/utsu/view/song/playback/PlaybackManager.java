@@ -11,9 +11,8 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.view.song.note.Note;
+import javafx.animation.*;
 import javafx.animation.Animation.Status;
-import javafx.animation.Interpolator;
-import javafx.animation.TranslateTransition;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -31,23 +30,31 @@ public class PlaybackManager {
     private final Scaler scaler;
     private final TreeSet<Note> highlighted; // All highlighted notes.
     private final BooleanProperty isAnythingHighlighted;
-    private final TranslateTransition playback;
+    private final Timeline playback;
 
     private final StartBar startBarItem;
     private final EndBar endBarItem;
+    private final PlayBar playBarItem;
     private PlaybackCallback callback;
 
     private Group bars;
 
     @Inject
-    public PlaybackManager(StartBar startBarItem, EndBar endBarItem, Scaler scaler) {
+    public PlaybackManager(
+            StartBar startBarItem, EndBar endBarItem, PlayBar playBarItem, Scaler scaler) {
         this.startBarItem = startBarItem;
         this.endBarItem = endBarItem;
+        this.playBarItem = playBarItem;
 
         this.scaler = scaler;
         highlighted = new TreeSet<>();
         isAnythingHighlighted = new SimpleBooleanProperty(false);
-        playback = new TranslateTransition();
+        playback = new Timeline();
+        playBarItem.xProperty().addListener((obs, oldValue, newValue) -> {
+            if (callback != null && playback.getStatus() == Status.RUNNING) {
+                callback.readjust(playBarItem);
+            }
+        });
         clear();
     }
 
@@ -65,37 +72,19 @@ public class PlaybackManager {
      * @return A double binding of the playback bar's current x-value.
      */
     public DoubleProperty startPlayback(Duration duration, RegionBounds playRegion) {
-        if (duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
-            // Create a playback bar.
-            double barX = scaler.scalePos(playRegion.getMinMs()).get();
-            Line playBar = new Line(barX, 0, barX, scaler.scaleY(TOTAL_HEIGHT).get());
-            playBar.getStyleClass().add("playback-bar");
+        if (callback != null && duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
+            playBarItem.setX(scaler.scalePos(playRegion.getMinMs()).get());
+            callback.setBar(playBarItem);
 
-            // Add a backing bar to handle a Windows-specific optimization issue.
-            Node playBarNode;
-            if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                Line backingBar = new Line(barX, 0, barX, scaler.scaleY(TOTAL_HEIGHT).get());
-                backingBar.getStyleClass().add("playback-backing-bar");
-                playBarNode = new Group(playBar, backingBar);
-            } else {
-                playBarNode = playBar;
-            }
-            bars.getChildren().add(playBarNode);
-
-            // Move the playback bar as the song plays.
             playback.stop();
-            playback.setNode(playBarNode);
-            playback.setDuration(duration);
-            playback.setToX(
-                    scaler.scaleX(playRegion.getMaxMs() - playRegion.getMinMs()).get());
-            playback.setInterpolator(Interpolator.LINEAR);
-            playback.statusProperty().addListener((obs, oldStatus, newStatus) -> {
-                if (newStatus == Status.STOPPED) {
-                    bars.getChildren().remove(playBarNode);
-                }
-            });
+            playback.getKeyFrames().clear();
+            double finalX = scaler.scalePos(playRegion.getMaxMs()).get();
+            playback.getKeyFrames().add(
+                    new KeyFrame(duration, new KeyValue(playBarItem.xProperty(), finalX)));
             playback.play();
-            return playBarNode.translateXProperty();
+            playback.setOnFinished(event -> callback.removeBar(playBarItem));
+
+            return playBarItem.xProperty();
         }
         // Return null if no playback bar created.
         return null;
