@@ -1,11 +1,10 @@
-package com.utsusynth.utsu.view.song;
+package com.utsusynth.utsu.view.song.track;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.view.song.DragHandler;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
@@ -21,9 +20,9 @@ public class Track {
     private final Scaler scaler;
 
     private int numMeasures = 0;
-    private ListView<Set<TrackItem>> noteTrack;
+    private ListView<TrackItemSet> noteTrack;
     private ScrollBar noteVScrollBar;
-    private ListView<Set<TrackItem>> dynamicsTrack;
+    private ListView<TrackItemSet> dynamicsTrack;
     private TrackCallback callback;
     private DragHandler dragHandler;
 
@@ -50,18 +49,23 @@ public class Track {
         setNumMeasures(dynamicsTrack, numMeasures);
     }
 
-    private void setNumMeasures(ListView<Set<TrackItem>> updateMe, int numMeasures) {
+    private void setNumMeasures(ListView<TrackItemSet> updateMe, int numMeasures) {
         if (updateMe != null) {
             int numCols = (numMeasures + 1) * 4;
-            updateMe.setItems(FXCollections.observableArrayList());
+            ObservableList<TrackItemSet> newItems = FXCollections.observableArrayList();
             for (int i = 0; i < numCols; i++) {
-                updateMe.getItems().add(ImmutableSet.of());
+                if (updateMe.getItems().size() > i) {
+                    newItems.add(updateMe.getItems().get(i));
+                } else {
+                    newItems.add(new TrackItemSet());
+                }
             }
+            updateMe.setItems(newItems);
         }
     }
 
     private Optional<ScrollBar> getScrollBar(
-            ListView<Set<TrackItem>> source, Orientation orientation) {
+            ListView<TrackItemSet> source, Orientation orientation) {
         if (source == null) {
             return Optional.empty();
         }
@@ -77,7 +81,7 @@ public class Track {
         return Optional.empty();
     }
 
-    private ListView<Set<TrackItem>> createNoteTrack() {
+    private ListView<TrackItemSet> createNoteTrack() {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
 
@@ -92,7 +96,7 @@ public class Track {
                 setStyle("-fx-padding: 0px;");
             }
             @Override
-            protected void updateItem(Set<TrackItem> item, boolean empty) {
+            protected void updateItem(TrackItemSet item, boolean empty) {
                 super.updateItem(item, empty);
                 if (getIndex() < 0) {
                     return; // Don't bother rendering if there is no item.
@@ -107,7 +111,7 @@ public class Track {
                 }
                 // Foreground.
                 if (item != null) {
-                    for (TrackItem trackItem : item) {
+                    for (TrackItem trackItem : item.asList()) {
                         double offset = getIndex() * colWidth;
                         graphic.getChildren().add(trackItem.redraw(getIndex(), offset));
                     }
@@ -149,14 +153,14 @@ public class Track {
         return noteTrack;
     }
 
-    public ListView<Set<TrackItem>> getNoteTrack() {
+    public ListView<TrackItemSet> getNoteTrack() {
         if (noteTrack == null) {
             return createNoteTrack();
         }
         return noteTrack;
     }
 
-    private ListView<Set<TrackItem>> createDynamicsTrack() {
+    private ListView<TrackItemSet> createDynamicsTrack() {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         double rowHeight = 50;
 
@@ -171,7 +175,7 @@ public class Track {
                 setStyle("-fx-padding: 0px;");
             }
             @Override
-            protected void updateItem (Set<TrackItem> item, boolean empty) {
+            protected void updateItem (TrackItemSet item, boolean empty) {
                 super.updateItem(item, empty);
                 if (getIndex() < 0) {
                     return; // Don't bother rendering if there is no item.
@@ -186,7 +190,7 @@ public class Track {
                 }
                 // Foreground.
                 if (item != null) {
-                    for (TrackItem trackItem : item) {
+                    for (TrackItem trackItem : item.asList()) {
                         double offset = getIndex() * colWidth;
                         graphic.getChildren().add(trackItem.redraw(getIndex(), offset));
                     }
@@ -204,39 +208,39 @@ public class Track {
         return dynamicsTrack;
     }
 
-    public ListView<Set<TrackItem>> getDynamicsTrack() {
+    public ListView<TrackItemSet> getDynamicsTrack() {
         if (dynamicsTrack == null) {
             return createDynamicsTrack();
         }
         return dynamicsTrack;
     }
 
-    public void insertItem(ListView<Set<TrackItem>> track, TrackItem trackItem) {
+    public void scrollToPosition(int position) {
+        // blah
+    }
+
+    public void insertItem(ListView<TrackItemSet> track, TrackItem trackItem) {
         double startX = trackItem.getStartX();
         double endX = trackItem.getStartX() + trackItem.getWidth();
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         int startColNum = (int) (startX / colWidth);
         int endColNum = (int) (endX / colWidth);
         for (int colNum = startColNum; colNum <= endColNum; colNum++) {
-            if (track.getItems().get(colNum).contains(trackItem)) {
+            TrackItemSet itemSet = track.getItems().get(colNum);
+            if (itemSet.hasItem(trackItem)) {
                 continue; // Don't add something that's already there.
             }
-            ImmutableSet<TrackItem> items = new ImmutableSet.Builder<TrackItem>()
-                    .addAll(track.getItems().get(colNum))
-                    .add(trackItem)
-                    .build();
-            track.getItems().set(colNum, items);
+            track.getItems().set(colNum, itemSet.withItem(trackItem));
         }
     }
 
-    public void removeItem(ListView<Set<TrackItem>> track, TrackItem trackItem) {
+    public void removeItem(ListView<TrackItemSet> track, TrackItem trackItem) {
         for (Integer colNum : trackItem.getColumns()) {
             if (colNum < 0) {
                 continue;
             }
-            ImmutableSet<TrackItem> items = Sets.difference(
-                    track.getItems().get(colNum), ImmutableSet.of(trackItem)).immutableCopy();
-            track.getItems().set(colNum, items);
+            TrackItemSet itemSet = track.getItems().get(colNum);
+            track.getItems().set(colNum, itemSet.withoutItem(trackItem));
         }
         trackItem.clearColumns();
     }

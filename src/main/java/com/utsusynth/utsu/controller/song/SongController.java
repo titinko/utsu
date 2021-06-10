@@ -24,8 +24,6 @@ import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.PreferencesManager;
-import com.utsusynth.utsu.files.PreferencesManager.AutoscrollCancelMode;
-import com.utsusynth.utsu.files.PreferencesManager.AutoscrollMode;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.files.song.Ust12Reader;
 import com.utsusynth.utsu.files.song.Ust12Writer;
@@ -36,14 +34,11 @@ import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.view.song.Piano;
 import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
-import com.utsusynth.utsu.view.song.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItemSet;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -389,10 +384,10 @@ public class SongController implements EditorController, Localizable {
         anchorLeft.getChildren().add(piano.initPiano());
 
         // Cross-editor bindings.
-        ListView<Set<TrackItem>> noteTrack = songEditor.createNewTrack(song.get().getNotes());
+        ListView<TrackItemSet> noteTrack = songEditor.createNewTrack(song.get().getNotes());
         noteTrack.prefWidthProperty().bind(scrollPaneCenter.widthProperty());
         noteTrack.prefHeightProperty().bind(scrollPaneCenter.heightProperty());
-        ListView<Set<TrackItem>> dynamicsTrack = songEditor.getDynamicsElement();
+        ListView<TrackItemSet> dynamicsTrack = songEditor.getDynamicsElement();
         dynamicsTrack.prefWidthProperty().bind(
                 scrollPaneBottom.widthProperty().subtract(Quantizer.SCROLL_BAR_WIDTH));
 

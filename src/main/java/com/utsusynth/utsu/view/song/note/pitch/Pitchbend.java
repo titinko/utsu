@@ -5,11 +5,10 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.utsusynth.utsu.common.data.PitchbendData;
-import com.utsusynth.utsu.view.song.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItem;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.Group;
-import javafx.scene.Node;
 
 public class Pitchbend implements TrackItem {
     private final Portamento portamento;
@@ -22,6 +21,11 @@ public class Pitchbend implements TrackItem {
         this.vibrato = vibrato;
         this.showPitchbend = showPitchbend;
         drawnColumns = new HashSet<>();
+    }
+
+    @Override
+    public TrackItemType getType() {
+        return TrackItemType.PITCHBEND;
     }
 
     @Override

@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
-import com.utsusynth.utsu.view.song.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.shape.Line;
@@ -29,6 +29,11 @@ public class EndBar implements TrackItem {
 
     void setX(double newX) {
         xValue.set(newX);
+    }
+
+    @Override
+    public TrackItemType getType() {
+        return TrackItemType.PLAYBACK;
     }
 
     @Override

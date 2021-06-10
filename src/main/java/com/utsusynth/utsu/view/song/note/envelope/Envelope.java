@@ -3,7 +3,7 @@ package com.utsusynth.utsu.view.song.note.envelope;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.RoundUtils;
-import com.utsusynth.utsu.view.song.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Cursor;
@@ -60,6 +60,11 @@ public class Envelope implements TrackItem {
         drawnColumns = new HashSet<>();
         this.endX = allXValues[6];
         this.endY = allYValues[6];
+    }
+
+    @Override
+    public TrackItemType getType() {
+        return TrackItemType.ENVELOPE;
     }
 
     @Override

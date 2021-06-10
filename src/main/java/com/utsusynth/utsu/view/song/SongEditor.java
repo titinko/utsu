@@ -21,6 +21,10 @@ import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import com.utsusynth.utsu.view.song.playback.PlaybackCallback;
 import com.utsusynth.utsu.view.song.playback.PlaybackManager;
 import com.utsusynth.utsu.view.song.playback.SelectionBox;
+import com.utsusynth.utsu.view.song.track.Track;
+import com.utsusynth.utsu.view.song.track.TrackCallback;
+import com.utsusynth.utsu.view.song.track.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItemSet;
 import javafx.beans.property.*;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
@@ -162,7 +166,7 @@ public class SongEditor {
     /**
      * Initialize track with data for a specific song.
      */
-    public ListView<Set<TrackItem>> createNewTrack(List<NoteData> notes) {
+    public ListView<TrackItemSet> createNewTrack(List<NoteData> notes) {
         clearTrack();
         if (notes.isEmpty()) {
             return track.getNoteTrack();
@@ -214,7 +218,7 @@ public class SongEditor {
         return noteMap.getNotesElement();
     }
 
-    public ListView<Set<TrackItem>> getDynamicsElement() {
+    public ListView<TrackItemSet> getDynamicsElement() {
         return track.getDynamicsTrack();
     }
 

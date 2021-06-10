@@ -16,12 +16,11 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.view.song.DragHandler;
-import com.utsusynth.utsu.view.song.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -120,6 +119,11 @@ public class Note implements TrackItem, Comparable<Note> {
                 thisNote.adjustDragEdge(thisNote.getDurationMs());
             }
         }, showLyrics, showAliases);
+    }
+
+    @Override
+    public TrackItemType getType() {
+        return TrackItemType.NOTE;
     }
 
     @Override

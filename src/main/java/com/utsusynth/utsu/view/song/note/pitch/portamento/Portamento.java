@@ -8,11 +8,9 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.DragHandler;
-import com.utsusynth.utsu.view.song.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItem;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
-import javafx.scene.Cursor;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -77,6 +75,11 @@ public class Portamento implements TrackItem {
                 controlPoints.add(end);
             }
         }
+    }
+
+    @Override
+    public TrackItemType getType() {
+        return TrackItemType.PITCHBEND;
     }
 
     @Override

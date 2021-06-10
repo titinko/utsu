@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.song;
+package com.utsusynth.utsu.view.song.track;
 
 import javafx.scene.Node;
 
@@ -6,6 +6,18 @@ import java.util.Set;
 
 /** Represents a single item that can be drawn in the track. */
 public interface TrackItem {
+    enum TrackItemType {
+        NOTE,
+        PITCHBEND,
+        ENVELOPE,
+        LYRIC, // Note lyrics and lyric entry boxes.
+        PLAYBACK, // Start, end, and playback bars.
+        DRAWING, // Drawn by mouse action, i.e. AddNoteBox and SelectionBox.
+    }
+
+    /** Used to decide what order to place items on the track. */
+    TrackItemType getType();
+
     /** Start position of this item. */
     double getStartX();
 

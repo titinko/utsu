@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.view.song;
+package com.utsusynth.utsu.view.song.track;
 
 import javafx.scene.layout.VBox;
 

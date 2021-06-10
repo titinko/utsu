@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.view.song.playback;
 
-import com.utsusynth.utsu.view.song.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.shape.Rectangle;
@@ -37,6 +37,11 @@ public class SelectionBox implements TrackItem {
 
     public void setHeight(double newHeight) {
         this.height.set(newHeight);
+    }
+
+    @Override
+    public TrackItemType getType() {
+        return TrackItemType.DRAWING;
     }
 
     @Override

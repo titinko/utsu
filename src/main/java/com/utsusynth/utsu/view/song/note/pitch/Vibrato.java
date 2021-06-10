@@ -6,7 +6,7 @@ import java.util.function.Function;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.view.song.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -75,6 +75,11 @@ public class Vibrato implements TrackItem {
                 redrawEditor();
             }
         });
+    }
+
+    @Override
+    public TrackItemType getType() {
+        return TrackItemType.PITCHBEND;
     }
 
     @Override

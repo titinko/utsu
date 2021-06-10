@@ -17,6 +17,7 @@ import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.Pitchbend;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
+import com.utsusynth.utsu.view.song.track.Track;
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.Group;
 

@@ -2,7 +2,7 @@ package com.utsusynth.utsu.view.song.note;
 
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.view.song.TrackItem;
+import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
@@ -63,6 +63,11 @@ public class Lyric implements TrackItem {
             adjustLyricAndAlias();
             trackNote.adjustColumnSpan();
         }
+    }
+
+    @Override
+    public TrackItemType getType() {
+        return TrackItemType.LYRIC;
     }
 
     @Override
