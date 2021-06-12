@@ -23,7 +23,6 @@ import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
-import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.files.song.Ust12Reader;
 import com.utsusynth.utsu.files.song.Ust12Writer;
@@ -94,7 +93,6 @@ public class SongController implements EditorController, Localizable {
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
     private final IconManager iconManager;
-    private final PreferencesManager preferencesManager;
     private final ThemeManager themeManager;
     private final ExternalProcessRunner processRunner;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
@@ -149,7 +147,6 @@ public class SongController implements EditorController, Localizable {
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
             IconManager iconManager,
-            PreferencesManager preferencesManager,
             ThemeManager themeManager,
             ExternalProcessRunner processRunner,
             Provider<FXMLLoader> fxmlLoaders) {
@@ -168,7 +165,6 @@ public class SongController implements EditorController, Localizable {
         this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
         this.iconManager = iconManager;
-        this.preferencesManager = preferencesManager;
         this.themeManager = themeManager;
         this.processRunner = processRunner;
         this.fxmlLoaderProvider = fxmlLoaders;
@@ -243,6 +239,7 @@ public class SongController implements EditorController, Localizable {
                 scrollPaneCenter.setHvalue(scrollPaneCenter.getHvalue() * newWidth / oldWidth);
             }
         });
+        scrollPaneLeft.setVvalue(0.5);
         //scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneCenter.vvalueProperty());
         //scrollPaneCenter.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
         scrollPaneCenter.hvalueProperty().addListener(event -> {
@@ -354,7 +351,7 @@ public class SongController implements EditorController, Localizable {
 
         // Do scrolling after a short pause for viewport to establish itself.
         PauseTransition briefPause = new PauseTransition(Duration.millis(50));
-        briefPause.setOnFinished(event -> scrollToPosition(0));
+        briefPause.setOnFinished(event -> songEditor.scrollToPosition(0));
         briefPause.play();
 
         // Set up localization.
@@ -402,6 +399,7 @@ public class SongController implements EditorController, Localizable {
                 if (scrollBar.getOrientation() == Orientation.VERTICAL) {
                     // TODO: Call this only once.
                     scrollBar.setPrefWidth(Quantizer.SCROLL_BAR_WIDTH);
+                    scrollBar.setValue(scrollPaneLeft.getVvalue() * scrollBar.getMax());
                     scrollPaneLeft.vvalueProperty().addListener((obs, oldValue, newValue) -> {
                         if (!oldValue.equals(newValue)) {
                             scrollBar.setValue(newValue.doubleValue() * scrollBar.getMax());
@@ -495,7 +493,7 @@ public class SongController implements EditorController, Localizable {
             Optional<Integer> focusNote = songEditor.getFocusNote();
             if (focusNote.isPresent()) {
                 if (!scrollPaneRegion().contains(focusNote.get())) {
-                    scrollToPosition(focusNote.get());
+                    songEditor.scrollToPosition(focusNote.get());
                 }
                 songEditor.openLyricInput(focusNote.get());
             }
@@ -507,14 +505,14 @@ public class SongController implements EditorController, Localizable {
                 Optional<Integer> newFocus = song.get().getNextNote(focusNote.get());
                 if (newFocus.isPresent()) {
                     if (!scrollPaneRegion().contains(newFocus.get())) {
-                        scrollToPosition(newFocus.get());
+                        songEditor.scrollToPosition(newFocus.get());
                     }
                     songEditor.focusOnNote(newFocus.get());
                 }
             } else if (song.get().getNoteIterator().hasNext()) {
                 int positionMs = song.get().getNoteIterator().next().getDelta();
                 if (!scrollPaneRegion().contains(positionMs)) {
-                    scrollToPosition(positionMs);
+                    songEditor.scrollToPosition(positionMs);
                 }
                 songEditor.focusOnNote(positionMs);
             }
@@ -526,14 +524,14 @@ public class SongController implements EditorController, Localizable {
                 Optional<Integer> newFocus = song.get().getPrevNote(focusNote.get());
                 if (newFocus.isPresent()) {
                     if (!scrollPaneRegion().contains(newFocus.get())) {
-                        scrollToPosition(newFocus.get());
+                        songEditor.scrollToPosition(newFocus.get());
                     }
                     songEditor.focusOnNote(newFocus.get());
                 }
             } else if (song.get().getNoteIterator().hasNext()) {
                 int positionMs = song.get().getNoteIterator().next().getDelta();
                 if (!scrollPaneRegion().contains(positionMs)) {
-                    scrollToPosition(positionMs);
+                    songEditor.scrollToPosition(positionMs);
                 }
                 songEditor.focusOnNote(positionMs);
             }
@@ -576,14 +574,14 @@ public class SongController implements EditorController, Localizable {
         }
     }
 
-    private void scrollToPosition(int positionMs) {
+    /* private void scrollToPosition(int positionMs) {
         double trackWidth = songEditor.getWidthX();
         double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
         if (viewportWidth != 0 && trackWidth > viewportWidth) {
             scrollPaneCenter.setHvalue(
                     scaler.scalePos(positionMs).get() / (trackWidth - viewportWidth));
         }
-    }
+    } */
 
     @Override
     public Optional<String> open() throws FileAlreadyOpenException {
@@ -638,7 +636,7 @@ public class SongController implements EditorController, Localizable {
                     statusBar.setText("Opened " + file.getName());
                     // Do scrolling after a short pause for viewport to establish itself.
                     PauseTransition briefPause = new PauseTransition(Duration.millis(10));
-                    briefPause.setOnFinished(event -> scrollToPosition(0));
+                    briefPause.setOnFinished(event -> songEditor.scrollToPosition(0));
                     briefPause.play();
                 });
             } catch (Exception e) {
@@ -814,7 +812,7 @@ public class SongController implements EditorController, Localizable {
         engine.stopPlayback();
         songEditor.stopPlayback();
         songEditor.selectRegion(RegionBounds.INVALID);
-        scrollToPosition(0); // Scroll to start of song.
+        songEditor.scrollToPosition(0); // Scroll to start of song.
         // TODO: Stop scrollbar's existing acceleration.
     }
 

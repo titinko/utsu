@@ -570,6 +570,10 @@ public class SongEditor {
         }
     }
 
+    public void scrollToPosition(int position) {
+        track.scrollToPosition(position);
+    }
+
     public void selectivelyShowRegion(double centerPercent, double margin) {
         int numMeasures = track.getNumMeasures();
         int measureWidthMs = 4 * Quantizer.COL_WIDTH;

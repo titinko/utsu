@@ -21,6 +21,7 @@ public class Track {
 
     private int numMeasures = 0;
     private ListView<TrackItemSet> noteTrack;
+    private ScrollBar noteHScrollBar;
     private ScrollBar noteVScrollBar;
     private ListView<TrackItemSet> dynamicsTrack;
     private TrackCallback callback;
@@ -68,6 +69,13 @@ public class Track {
             ListView<TrackItemSet> source, Orientation orientation) {
         if (source == null) {
             return Optional.empty();
+        } else if (source == noteTrack) {
+            if (orientation.equals(Orientation.VERTICAL) && noteVScrollBar != null) {
+                return Optional.of(noteVScrollBar);
+            }
+            if (orientation.equals(Orientation.HORIZONTAL) && noteHScrollBar != null) {
+                return Optional.of(noteHScrollBar);
+            }
         }
         for (Node node : source.lookupAll(".scroll-bar")) {
             if (!(node instanceof ScrollBar)) {
@@ -75,6 +83,12 @@ public class Track {
             }
             ScrollBar scrollBar = (ScrollBar) node;
             if (scrollBar.getOrientation() == orientation) {
+                if (source == noteTrack && orientation.equals(Orientation.VERTICAL)) {
+                    noteVScrollBar = scrollBar;
+                }
+                if (source == noteTrack && orientation.equals(Orientation.HORIZONTAL)) {
+                    noteHScrollBar = scrollBar;
+                }
                 return Optional.of(scrollBar);
             }
         }
@@ -135,12 +149,10 @@ public class Track {
         // Custom scroll behavior because default behavior is stupid.
         noteTrack.addEventFilter(ScrollEvent.ANY, event -> {
             if (event.getDeltaX() != 0) {
-                return; // Vertical scrolling should be left to default behavior.
+                return; // Horizontal scrolling should be left to default behavior.
             }
-            Optional<ScrollBar> verticalScroll = noteVScrollBar != null
-                    ? Optional.of(noteVScrollBar) : getScrollBar(noteTrack, Orientation.VERTICAL);
+            Optional<ScrollBar> verticalScroll = getScrollBar(noteTrack, Orientation.VERTICAL);
             if (verticalScroll.isPresent()) {
-                noteVScrollBar = verticalScroll.get();
                 double newValue = verticalScroll.get().getValue() - event.getDeltaY();
                 double boundedValue = Math.min(
                         verticalScroll.get().getMax(),
@@ -215,8 +227,18 @@ public class Track {
         return dynamicsTrack;
     }
 
-    public void scrollToPosition(int position) {
-        // blah
+    public void scrollToPosition(int positionMs) {
+        Optional<ScrollBar> hScroll = getScrollBar(noteTrack, Orientation.HORIZONTAL);
+        if (hScroll.isPresent()) {
+            double totalWidth = scaler.scaleX(Quantizer.COL_WIDTH).get() * (numMeasures + 1) * 4;
+            double viewportWidth = noteTrack.getWidth() - Quantizer.SCROLL_BAR_WIDTH;
+            if (viewportWidth != 0 && totalWidth > viewportWidth) {
+                // Should be between 0 and 1.
+                double hValue = scaler.scalePos(positionMs).get() / (totalWidth - viewportWidth);
+                System.out.println("hvalue: " + hValue);
+                hScroll.get().setValue((hScroll.get().getMax() - hScroll.get().getMin()) * hValue);
+            }
+        }
     }
 
     public void insertItem(ListView<TrackItemSet> track, TrackItem trackItem) {
