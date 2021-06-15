@@ -32,29 +32,23 @@ public class PlaybackManager {
     private final BooleanProperty isAnythingHighlighted;
     private final Timeline playback;
 
-    private final StartBar startBarItem;
-    private final EndBar endBarItem;
-    private final PlayBar playBarItem;
+    private final StartBar startBar;
+    private final EndBar endBar;
+    private final PlayBar playBar;
     private PlaybackCallback callback;
 
     private Group bars;
 
     @Inject
-    public PlaybackManager(
-            StartBar startBarItem, EndBar endBarItem, PlayBar playBarItem, Scaler scaler) {
-        this.startBarItem = startBarItem;
-        this.endBarItem = endBarItem;
-        this.playBarItem = playBarItem;
+    public PlaybackManager(StartBar startBar, EndBar endBar, PlayBar playBar, Scaler scaler) {
+        this.startBar = startBar;
+        this.endBar = endBar;
+        this.playBar = playBar;
 
         this.scaler = scaler;
         highlighted = new TreeSet<>();
         isAnythingHighlighted = new SimpleBooleanProperty(false);
         playback = new Timeline();
-        playBarItem.xProperty().addListener((obs, oldValue, newValue) -> {
-            if (callback != null && playback.getStatus() == Status.RUNNING) {
-                callback.readjust(playBarItem);
-            }
-        });
         clear();
     }
 
@@ -73,18 +67,24 @@ public class PlaybackManager {
      */
     public DoubleProperty startPlayback(Duration duration, RegionBounds playRegion) {
         if (callback != null && duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
-            playBarItem.setX(scaler.scalePos(playRegion.getMinMs()).get());
-            callback.setBar(playBarItem);
+            playBar.clearListeners();
+            playBar.setX(scaler.scalePos(playRegion.getMinMs()).get());
+            callback.setBar(playBar);
 
             playback.stop();
             playback.getKeyFrames().clear();
             double finalX = scaler.scalePos(playRegion.getMaxMs()).get();
             playback.getKeyFrames().add(
-                    new KeyFrame(duration, new KeyValue(playBarItem.xProperty(), finalX)));
+                    new KeyFrame(duration, new KeyValue(playBar.xProperty(), finalX)));
             playback.play();
-            playback.setOnFinished(event -> callback.removeBar(playBarItem));
+            playback.setOnFinished(event -> callback.removeBar(playBar));
 
-            return playBarItem.xProperty();
+            playBar.xProperty().addListener((obs, oldValue, newValue) -> {
+                if (callback != null && playback.getStatus() == Status.RUNNING) {
+                    callback.readjust(playBar);
+                }
+            });
+            return playBar.xProperty();
         }
         // Return null if no playback bar created.
         return null;
@@ -125,10 +125,10 @@ public class PlaybackManager {
 
         // Add start and stop bars to the track at the correct location.
         if (callback != null) {
-            startBarItem.setX(scaler.scalePos(region.getMinMs()).get());
-            callback.setBar(startBarItem);
-            endBarItem.setX(scaler.scalePos(region.getMaxMs()).get());
-            callback.setBar(endBarItem);
+            startBar.setX(scaler.scalePos(region.getMinMs()).get());
+            callback.setBar(startBar);
+            endBar.setX(scaler.scalePos(region.getMaxMs()).get());
+            callback.setBar(endBar);
         }
 
         // Highlight all notes within the add region.
@@ -159,11 +159,11 @@ public class PlaybackManager {
 
         // Add start and stop bars to the track at the correct location.
         if (callback != null) {
-            startBarItem.setX(
+            startBar.setX(
                     scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
-            callback.setBar(startBarItem);
-            endBarItem.setX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
-            callback.setBar(endBarItem);
+            callback.setBar(startBar);
+            endBar.setX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
+            callback.setBar(endBar);
         }
     }
 
@@ -176,12 +176,12 @@ public class PlaybackManager {
         } else {
             // Add start and stop bars to the track if necessary.
             if (callback != null) {
-                startBarItem.setX(
+                startBar.setX(
                         scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
-                callback.setBar(startBarItem);
-                endBarItem.setX(
+                callback.setBar(startBar);
+                endBar.setX(
                         scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
-                callback.setBar(endBarItem);
+                callback.setBar(endBar);
             }
         }
     }
@@ -199,30 +199,30 @@ public class PlaybackManager {
         highlighted.clear();
         isAnythingHighlighted.set(false);
         if (callback != null) {
-            callback.removeBar(startBarItem);
-            callback.removeBar(endBarItem);
+            callback.removeBar(startBar);
+            callback.removeBar(endBar);
         }
     }
 
     public void setCursor(int positionMs) {
         clearHighlights();
         if (callback != null) {
-            startBarItem.setX(scaler.scalePos(positionMs).get());
-            callback.setBar(startBarItem);
+            startBar.setX(scaler.scalePos(positionMs).get());
+            callback.setBar(startBar);
         }
     }
 
     public int getCursorPosition() {
-        if (!startBarItem.getColumns().isEmpty()) {
-            return Math.max(0, RoundUtils.round(scaler.unscalePos(startBarItem.getStartX())));
+        if (!startBar.getColumns().isEmpty()) {
+            return Math.max(0, RoundUtils.round(scaler.unscalePos(startBar.getStartX())));
         }
         return 0;
     }
 
     public RegionBounds getPlayableRegion() {
         int endPosition = Integer.MAX_VALUE;
-        if (!endBarItem.getColumns().isEmpty()) {
-            endPosition = RoundUtils.round(scaler.unscalePos(endBarItem.getStartX()));
+        if (!endBar.getColumns().isEmpty()) {
+            endPosition = RoundUtils.round(scaler.unscalePos(endBar.getStartX()));
         }
         return new RegionBounds(getCursorPosition(), endPosition);
     }

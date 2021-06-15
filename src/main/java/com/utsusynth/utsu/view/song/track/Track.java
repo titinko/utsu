@@ -1,10 +1,19 @@
 package com.utsusynth.utsu.view.song.track;
 
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.files.PreferencesManager;
+import com.utsusynth.utsu.files.PreferencesManager.AutoscrollCancelMode;
+import com.utsusynth.utsu.files.PreferencesManager.AutoscrollMode;
 import com.utsusynth.utsu.view.song.DragHandler;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
@@ -17,6 +26,7 @@ import java.util.*;
 
 /** The background track of the song editor. */
 public class Track {
+    private final PreferencesManager preferencesManager;
     private final Scaler scaler;
 
     private int numMeasures = 0;
@@ -28,7 +38,8 @@ public class Track {
     private DragHandler dragHandler;
 
     @Inject
-    public Track(Scaler scaler) {
+    public Track(PreferencesManager preferencesManager, Scaler scaler) {
+        this.preferencesManager = preferencesManager;
         this.scaler = scaler;
     }
 
@@ -231,13 +242,93 @@ public class Track {
         Optional<ScrollBar> hScroll = getScrollBar(noteTrack, Orientation.HORIZONTAL);
         if (hScroll.isPresent()) {
             double totalWidth = scaler.scaleX(Quantizer.COL_WIDTH).get() * (numMeasures + 1) * 4;
-            double viewportWidth = noteTrack.getWidth() - Quantizer.SCROLL_BAR_WIDTH;
-            if (viewportWidth != 0 && totalWidth > viewportWidth) {
+            double visibleWidth = noteTrack.getWidth() - Quantizer.SCROLL_BAR_WIDTH;
+            if (visibleWidth != 0 && totalWidth > visibleWidth) {
                 // Should be between 0 and 1.
-                double hValue = scaler.scalePos(positionMs).get() / (totalWidth - viewportWidth);
+                double hValue = scaler.scalePos(positionMs).get() / (totalWidth - visibleWidth);
                 System.out.println("hvalue: " + hValue);
                 hScroll.get().setValue((hScroll.get().getMax() - hScroll.get().getMin()) * hValue);
             }
+        }
+    }
+
+    public void startPlaybackAutoscroll(DoubleProperty playbackX) {
+        Optional<ScrollBar> maybeHScroll = getScrollBar(noteTrack, Orientation.HORIZONTAL);
+        AutoscrollMode autoscrollMode = preferencesManager.getAutoscroll();
+        if (playbackX == null
+                || maybeHScroll.isEmpty()
+                || autoscrollMode.equals(AutoscrollMode.DISABLED)) {
+            return;
+        }
+        // Implement autoscroll to follow playback bar.
+        ScrollBar hScroll = maybeHScroll.get();
+        InvalidationListener autoscrollListener = event -> {
+            RegionBounds visibleRegion = visibleRegion();
+            int newMs = RoundUtils.round(scaler.unscalePos(playbackX.get()));
+            if (autoscrollMode.equals(AutoscrollMode.ENABLED_END)) {
+                // Scroll when playback bar reaches end of screen.
+                if (!visibleRegion.contains(newMs)) {
+                    scrollToPosition(newMs);
+                }
+            } else if (autoscrollMode.equals(AutoscrollMode.ENABLED_MIDDLE)) {
+                // Scroll when playback bar reaches middle of screen.
+                int halfWidthMs = RoundUtils.round(
+                        (visibleRegion().getMaxMs() - visibleRegion.getMinMs()) / 2.0);
+                int scrollMidMs = visibleRegion.getMinMs() + halfWidthMs;
+                if (!new RegionBounds(visibleRegion.getMinMs(), scrollMidMs + 10).contains(newMs)) {
+                    scrollToPosition(Math.max(0, newMs - halfWidthMs));
+                }
+            }
+        };
+        playbackX.addListener(autoscrollListener);
+        // Disable autoscroll if user jiggles the scroll bar.
+        if (preferencesManager.getAutoscrollCancel().equals(AutoscrollCancelMode.ENABLED)) {
+            ChangeListener<Number> disableAutoScroll = new ChangeListener<>() {
+                @Override
+                public void changed(ObservableValue<? extends Number> obs, Number oldValue, Number newValue) {
+                    double visibleWidth = noteTrack.getWidth() - Quantizer.SCROLL_BAR_WIDTH;
+                    double pixelsTravelled = visibleWidth
+                            * Math.abs(newValue.doubleValue() - oldValue.doubleValue());
+                    if (autoscrollMode.equals(AutoscrollMode.ENABLED_END) && pixelsTravelled < 5) {
+                        playbackX.removeListener(autoscrollListener);
+                        // These listeners remove themselves when user touches the srollbar, but
+                        // there's a chance they could pile up before then.
+                        hScroll.valueProperty().removeListener(this);
+                    } else if (autoscrollMode.equals(AutoscrollMode.ENABLED_MIDDLE)
+                            && pixelsTravelled < 5
+                            && oldValue.doubleValue() > newValue.doubleValue()) {
+                        playbackX.removeListener(autoscrollListener);
+                        // These listeners remove themselves when user touches the scrollbar,
+                        // but there's a chance they could pile up before then.
+                        hScroll.valueProperty().removeListener(this);
+                    } else {
+                        hScroll.valueProperty().removeListener(this);
+                    }
+                }
+            };
+            hScroll.valueProperty().addListener(disableAutoScroll);
+        }
+    }
+
+    private RegionBounds visibleRegion() {
+        Optional<ScrollBar> maybeHScroll = getScrollBar(noteTrack, Orientation.HORIZONTAL);
+        if (maybeHScroll.isEmpty()) {
+            return noteTrack == null ? RegionBounds.INVALID : RegionBounds.WHOLE_SONG;
+        }
+        ScrollBar hScroll = maybeHScroll.get();
+        double totalWidth = scaler.scaleX(Quantizer.COL_WIDTH).get() * (numMeasures + 1) * 4;
+        double visibleWidth = noteTrack.getWidth() - Quantizer.SCROLL_BAR_WIDTH;
+        if (visibleWidth <= 0 || totalWidth <= 0) {
+            return RegionBounds.INVALID;
+        } else if (visibleWidth >= totalWidth) {
+            return RegionBounds.WHOLE_SONG;
+        } else {
+            double hValue = hScroll.getValue() * (hScroll.getMax() - hScroll.getMin());
+            double leftX = hValue * (totalWidth - visibleWidth);
+            double rightX = leftX + visibleWidth;
+            int startPos = RoundUtils.round(scaler.unscalePos(leftX));
+            int endPos = RoundUtils.round(scaler.unscalePos(rightX));
+            return new RegionBounds(startPos, endPos); // May be negative positions.
         }
     }
 

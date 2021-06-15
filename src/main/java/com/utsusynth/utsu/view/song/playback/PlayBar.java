@@ -19,18 +19,25 @@ public class PlayBar implements TrackItem {
     private static final int STROKE_WIDTH = 2;
 
     private final Scaler scaler;
-    private final DoubleProperty xValue;
     private final Set<Integer> drawnColumns;
+
+    private DoubleProperty xValue;
 
     @Inject
     PlayBar(Scaler scaler) {
         this.scaler = scaler;
-        this.xValue = new SimpleDoubleProperty(0);
         drawnColumns = new HashSet<>();
+
+        xValue = new SimpleDoubleProperty(0);
     }
 
     void setX(double newX) {
         xValue.set(newX);
+    }
+
+    void clearListeners() {
+        double currentValue = xValue.get();
+        xValue = new SimpleDoubleProperty(currentValue);
     }
 
     DoubleProperty xProperty() {

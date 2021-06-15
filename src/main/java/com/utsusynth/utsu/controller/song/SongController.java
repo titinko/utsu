@@ -574,15 +574,6 @@ public class SongController implements EditorController, Localizable {
         }
     }
 
-    /* private void scrollToPosition(int positionMs) {
-        double trackWidth = songEditor.getWidthX();
-        double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
-        if (viewportWidth != 0 && trackWidth > viewportWidth) {
-            scrollPaneCenter.setHvalue(
-                    scaler.scalePos(positionMs).get() / (trackWidth - viewportWidth));
-        }
-    } */
-
     @Override
     public Optional<String> open() throws FileAlreadyOpenException {
         FileChooser fc = new FileChooser();
@@ -842,65 +833,8 @@ public class SongController implements EditorController, Localizable {
         RegionBounds regionToPlay = songEditor.getPlayableTrack();
 
         Function<Duration, Void> startPlaybackFn = duration -> {
-            DoubleProperty playbackX = songEditor.startPlayback(regionToPlay, duration);
-            if (playbackX == null) {
-                return null;
-            }
+            songEditor.startPlayback(regionToPlay, duration);
             return null;
-            /* AutoscrollMode autoscrollMode = preferencesManager.getAutoscroll();
-            if (autoscrollMode.equals(AutoscrollMode.DISABLED)) {
-                return null;
-            }
-            // Implements autoscroll to follow playback bar.
-            InvalidationListener autoscrollListener = event -> {
-                RegionBounds scrollRegion = scrollPaneRegion();
-                int newMs = regionToPlay.getMinMs()
-                        + RoundUtils.round(scaler.unscaleX(playbackX.get()));
-                if (autoscrollMode.equals(AutoscrollMode.ENABLED_END)) {
-                    // Scroll when playback bar reaches end of screen.
-                    if (!scrollRegion.contains(newMs)) {
-                        scrollToPosition(newMs);
-                    }
-                } else if (autoscrollMode.equals(AutoscrollMode.ENABLED_MIDDLE)) {
-                    // Scroll when playback bar reaches middle of screen.
-                    int halfWidth = RoundUtils.round(
-                            (scrollRegion.getMaxMs() - scrollRegion.getMinMs()) / 2.0);
-                    int scrollMid = scrollRegion.getMinMs() + halfWidth;
-                    if (!new RegionBounds(scrollMid - 10, scrollMid + 10).contains(newMs)) {
-                        scrollToPosition(Math.max(0, newMs - halfWidth));
-                    }
-                }
-            };
-            playbackX.addListener(autoscrollListener);
-            // Disables autoscroll if the user jiggles the scroll bar.
-            if (preferencesManager.getAutoscrollCancel().equals(AutoscrollCancelMode.ENABLED)) {
-                ChangeListener<Number> disableAutoScroll = new ChangeListener<>() {
-                    @Override
-                    public void changed(
-                            ObservableValue<? extends Number> observable,
-                            Number oldValue,
-                            Number newValue) {
-                        double pixelsTravelled = scrollPaneCenter.getWidth() *
-                                Math.abs(newValue.doubleValue() - oldValue.doubleValue());
-                        if (autoscrollMode.equals(AutoscrollMode.ENABLED_END)
-                                && pixelsTravelled < 5) {
-                            playbackX.removeListener(autoscrollListener);
-                            // These listeners remove themselves when user touches the scrollbar,
-                            // but there's a chance they could pile up before then.
-                            scrollPaneCenter.hvalueProperty().removeListener(this);
-                        } else if (autoscrollMode.equals(AutoscrollMode.ENABLED_MIDDLE)
-                                && pixelsTravelled < 5
-                                && oldValue.doubleValue() > newValue.doubleValue()) {
-                            playbackX.removeListener(autoscrollListener);
-                            // These listeners remove themselves when user touches the scrollbar,
-                            // but there's a chance they could pile up before then.
-                            scrollPaneCenter.hvalueProperty().removeListener(this);
-                        }
-                    }
-                };
-                scrollPaneCenter.hvalueProperty().addListener(disableAutoScroll);
-            }
-            return null; */
         };
         Runnable endPlaybackFn = () -> {
             iconManager.setPlayIcon(playPauseIcon);

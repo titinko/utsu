@@ -12,6 +12,8 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
+import com.utsusynth.utsu.files.PreferencesManager;
+import com.utsusynth.utsu.files.PreferencesManager.AutoscrollMode;
 import com.utsusynth.utsu.view.song.note.AddNoteBox;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 public class SongEditor {
     private final Track track;
     private final PlaybackManager playbackManager;
+    private final PreferencesManager preferencesManager;
     private final SelectionBox selectionBox;
     private final AddNoteBox addNoteBox;
     private final ContextMenu editorContextMenu;
@@ -71,6 +74,7 @@ public class SongEditor {
     public SongEditor(
             Track track,
             PlaybackManager playbackManager,
+            PreferencesManager preferencesManager,
             SelectionBox selectionBox,
             AddNoteBox addNoteBox,
             SongClipboard clipboard,
@@ -81,6 +85,7 @@ public class SongEditor {
             Scaler scaler) {
         this.track = track;
         this.playbackManager = playbackManager;
+        this.preferencesManager = preferencesManager;
         this.selectionBox = selectionBox;
         this.addNoteBox = addNoteBox;
         this.clipboard = clipboard;
@@ -241,17 +246,18 @@ public class SongEditor {
     /**
      * Start the playback bar animation. It will end on its own.
      */
-    public DoubleProperty startPlayback(RegionBounds rendered, Duration duration) {
+    public void startPlayback(RegionBounds rendered, Duration duration) {
         int firstPosition = noteMap.getFirstPosition(rendered);
         int lastPosition = noteMap.getLastPosition(rendered);
-        if (noteMap.hasNote(firstPosition) && noteMap.hasNote(lastPosition)) {
-            int firstNoteStart = noteMap.getEnvelope(firstPosition).getStartMs();
-            int renderStart = Math.min(firstNoteStart, rendered.getMinMs());
-            int renderEnd = lastPosition + noteMap.getNote(lastPosition).getDurationMs();
-            return playbackManager.startPlayback(
-                    duration, new RegionBounds(renderStart, renderEnd));
+        if (!noteMap.hasNote(firstPosition) || !noteMap.hasNote(lastPosition)) {
+            return;
         }
-        return null;
+        int firstNoteStart = noteMap.getEnvelope(firstPosition).getStartMs();
+        int renderStart = Math.min(firstNoteStart, rendered.getMinMs());
+        int renderEnd = lastPosition + noteMap.getNote(lastPosition).getDurationMs();
+        DoubleProperty playbackX = playbackManager.startPlayback(
+                duration, new RegionBounds(renderStart, renderEnd));
+        track.startPlaybackAutoscroll(playbackX);
     }
 
     /**
