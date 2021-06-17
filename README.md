@@ -6,6 +6,8 @@ Supported languages: English, Español, Français, 日本語, 中文, Italiano, 
 
 Discord: https://discord.gg/c7PMdzM972
 
+Trello: https://trello.com/b/8sTfttmT/utsu
+
 ## Installation instructions
 
 ### Windows
