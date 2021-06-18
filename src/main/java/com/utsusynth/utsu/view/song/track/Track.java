@@ -246,7 +246,6 @@ public class Track {
             if (visibleWidth != 0 && totalWidth > visibleWidth) {
                 // Should be between 0 and 1.
                 double hValue = scaler.scalePos(positionMs).get() / (totalWidth - visibleWidth);
-                System.out.println("hvalue: " + hValue);
                 hScroll.get().setValue((hScroll.get().getMax() - hScroll.get().getMin()) * hValue);
             }
         }
@@ -338,12 +337,30 @@ public class Track {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         int startColNum = (int) (startX / colWidth);
         int endColNum = (int) (endX / colWidth);
+        HashSet<Integer> columns = trackItem.getColumns();
+        HashSet<Integer> columnsToRemove = new HashSet<>();
+        // Remove items that should no longer be rendered.
+        for (Integer colNum : columns) {
+            if (colNum >= startColNum && colNum <= endColNum) {
+                continue;
+            }
+            if (colNum >= 0) {
+                TrackItemSet itemSet = track.getItems().get(colNum);
+                track.getItems().set(colNum, itemSet.withoutItem(trackItem));
+            }
+            columnsToRemove.add(colNum);
+        }
+        for (Integer colNum : columnsToRemove) {
+            columns.remove(colNum);
+        }
+        // Add new items that should be rendered.
         for (int colNum = startColNum; colNum <= endColNum; colNum++) {
-            TrackItemSet itemSet = track.getItems().get(colNum);
-            if (itemSet.hasItem(trackItem)) {
+            if (columns.contains(colNum)) {
                 continue; // Don't add something that's already there.
             }
+            TrackItemSet itemSet = track.getItems().get(colNum);
             track.getItems().set(colNum, itemSet.withItem(trackItem));
+            columns.add(colNum);
         }
     }
 

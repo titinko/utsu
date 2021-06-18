@@ -12,10 +12,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 
 import java.util.HashSet;
-import java.util.Set;
 
 public class Lyric implements TrackItem {
-    private final Set<Integer> drawnColumns;
+    private final HashSet<Integer> drawnColumns;
     private final Scaler scaler;
 
     // UI-independent state.
@@ -120,7 +119,7 @@ public class Lyric implements TrackItem {
     }
 
     @Override
-    public Set<Integer> getColumns() {
+    public HashSet<Integer> getColumns() {
         return drawnColumns;
     }
 

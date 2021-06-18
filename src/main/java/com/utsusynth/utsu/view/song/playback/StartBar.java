@@ -10,7 +10,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.shape.Line;
 
 import java.util.HashSet;
-import java.util.Set;
 
 public class StartBar implements TrackItem {
     private static final int TOTAL_HEIGHT = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
@@ -18,7 +17,7 @@ public class StartBar implements TrackItem {
 
     private final Scaler scaler;
     private final DoubleProperty xValue;
-    private final Set<Integer> drawnColumns;
+    private final HashSet<Integer> drawnColumns;
 
     @Inject
     StartBar(Scaler scaler) {
@@ -64,7 +63,7 @@ public class StartBar implements TrackItem {
     }
 
     @Override
-    public Set<Integer> getColumns() {
+    public HashSet<Integer> getColumns() {
         return drawnColumns;
     }
 

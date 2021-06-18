@@ -12,14 +12,13 @@ import javafx.scene.Node;
 import javafx.scene.shape.Line;
 
 import java.util.HashSet;
-import java.util.Set;
 
 public class PlayBar implements TrackItem {
     private static final int TOTAL_HEIGHT = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
     private static final int STROKE_WIDTH = 2;
 
     private final Scaler scaler;
-    private final Set<Integer> drawnColumns;
+    private final HashSet<Integer> drawnColumns;
 
     private DoubleProperty xValue;
 
@@ -88,7 +87,7 @@ public class PlayBar implements TrackItem {
     }
 
     @Override
-    public Set<Integer> getColumns() {
+    public HashSet<Integer> getColumns() {
         return drawnColumns;
     }
 

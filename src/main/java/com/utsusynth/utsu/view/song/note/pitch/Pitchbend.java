@@ -2,7 +2,6 @@ package com.utsusynth.utsu.view.song.note.pitch;
 
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.view.song.track.TrackItem;
@@ -14,7 +13,7 @@ public class Pitchbend implements TrackItem {
     private final Portamento portamento;
     private final Vibrato vibrato;
     private final BooleanProperty showPitchbend;
-    private final Set<Integer> drawnColumns;
+    private final HashSet<Integer> drawnColumns;
 
     Pitchbend(Portamento portamento, Vibrato vibrato, BooleanProperty showPitchbend) {
         this.portamento = portamento;
@@ -62,7 +61,7 @@ public class Pitchbend implements TrackItem {
     }
 
     @Override
-    public Set<Integer> getColumns() {
+    public HashSet<Integer> getColumns() {
         return drawnColumns;
     }
 

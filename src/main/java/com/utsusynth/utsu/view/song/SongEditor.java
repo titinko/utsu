@@ -46,7 +46,6 @@ import java.util.stream.Collectors;
 public class SongEditor {
     private final Track track;
     private final PlaybackManager playbackManager;
-    private final PreferencesManager preferencesManager;
     private final SelectionBox selectionBox;
     private final AddNoteBox addNoteBox;
     private final ContextMenu editorContextMenu;
@@ -74,7 +73,6 @@ public class SongEditor {
     public SongEditor(
             Track track,
             PlaybackManager playbackManager,
-            PreferencesManager preferencesManager,
             SelectionBox selectionBox,
             AddNoteBox addNoteBox,
             SongClipboard clipboard,
@@ -85,7 +83,6 @@ public class SongEditor {
             Scaler scaler) {
         this.track = track;
         this.playbackManager = playbackManager;
-        this.preferencesManager = preferencesManager;
         this.selectionBox = selectionBox;
         this.addNoteBox = addNoteBox;
         this.clipboard = clipboard;
@@ -159,11 +156,7 @@ public class SongEditor {
 
             @Override
             public void readjust(TrackItem bar) {
-                int numColumns = bar.getColumns().size();
                 track.insertItem(track.getNoteTrack(), bar);
-                if (bar.getColumns().size() > numColumns) {
-                    setBar(bar);
-                }
             }
         });
     }
@@ -282,9 +275,8 @@ public class SongEditor {
     }
 
     public double getWidthX() {
-        return track.getNoteTrack().getWidth(); // Include pre-roll.
-        //double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
-        //return measureWidth * (numMeasures + 1); // Include pre-roll.
+        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+        return measureWidth * (track.getNumMeasures() + 1); // Include pre-roll.
     }
 
     public BooleanProperty clibboardFilledProperty() {

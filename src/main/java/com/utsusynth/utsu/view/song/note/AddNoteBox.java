@@ -6,14 +6,13 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.shape.Rectangle;
 
 import java.util.HashSet;
-import java.util.Set;
 
 public class AddNoteBox implements TrackItem {
     private final DoubleProperty startX;
     private final DoubleProperty startY;
     private final DoubleProperty width;
     private final DoubleProperty height;
-    private final Set<Integer> drawnColumns;
+    private final HashSet<Integer> drawnColumns;
 
     AddNoteBox() {
         startX = new SimpleDoubleProperty(0);
@@ -74,7 +73,7 @@ public class AddNoteBox implements TrackItem {
     }
 
     @Override
-    public Set<Integer> getColumns() {
+    public HashSet<Integer> getColumns() {
         return drawnColumns;
     }
 

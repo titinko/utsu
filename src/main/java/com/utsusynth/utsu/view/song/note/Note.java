@@ -2,7 +2,6 @@ package com.utsusynth.utsu.view.song.note;
 
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
@@ -39,7 +38,7 @@ public class Note implements TrackItem, Comparable<Note> {
     private final Localizer localizer;
     private final Quantizer quantizer;
     private final Scaler scaler;
-    private final Set<Integer> drawnColumns;
+    private final HashSet<Integer> drawnColumns;
 
     // UI-independent state.
     private final IntegerProperty currentRow;
@@ -434,7 +433,7 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     @Override
-    public Set<Integer> getColumns() {
+    public HashSet<Integer> getColumns() {
         return drawnColumns;
     }
 

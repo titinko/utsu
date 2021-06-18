@@ -2,7 +2,7 @@ package com.utsusynth.utsu.view.song.track;
 
 import javafx.scene.Node;
 
-import java.util.Set;
+import java.util.HashSet;
 
 /** Represents a single item that can be drawn in the track. */
 public interface TrackItem {
@@ -31,7 +31,7 @@ public interface TrackItem {
     Node redraw(int colNum, double offsetX);
 
     /** Return every column where this item is currently drawn. */
-    Set<Integer> getColumns();
+    HashSet<Integer> getColumns();
 
     /** Clear list of columns after erasing item from them. */
     void clearColumns();

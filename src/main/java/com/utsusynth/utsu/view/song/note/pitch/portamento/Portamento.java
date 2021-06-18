@@ -26,7 +26,7 @@ public class Portamento implements TrackItem {
     private final ArrayList<ControlPoint> controlPoints; // Control points, ordered.
     private final HashMap<Double, Group> drawnCurves;
     private final HashMap<Double, Group> drawnSquares;
-    private final Set<Integer> drawnColumns;
+    private final HashSet<Integer> drawnColumns;
     private final PitchbendCallback callback;
     private final CurveFactory curveFactory;
     private final Localizer localizer;
@@ -122,7 +122,7 @@ public class Portamento implements TrackItem {
     }
 
     @Override
-    public Set<Integer> getColumns() {
+    public HashSet<Integer> getColumns() {
         return drawnColumns;
     }
 

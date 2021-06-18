@@ -36,7 +36,7 @@ public class Vibrato implements TrackItem {
     private final BooleanProperty showEditor;
 
     private final PitchbendCallback callback;
-    private final Set<Integer> drawnColumns;
+    private final HashSet<Integer> drawnColumns;
     private final Localizer localizer;
     private final Scaler scaler;
 
@@ -122,7 +122,7 @@ public class Vibrato implements TrackItem {
     }
 
     @Override
-    public Set<Integer> getColumns() {
+    public HashSet<Integer> getColumns() {
         return drawnColumns;
     }
 

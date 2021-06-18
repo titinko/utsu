@@ -14,7 +14,6 @@ import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 
 import java.util.HashSet;
-import java.util.Set;
 
 public class Envelope implements TrackItem {
     private final double startX;
@@ -24,7 +23,7 @@ public class Envelope implements TrackItem {
     private final double endX;
     private final double endY;
     private final double maxHeight;
-    private final Set<Integer> drawnColumns;
+    private final HashSet<Integer> drawnColumns;
     private final EnvelopeCallback callback;
     private final Scaler scaler;
 
@@ -147,7 +146,7 @@ public class Envelope implements TrackItem {
     }
 
     @Override
-    public Set<Integer> getColumns() {
+    public HashSet<Integer> getColumns() {
         return drawnColumns;
     }
 
