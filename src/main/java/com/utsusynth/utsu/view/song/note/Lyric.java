@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
+import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.track.TrackItem;
@@ -81,12 +82,11 @@ public class Lyric implements TrackItem {
 
     @Override
     public Group redraw() {
-        return redraw(-1, 0);
+        return redraw(0);
     }
 
     @Override
-    public Group redraw(int colNum, double offsetX) {
-        drawnColumns.add(colNum);
+    public Group redraw(double offsetX) {
         lyricText = new Label(lyric);
         lyricText.getStyleClass().add("track-note-text");
 
@@ -119,12 +119,22 @@ public class Lyric implements TrackItem {
     }
 
     @Override
-    public HashSet<Integer> getColumns() {
-        return drawnColumns;
+    public ImmutableSet<Integer> getColumns() {
+        return ImmutableSet.copyOf(drawnColumns);
     }
 
     @Override
-    public void clearColumns() {
+    public void addColumn(int colNum) {
+        drawnColumns.add(colNum);
+    }
+
+    @Override
+    public void removeColumn(int colNum) {
+        drawnColumns.remove(colNum);
+    }
+
+    @Override
+    public void removeAllColumns() {
         drawnColumns.clear();
     }
 

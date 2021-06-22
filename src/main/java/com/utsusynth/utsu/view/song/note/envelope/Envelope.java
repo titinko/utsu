@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.note.envelope;
 
+import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.RoundUtils;
@@ -78,13 +79,11 @@ public class Envelope implements TrackItem {
 
     @Override
     public Group redraw() {
-        return redraw(-1, 0); // Grab element without any positioning.
+        return redraw(0); // Grab element without any positioning.
     }
 
     @Override
-    public Group redraw(int colNum, final double offsetX) {
-        drawnColumns.add(colNum);
-
+    public Group redraw(final double offsetX) {
         MoveTo start = new MoveTo(startX - offsetX, startY);
         LineTo[] lines = new LineTo[] {
                 new LineTo(xValues[0].get() - offsetX, yValues[0].get()),
@@ -146,12 +145,22 @@ public class Envelope implements TrackItem {
     }
 
     @Override
-    public HashSet<Integer> getColumns() {
-        return drawnColumns;
+    public ImmutableSet<Integer> getColumns() {
+        return ImmutableSet.copyOf(drawnColumns);
     }
 
     @Override
-    public void clearColumns() {
+    public void addColumn(int colNum) {
+        drawnColumns.add(colNum);
+    }
+
+    @Override
+    public void removeColumn(int colNum) {
+        drawnColumns.remove(colNum);
+    }
+
+    @Override
+    public void removeAllColumns() {
         drawnColumns.clear();
     }
 

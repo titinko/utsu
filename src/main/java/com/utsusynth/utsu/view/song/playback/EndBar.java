@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.playback;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -47,13 +48,11 @@ public class EndBar implements TrackItem {
 
     @Override
     public Line redraw() {
-        return redraw(-1, 0);
+        return redraw(0);
     }
 
     @Override
-    public Line redraw(int colNum, double offsetX) {
-        drawnColumns.add(colNum);
-
+    public Line redraw(double offsetX) {
         Line bar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT).get());
         bar.translateXProperty().bind(xValue.subtract(offsetX));
         bar.getStyleClass().add("end-bar");
@@ -63,12 +62,22 @@ public class EndBar implements TrackItem {
     }
 
     @Override
-    public HashSet<Integer> getColumns() {
-        return drawnColumns;
+    public ImmutableSet<Integer> getColumns() {
+        return ImmutableSet.copyOf(drawnColumns);
     }
 
     @Override
-    public void clearColumns() {
+    public void addColumn(int colNum) {
+        drawnColumns.add(colNum);
+    }
+
+    @Override
+    public void removeColumn(int colNum) {
+        drawnColumns.remove(colNum);
+    }
+
+    @Override
+    public void removeAllColumns() {
         drawnColumns.clear();
     }
 }

@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.song.note.pitch;
 import java.util.HashSet;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.view.song.track.TrackItem;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
@@ -48,25 +49,34 @@ public class Pitchbend implements TrackItem {
 
     @Override
     public Group redraw() {
-        return redraw(-1, 0);
+        return redraw(0);
     }
 
     @Override
-    public Group redraw(int colNum, double offsetX) {
-        drawnColumns.add(colNum);
+    public Group redraw(double offsetX) {
         Group group =
-                new Group(portamento.redraw(colNum, offsetX), vibrato.redraw(colNum, offsetX));
+                new Group(portamento.redraw(offsetX), vibrato.redraw(offsetX));
         group.visibleProperty().bind(showPitchbend);
         return group;
     }
 
     @Override
-    public HashSet<Integer> getColumns() {
-        return drawnColumns;
+    public ImmutableSet<Integer> getColumns() {
+        return ImmutableSet.copyOf(drawnColumns);
     }
 
     @Override
-    public void clearColumns() {
+    public void addColumn(int colNum) {
+        drawnColumns.add(colNum);
+    }
+
+    @Override
+    public void removeColumn(int colNum) {
+        drawnColumns.remove(colNum);
+    }
+
+    @Override
+    public void removeAllColumns() {
         drawnColumns.clear();
     }
 

@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
+import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -55,13 +56,11 @@ public class AddNoteBox implements TrackItem {
 
     @Override
     public Rectangle redraw() {
-        return redraw(-1, 0);
+        return redraw(0);
     }
 
     @Override
-    public Rectangle redraw(int colNum, double offsetX) {
-        drawnColumns.add(colNum);
-
+    public Rectangle redraw(double offsetX) {
         Rectangle box = new Rectangle();
         box.xProperty().bind(startX.subtract(offsetX));
         box.yProperty().bind(startY);
@@ -73,12 +72,22 @@ public class AddNoteBox implements TrackItem {
     }
 
     @Override
-    public HashSet<Integer> getColumns() {
-        return drawnColumns;
+    public ImmutableSet<Integer> getColumns() {
+        return ImmutableSet.copyOf(drawnColumns);
     }
 
     @Override
-    public void clearColumns() {
+    public void addColumn(int colNum) {
+        drawnColumns.add(colNum);
+    }
+
+    @Override
+    public void removeColumn(int colNum) {
+        drawnColumns.remove(colNum);
+    }
+
+    @Override
+    public void removeAllColumns() {
         drawnColumns.clear();
     }
 }

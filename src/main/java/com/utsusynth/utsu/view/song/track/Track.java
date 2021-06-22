@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.track;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.quantize.Quantizer;
@@ -138,7 +139,7 @@ public class Track {
                 if (item != null) {
                     for (TrackItem trackItem : item.asList()) {
                         double offset = getIndex() * colWidth;
-                        graphic.getChildren().add(trackItem.redraw(getIndex(), offset));
+                        graphic.getChildren().add(trackItem.redraw(offset));
                     }
                 }
                 // Drag behavior.
@@ -215,7 +216,7 @@ public class Track {
                 if (item != null) {
                     for (TrackItem trackItem : item.asList()) {
                         double offset = getIndex() * colWidth;
-                        graphic.getChildren().add(trackItem.redraw(getIndex(), offset));
+                        graphic.getChildren().add(trackItem.redraw(offset));
                     }
                 }
                 setGraphic(graphic);
@@ -337,7 +338,7 @@ public class Track {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         int startColNum = (int) (startX / colWidth);
         int endColNum = (int) (endX / colWidth);
-        HashSet<Integer> columns = trackItem.getColumns();
+        ImmutableSet<Integer> columns = trackItem.getColumns();
         HashSet<Integer> columnsToRemove = new HashSet<>();
         // Remove items that should no longer be rendered.
         for (Integer colNum : columns) {
@@ -348,10 +349,7 @@ public class Track {
                 TrackItemSet itemSet = track.getItems().get(colNum);
                 track.getItems().set(colNum, itemSet.withoutItem(trackItem));
             }
-            columnsToRemove.add(colNum);
-        }
-        for (Integer colNum : columnsToRemove) {
-            columns.remove(colNum);
+            trackItem.removeColumn(colNum);
         }
         // Add new items that should be rendered.
         for (int colNum = startColNum; colNum <= endColNum; colNum++) {
@@ -360,7 +358,7 @@ public class Track {
             }
             TrackItemSet itemSet = track.getItems().get(colNum);
             track.getItems().set(colNum, itemSet.withItem(trackItem));
-            columns.add(colNum);
+            trackItem.addColumn(colNum);
         }
     }
 
@@ -372,7 +370,7 @@ public class Track {
             TrackItemSet itemSet = track.getItems().get(colNum);
             track.getItems().set(colNum, itemSet.withoutItem(trackItem));
         }
-        trackItem.clearColumns();
+        trackItem.removeAllColumns();
     }
 
     /**

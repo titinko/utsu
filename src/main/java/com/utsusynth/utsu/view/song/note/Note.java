@@ -1,8 +1,10 @@
 package com.utsusynth.utsu.view.song.note;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
@@ -38,22 +40,20 @@ public class Note implements TrackItem, Comparable<Note> {
     private final Localizer localizer;
     private final Quantizer quantizer;
     private final Scaler scaler;
+    private final HashMap<Double, Rectangle> drawnNotes;
+    private final HashMap<Double, Rectangle> drawnDragEdges;
+    private final HashMap<Double, Rectangle> drawnOverlaps;
     private final HashSet<Integer> drawnColumns;
 
     // UI-independent state.
     private final IntegerProperty currentRow;
+    private final DoubleProperty currentY;
     private final DoubleProperty startX;
     private final DoubleProperty widthX;
     private final DoubleProperty overlapWidthX;
     private boolean isValid = false;
     private boolean isHighlighted = false;
     private boolean isDisplayOnly = false;
-
-    // UI-dependent state.
-    private StackPane layout;
-    private Rectangle note;
-    private Rectangle dragEdge;
-    private Rectangle overlap;
 
     private enum SubMode {
         CLICKING, DRAGGING, RESIZING,
@@ -90,8 +90,19 @@ public class Note implements TrackItem, Comparable<Note> {
         this.currentRow = new SimpleIntegerProperty(currentRow);
         this.startX = new SimpleDoubleProperty(startX);
         this.widthX = new SimpleDoubleProperty(widthX);
+        currentY = new SimpleDoubleProperty(
+                scaler.scaleY(currentRow * Quantizer.ROW_HEIGHT).get());
         overlapWidthX = new SimpleDoubleProperty(0);
+        drawnNotes = new HashMap<>();
+        drawnDragEdges = new HashMap<>();
+        drawnOverlaps = new HashMap<>();
         drawnColumns = new HashSet<>();
+
+        this.currentRow.addListener((obs, oldRow, newRow) -> {
+            if (!oldRow.equals(newRow)) {
+                currentY.set(scaler.scaleY(newRow.doubleValue() * Quantizer.ROW_HEIGHT).get());
+            }
+        });
 
         Note thisNote = this;
         lyric.initialize(new LyricCallback() {
@@ -137,30 +148,21 @@ public class Note implements TrackItem, Comparable<Note> {
 
     @Override
     public StackPane redraw() {
-        return redraw(-1, 0);
+        return redraw(0);
     }
 
     @Override
-    public StackPane redraw(int colNum, double offsetX) {
-        drawnColumns.add(colNum);
-        if (layout != null) {
-            layout.translateXProperty().unbind();
-        }
-        if (note != null) {
-            note.widthProperty().unbindBidirectional(widthX);
-        }
-        if (overlap != null) {
-            overlap.widthProperty().unbindBidirectional(overlapWidthX);
-        }
-        note = new Rectangle();
-        note.widthProperty().bindBidirectional(widthX);
+    public StackPane redraw(double offsetX) {
+        Rectangle note = new Rectangle();
+        note.widthProperty().bind(widthX);
         note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
         note.getStyleClass().addAll(
                 "track-note",
                 isValid ? "valid" : "invalid",
                 isHighlighted ? "highlighted" : "not-highlighted");
+        drawnNotes.put(offsetX, note);
 
-        dragEdge = new Rectangle();
+        Rectangle dragEdge = new Rectangle();
         dragEdge.setWidth(isDisplayOnly ? 0 : 3);
         dragEdge.setHeight(note.getHeight());
         dragEdge.setOpacity(0.0);
@@ -170,16 +172,18 @@ public class Note implements TrackItem, Comparable<Note> {
         dragEdge.setOnMouseExited(event -> {
             dragEdge.getScene().setCursor(Cursor.DEFAULT);
         });
+        drawnDragEdges.put(offsetX, dragEdge);
 
-        overlap = new Rectangle();
-        overlap.widthProperty().bindBidirectional(overlapWidthX);
+        Rectangle overlap = new Rectangle();
+        overlap.widthProperty().bind(overlapWidthX);
         overlap.setHeight(note.getHeight());
         overlap.getStyleClass().add("note-overlap");
+        drawnOverlaps.put(offsetX, overlap);
 
-        layout = new StackPane();
+        StackPane layout = new StackPane();
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
-        layout.setTranslateY(scaler.scaleY(currentRow.get() * Quantizer.ROW_HEIGHT).get());
+        layout.translateYProperty().bind(currentY);
         layout.translateXProperty().bind(startX.subtract(offsetX));
         if (isDisplayOnly) {
             layout.getChildren().add(note);
@@ -433,13 +437,31 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     @Override
-    public HashSet<Integer> getColumns() {
-        return drawnColumns;
+    public ImmutableSet<Integer> getColumns() {
+        return ImmutableSet.copyOf(drawnColumns);
     }
 
     @Override
-    public void clearColumns() {
+    public void addColumn(int colNum) {
+        drawnColumns.add(colNum);
+    }
+
+    @Override
+    public void removeColumn(int colNum) {
+        drawnColumns.remove(colNum);
+        // This is risky if the width of a single column ever gets changed.
+        double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
+        drawnNotes.remove(offsetX);
+        drawnDragEdges.remove(offsetX);
+        drawnOverlaps.remove(offsetX);
+    }
+
+    @Override
+    public void removeAllColumns() {
         drawnColumns.clear();
+        drawnNotes.clear();
+        drawnDragEdges.clear();
+        drawnOverlaps.clear();
     }
 
     public int getRow() {
@@ -479,7 +501,7 @@ public class Note implements TrackItem, Comparable<Note> {
      */
     public void setHighlighted(boolean highlighted) {
         isHighlighted = highlighted;
-        if (note != null) {
+        for (Rectangle note : drawnNotes.values()) {
             note.getStyleClass().set(2, highlighted ? "highlighted" : "not-highlighted");
         }
 
@@ -494,9 +516,10 @@ public class Note implements TrackItem, Comparable<Note> {
 
     public void setValid(boolean isValid) {
         this.isValid = isValid;
-        if (note != null) {
+        for (Rectangle note : drawnNotes.values()) {
             note.getStyleClass().set(1, isValid ? "valid" : "invalid");
         }
+
         if (!isValid) {
             lyric.setVisibleAlias("");
             adjustForOverlap(Integer.MAX_VALUE);
@@ -544,9 +567,6 @@ public class Note implements TrackItem, Comparable<Note> {
         startX.set(scaler.scalePos(newPositionMs).get());
         int newRow = getRow() + rowDelta;
         currentRow.set(newRow);
-        if (layout != null) {
-            layout.setTranslateY(scaler.scaleY(newRow * Quantizer.ROW_HEIGHT).get());
-        }
     }
 
     public void setBackupData(NoteUpdateData backupData) {
@@ -586,13 +606,14 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     private void adjustDragEdge(double newDuration) {
-        if (dragEdge == null || overlap == null) {
-            return;
-        }
         double scaledDuration = scaler.scaleX(newDuration).get();
-        StackPane
-                .setMargin(dragEdge, new Insets(0, 0, 0, scaledDuration - dragEdge.getWidth() - 1));
-        StackPane.setMargin(overlap, new Insets(0, 0, 0, scaledDuration - overlap.getWidth() - 1));
+        for (Rectangle dragEdge : drawnDragEdges.values()) {
+            StackPane
+                    .setMargin(dragEdge, new Insets(0, 0, 0, scaledDuration - dragEdge.getWidth() - 1));
+        }
+        for (Rectangle overlap : drawnOverlaps.values()) {
+            StackPane.setMargin(overlap, new Insets(0, 0, 0, scaledDuration - overlap.getWidth() - 1));
+        }
     }
 
     private int getQuantizedStart() {

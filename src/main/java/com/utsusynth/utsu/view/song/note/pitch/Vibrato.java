@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.song.note.pitch;
 import java.util.*;
 import java.util.function.Function;
 
+import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
@@ -94,12 +95,11 @@ public class Vibrato implements TrackItem {
     }
 
     public Group redraw() {
-        return redraw(-1, 0);
+        return redraw(0);
     }
 
     @Override
-    public Group redraw(int colNum, double offsetX) {
-        drawnColumns.add(colNum);
+    public Group redraw(double offsetX) {
         this.offsetX = offsetX;
 
         vibratoPath = new Path();
@@ -122,12 +122,22 @@ public class Vibrato implements TrackItem {
     }
 
     @Override
-    public HashSet<Integer> getColumns() {
-        return drawnColumns;
+    public ImmutableSet<Integer> getColumns() {
+        return ImmutableSet.copyOf(drawnColumns);
     }
 
     @Override
-    public void clearColumns() {
+    public void addColumn(int colNum) {
+        drawnColumns.add(colNum);
+    }
+
+    @Override
+    public void removeColumn(int colNum) {
+        drawnColumns.remove(colNum);
+    }
+
+    @Override
+    public void removeAllColumns() {
         drawnColumns.clear();
     }
 

@@ -3,6 +3,7 @@ package com.utsusynth.utsu.view.song.note.pitch.portamento;
 import java.util.*;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
@@ -100,13 +101,11 @@ public class Portamento implements TrackItem {
 
     @Override
     public Group redraw() {
-        return redraw(-1, 0);
+        return redraw(0);
     }
 
     @Override
-    public Group redraw(int colNum, double offsetX) {
-        drawnColumns.add(colNum);
-
+    public Group redraw(double offsetX) {
         Group curveGroup = new Group();
         for (Curve curve : this.curves) {
             curveGroup.getChildren().add(curve.redraw(offsetX));
@@ -122,12 +121,26 @@ public class Portamento implements TrackItem {
     }
 
     @Override
-    public HashSet<Integer> getColumns() {
-        return drawnColumns;
+    public ImmutableSet<Integer> getColumns() {
+        return ImmutableSet.copyOf(drawnColumns);
     }
 
     @Override
-    public void clearColumns() {
+    public void addColumn(int colNum) {
+        drawnColumns.add(colNum);
+    }
+
+    @Override
+    public void removeColumn(int colNum) {
+        drawnColumns.remove(colNum);
+        // This is risky if the width of a single column ever gets changed.
+        double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
+        drawnCurves.remove(offsetX);
+        drawnSquares.remove(offsetX);
+    }
+
+    @Override
+    public void removeAllColumns() {
         drawnColumns.clear();
         drawnCurves.clear();
         drawnSquares.clear();

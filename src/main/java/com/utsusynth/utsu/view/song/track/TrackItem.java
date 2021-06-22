@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.view.song.track;
 
+import com.google.common.collect.ImmutableSet;
 import javafx.scene.Node;
 
 import java.util.HashSet;
@@ -28,11 +29,17 @@ public interface TrackItem {
     Node redraw();
 
     /** Redraw this item with a certain offset. */
-    Node redraw(int colNum, double offsetX);
+    Node redraw(double offsetX);
 
     /** Return every column where this item is currently drawn. */
-    HashSet<Integer> getColumns();
+    ImmutableSet<Integer> getColumns();
 
-    /** Clear list of columns after erasing item from them. */
-    void clearColumns();
+    /** Officially adds this item to a column but does not actually redraw the item. */
+    void addColumn(int colNum);
+
+    /** Officially removes this item from a column and cleans up fields related to them. */
+    void removeColumn(int colNum);
+
+    /** Clear list of columns and clears any fields related to them. */
+    void removeAllColumns();
 }
