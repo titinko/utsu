@@ -96,28 +96,40 @@
 	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
 }
 
+.left-crop {
+    -fx-background-insets: 0, 1 1 1 0;
+}
+
+.right-crop {
+    -fx-background-insets: 0, 1 0 1 1;
+}
+
+.full-crop {
+    -fx-background-insets: 0, 1 0 1 0;
+}
+
+.no-crop {
+    -fx-background-insets: 0, 1;
+}
+
 .track-note.valid.not-highlighted {
-    -fx-fill: skyblue;
-    -fx-stroke: dodgerblue;
+	-fx-background-color: dodgerblue, skyblue;
 }
 
 .track-note.valid.highlighted {
-    -fx-fill: azure;
-    -fx-stroke: skyblue;
+	-fx-background-color: skyblue, azure;
 }
 
 .track-note.invalid {
-    -fx-fill: gray;
-    -fx-stroke: darkslategray;
+	-fx-background-color: darkslategray, gray;
+}
+
+.note-overlap {
+	-fx-background-color: gray;
 }
 
 .track-note-text {
     -fx-text-fill: black;
-}
-
-.note-overlap {
-	-fx-fill: gray;
-	-fx-stroke: transparent;
 }
 
 .list-cell:even {

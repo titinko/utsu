@@ -18,6 +18,8 @@ import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.view.song.DragHandler;
 import com.utsusynth.utsu.view.song.track.TrackItem;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -27,6 +29,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
@@ -40,9 +43,9 @@ public class Note implements TrackItem, Comparable<Note> {
     private final Localizer localizer;
     private final Quantizer quantizer;
     private final Scaler scaler;
-    private final HashMap<Double, Rectangle> drawnNotes;
-    private final HashMap<Double, Rectangle> drawnDragEdges;
-    private final HashMap<Double, Rectangle> drawnOverlaps;
+    private final HashMap<Double, Pane> drawnNotes;
+    private final HashMap<Double, Pane> drawnDragEdges;
+    private final HashMap<Double, Pane> drawnOverlaps;
     private final HashSet<Integer> drawnColumns;
 
     // UI-independent state.
@@ -51,6 +54,7 @@ public class Note implements TrackItem, Comparable<Note> {
     private final DoubleProperty startX;
     private final DoubleProperty widthX;
     private final DoubleProperty overlapWidthX;
+    private final IntegerProperty dragEdgeWidthX;
     private boolean isValid = false;
     private boolean isHighlighted = false;
     private boolean isDisplayOnly = false;
@@ -90,9 +94,15 @@ public class Note implements TrackItem, Comparable<Note> {
         this.currentRow = new SimpleIntegerProperty(currentRow);
         this.startX = new SimpleDoubleProperty(startX);
         this.widthX = new SimpleDoubleProperty(widthX);
+        this.widthX.addListener((obs, oldValue, newValue) -> {
+            if (newValue.equals(oldValue)) {
+                adjustNote(newValue.doubleValue());
+            }
+        });
         currentY = new SimpleDoubleProperty(
                 scaler.scaleY(currentRow * Quantizer.ROW_HEIGHT).get());
         overlapWidthX = new SimpleDoubleProperty(0);
+        dragEdgeWidthX = new SimpleIntegerProperty(3);
         drawnNotes = new HashMap<>();
         drawnDragEdges = new HashMap<>();
         drawnOverlaps = new HashMap<>();
@@ -126,7 +136,7 @@ public class Note implements TrackItem, Comparable<Note> {
             @Override
             public void adjustColumnSpan() {
                 // TODO: Factor lyric width into this.
-                thisNote.adjustDragEdge(thisNote.getDurationMs());
+                thisNote.adjustDragEdge(thisNote.widthX.get());
             }
         }, showLyrics, showAliases);
     }
@@ -153,18 +163,18 @@ public class Note implements TrackItem, Comparable<Note> {
 
     @Override
     public StackPane redraw(double offsetX) {
-        Rectangle note = new Rectangle();
-        note.widthProperty().bind(widthX);
-        note.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
+        double colWidth = scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
+        Pane note = new Pane();
+        note.setPrefHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
         note.getStyleClass().addAll(
                 "track-note",
                 isValid ? "valid" : "invalid",
-                isHighlighted ? "highlighted" : "not-highlighted");
+                isHighlighted ? "highlighted" : "not-highlighted",
+                "no-crop");
         drawnNotes.put(offsetX, note);
 
-        Rectangle dragEdge = new Rectangle();
-        dragEdge.setWidth(isDisplayOnly ? 0 : 3);
-        dragEdge.setHeight(note.getHeight());
+        Pane dragEdge = new Pane();
+        dragEdge.setPrefHeight(note.getHeight());
         dragEdge.setOpacity(0.0);
         dragEdge.setOnMouseEntered(event -> {
             dragEdge.getScene().setCursor(Cursor.W_RESIZE);
@@ -172,31 +182,36 @@ public class Note implements TrackItem, Comparable<Note> {
         dragEdge.setOnMouseExited(event -> {
             dragEdge.getScene().setCursor(Cursor.DEFAULT);
         });
+        StackPane.setAlignment(dragEdge, Pos.CENTER_RIGHT);
         drawnDragEdges.put(offsetX, dragEdge);
 
-        Rectangle overlap = new Rectangle();
-        overlap.widthProperty().bind(overlapWidthX);
-        overlap.setHeight(note.getHeight());
+        Pane overlap = new Pane();
+        overlap.setPrefHeight(note.getHeight());
         overlap.getStyleClass().add("note-overlap");
+        StackPane.setAlignment(overlap, Pos.CENTER_RIGHT);
         drawnOverlaps.put(offsetX, overlap);
 
         StackPane layout = new StackPane();
         layout.setPickOnBounds(false);
         layout.setAlignment(Pos.CENTER_LEFT);
         layout.translateYProperty().bind(currentY);
-        layout.translateXProperty().bind(startX.subtract(offsetX));
+        DoubleBinding boundedStartX =
+                Bindings.min(colWidth, Bindings.max(0, startX.subtract(offsetX)));
+        layout.translateXProperty().bind(boundedStartX);
         if (isDisplayOnly) {
             layout.getChildren().add(note);
             layout.setMouseTransparent(true);
         } else {
-            layout.getChildren().addAll(note, overlap, lyric.redraw(), dragEdge);
+            //layout.getChildren().addAll(note, overlap, lyric.redraw(), dragEdge);
+            layout.getChildren().addAll(note, overlap, dragEdge);
         }
         StackPane.setAlignment(note, Pos.TOP_LEFT);
-        initializeLayout(layout);
+        initializeLayout(layout, offsetX);
+        adjustNote(widthX.get());
         return layout;
     }
 
-    private void initializeLayout(StackPane newLayout) {
+    private void initializeLayout(StackPane newLayout, double offsetX) {
         Note thisNote = this;
         newLayout.setOnContextMenuRequested(event -> {
             if (contextMenu != null) {
@@ -374,7 +389,8 @@ public class Note implements TrackItem, Comparable<Note> {
                 startDuration = getDurationMs();
             } else {
                 subMode = SubMode.CLICKING; // Note that this may become dragging in the future.
-                positionInNote = RoundUtils.round(scaler.unscaleX(event.getX()));
+                positionInNote =
+                        RoundUtils.round(scaler.unscaleX(event.getX() + offsetX - getStartX()));
                 startPos = getAbsPositionMs();
                 startRow = getRow();
                 hasMoved = false;
@@ -449,8 +465,7 @@ public class Note implements TrackItem, Comparable<Note> {
     @Override
     public void removeColumn(int colNum) {
         drawnColumns.remove(colNum);
-        // This is risky if the width of a single column ever gets changed.
-        double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
+        double offsetX = colNum * scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
         drawnNotes.remove(offsetX);
         drawnDragEdges.remove(offsetX);
         drawnOverlaps.remove(offsetX);
@@ -501,7 +516,7 @@ public class Note implements TrackItem, Comparable<Note> {
      */
     public void setHighlighted(boolean highlighted) {
         isHighlighted = highlighted;
-        for (Rectangle note : drawnNotes.values()) {
+        for (Pane note : drawnNotes.values()) {
             note.getStyleClass().set(2, highlighted ? "highlighted" : "not-highlighted");
         }
 
@@ -516,7 +531,7 @@ public class Note implements TrackItem, Comparable<Note> {
 
     public void setValid(boolean isValid) {
         this.isValid = isValid;
-        for (Rectangle note : drawnNotes.values()) {
+        for (Pane note : drawnNotes.values()) {
             note.getStyleClass().set(1, isValid ? "valid" : "invalid");
         }
 
@@ -529,6 +544,7 @@ public class Note implements TrackItem, Comparable<Note> {
     /** Make note non-interactable and only a background object. Irreversible. */
     public void setToDisplayOnly() {
         isDisplayOnly = true;
+        dragEdgeWidthX.set(0);
     }
 
     public boolean isLyricInputOpen() {
@@ -552,8 +568,9 @@ public class Note implements TrackItem, Comparable<Note> {
         // Resize note if necessary.
         if (overlapWidthX.get() < oldOverlap) {
             resizeNote(getDurationMs());
+        } else {
+            adjustDragEdge(widthX.get());
         }
-        adjustDragEdge(getDurationMs());
     }
 
     /** Sets the lyric that will be used to render the note. */
@@ -601,19 +618,56 @@ public class Note implements TrackItem, Comparable<Note> {
 
     private void resizeNote(int newDuration) {
         widthX.set(scaler.scaleX(newDuration).get() - 1);
-        adjustDragEdge(newDuration);
         track.updateNote(this);
     }
 
-    private void adjustDragEdge(double newDuration) {
-        double scaledDuration = scaler.scaleX(newDuration).get();
-        for (Rectangle dragEdge : drawnDragEdges.values()) {
+    private void adjustNote(double newWidthX) {
+        double colWidthX = scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
+        for (double offsetX : drawnNotes.keySet()) {
+            Pane note = drawnNotes.get(offsetX);
+            double startOfSection = Math.min(Math.max(startX.get(), offsetX), offsetX + colWidthX);
+            double endOfSection =
+                    Math.min(Math.max(startX.get() + newWidthX, offsetX), offsetX + colWidthX);
+            double adjustedWidthX = Math.max(0, endOfSection - startOfSection);
+            note.setPrefWidth(adjustedWidthX);
+
+            String cropStyle = "no-crop";
+            boolean leftCrop = startX.get() < offsetX;
+            boolean rightCrop = startX.get() + newWidthX > offsetX + colWidthX;
+            if (leftCrop && rightCrop) {
+                cropStyle = "full-crop";
+            } else if (leftCrop) {
+                cropStyle = "left-crop";
+            } else if (rightCrop) {
+                cropStyle = "right-crop";
+            }
+            note.getStyleClass().set(3, cropStyle);
+        }
+        adjustDragEdge(newWidthX);
+    }
+
+    private void adjustDragEdge(double newWidthX) {
+        double colWidthX = scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
+        double newEndX = newWidthX + getStartX();
+        for (double offsetX : drawnDragEdges.keySet()) {
+            double startOfSection = Math.min(Math.max(newEndX - dragEdgeWidthX.get(), offsetX), offsetX + colWidthX);
+            double endOfSection = Math.min(Math.max(newEndX, offsetX), offsetX + colWidthX);
+            double adjustedWidthX = Math.max(0, endOfSection - startOfSection);
+            drawnDragEdges.get(offsetX).setMaxWidth(adjustedWidthX);
+        }
+        for (double offsetX : drawnOverlaps.keySet()) {
+            double startOfSection = Math.min(Math.max(newEndX - overlapWidthX.get(), offsetX), offsetX + colWidthX);
+            double endOfSection = Math.min(Math.max(newEndX, offsetX), offsetX + colWidthX);
+            double adjustedWidthX = Math.max(0, endOfSection - startOfSection);
+            drawnOverlaps.get(offsetX).setMaxWidth(adjustedWidthX);
+        }
+        /*for (Rectangle dragEdge : drawnDragEdges.values()) {
             StackPane
                     .setMargin(dragEdge, new Insets(0, 0, 0, scaledDuration - dragEdge.getWidth() - 1));
         }
         for (Rectangle overlap : drawnOverlaps.values()) {
             StackPane.setMargin(overlap, new Insets(0, 0, 0, scaledDuration - overlap.getWidth() - 1));
-        }
+        }*/
     }
 
     private int getQuantizedStart() {

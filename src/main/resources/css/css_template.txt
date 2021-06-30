@@ -100,28 +100,40 @@
 	-fx-background-insets: 0, 0 1 0 0, 0 1 1 0;
 }
 
+.left-crop {
+    -fx-background-insets: 0, 1 1 1 0;
+}
+
+.right-crop {
+    -fx-background-insets: 0, 1 0 1 1;
+}
+
+.full-crop {
+    -fx-background-insets: 0, 1 0 1 0;
+}
+
+.no-crop {
+    -fx-background-insets: 0, 1;
+}
+
 .track-note.valid.not-highlighted {
-    -fx-fill: $[NOTE];
-    -fx-stroke: $[NOTE_BORDER];
+	-fx-background-color: $[NOTE_BORDER], $[NOTE];
 }
 
 .track-note.valid.highlighted {
-    -fx-fill: $[HIGHLIGHTED];
-    -fx-stroke: $[HIGHLIGHTED_BORDER];
+	-fx-background-color: $[HIGHLIGHTED_BORDER], $[HIGHLIGHTED];
 }
 
 .track-note.invalid {
-    -fx-fill: $[INVALID_NOTE];
-    -fx-stroke: $[INVALID_NOTE_BORDER];
+	-fx-background-color: $[INVALID_NOTE_BORDER], $[INVALID_NOTE];
+}
+
+.note-overlap {
+	-fx-background-color: $[INVALID_NOTE];
 }
 
 .track-note-text {
     -fx-text-fill: $[NOTE_TEXT];
-}
-
-.note-overlap {
-	-fx-fill: $[INVALID_NOTE];
-	-fx-stroke: transparent;
 }
 
 .list-cell:even {
