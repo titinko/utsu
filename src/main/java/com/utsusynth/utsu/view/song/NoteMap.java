@@ -148,6 +148,8 @@ public class NoteMap {
     }
 
     void addNoteElement(Note note) {
+        track.insertItem(track.getNoteTrack(), note);
+        allNotes.add(note);
         /*allNotes.add(note);
         if (visibleRegion.intersects(note.getBounds())) {
             visibleNotes.getChildren().add(note.getElement());
@@ -155,6 +157,8 @@ public class NoteMap {
     }
 
     void removeNoteElement(Note note) {
+        track.removeItem(track.getNoteTrack(), note);
+        allNotes.remove(note);
         /*
         allNotes.remove(note);
         visibleNotes.getChildren().remove(note.getElement());
@@ -163,7 +167,7 @@ public class NoteMap {
 
     void removeFullNote(int position) {
         if (noteMap.containsKey(position)) {
-            track.removeItem(track.getNoteTrack(), noteMap.get(position));
+            // track.removeItem(track.getNoteTrack(), noteMap.get(position));
             noteMap.remove(position);
         } else {
             // TODO: Handle this better.

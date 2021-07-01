@@ -5,7 +5,9 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -19,7 +21,8 @@ public class Lyric implements TrackItem {
     private final Scaler scaler;
 
     // UI-independent state.
-    private final SimpleBooleanProperty editMode;
+    private final DoubleProperty startX;
+    private final BooleanProperty editMode;
     private String lyric;
     private String alias;
 
@@ -36,6 +39,7 @@ public class Lyric implements TrackItem {
 
     public Lyric(String defaultLyric, Scaler scaler) {
         this.scaler = scaler;
+        startX = new SimpleDoubleProperty(0);
         editMode = new SimpleBooleanProperty(false);
         lyric = defaultLyric;
         alias = "";
@@ -72,7 +76,7 @@ public class Lyric implements TrackItem {
 
     @Override
     public double getStartX() {
-        return 0;
+        return startX.get();
     }
 
     @Override
