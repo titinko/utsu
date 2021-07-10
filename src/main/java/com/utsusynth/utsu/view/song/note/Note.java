@@ -658,13 +658,6 @@ public class Note implements TrackItem, Comparable<Note> {
             double adjustedWidthX = Math.max(0, endOfSection - startOfSection);
             drawnOverlaps.get(offsetX).setMaxWidth(adjustedWidthX);
         }
-        /*for (Rectangle dragEdge : drawnDragEdges.values()) {
-            StackPane
-                    .setMargin(dragEdge, new Insets(0, 0, 0, scaledDuration - dragEdge.getWidth() - 1));
-        }
-        for (Rectangle overlap : drawnOverlaps.values()) {
-            StackPane.setMargin(overlap, new Insets(0, 0, 0, scaledDuration - overlap.getWidth() - 1));
-        }*/
     }
 
     private int getQuantizedStart() {

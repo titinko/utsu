@@ -9,6 +9,7 @@ import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 
 import java.util.HashMap;
@@ -87,8 +88,7 @@ public class Lyric implements TrackItem {
 
     @Override
     public double getWidth() {
-        //return Math.max(noteWidth.get(), Quantizer.TEXT_FIELD_WIDTH * 2);
-        return 1;
+        return Math.max(noteWidth.get(), Quantizer.TEXT_FIELD_WIDTH * 2);
     }
 
     @Override
@@ -137,6 +137,11 @@ public class Lyric implements TrackItem {
         activeNode.translateXProperty().bind(startX.subtract(offsetX));
         activeNode.translateYProperty().bind(currentY);
         drawnActiveNodes.put(offsetX, activeNode);
+
+        Rectangle clip = new Rectangle(scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get(),
+                scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        clip.xProperty().bind(startX.subtract(offsetX).negate());
+        activeNode.setClip(clip);
         return activeNode;
     }
 
