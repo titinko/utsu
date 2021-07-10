@@ -17,16 +17,12 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
-import javafx.scene.Node;
-import javafx.scene.shape.Line;
 import javafx.util.Duration;
 
 /**
  * Keeps track of what notes are currently highlighted.
  */
 public class PlaybackManager {
-    private static final int TOTAL_HEIGHT = PitchUtils.TOTAL_NUM_PITCHES * Quantizer.ROW_HEIGHT;
-
     private final Scaler scaler;
     private final TreeSet<Note> highlighted; // All highlighted notes.
     private final BooleanProperty isAnythingHighlighted;

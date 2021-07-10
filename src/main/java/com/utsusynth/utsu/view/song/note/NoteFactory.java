@@ -5,15 +5,12 @@ import com.google.inject.Provider;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.common.i18n.Localizer;
-import com.utsusynth.utsu.common.quantize.ContinuousScaler;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.view.song.note.lyric.Lyric;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.geometry.Pos;
-import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Rectangle;
 
 public class NoteFactory {
     private final Localizer localizer;

@@ -30,9 +30,7 @@ public class NoteMap {
     private Map<Integer, Note> noteMap;
     private Map<Integer, Envelope> envelopeMap;
     private Map<Integer, Pitchbend> pitchbendMap;
-    private Set<Note> allNotes; // Includes invalid notes.
 
-    private RegionBounds visibleRegion;
     private Group visibleNotes; // Only includes notes in the visible region.
     private Group visibleEnvelopes; // Only includes envelopes in the visible region.
     private Group visiblePitchbends; // Only includes pitchbends in the visible region.
@@ -62,8 +60,6 @@ public class NoteMap {
         noteMap = new HashMap<>();
         envelopeMap = new HashMap<>();
         pitchbendMap = new HashMap<>();
-        allNotes = new HashSet<>();
-        visibleRegion = RegionBounds.WHOLE_SONG;
         visibleNotes = new Group();
         visibleEnvelopes = new Group();
         visiblePitchbends = new Group();
@@ -143,31 +139,22 @@ public class NoteMap {
         if (noteMap.containsKey(position)) {
             throw new NoteAlreadyExistsException();
         }
-        track.insertItem(track.getNoteTrack(), note);
+        addNoteElement(note);
         noteMap.put(position, note);
     }
 
     void addNoteElement(Note note) {
         track.insertItem(track.getNoteTrack(), note);
-        allNotes.add(note);
-        /*allNotes.add(note);
-        if (visibleRegion.intersects(note.getBounds())) {
-            visibleNotes.getChildren().add(note.getElement());
-        }*/
+        track.insertItem(track.getNoteTrack(), note.getLyricTrackItem());
     }
 
     void removeNoteElement(Note note) {
         track.removeItem(track.getNoteTrack(), note);
-        allNotes.remove(note);
-        /*
-        allNotes.remove(note);
-        visibleNotes.getChildren().remove(note.getElement());
-         */
+        track.removeItem(track.getNoteTrack(), note.getLyricTrackItem());
     }
 
     void removeFullNote(int position) {
         if (noteMap.containsKey(position)) {
-            // track.removeItem(track.getNoteTrack(), noteMap.get(position));
             noteMap.remove(position);
         } else {
             // TODO: Handle this better.
@@ -192,13 +179,10 @@ public class NoteMap {
                     envelopeFactory.createEnvelope(noteMap.get(position), envelopeData, callback);
             // Overrides are expected here.
             if (envelopeMap.containsKey(position)) {
-                //visibleEnvelopes.getChildren().remove(envelopeMap.get(position).getElement());
                 track.removeItem(track.getDynamicsTrack(), envelopeMap.get(position));
+                envelopeMap.remove(position);
             }
             envelopeMap.put(position, envelope);
-            if (visibleRegion.intersects(noteMap.get(position).getBounds())) {
-                //visibleEnvelopes.getChildren().add(envelope.getElement());
-            }
             track.insertItem(track.getDynamicsTrack(), envelope);
         }
     }
@@ -228,13 +212,10 @@ public class NoteMap {
                     showPitchbend);
             // Overrides are expected here.
             if (pitchbendMap.containsKey(position)) {
-                // visiblePitchbends.getChildren().remove(pitchbendMap.get(position).redraw());
                 track.removeItem(track.getNoteTrack(), pitchbendMap.get(position));
+                pitchbendMap.remove(position);
             }
             pitchbendMap.put(position, pitchbend);
-            if (visibleRegion.intersects(noteMap.get(position).getBounds())) {
-                // visiblePitchbends.getChildren().add(pitchbend.redraw());
-            }
             track.insertItem(track.getNoteTrack(), pitchbend);
         }
     }

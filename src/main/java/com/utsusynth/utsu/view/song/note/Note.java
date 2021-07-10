@@ -17,11 +17,12 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.view.song.DragHandler;
+import com.utsusynth.utsu.view.song.note.lyric.Lyric;
+import com.utsusynth.utsu.view.song.note.lyric.LyricCallback;
 import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.*;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.CheckMenuItem;
@@ -31,7 +32,6 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Rectangle;
 
 /**
  * Frontend representation of a note. The backend representation is found in the model's Note class.
@@ -132,13 +132,7 @@ public class Note implements TrackItem, Comparable<Note> {
                     thisNote.track.updateNote(thisNote);
                 });
             }
-
-            @Override
-            public void adjustColumnSpan() {
-                // TODO: Factor lyric width into this.
-                thisNote.adjustDragEdge(thisNote.widthX.get());
-            }
-        }, showLyrics, showAliases);
+        }, this.startX, this.widthX, this.currentY, showLyrics, showAliases);
     }
 
     @Override
@@ -202,7 +196,6 @@ public class Note implements TrackItem, Comparable<Note> {
             layout.getChildren().add(note);
             layout.setMouseTransparent(true);
         } else {
-            //layout.getChildren().addAll(note, overlap, lyric.redraw(), dragEdge);
             layout.getChildren().addAll(note, overlap, dragEdge);
         }
         StackPane.setAlignment(note, Pos.TOP_LEFT);
@@ -493,6 +486,10 @@ public class Note implements TrackItem, Comparable<Note> {
 
     public String getLyric() {
         return lyric.getLyric();
+    }
+
+    public TrackItem getLyricTrackItem() {
+        return lyric;
     }
 
     public RegionBounds getBounds() {

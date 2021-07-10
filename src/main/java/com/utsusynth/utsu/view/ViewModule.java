@@ -5,7 +5,7 @@ import com.google.inject.Provides;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.SongClipboard;
 import com.utsusynth.utsu.view.song.track.Track;
-import com.utsusynth.utsu.view.song.note.Lyric;
+import com.utsusynth.utsu.view.song.note.lyric.Lyric;
 import com.utsusynth.utsu.view.song.note.NoteFactory;
 import com.utsusynth.utsu.view.song.note.envelope.EnvelopeFactory;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
