@@ -98,6 +98,7 @@ public class NoteFactory {
         return trackNote;
     }
 
+    /** Create a note to appear in the background of the bulk editor. */
     public Note createBackgroundNote(int row, double startX, double widthX, Scaler noteScaler) {
         // Should remove drag edge.
         Note trackNote = new Note(
@@ -113,6 +114,7 @@ public class NoteFactory {
                 quantizer,
                 noteScaler);
         trackNote.setToDisplayOnly();
+        trackNote.setCroppingEnabled(false);
         trackNote.setValid(true);
         return trackNote;
     }

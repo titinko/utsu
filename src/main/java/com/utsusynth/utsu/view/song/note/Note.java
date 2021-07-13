@@ -58,6 +58,7 @@ public class Note implements TrackItem, Comparable<Note> {
     private boolean isValid = false;
     private boolean isHighlighted = false;
     private boolean isDisplayOnly = false;
+    private boolean croppingEnabled = true;
 
     private enum SubMode {
         CLICKING, DRAGGING, RESIZING,
@@ -157,7 +158,7 @@ public class Note implements TrackItem, Comparable<Note> {
 
     @Override
     public StackPane redraw(double offsetX) {
-        double colWidth = scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
+        double colWidth = getTrackColWidth();
         Pane note = new Pane();
         note.setPrefHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
         note.getStyleClass().addAll(
@@ -458,7 +459,7 @@ public class Note implements TrackItem, Comparable<Note> {
     @Override
     public void removeColumn(int colNum) {
         drawnColumns.remove(colNum);
-        double offsetX = colNum * scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
+        double offsetX = colNum * getTrackColWidth();
         drawnNotes.remove(offsetX);
         drawnDragEdges.remove(offsetX);
         drawnOverlaps.remove(offsetX);
@@ -544,6 +545,11 @@ public class Note implements TrackItem, Comparable<Note> {
         dragEdgeWidthX.set(0);
     }
 
+    /** Will need to redraw the note for this change to take effect. */
+    public void setCroppingEnabled(boolean croppingEnabled) {
+        this.croppingEnabled = croppingEnabled;
+    }
+
     public boolean isLyricInputOpen() {
         return lyric.isTextFieldOpen();
     }
@@ -619,7 +625,7 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     private void adjustNote(double newWidthX) {
-        double colWidthX = scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
+        double colWidthX = getTrackColWidth();
         for (double offsetX : drawnNotes.keySet()) {
             Pane note = drawnNotes.get(offsetX);
             double startOfSection = Math.min(Math.max(startX.get(), offsetX), offsetX + colWidthX);
@@ -644,7 +650,7 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     private void adjustDragEdge(double newWidthX) {
-        double colWidthX = scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
+        double colWidthX = getTrackColWidth();
         double newEndX = newWidthX + getStartX();
         for (double offsetX : drawnDragEdges.keySet()) {
             double startOfSection = Math.min(Math.max(newEndX - dragEdgeWidthX.get(), offsetX), offsetX + colWidthX);
@@ -666,6 +672,11 @@ public class Note implements TrackItem, Comparable<Note> {
 
     private int getQuantizedStart(int quantization) {
         return getAbsPositionMs() / quantization;
+    }
+
+    /** Returns the width of a column, or a very large number if cropping is disabled. */
+    private double getTrackColWidth() {
+        return croppingEnabled ? scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get() : Integer.MAX_VALUE;
     }
 
     @Override
