@@ -118,7 +118,7 @@ public class Lyric implements TrackItem {
 
         TextField textField = new TextField();
         textField.setFont(Font.font(9));
-        textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 2);
+        textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 2);
         textField.setMaxWidth(Quantizer.TEXT_FIELD_WIDTH);
         textField.setOnAction(event -> closeTextFieldIfNeeded());
         textField.focusedProperty().addListener(event -> {
@@ -138,8 +138,8 @@ public class Lyric implements TrackItem {
         activeNode.translateYProperty().bind(currentY);
         drawnActiveNodes.put(offsetX, activeNode);
 
-        Rectangle clip = new Rectangle(scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get(),
-                scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        Rectangle clip = new Rectangle(scaler.scaleX(Quantizer.TRACK_COL_WIDTH),
+                scaler.scaleY(Quantizer.ROW_HEIGHT));
         clip.xProperty().bind(startX.subtract(offsetX).negate());
         activeNode.setClip(clip);
         return activeNode;
@@ -158,7 +158,7 @@ public class Lyric implements TrackItem {
     @Override
     public void removeColumn(int colNum) {
         drawnColumns.remove(colNum);
-        double offsetX = colNum * scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
+        double offsetX = colNum * scaler.scaleX(Quantizer.TRACK_COL_WIDTH);
         drawnHBoxes.remove(offsetX);
         drawnLyrics.remove(offsetX);
         drawnAliases.remove(offsetX);

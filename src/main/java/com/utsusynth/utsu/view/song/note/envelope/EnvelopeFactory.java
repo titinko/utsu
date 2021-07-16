@@ -40,13 +40,13 @@ public class EnvelopeFactory {
 
         // Do not scale y axis for envelopes.
         double[] xValues = new double[] {
-                scaler.scalePos(startPos).get(),
-                scaler.scalePos(startPos + p1).get(),
-                scaler.scalePos(startPos + p1 + p2).get(),
-                scaler.scalePos(startPos + p1 + p2 + p5).get(),
-                scaler.scalePos(endPos - p4 - p3).get(),
-                scaler.scalePos(endPos - p4).get(),
-                scaler.scalePos(endPos).get()};
+                scaler.scalePos(startPos),
+                scaler.scalePos(startPos + p1),
+                scaler.scalePos(startPos + p1 + p2),
+                scaler.scalePos(startPos + p1 + p2 + p5),
+                scaler.scalePos(endPos - p4 - p3),
+                scaler.scalePos(endPos - p4),
+                scaler.scalePos(endPos)};
         double[] yValues = new double[] {100, v1, v2, v5, v3, v4, 100};
 
         return new Envelope(xValues, yValues, callback, 100, scaler);
@@ -65,8 +65,8 @@ public class EnvelopeFactory {
         double p4 = widths[3];
         double p5 = widths[4];
 
-        double maxAllowedWidth = editorWidth - editorScaler.scaleX(p1 + p4).get();
-        double totalWidth = editorScaler.scaleX(p2 + p3 + p5).get();
+        double maxAllowedWidth = editorWidth - editorScaler.scaleX(p1 + p4);
+        double totalWidth = editorScaler.scaleX(p2 + p3 + p5);
         if (maxAllowedWidth > 0 && totalWidth > maxAllowedWidth) {
             double scaleFactor = maxAllowedWidth / totalWidth;
             if (scaleToFit) {
@@ -90,11 +90,11 @@ public class EnvelopeFactory {
         // Do not scale y axis for envelopes.
         double[] xValues = new double[] {
                 0,
-                editorScaler.scaleX(p1).get(),
-                editorScaler.scaleX(p1 + p2).get(),
-                editorScaler.scaleX(p1 + p2 + p5).get(),
-                editorWidth - editorScaler.scaleX(p4 + p3).get(),
-                editorWidth - editorScaler.scaleX(p4).get(),
+                editorScaler.scaleX(p1),
+                editorScaler.scaleX(p1 + p2),
+                editorScaler.scaleX(p1 + p2 + p5),
+                editorWidth - editorScaler.scaleX(p4 + p3),
+                editorWidth - editorScaler.scaleX(p4),
                 editorWidth};
         double[] yValues = new double[] {editorHeight, v1, v2, v5, v3, v4, editorHeight};
 

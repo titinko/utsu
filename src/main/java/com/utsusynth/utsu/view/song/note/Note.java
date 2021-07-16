@@ -101,7 +101,7 @@ public class Note implements TrackItem, Comparable<Note> {
             }
         });
         currentY = new SimpleDoubleProperty(
-                scaler.scaleY(currentRow * Quantizer.ROW_HEIGHT).get());
+                scaler.scaleY(currentRow * Quantizer.ROW_HEIGHT));
         overlapWidthX = new SimpleDoubleProperty(0);
         dragEdgeWidthX = new SimpleIntegerProperty(3);
         drawnNotes = new HashMap<>();
@@ -111,7 +111,7 @@ public class Note implements TrackItem, Comparable<Note> {
 
         this.currentRow.addListener((obs, oldRow, newRow) -> {
             if (!oldRow.equals(newRow)) {
-                currentY.set(scaler.scaleY(newRow.doubleValue() * Quantizer.ROW_HEIGHT).get());
+                currentY.set(scaler.scaleY(newRow.doubleValue() * Quantizer.ROW_HEIGHT));
             }
         });
 
@@ -160,7 +160,7 @@ public class Note implements TrackItem, Comparable<Note> {
     public StackPane redraw(double offsetX) {
         double colWidth = getTrackColWidth();
         Pane note = new Pane();
-        note.setPrefHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get() - 1);
+        note.setPrefHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
         note.getStyleClass().addAll(
                 "track-note",
                 isValid ? "valid" : "invalid",
@@ -564,7 +564,7 @@ public class Note implements TrackItem, Comparable<Note> {
         double oldOverlap = overlapWidthX.get();
         double noteWidthMs = scaler.unscaleX(getWidth());
         if (noteWidthMs > distanceToNextNote) {
-            overlapWidthX.set(scaler.scaleX(noteWidthMs - distanceToNextNote).get());
+            overlapWidthX.set(scaler.scaleX(noteWidthMs - distanceToNextNote));
         } else {
             overlapWidthX.set(0);
         }
@@ -584,7 +584,7 @@ public class Note implements TrackItem, Comparable<Note> {
     /** Only moves the visual note. */
     public void moveNoteElement(int positionMsDelta, int rowDelta) {
         int newPositionMs = getAbsPositionMs() + positionMsDelta;
-        startX.set(scaler.scalePos(newPositionMs).get());
+        startX.set(scaler.scalePos(newPositionMs));
         int newRow = getRow() + rowDelta;
         currentRow.set(newRow);
     }
@@ -620,7 +620,7 @@ public class Note implements TrackItem, Comparable<Note> {
     }
 
     private void resizeNote(int newDuration) {
-        widthX.set(scaler.scaleX(newDuration).get() - 1);
+        widthX.set(scaler.scaleX(newDuration) - 1);
         track.updateNote(this);
     }
 
@@ -676,7 +676,7 @@ public class Note implements TrackItem, Comparable<Note> {
 
     /** Returns the width of a column, or a very large number if cropping is disabled. */
     private double getTrackColWidth() {
-        return croppingEnabled ? scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get() : Integer.MAX_VALUE;
+        return croppingEnabled ? scaler.scaleX(Quantizer.TRACK_COL_WIDTH) : Integer.MAX_VALUE;
     }
 
     @Override

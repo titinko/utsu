@@ -42,8 +42,8 @@ public class NoteFactory {
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(
                 PitchUtils.pitchToRowNum(note.getPitch()),
-                scaler.scalePos(absStart).get(),
-                scaler.scaleX(absDuration).get() - 1,
+                scaler.scalePos(absStart),
+                scaler.scaleX(absDuration) - 1,
                 lyric,
                 callback,
                 vibratoEditor,
@@ -83,8 +83,8 @@ public class NoteFactory {
         Lyric lyric = lyricProvider.get();
         Note trackNote = new Note(
                 row,
-                scaler.scalePos(positionMs).get(),
-                scaler.scaleX(durationMs).get() - 1,
+                scaler.scalePos(positionMs),
+                scaler.scaleX(durationMs) - 1,
                 lyric,
                 callback,
                 vibratoEditor,

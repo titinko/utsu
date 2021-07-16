@@ -66,7 +66,7 @@ public class PlayBar implements TrackItem {
 
     @Override
     public Node redraw(double offsetX) {
-        Line bar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT).get());
+        Line bar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT));
         bar.translateXProperty().bind(xValue.subtract(offsetX));
         bar.getStyleClass().add("playback-bar");
         bar.setStrokeWidth(STROKE_WIDTH);
@@ -75,7 +75,7 @@ public class PlayBar implements TrackItem {
         // Add a backing bar to handle a Windows-specific optimization issue.
         Node playBarNode;
         if (System.getProperty("os.name").toLowerCase().contains("win")) {
-            Line backingBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT).get());
+            Line backingBar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT));
             backingBar.translateXProperty().bind(xValue.subtract(offsetX));
             backingBar.getStyleClass().add("playback-backing-bar");
             playBarNode = new Group(bar, backingBar);

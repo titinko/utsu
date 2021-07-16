@@ -12,8 +12,6 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
-import com.utsusynth.utsu.files.PreferencesManager;
-import com.utsusynth.utsu.files.PreferencesManager.AutoscrollMode;
 import com.utsusynth.utsu.view.song.note.AddNoteBox;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
@@ -36,7 +34,6 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
@@ -58,10 +55,6 @@ public class SongEditor {
     // Whether the vibrato editor is active for this song editor.
     private final BooleanProperty vibratoEditor;
 
-    //private HBox measures;
-    private Region canvas;
-    //private Rectangle selection;
-    //private int numMeasures;
     private SongCallback model;
 
     // Temporary cache values.
@@ -172,7 +165,7 @@ public class SongEditor {
 
         // Add as many octaves as needed.
         NoteData lastNote = notes.get(notes.size() - 1);
-        setNumMeasures((lastNote.getPosition() / Quantizer.COL_WIDTH / 4) + 4);
+        track.setNumMeasures((lastNote.getPosition() / Quantizer.COL_WIDTH / 4) + 4);
 
         // Add all notes.
         NoteData prevNote = notes.get(0);
@@ -220,22 +213,6 @@ public class SongEditor {
         return track.getDynamicsTrack();
     }
 
-    public Group getEnvelopesElement() {
-        return noteMap.getEnvelopesElement();
-    }
-
-    public Group getPitchbendsElement() {
-        return noteMap.getPitchbendsElement();
-    }
-
-    public Group getPlaybackElement() {
-        return playbackManager.getElement();
-    }
-
-    public Region getCanvasElement() {
-        return canvas;
-    }
-
     /**
      * Start the playback bar animation. It will end on its own.
      */
@@ -275,7 +252,7 @@ public class SongEditor {
     }
 
     public double getWidthX() {
-        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
         return measureWidth * (track.getNumMeasures() + 1); // Include pre-roll.
     }
 
@@ -500,7 +477,7 @@ public class SongEditor {
         } else if (curNote != null) {
             curNote.adjustForOverlap(Integer.MAX_VALUE);
             // If this is the last note, adjust number of measures.
-            setNumMeasures((curNote.getBounds().getMaxMs() / Quantizer.COL_WIDTH / 4) + 4);
+            track.setNumMeasures((curNote.getBounds().getMaxMs() / Quantizer.COL_WIDTH / 4) + 4);
         }
     }
 
@@ -572,110 +549,16 @@ public class SongEditor {
         track.scrollToPosition(position);
     }
 
-    public void selectivelyShowRegion(double centerPercent, double margin) {
-        int numMeasures = track.getNumMeasures();
-        int measureWidthMs = 4 * Quantizer.COL_WIDTH;
-        int marginMeasures = ((int) (margin / Math.round(scaler.scaleX(measureWidthMs).get()))) + 3;
-        int centerMeasure = RoundUtils.round((numMeasures) * centerPercent) - 1; // Pre-roll.
-        int clampedStartMeasure =
-                Math.min(Math.max(centerMeasure - marginMeasures, 0), numMeasures - 1);
-        int clampedEndMeasure =
-                Math.min(Math.max(centerMeasure + marginMeasures, 0), numMeasures - 1);
-        // Use measures to we don't have to redraw the visible region too much.
-        showMeasures(clampedStartMeasure, clampedEndMeasure + 1);
-        noteMap.setVisibleRegion(
-                new RegionBounds(
-                        clampedStartMeasure * measureWidthMs,
-                        (clampedEndMeasure + 1) * measureWidthMs));
-    }
-
     private void clearTrack() {
         // Remove current track.
         playbackManager.clear();
         noteMap.clear();
-        // measures = new HBox();
-        // selection = new Rectangle();
-
-        // numMeasures = 0;
-        // addMeasure(false);
-        setNumMeasures(4);
-    }
-
-    private void showMeasures(int startMeasure, int endMeasure) {
-        /*int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
-        int startX = measureWidth * startMeasure;
-        int endX = measureWidth * endMeasure;
-        measures.getChildren().forEach(child -> {
-            int measureX = RoundUtils.round(child.getLayoutX());
-            child.setVisible(measureX >= startX && measureX <= endX);
-        });*/
-    }
-
-    private void setNumMeasures(int newNumMeasures) {
-        track.setNumMeasures(newNumMeasures);
-
-        /*if (newNumMeasures < 0) {
-            return;
-        } else if (newNumMeasures > numMeasures) {
-            for (int i = numMeasures; i < newNumMeasures; i++) {
-                addMeasure(true);
-            }
-        } else if (newNumMeasures == numMeasures) {
-            // Nothing needs to be done.
-            return;
-        } else {
-            int measureWidth = 4 * RoundUtils.round(scaler.scaleX(Quantizer.COL_WIDTH).get());
-            int maxWidth = measureWidth * (newNumMeasures + 1); // Include pre-roll.
-            // Remove measures.
-            measures.getChildren().removeIf(
-                    child -> RoundUtils.round(child.getLayoutX()) >= maxWidth);
-            numMeasures = newNumMeasures;
-        }*/
-    }
-
-    private void addMeasure(boolean enabled) {
-        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
-        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
-
-        Pane newMeasure = new Pane();
-        newMeasure.setPrefSize(colWidth * 4, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
-        int rowNum = 0;
-        for (int octave = 7; octave > 0; octave--) {
-            for (String pitch : PitchUtils.REVERSE_PITCHES) {
-                // Add row to track.
-                for (int colNum = 0; colNum < 4; colNum++) {
-                    Pane newCell = new Pane();
-                    newCell.setPrefSize(colWidth, rowHeight);
-                    newCell.getStyleClass().add("track-cell");
-                    if (enabled) {
-                        newCell.getStyleClass()
-                                .add(pitch.endsWith("#") ? "black-key" : "white-key");
-                    } else {
-                        newCell.getStyleClass().add("gray-key");
-                    }
-                    if (colNum == 0) {
-                        newCell.getStyleClass().add("measure-start");
-                    } else if (colNum == 3) {
-                        newCell.getStyleClass().add("measure-end");
-                    }
-                    newCell.setTranslateX(colWidth * colNum);
-                    newCell.setTranslateY(rowHeight * rowNum);
-                    newMeasure.getChildren().add(newCell);
-                }
-                rowNum++;
-            }
-        }
-        //measures.getChildren().add(newMeasure);
-
-        if (enabled) {
-            //activateMeasure(newMeasure);
-            //numMeasures++;
-        }
+        track.reset();
     }
 
     private VBox createNoteColumnInternal(int colNum) {
-        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
-        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH);
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT);
 
         VBox column = new VBox();
         for (int octave = 7; octave > 0; octave--) {
@@ -704,7 +587,7 @@ public class SongEditor {
 
     private void activateNoteColumn(VBox column, int colNum) {
         column.setOnMousePressed(event -> {
-            double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
+            double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH);
             // End any leftover drag action.
             if (dragHandler != null) {
                 dragHandler.onDragReleased(offsetX + event.getX(), event.getY());
@@ -720,7 +603,7 @@ public class SongEditor {
                         track.getNoteTrack(), event.getScreenX(), event.getScreenY());
             }
             if (event.getButton() == MouseButton.SECONDARY || event.isShiftDown()) {
-                double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH);
                 double endX = offsetX + event.getX();
                 int quantSize = quantizer.getQuant();
                 int endMs = RoundUtils.round(
@@ -736,7 +619,7 @@ public class SongEditor {
                     @Override
                     public void onDragged(double absoluteX, double absoluteY) {
                         // Draw selection rectangle.
-                        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
                         double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
                         double endY = Math.min(column.getHeight(), Math.max(0, absoluteY));
                         selectionBox.setStartX(Math.min(curX, endX));
@@ -771,7 +654,7 @@ public class SongEditor {
                         } else {
                             // Set cursor.
                             int quantSize = quantizer.getQuant();
-                            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                            double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
                             double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
                             int endMs = RoundUtils.round(
                                     scaler.unscalePos(endX) / quantSize) * quantSize;
@@ -784,7 +667,7 @@ public class SongEditor {
                 dragHandler = new DragHandler() {
                     @Override
                     public void onDragged(double absoluteX, double absoluteY) {
-                        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
                         double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
                         int quantSize = quantizer.getQuant();
                         int startMs = RoundUtils.round(
@@ -794,11 +677,11 @@ public class SongEditor {
                         if (endMs > startMs) {
                             // Draw selection rectangle.
                             int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
-                            addNoteBox.setStartX(scaler.scalePos(startMs).get());
+                            addNoteBox.setStartX(scaler.scalePos(startMs));
                             addNoteBox.setStartY(
-                                    scaler.scaleY(startRow * Quantizer.ROW_HEIGHT).get());
-                            addNoteBox.setWidth(scaler.scaleX(endMs - startMs).get());
-                            addNoteBox.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+                                    scaler.scaleY(startRow * Quantizer.ROW_HEIGHT));
+                            addNoteBox.setWidth(scaler.scaleX(endMs - startMs));
+                            addNoteBox.setHeight(scaler.scaleY(Quantizer.ROW_HEIGHT));
                             track.insertItem(track.getNoteTrack(), addNoteBox);
                         } else {
                             track.removeItem(track.getNoteTrack(), addNoteBox);
@@ -808,7 +691,7 @@ public class SongEditor {
                     @Override
                     public void onDragReleased(double absoluteX, double absoluteY) {
                         track.removeItem(track.getNoteTrack(), addNoteBox);
-                        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH).get();
+                        double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
                         double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
                         int quantSize = quantizer.getQuant();
                         int startMs = RoundUtils.round(
@@ -843,7 +726,7 @@ public class SongEditor {
     }
 
     private VBox createDyanmicsColumnInternal(int colNum) {
-        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
+        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH);
         double rowHeight = 50;
 
         VBox newDynamics = new VBox();

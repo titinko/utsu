@@ -86,12 +86,12 @@ public class Vibrato implements TrackItem {
     @Override
     public double getStartX() {
         double lengthMs = (noteEndMs - noteStartMs) * (vibrato[0] / 100.0); // Vibrato length.
-        return scaler.scalePos(noteEndMs - lengthMs).get();
+        return scaler.scalePos(noteEndMs - lengthMs);
     }
 
     @Override
     public double getWidth() {
-        return scaler.scaleX((noteEndMs - noteStartMs) * (vibrato[0] / 100.0)).get();
+        return scaler.scaleX((noteEndMs - noteStartMs) * (vibrato[0] / 100.0));
     }
 
     public Group redraw() {
@@ -318,7 +318,7 @@ public class Vibrato implements TrackItem {
         // Draw path.
         double curStartMs = noteEndMs - lengthMs;
         vibratoPath.getElements().add(
-                new MoveTo(scaler.scalePos(curStartMs).get() - offsetX, noteY));
+                new MoveTo(scaler.scalePos(curStartMs) - offsetX, noteY));
         for (VibratoCurve hump : humps) {
             hump.addToPath(vibratoPath, curStartMs, offsetX);
             curStartMs += hump.getWidthMs();
@@ -349,25 +349,25 @@ public class Vibrato implements TrackItem {
 
         public Editor() {
             // Values that don't change.
-            this.minX = new SimpleDoubleProperty(scaler.scalePos(noteStartMs).get() - offsetX);
-            this.maxX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs).get() - offsetX);
+            this.minX = new SimpleDoubleProperty(scaler.scalePos(noteStartMs) - offsetX);
+            this.maxX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs) - offsetX);
             this.baseY = new SimpleDoubleProperty(noteY);
 
             this.centerY = new SimpleDoubleProperty(
-                    scaler.scaleY(-vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT).get() + noteY);
+                    scaler.scaleY(-vibrato[6] / 100.0 * Quantizer.ROW_HEIGHT) + noteY);
             this.amplitudeY = new SimpleDoubleProperty(
-                    scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT).get());
+                    scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT));
 
             double lengthMs = (noteEndMs - noteStartMs) * (vibrato[0] / 100.0); // Vibrato length.
             this.startX = new SimpleDoubleProperty(
-                    scaler.scalePos(noteEndMs - lengthMs).get() - offsetX);
+                    scaler.scalePos(noteEndMs - lengthMs) - offsetX);
             double fadeInMs = noteEndMs - lengthMs + (lengthMs * (vibrato[3] / 100.0));
-            this.fadeInX = new SimpleDoubleProperty(scaler.scalePos(fadeInMs).get() - offsetX);
+            this.fadeInX = new SimpleDoubleProperty(scaler.scalePos(fadeInMs) - offsetX);
             double fadeOutMs = noteEndMs - (lengthMs * (vibrato[4] / 100.0));
-            this.fadeOutX = new SimpleDoubleProperty(scaler.scalePos(fadeOutMs).get() - offsetX);
+            this.fadeOutX = new SimpleDoubleProperty(scaler.scalePos(fadeOutMs) - offsetX);
 
             this.maxSliderX = new SimpleDoubleProperty(
-                    Math.min(maxX.get(), startX.get() + scaler.scaleX(Quantizer.COL_WIDTH).get()));
+                    Math.min(maxX.get(), startX.get() + scaler.scaleX(Quantizer.COL_WIDTH)));
             this.frqX = new SimpleDoubleProperty(
                     startX.get() + (maxSliderX.get() - startX.get()) * (vibrato[1] - 10) / 448.0);
             this.phaseX = new SimpleDoubleProperty(
@@ -477,8 +477,7 @@ public class Vibrato implements TrackItem {
                     startX.set(x);
                     fadeInX.set(x + ((maxX.get() - x) * vibrato[3] / 100.0));
                     fadeOutX.set(maxX.get() - ((maxX.get() - x) * vibrato[4] / 100.0));
-                    maxSliderX.set(
-                            Math.min(maxX.get(), x + scaler.scaleX(Quantizer.COL_WIDTH).get()));
+                    maxSliderX.set(Math.min(maxX.get(), x + scaler.scaleX(Quantizer.COL_WIDTH)));
                     frqX.set(x + (maxSliderX.get() - x) * (vibrato[1] - 10) / 448.0);
                     phaseX.set(x + (maxSliderX.get() - x) * vibrato[5] / 100.0);
                     frqSlopeX.set(x + (maxSliderX.get() - x) * (vibrato[8] + 100) / 200.0);
@@ -560,7 +559,7 @@ public class Vibrato implements TrackItem {
         }
 
         private double centsToY(double cents) {
-            return scaler.scaleY(cents / 100.0 * Quantizer.ROW_HEIGHT).get();
+            return scaler.scaleY(cents / 100.0 * Quantizer.ROW_HEIGHT);
         }
 
         private int yToCents(double y) {

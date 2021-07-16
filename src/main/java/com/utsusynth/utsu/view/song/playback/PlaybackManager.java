@@ -64,12 +64,12 @@ public class PlaybackManager {
     public DoubleProperty startPlayback(Duration duration, RegionBounds playRegion) {
         if (callback != null && duration != Duration.UNKNOWN && duration != Duration.INDEFINITE) {
             playBar.clearListeners();
-            playBar.setX(scaler.scalePos(playRegion.getMinMs()).get());
+            playBar.setX(scaler.scalePos(playRegion.getMinMs()));
             callback.setBar(playBar);
 
             playback.stop();
             playback.getKeyFrames().clear();
-            double finalX = scaler.scalePos(playRegion.getMaxMs()).get();
+            double finalX = scaler.scalePos(playRegion.getMaxMs());
             playback.getKeyFrames().add(
                     new KeyFrame(duration, new KeyValue(playBar.xProperty(), finalX)));
             playback.play();
@@ -121,9 +121,9 @@ public class PlaybackManager {
 
         // Add start and stop bars to the track at the correct location.
         if (callback != null) {
-            startBar.setX(scaler.scalePos(region.getMinMs()).get());
+            startBar.setX(scaler.scalePos(region.getMinMs()));
             callback.setBar(startBar);
-            endBar.setX(scaler.scalePos(region.getMaxMs()).get());
+            endBar.setX(scaler.scalePos(region.getMaxMs()));
             callback.setBar(endBar);
         }
 
@@ -156,9 +156,9 @@ public class PlaybackManager {
         // Add start and stop bars to the track at the correct location.
         if (callback != null) {
             startBar.setX(
-                    scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
+                    scaler.scalePos(highlighted.first().getValidBounds().getMinMs()));
             callback.setBar(startBar);
-            endBar.setX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
+            endBar.setX(scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()));
             callback.setBar(endBar);
         }
     }
@@ -173,10 +173,10 @@ public class PlaybackManager {
             // Add start and stop bars to the track if necessary.
             if (callback != null) {
                 startBar.setX(
-                        scaler.scalePos(highlighted.first().getValidBounds().getMinMs()).get());
+                        scaler.scalePos(highlighted.first().getValidBounds().getMinMs()));
                 callback.setBar(startBar);
                 endBar.setX(
-                        scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()).get());
+                        scaler.scalePos(highlighted.last().getValidBounds().getMaxMs()));
                 callback.setBar(endBar);
             }
         }
@@ -203,7 +203,7 @@ public class PlaybackManager {
     public void setCursor(int positionMs) {
         clearHighlights();
         if (callback != null) {
-            startBar.setX(scaler.scalePos(positionMs).get());
+            startBar.setX(scaler.scalePos(positionMs));
             callback.setBar(startBar);
         }
     }

@@ -26,7 +26,7 @@ public class Piano {
     }
 
     private void addPianoKeys() {
-        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT);
         pianoGrid = new Pane();
         pianoGrid.setPrefSize(
                 LEFT_KEY_WIDTH + RIGHT_KEY_WIDTH, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);

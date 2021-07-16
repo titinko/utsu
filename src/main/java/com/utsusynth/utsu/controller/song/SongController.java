@@ -37,7 +37,6 @@ import com.utsusynth.utsu.view.song.track.TrackItemSet;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -231,29 +230,7 @@ public class SongController implements EditorController, Localizable {
                 return callback.getCheckboxValue(checkboxType);
             }
         });
-        anchorCenter.widthProperty().addListener((obs, oldWidthNum, newWidthNum) -> {
-            // Scrollbar should still be at its old location.
-            double oldWidth = oldWidthNum.doubleValue() - scrollPaneCenter.getWidth();
-            double newWidth = newWidthNum.doubleValue() - scrollPaneCenter.getWidth();
-            if (oldWidth > 0 && newWidth > 0) {
-                scrollPaneCenter.setHvalue(scrollPaneCenter.getHvalue() * newWidth / oldWidth);
-            }
-        });
         scrollPaneLeft.setVvalue(0.5);
-        //scrollPaneLeft.vvalueProperty().bindBidirectional(scrollPaneCenter.vvalueProperty());
-        //scrollPaneCenter.hvalueProperty().bindBidirectional(scrollPaneBottom.hvalueProperty());
-        scrollPaneCenter.hvalueProperty().addListener(event -> {
-            double hvalue = scrollPaneCenter.getHvalue();
-            double margin = scrollPaneCenter.getViewportBounds().getWidth();
-            songEditor.selectivelyShowRegion(hvalue, margin);
-        });
-        scrollPaneCenter.viewportBoundsProperty().addListener((event, oldValue, newValue) -> {
-            if (oldValue.getWidth() != newValue.getWidth()) {
-                double hvalue = scrollPaneCenter.getHvalue();
-                double margin = scrollPaneCenter.getViewportBounds().getWidth();
-                songEditor.selectivelyShowRegion(hvalue, margin);
-            }
-        });
         scrollPaneCenter.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPaneCenter.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPaneBottom.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -430,14 +407,8 @@ public class SongController implements EditorController, Localizable {
         // Reloads current song.
         anchorCenter.getChildren().clear();
         anchorCenter.getChildren().add(noteTrack);
-        //anchorCenter.getChildren().add(songEditor.getCanvasElement());
-        //anchorCenter.getChildren().add(songEditor.getNotesElement());
-        //anchorCenter.getChildren().add(songEditor.getPitchbendsElement());
-        //anchorCenter.getChildren().add(songEditor.getPlaybackElement());
-        //anchorCenter.getChildren().add(songEditor.getSelectionElement());
         anchorBottom.getChildren().clear();
-        anchorBottom.getChildren().add(songEditor.getDynamicsElement());
-        //anchorBottom.getChildren().add(songEditor.getEnvelopesElement());
+        anchorBottom.getChildren().add(dynamicsTrack);
     }
 
     @Override

@@ -49,6 +49,13 @@ public class Track {
         this.dragHandler = dragHandler;
     }
 
+    public void reset() {
+        // Clear all items and set number of measures to 4.
+        this.numMeasures = 4;
+        setNumMeasures(noteTrack, numMeasures, false);
+        setNumMeasures(dynamicsTrack, numMeasures, false);
+    }
+
     public int getNumMeasures() {
         return numMeasures;
     }
@@ -58,16 +65,17 @@ public class Track {
             return; // Don't refresh unless you have to.
         }
         this.numMeasures = numMeasures;
-        setNumMeasures(noteTrack, numMeasures);
-        setNumMeasures(dynamicsTrack, numMeasures);
+        setNumMeasures(noteTrack, numMeasures, true);
+        setNumMeasures(dynamicsTrack, numMeasures, true);
     }
 
-    private void setNumMeasures(ListView<TrackItemSet> updateMe, int numMeasures) {
+    private void setNumMeasures(
+            ListView<TrackItemSet> updateMe, int numMeasures, boolean preserveItems) {
         if (updateMe != null) {
             int numCols = (numMeasures + 1) * 4;
             ObservableList<TrackItemSet> newItems = FXCollections.observableArrayList();
             for (int i = 0; i < numCols; i++) {
-                if (updateMe.getItems().size() > i) {
+                if (preserveItems && updateMe.getItems().size() > i) {
                     newItems.add(updateMe.getItems().get(i));
                 } else {
                     newItems.add(new TrackItemSet());
@@ -108,17 +116,12 @@ public class Track {
     }
 
     private ListView<TrackItemSet> createNoteTrack() {
-        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
-        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
-
         noteTrack = new ListView<>();
         noteVScrollBar = null;
         noteTrack.setSelectionModel(new NoSelectionModel<>());
-        noteTrack.setFixedCellSize(colWidth);
         noteTrack.setOrientation(Orientation.HORIZONTAL);
         noteTrack.setCellFactory(source -> new ListCell<>() {
             {
-                setPrefHeight(rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
                 setStyle("-fx-padding: 0px;");
             }
             @Override
@@ -128,6 +131,8 @@ public class Track {
                     return; // Don't bother rendering if there is no item.
                 }
 
+                double colWidth = scaler.scaleX(Quantizer.COL_WIDTH);
+                double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT);
                 Pane graphic = new Pane();
                 graphic.setPrefSize(colWidth, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
 
@@ -173,7 +178,7 @@ public class Track {
             }
             event.consume();
         });
-        setNumMeasures(noteTrack, numMeasures);
+        setNumMeasures(noteTrack, numMeasures, false);
         return noteTrack;
     }
 
@@ -185,17 +190,14 @@ public class Track {
     }
 
     private ListView<TrackItemSet> createDynamicsTrack() {
-        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
         double rowHeight = 50;
 
         dynamicsTrack = new ListView<>();
         dynamicsTrack.setSelectionModel(new NoSelectionModel<>());
-        dynamicsTrack.setFixedCellSize(colWidth);
         dynamicsTrack.setOrientation(Orientation.HORIZONTAL);
         dynamicsTrack.setCellFactory(source -> new ListCell<>() {
             {
                 setPrefHeight(rowHeight * 2);
-                setPrefWidth(colWidth);
                 setStyle("-fx-padding: 0px;");
             }
             @Override
@@ -206,6 +208,7 @@ public class Track {
                 }
 
                 Pane graphic = new Pane();
+                double colWidth = scaler.scaleX(Quantizer.COL_WIDTH);
                 graphic.setPrefSize(colWidth, rowHeight * 2);
 
                 // Background.
@@ -228,7 +231,7 @@ public class Track {
                 event.consume();
             }
         });
-        setNumMeasures(dynamicsTrack, numMeasures);
+        setNumMeasures(dynamicsTrack, numMeasures, false);
         return dynamicsTrack;
     }
 
@@ -242,11 +245,11 @@ public class Track {
     public void scrollToPosition(int positionMs) {
         Optional<ScrollBar> hScroll = getScrollBar(noteTrack, Orientation.HORIZONTAL);
         if (hScroll.isPresent()) {
-            double totalWidth = scaler.scaleX(Quantizer.COL_WIDTH).get() * (numMeasures + 1) * 4;
+            double totalWidth = scaler.scaleX(Quantizer.COL_WIDTH) * (numMeasures + 1) * 4;
             double visibleWidth = noteTrack.getWidth() - Quantizer.SCROLL_BAR_WIDTH;
             if (visibleWidth != 0 && totalWidth > visibleWidth) {
                 // Should be between 0 and 1.
-                double hValue = scaler.scalePos(positionMs).get() / (totalWidth - visibleWidth);
+                double hValue = scaler.scalePos(positionMs) / (totalWidth - visibleWidth);
                 hScroll.get().setValue((hScroll.get().getMax() - hScroll.get().getMin()) * hValue);
             }
         }
@@ -316,7 +319,7 @@ public class Track {
             return noteTrack == null ? RegionBounds.INVALID : RegionBounds.WHOLE_SONG;
         }
         ScrollBar hScroll = maybeHScroll.get();
-        double totalWidth = scaler.scaleX(Quantizer.COL_WIDTH).get() * (numMeasures + 1) * 4;
+        double totalWidth = scaler.scaleX(Quantizer.COL_WIDTH) * (numMeasures + 1) * 4;
         double visibleWidth = noteTrack.getWidth() - Quantizer.SCROLL_BAR_WIDTH;
         if (visibleWidth <= 0 || totalWidth <= 0) {
             return RegionBounds.INVALID;
@@ -335,11 +338,10 @@ public class Track {
     public void insertItem(ListView<TrackItemSet> track, TrackItem trackItem) {
         double startX = trackItem.getStartX();
         double endX = trackItem.getStartX() + trackItem.getWidth();
-        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH).get();
+        double colWidth = scaler.scaleX(Quantizer.COL_WIDTH);
         int startColNum = (int) (startX / colWidth);
         int endColNum = (int) (endX / colWidth);
         ImmutableSet<Integer> columns = trackItem.getColumns();
-        HashSet<Integer> columnsToRemove = new HashSet<>();
         // Remove items that should no longer be rendered.
         for (Integer colNum : columns) {
             if (colNum >= startColNum && colNum <= endColNum) {

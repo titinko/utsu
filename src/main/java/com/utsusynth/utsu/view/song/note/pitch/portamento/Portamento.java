@@ -133,7 +133,7 @@ public class Portamento implements TrackItem {
     @Override
     public void removeColumn(int colNum) {
         drawnColumns.remove(colNum);
-        double offsetX = colNum * scaler.scaleX(Quantizer.TRACK_COL_WIDTH).get();
+        double offsetX = colNum * scaler.scaleX(Quantizer.TRACK_COL_WIDTH);
         drawnCurves.remove(offsetX);
         drawnSquares.remove(offsetX);
     }

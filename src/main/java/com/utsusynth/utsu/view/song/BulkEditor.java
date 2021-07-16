@@ -82,7 +82,7 @@ public class BulkEditor {
 
     public Group createPortamentoEditor(PitchbendData portamentoData, List<FilterType> filters) {
         currentFilters = filters;
-        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT);
         ListView<String> background =
                 createPitchbendBackground(editorWidth, editorHeight, rowHeight);
         portamentoGroup = new Group(background);
@@ -103,7 +103,7 @@ public class BulkEditor {
     private Group createNotesAndPortamento(PitchbendData portamentoData) {
         Group notesAndPortamento = new Group();
         int noteWidth = (int) Math.max(1, editorWidth.get() / 2);
-        int numRows = (int) (editorHeight.get() / scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        int numRows = (int) (editorHeight.get() / scaler.scaleY(Quantizer.ROW_HEIGHT));
         if (currentFilters.contains(FilterType.RISING_NOTE)) {
             Note first = noteFactory.createBackgroundNote(
                     numRows / 3 * 2, 0, noteWidth, scaler);
@@ -154,12 +154,12 @@ public class BulkEditor {
     /** Mini portamento view to be used in portamento config list. */
     private Group createMiniNotesAndPortamento(
             PitchbendData portamentoData, double width, double height, double rowHeight) {
-        double yScale = rowHeight / scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        double yScale = rowHeight / scaler.scaleY(Quantizer.ROW_HEIGHT);
         double xScale = (yScale + 1) / 2.0;
         Scaler miniScaler = scaler.derive(xScale, yScale);
 
         int noteWidth = (int) Math.max(1, width / 2);
-        int numRows = (int) (height / miniScaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        int numRows = (int) (height / miniScaler.scaleY(Quantizer.ROW_HEIGHT));
 
         Note note = noteFactory.createBackgroundNote(
                 numRows / 2, noteWidth, noteWidth, miniScaler);
@@ -263,7 +263,7 @@ public class BulkEditor {
 
     public VBox createVibratoEditor(PitchbendData vibratoData, Runnable vibratoCallback) {
         this.vibratoCallback = vibratoCallback;
-        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT);
         ListView<String> backgroundUpper =
                 createPitchbendBackground(editorWidth, editorHeight.divide(2), rowHeight);
         vibratoGroupUpper = new Group(backgroundUpper, createNoteAndVibrato(vibratoData));
@@ -289,7 +289,7 @@ public class BulkEditor {
 
     private Group createNoteAndVibrato(PitchbendData vibratoData) {
         int noteStart = (int) Math.max(1, editorWidth.get() / 4);
-        int numRows = (int) (editorHeight.get() * .5 / scaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        int numRows = (int) (editorHeight.get() * .5 / scaler.scaleY(Quantizer.ROW_HEIGHT));
         Note note = noteFactory.createBackgroundNote(
                 numRows / 2, noteStart, editorWidth.get() - noteStart, scaler);
         currentVibrato = pitchbendFactory.createVibrato(
@@ -321,12 +321,12 @@ public class BulkEditor {
 
     private Group createMiniNoteAndVibrato(
             PitchbendData vibratoData, double width, double height, double rowHeight) {
-        double yScale = rowHeight / scaler.scaleY(Quantizer.ROW_HEIGHT).get();
+        double yScale = rowHeight / scaler.scaleY(Quantizer.ROW_HEIGHT);
         double xScale = (yScale + 1) / 2.0;
         Scaler miniScaler = scaler.derive(xScale, yScale);
 
         int noteStart = (int) Math.max(1, width / 4);
-        int numRows = (int) (height / miniScaler.scaleY(Quantizer.ROW_HEIGHT).get());
+        int numRows = (int) (height / miniScaler.scaleY(Quantizer.ROW_HEIGHT));
 
         Note note = noteFactory.createBackgroundNote(
                 numRows / 2, noteStart, width - noteStart, miniScaler);

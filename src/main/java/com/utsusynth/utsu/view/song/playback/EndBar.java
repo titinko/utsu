@@ -53,7 +53,7 @@ public class EndBar implements TrackItem {
 
     @Override
     public Line redraw(double offsetX) {
-        Line bar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT).get());
+        Line bar = new Line(0, 0, 0, scaler.scaleY(TOTAL_HEIGHT));
         bar.translateXProperty().bind(xValue.subtract(offsetX));
         bar.getStyleClass().add("end-bar");
         bar.setStrokeWidth(STROKE_WIDTH);

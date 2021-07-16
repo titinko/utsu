@@ -14,33 +14,33 @@ public class ContinuousScaler implements Scaler {
     }
 
     @Override
-    public DoubleBinding scaleX(int scaleMe) {
-        return horizontalScale.multiply(scaleMe);
+    public double scaleX(int scaleMe) {
+        return horizontalScale.get() * scaleMe;
     }
 
     @Override
-    public DoubleBinding scaleX(double scaleMe) {
-        return horizontalScale.multiply(scaleMe);
+    public double scaleX(double scaleMe) {
+        return horizontalScale.get() * scaleMe;
     }
 
     @Override
-    public DoubleBinding scalePos(int scaleMe) {
-        return horizontalScale.multiply(Quantizer.COL_WIDTH * 4 + scaleMe);
+    public double scalePos(int scaleMe) {
+        return horizontalScale.get() * (Quantizer.COL_WIDTH * 4 + scaleMe);
     }
 
     @Override
-    public DoubleBinding scalePos(double scaleMe) {
-        return horizontalScale.multiply(Quantizer.COL_WIDTH * 4 + scaleMe);
+    public double scalePos(double scaleMe) {
+        return horizontalScale.get() * (Quantizer.COL_WIDTH * 4 + scaleMe);
     }
 
     @Override
-    public DoubleBinding scaleY(int scaleMe) {
-        return verticalScale.multiply(scaleMe);
+    public double scaleY(int scaleMe) {
+        return verticalScale.get() * scaleMe;
     }
 
     @Override
-    public DoubleBinding scaleY(double scaleMe) {
-        return verticalScale.multiply(scaleMe);
+    public double scaleY(double scaleMe) {
+        return verticalScale.get() * scaleMe;
     }
 
     @Override
