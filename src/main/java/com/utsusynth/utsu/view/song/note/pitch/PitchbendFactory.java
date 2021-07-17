@@ -39,7 +39,7 @@ public class PitchbendFactory {
             BooleanProperty showPitchbend) {
         Portamento portamento = createPortamento(note, prevPitch, pitchbend, callback);
         Vibrato vibrato = createVibrato(note, pitchbend, callback, vibratoEditor);
-        return new Pitchbend(portamento, vibrato, showPitchbend);
+        return new Pitchbend(scaler, portamento, vibrato, showPitchbend);
     }
 
     private Portamento createPortamento(

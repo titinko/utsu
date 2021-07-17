@@ -5,18 +5,25 @@ import java.util.Optional;
 
 import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.data.PitchbendData;
+import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.view.song.track.TrackItem;
 import com.utsusynth.utsu.view.song.note.pitch.portamento.Portamento;
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.Group;
+import javafx.scene.shape.Rectangle;
 
 public class Pitchbend implements TrackItem {
+    private final Scaler scaler;
     private final Portamento portamento;
     private final Vibrato vibrato;
     private final BooleanProperty showPitchbend;
     private final HashSet<Integer> drawnColumns;
 
-    Pitchbend(Portamento portamento, Vibrato vibrato, BooleanProperty showPitchbend) {
+    Pitchbend(
+            Scaler scaler, Portamento portamento, Vibrato vibrato, BooleanProperty showPitchbend) {
+        this.scaler = scaler;
         this.portamento = portamento;
         this.vibrato = vibrato;
         this.showPitchbend = showPitchbend;
@@ -57,6 +64,10 @@ public class Pitchbend implements TrackItem {
         Group group =
                 new Group(portamento.redraw(offsetX), vibrato.redraw(offsetX));
         group.visibleProperty().bind(showPitchbend);
+
+        Rectangle clip = new Rectangle(scaler.scaleX(Quantizer.TRACK_COL_WIDTH),
+                scaler.scaleY(Quantizer.ROW_HEIGHT) * PitchUtils.TOTAL_NUM_PITCHES);
+        group.setClip(clip);
         return group;
     }
 
