@@ -160,7 +160,7 @@ public class Note implements TrackItem, Comparable<Note> {
     public StackPane redraw(double offsetX) {
         double colWidth = getTrackColWidth();
         Pane note = new Pane();
-        note.setPrefHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 1);
+        note.setPrefHeight(scaler.scaleY(Quantizer.ROW_HEIGHT));
         note.getStyleClass().addAll(
                 "track-note",
                 isValid ? "valid" : "invalid",
@@ -631,7 +631,7 @@ public class Note implements TrackItem, Comparable<Note> {
             double startOfSection = Math.min(Math.max(startX.get(), offsetX), offsetX + colWidthX);
             double endOfSection =
                     Math.min(Math.max(startX.get() + newWidthX, offsetX), offsetX + colWidthX);
-            double adjustedWidthX = Math.max(0, endOfSection - startOfSection);
+            double adjustedWidthX = Math.max(0, endOfSection - startOfSection + 1);
             note.setPrefWidth(adjustedWidthX);
 
             String cropStyle = "no-crop";
