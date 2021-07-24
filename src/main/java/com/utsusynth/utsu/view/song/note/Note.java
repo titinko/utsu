@@ -208,6 +208,9 @@ public class Note implements TrackItem, Comparable<Note> {
     private void initializeLayout(StackPane newLayout, double offsetX) {
         Note thisNote = this;
         newLayout.setOnContextMenuRequested(event -> {
+            if (!isValid()) {
+                return;
+            }
             if (contextMenu != null) {
                 contextMenu.hide(); // Hide any existing context menu.
             }
@@ -222,12 +225,14 @@ public class Note implements TrackItem, Comparable<Note> {
                 if (contextMenu != null) {
                     contextMenu.hide();
                 }
-                if (event.isShiftDown()) {
-                    track.highlightInclusive(this);
-                } else if (track.isExclusivelyHighlighted(this)) {
-                    lyric.openTextField();
-                } else {
-                    track.highlightExclusive(this);
+                if (isValid()) {
+                    if (event.isShiftDown()) {
+                        track.highlightInclusive(this);
+                    } else if (track.isExclusivelyHighlighted(this)) {
+                        lyric.openTextField();
+                    } else {
+                        track.highlightExclusive(this);
+                    }
                 }
             }
             subMode = SubMode.CLICKING;
@@ -275,7 +280,7 @@ public class Note implements TrackItem, Comparable<Note> {
                                     () -> resizeNote(newDuration),
                                     () -> resizeNote(oldDuration));
                         }
-                        if (isHighlighted) {
+                        if (isHighlighted && isValid()) {
                             track.realignHighlights();
                         }
                         subMode = SubMode.CLICKING;
@@ -357,19 +362,21 @@ public class Note implements TrackItem, Comparable<Note> {
                                 track.recordNoteMovement(
                                         thisNote, newPos - startPos, newRow - startRow);
                             }
-                            if (isHighlighted) {
+                            if (isHighlighted && isValid()) {
                                 track.realignHighlights();
                             }
                         } else {
                             if (contextMenu != null) {
                                 contextMenu.hide();
                             }
-                            if (event.isShiftDown()) {
-                                track.highlightInclusive(thisNote);
-                            } else if (track.isExclusivelyHighlighted(thisNote)) {
-                                lyric.openTextField();
-                            } else {
-                                track.highlightExclusive(thisNote);
+                            if (isValid()) {
+                                if (event.isShiftDown()) {
+                                    track.highlightInclusive(thisNote);
+                                } else if (track.isExclusivelyHighlighted(thisNote)) {
+                                    lyric.openTextField();
+                                } else {
+                                    track.highlightExclusive(thisNote);
+                                }
                             }
                         }
                         subMode = SubMode.CLICKING;

@@ -14,6 +14,7 @@ import javafx.scene.text.Font;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Optional;
 
 public class Lyric implements TrackItem {
     private final HashMap<Double, HBox> drawnHBoxes;
@@ -121,6 +122,7 @@ public class Lyric implements TrackItem {
         textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 2);
         textField.setMaxWidth(Quantizer.TEXT_FIELD_WIDTH);
         textField.setOnAction(event -> closeTextFieldIfNeeded());
+        // Removing focus closes the text field unless another text field gets focus.
         textField.focusedProperty().addListener(event -> {
             for (TextField tf : drawnTextFields.values()) {
                 if (tf.isFocused()) {
@@ -128,6 +130,17 @@ public class Lyric implements TrackItem {
                 }
             }
             closeTextFieldIfNeeded();
+        });
+        // A change to the focused text field is copied to all others.
+        textField.textProperty().addListener((obs, oldValue, newValue) -> {
+            if (oldValue.equals(newValue) || !textField.isFocused()) {
+                return;
+            }
+            for (TextField tf : drawnTextFields.values()) {
+                if (!tf.isFocused()) {
+                    tf.setText(textField.getText());
+                }
+            }
         });
         drawnTextFields.put(offsetX, textField);
 
@@ -196,6 +209,8 @@ public class Lyric implements TrackItem {
             activeNode.getChildren().add(textField);
             textField.setText(lyric.get());
             textField.requestFocus();
+        }
+        for (TextField textField : drawnTextFields.values()) {
             textField.selectAll();
         }
     }
@@ -209,6 +224,7 @@ public class Lyric implements TrackItem {
             editMode.set(false);
             String oldLyric = lyric.get();
             String newLyric = oldLyric;
+
             for (double offsetX : drawnActiveNodes.keySet()) {
                 Group activeNode = drawnActiveNodes.get(offsetX);
                 activeNode.getChildren().clear();
