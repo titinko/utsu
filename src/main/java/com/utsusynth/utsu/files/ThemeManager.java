@@ -121,7 +121,7 @@ public class ThemeManager {
             System.out.println("Warning: tried to apply theme to a null scene.");
             return;
         }
-        String css = "file:///" + generatedCss.getAbsolutePath().replace("\\", "/");
+        String css = generatedCss.toURI().toString();
         if (scene.getStylesheets().size() > 0) {
             scene.getStylesheets().set(0, css);
         } else {
