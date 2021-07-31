@@ -983,14 +983,16 @@ public class SongController implements EditorController, Localizable {
                                     return noteData;
                                 }
                                 if (noteData.getPitchbend().isPresent()) {
-                                    PitchbendData newPitchbend = newPortamento.withVibrato(
-                                            Optional.of(noteData.getPitchbend().get().getVibrato()));
-                                    return noteData.withPitchbend(newPitchbend);
+                                    PitchbendData newPitchbend =
+                                            newPortamento.withVibrato(Optional.of(
+                                                    noteData.getPitchbend().get().getVibrato()));
+                                    return noteData.withPitchbend(newPitchbend.deepcopy());
                                 } else {
                                     return noteData;
                                 }
                             };
-                            modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
+                            modifyNotes(
+                                    song.get().getNotes(regionToUpdate, filters), transformNote);
                         }
 
                         @Override
@@ -1003,14 +1005,16 @@ public class SongController implements EditorController, Localizable {
                                     return noteData;
                                 }
                                 if (noteData.getPitchbend().isPresent()) {
-                                    PitchbendData newPitchbend = noteData.getPitchbend().get().withVibrato(
-                                            Optional.of(newVibrato.getVibrato()));
-                                    return noteData.withPitchbend(newPitchbend);
+                                    PitchbendData newPitchbend =
+                                            noteData.getPitchbend().get().withVibrato(
+                                                    Optional.of(newVibrato.getVibrato()));
+                                    return noteData.withPitchbend(newPitchbend.deepcopy());
                                 } else {
                                     return noteData;
                                 }
                             };
-                            modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
+                            modifyNotes(
+                                    song.get().getNotes(regionToUpdate, filters), transformNote);
                         }
 
                         @Override
@@ -1022,9 +1026,10 @@ public class SongController implements EditorController, Localizable {
                                 if (noteData == null) {
                                     return noteData;
                                 }
-                                return noteData.withEnvelope(newEnvelope);
+                                return noteData.withEnvelope(newEnvelope.deepcopy());
                             };
-                            modifyNotes(song.get().getNotes(regionToUpdate, filters), transformNote);
+                            modifyNotes(
+                                    song.get().getNotes(regionToUpdate, filters), transformNote);
                         }
                     });
             Scene scene = new Scene(editorPane);

@@ -202,11 +202,6 @@ public class SongEditor {
             prevNote = note;
         }
         return track.getNoteTrack();
-        //return measures;
-    }
-
-    public Group getNotesElement() {
-        return noteMap.getNotesElement();
     }
 
     public ListView<TrackItemSet> getDynamicsElement() {

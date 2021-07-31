@@ -66,6 +66,15 @@ public class PitchbendData {
         }
     }
 
+    public PitchbendData deepcopy() {
+        return new PitchbendData(
+                ImmutableList.copyOf(pbs),
+                ImmutableList.copyOf(pbw),
+                ImmutableList.copyOf(pby),
+                ImmutableList.copyOf(pbm),
+                vibrato.clone());
+    }
+
     @Override
     public String toString() {
         // String representation of a PitchbendData object.

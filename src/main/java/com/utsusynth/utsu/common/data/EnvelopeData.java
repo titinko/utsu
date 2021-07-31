@@ -27,6 +27,17 @@ public class EnvelopeData {
         this.heights = envHeights;
     }
 
+    private EnvelopeData(
+            Optional<Double> envPreutter,
+            Optional<Double> envLength,
+            double[] envWidths,
+            double[] envHeights) {
+        this.envPreutter = envPreutter;
+        this.envLength = envLength;
+        this.widths = envWidths;
+        this.heights = envHeights;
+    }
+
     public Optional<Double> getPreutter() {
         return envPreutter;
     }
@@ -41,5 +52,9 @@ public class EnvelopeData {
 
     public double[] getHeights() {
         return heights;
+    }
+
+    public EnvelopeData deepcopy() {
+        return new EnvelopeData(envPreutter, envLength, widths.clone(), heights.clone());
     }
 }

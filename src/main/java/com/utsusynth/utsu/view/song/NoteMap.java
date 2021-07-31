@@ -31,10 +31,6 @@ public class NoteMap {
     private Map<Integer, Envelope> envelopeMap;
     private Map<Integer, Pitchbend> pitchbendMap;
 
-    private Group visibleNotes; // Only includes notes in the visible region.
-    private Group visibleEnvelopes; // Only includes envelopes in the visible region.
-    private Group visiblePitchbends; // Only includes pitchbends in the visible region.
-
     @Inject
     public NoteMap(
             EnvelopeFactory envelopeFactory, PitchbendFactory pitchbendFactory, Track track) {
@@ -44,61 +40,10 @@ public class NoteMap {
         clear();
     }
 
-    Group getNotesElement() {
-        return visibleNotes;
-    }
-
-    Group getEnvelopesElement() {
-        return visibleEnvelopes;
-    }
-
-    Group getPitchbendsElement() {
-        return visiblePitchbends;
-    }
-
     void clear() {
         noteMap = new HashMap<>();
         envelopeMap = new HashMap<>();
         pitchbendMap = new HashMap<>();
-        visibleNotes = new Group();
-        visibleEnvelopes = new Group();
-        visiblePitchbends = new Group();
-    }
-
-    void setVisibleRegion(RegionBounds newRegion) {
-        /*if (newRegion.getMinMs() == visibleRegion.getMinMs()
-                && newRegion.getMaxMs() == visibleRegion.getMaxMs()) {
-            // Do nothing if region does not change.
-            return;
-        }
-        visibleRegion = newRegion;
-
-        // Add all elements from new visibleRegion.
-        for (Note note : allNotes) {
-            int pos = note.getAbsPositionMs();
-            if (newRegion.intersects(note.getBounds())) {
-                if (!visibleNotes.getChildren().contains(note.getElement())) {
-                    visibleNotes.getChildren().add(note.getElement());
-                    if (envelopeMap.containsKey(pos) && pitchbendMap.containsKey(pos)) {
-                        Envelope envelope = envelopeMap.get(pos);
-                        if (!visibleEnvelopes.getChildren().contains(envelope.getElement())) {
-                            visibleEnvelopes.getChildren().add(envelope.getElement());
-                        }
-                        Pitchbend pitchbend = pitchbendMap.get(pos);
-                        if (!visiblePitchbends.getChildren().contains(pitchbend.getElement())) {
-                            visiblePitchbends.getChildren().add(pitchbend.getElement());
-                        }
-                    }
-                }
-            } else {
-                // Removes all elements outside visible region.
-                visibleNotes.getChildren().remove(note.getElement());
-                if (envelopeMap.containsKey(pos) && pitchbendMap.containsKey(pos)) {
-                    visibleEnvelopes.getChildren().remove(envelopeMap.get(pos).getElement());
-                    visiblePitchbends.getChildren().remove(pitchbendMap.get(pos).getElement());
-                }
-            }
-        }*/
     }
 
     boolean hasNote(int position) {
@@ -161,12 +106,10 @@ public class NoteMap {
             System.out.println("Could not find note in map of track notes :(");
         }
         if (envelopeMap.containsKey(position)) {
-            //visibleEnvelopes.getChildren().remove(envelopeMap.get(position).getElement());
             track.removeItem(track.getDynamicsTrack(), envelopeMap.get(position));
             envelopeMap.remove(position);
         }
         if (pitchbendMap.containsKey(position)) {
-            //visiblePitchbends.getChildren().remove(pitchbendMap.get(position).getElement());
             track.removeItem(track.getNoteTrack(), pitchbendMap.get(position));
             pitchbendMap.remove(position);
         }
