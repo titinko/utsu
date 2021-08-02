@@ -189,6 +189,9 @@ public class Vibrato implements TrackItem {
             redrawVibrato(vibratoPath);
         }
         redrawEditor();
+
+        // Bounds might have been changed, so refresh track columns.
+        callback.readjust();
     }
 
     public void clearVibrato() {
@@ -200,6 +203,9 @@ public class Vibrato implements TrackItem {
             redrawVibrato(vibratoPath);
         }
         redrawEditor();
+
+        // Bounds might have been changed, so refresh track columns.
+        callback.readjust();
     }
 
     public void adjustVibrato(int index, int newValue) {

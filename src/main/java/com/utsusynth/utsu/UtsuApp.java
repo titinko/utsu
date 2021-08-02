@@ -17,10 +17,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TextInputControl;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
@@ -113,6 +110,11 @@ public class UtsuApp extends Application {
                 scrollEvent.consume();
             }
         });
+
+        // Set up an event that runs when a mouse is released.
+        // primaryStage.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
+        //    System.out.println("Mouse released");
+        // });
 
         // Set up an event that runs when the program is closed.
         primaryStage.setOnCloseRequest(windowEvent -> {
