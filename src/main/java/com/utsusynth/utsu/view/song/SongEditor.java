@@ -26,7 +26,6 @@ import com.utsusynth.utsu.view.song.track.TrackCallback;
 import com.utsusynth.utsu.view.song.track.TrackItem;
 import com.utsusynth.utsu.view.song.track.TrackItemSet;
 import javafx.beans.property.*;
-import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;

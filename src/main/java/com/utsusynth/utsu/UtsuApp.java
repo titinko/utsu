@@ -111,11 +111,6 @@ public class UtsuApp extends Application {
             }
         });
 
-        // Set up an event that runs when a mouse is released.
-        // primaryStage.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
-        //    System.out.println("Mouse released");
-        // });
-
         // Set up an event that runs when the program is closed.
         primaryStage.setOnCloseRequest(windowEvent -> {
             if (!controller.onCloseWindow()) {

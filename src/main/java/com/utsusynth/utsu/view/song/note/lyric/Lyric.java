@@ -14,7 +14,6 @@ import javafx.scene.text.Font;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Optional;
 
 public class Lyric implements TrackItem {
     private final HashMap<Double, HBox> drawnHBoxes;
@@ -182,6 +181,11 @@ public class Lyric implements TrackItem {
     @Override
     public void removeAllColumns() {
         drawnColumns.clear();
+        drawnHBoxes.clear();
+        drawnLyrics.clear();
+        drawnAliases.clear();
+        drawnTextFields.clear();
+        drawnActiveNodes.clear();
     }
 
     public String getLyric() {

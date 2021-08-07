@@ -37,19 +37,18 @@ public class Vibrato implements TrackItem {
     private final BooleanProperty showEditor;
 
     private final PitchbendCallback callback;
+    private final HashMap<Double, Path> drawnVibratoPaths;
+    private final HashMap<Double, Group> drawnEditors;
     private final HashSet<Integer> drawnColumns;
     private final Localizer localizer;
     private final Scaler scaler;
 
     // UI-independent state.
-    private Optional<Editor> editor;
+    private Editor editor = null;
     private int[] vibrato;
 
     // UI-dependent state.
-    private Path vibratoPath;
-    private Group editorGroup;
     private ContextMenu contextMenu;
-    private double offsetX = 0;
 
     Vibrato(
             int noteStartMs,
@@ -68,8 +67,9 @@ public class Vibrato implements TrackItem {
         this.localizer = localizer;
         this.scaler = scaler;
         this.vibrato = startVibrato;
+        drawnVibratoPaths = new HashMap<>();
+        drawnEditors = new HashMap<>();
         drawnColumns = new HashSet<>();
-        editor = Optional.empty();
 
         showEditor.addListener((event, oldValue, newValue) -> {
             if (newValue != oldValue) {
@@ -100,14 +100,13 @@ public class Vibrato implements TrackItem {
 
     @Override
     public Group redraw(double offsetX) {
-        this.offsetX = offsetX;
-
-        vibratoPath = new Path();
+        Path vibratoPath = new Path();
         vibratoPath.getStyleClass().add("pitchbend");
         vibratoPath.setMouseTransparent(true);
-        redrawVibrato(vibratoPath);
+        redrawVibrato(vibratoPath, offsetX);
+        drawnVibratoPaths.put(offsetX, vibratoPath);
 
-        editorGroup = new Group();
+        Group editorGroup = new Group();
         // Vibrato editor has its own context menu.
         editorGroup.setOnContextMenuRequested(event -> {
             if (contextMenu != null) {
@@ -115,7 +114,8 @@ public class Vibrato implements TrackItem {
             }
             createContextMenu().show(editorGroup, event.getScreenX(), event.getScreenY());
         });
-        redrawEditor();
+        redrawEditor(editorGroup, offsetX);
+        drawnEditors.put(offsetX, editorGroup);
 
         // Create final group.
         return new Group(vibratoPath, editorGroup);
@@ -134,27 +134,32 @@ public class Vibrato implements TrackItem {
     @Override
     public void removeColumn(int colNum) {
         drawnColumns.remove(colNum);
+        double offsetX = colNum * scaler.scaleX(Quantizer.TRACK_COL_WIDTH);
+        drawnVibratoPaths.remove(offsetX);
+        drawnEditors.remove(offsetX);
     }
 
     @Override
     public void removeAllColumns() {
         drawnColumns.clear();
+        drawnVibratoPaths.clear();
+        drawnEditors.clear();
     }
 
     /** Fetch just the vibrato, never showing the editor. */
     public Path getVibratoElement() {
-        if (vibratoPath == null) {
+        if (drawnVibratoPaths.isEmpty()) {
             redraw();
         }
-        return vibratoPath;
+        return drawnVibratoPaths.values().iterator().next();
     }
 
     /** Fetch just the editor, never showing the vibrato. */
     public Group getEditorElement() {
-        if (editorGroup == null) {
+        if (drawnEditors.isEmpty()) {
             redraw();
         }
-        return editorGroup;
+        return drawnEditors.values().iterator().next();
     }
 
     public Optional<int[]> getVibrato() {
@@ -185,9 +190,7 @@ public class Vibrato implements TrackItem {
         vibrato[8] = 0; // Frequency slope (range of -100 to 100)
         vibrato[9] = 0; // Unused.
         callback.modifySongVibrato(oldVibrato, Arrays.copyOf(vibrato, vibrato.length));
-        if (vibratoPath != null) {
-            redrawVibrato(vibratoPath);
-        }
+        redrawVibrato();
         redrawEditor();
 
         // Bounds might have been changed, so refresh track columns.
@@ -199,9 +202,7 @@ public class Vibrato implements TrackItem {
         int[] newVibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         callback.modifySongVibrato(oldVibrato, newVibrato);
         vibrato = Arrays.copyOf(newVibrato, newVibrato.length);
-        if (vibratoPath != null) {
-            redrawVibrato(vibratoPath);
-        }
+        redrawVibrato();
         redrawEditor();
 
         // Bounds might have been changed, so refresh track columns.
@@ -213,24 +214,27 @@ public class Vibrato implements TrackItem {
             return;
         }
         vibrato[index] = newValue;
-        if (vibratoPath != null) {
-            redrawVibrato(vibratoPath);
-        }
+        redrawVibrato();
         // This method does not include redrawing the editor.
     }
 
     public void redrawEditor() {
         // Only use when vibrato is edited by something besides the editor.
+        editor = showEditor.get() && getVibrato().isPresent() ? new Editor() : null;
+        for (double offsetX : drawnEditors.keySet()) {
+            redrawEditor(drawnEditors.get(offsetX), offsetX);
+        }
+    }
+
+    private void redrawEditor(Group editorGroup, double offsetX) {
         if (showEditor.get() && getVibrato().isPresent()) {
-            editor = Optional.of(new Editor());
-            if (editorGroup != null) {
-                editorGroup.getChildren().setAll(editor.get().render());
+            if (editor == null) {
+                editor = new Editor(); // Does not re-create editor unless needed.
             }
+            editorGroup.getChildren().setAll(editor.render(offsetX));
         } else {
-            editor = Optional.empty();
-            if (editorGroup != null) {
-                editorGroup.getChildren().clear();
-            }
+            editor = null;
+            editorGroup.getChildren().clear();
         }
     }
 
@@ -244,7 +248,13 @@ public class Vibrato implements TrackItem {
         return contextMenu;
     }
 
-    private void redrawVibrato(Path vibratoPath) {
+    private void redrawVibrato() {
+        for (double offsetX : drawnVibratoPaths.keySet()) {
+            redrawVibrato(drawnVibratoPaths.get(offsetX), offsetX);
+        }
+    }
+
+    private void redrawVibrato(Path vibratoPath, double offsetX) {
         // TODO: Validate that vibrato values are within correct ranges.
         vibratoPath.getElements().clear();
         if (vibrato.length != 10) {
@@ -333,8 +343,8 @@ public class Vibrato implements TrackItem {
 
     // Vibrato editor. Lines can be dragged around to alter vibrato values.
     private class Editor {
-        private final ObservableDoubleValue minX;
-        private final ObservableDoubleValue maxX;
+        private final DoubleProperty minX;
+        private final DoubleProperty maxX;
         private final DoubleProperty baseY;
 
         private final DoubleProperty centerY;
@@ -355,8 +365,8 @@ public class Vibrato implements TrackItem {
 
         public Editor() {
             // Values that don't change.
-            this.minX = new SimpleDoubleProperty(scaler.scalePos(noteStartMs) - offsetX);
-            this.maxX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs) - offsetX);
+            this.minX = new SimpleDoubleProperty(scaler.scalePos(noteStartMs));
+            this.maxX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs));
             this.baseY = new SimpleDoubleProperty(noteY);
 
             this.centerY = new SimpleDoubleProperty(
@@ -365,12 +375,11 @@ public class Vibrato implements TrackItem {
                     scaler.scaleY(vibrato[2] / 100.0 * Quantizer.ROW_HEIGHT));
 
             double lengthMs = (noteEndMs - noteStartMs) * (vibrato[0] / 100.0); // Vibrato length.
-            this.startX = new SimpleDoubleProperty(
-                    scaler.scalePos(noteEndMs - lengthMs) - offsetX);
+            this.startX = new SimpleDoubleProperty(scaler.scalePos(noteEndMs - lengthMs));
             double fadeInMs = noteEndMs - lengthMs + (lengthMs * (vibrato[3] / 100.0));
-            this.fadeInX = new SimpleDoubleProperty(scaler.scalePos(fadeInMs) - offsetX);
+            this.fadeInX = new SimpleDoubleProperty(scaler.scalePos(fadeInMs));
             double fadeOutMs = noteEndMs - (lengthMs * (vibrato[4] / 100.0));
-            this.fadeOutX = new SimpleDoubleProperty(scaler.scalePos(fadeOutMs) - offsetX);
+            this.fadeOutX = new SimpleDoubleProperty(scaler.scalePos(fadeOutMs));
 
             this.maxSliderX = new SimpleDoubleProperty(
                     Math.min(maxX.get(), startX.get() + scaler.scaleX(Quantizer.COL_WIDTH)));
@@ -410,7 +419,13 @@ public class Vibrato implements TrackItem {
             });
         }
 
-        public Node[] render() {
+        public Node[] render(double offsetX) {
+            ObservableDoubleValue offsetMaxX = maxX.subtract(offsetX);
+            ObservableDoubleValue offsetStartX = startX.subtract(offsetX);
+            ObservableDoubleValue offsetFadeInX = fadeInX.subtract(offsetX);
+            ObservableDoubleValue offsetFadeOutX = fadeOutX.subtract(offsetX);
+            ObservableDoubleValue offsetMaxSliderX = maxSliderX.subtract(offsetX);
+
             ObservableDoubleValue highY = centerY.subtract(amplitudeY);
             ObservableDoubleValue lowY = centerY.add(amplitudeY);
             ObservableDoubleValue highBaseY = baseY.subtract(centsToY(75));
@@ -418,18 +433,19 @@ public class Vibrato implements TrackItem {
             Node[] nodes = new Node[16];
 
             // Non-draggable nodes.
-            nodes[0] = createLine(startX, baseY, fadeInX, highY); // Start -> Top
-            nodes[1] = createLine(startX, baseY, fadeInX, centerY); // Start -> Center
-            nodes[2] = createLine(startX, baseY, fadeInX, lowY); // Start -> Bottom
-            nodes[3] = createLine(fadeOutX, highY, maxX, baseY); // Top -> End
-            nodes[4] = createLine(fadeOutX, centerY, maxX, baseY); // Center -> End
-            nodes[5] = createLine(fadeOutX, lowY, maxX, baseY); // Bottom -> End
-            Line endOfSlider = createLine(maxSliderX, highBaseY, maxSliderX, lowBaseY);
+            nodes[0] = createLine(offsetStartX, baseY, offsetFadeInX, highY); // Start -> Top
+            nodes[1] = createLine(offsetStartX, baseY, offsetFadeInX, centerY); // Start -> Center
+            nodes[2] = createLine(offsetStartX, baseY, offsetFadeInX, lowY); // Start -> Bottom
+            nodes[3] = createLine(offsetFadeOutX, highY, offsetMaxX, baseY); // Top -> End
+            nodes[4] = createLine(offsetFadeOutX, centerY, offsetMaxX, baseY); // Center -> End
+            nodes[5] = createLine(offsetFadeOutX, lowY, offsetMaxX, baseY); // Bottom -> End
+            Line endOfSlider = createLine(offsetMaxSliderX, highBaseY, offsetMaxSliderX, lowBaseY);
             endOfSlider.setStroke(Color.ROYALBLUE);
             nodes[6] = endOfSlider;
 
             // Draggable nodes.
-            nodes[7] = createLine(fadeInX, centerY, fadeOutX, centerY, Cursor.V_RESIZE); // Center
+            nodes[7] = createLine(
+                    offsetFadeInX, centerY, offsetFadeOutX, centerY, Cursor.V_RESIZE); // Center
             setUpBackendUpdate(nodes[7]);
             nodes[7].setOnMouseDragged(event -> {
                 double y = event.getY();
@@ -438,7 +454,8 @@ public class Vibrato implements TrackItem {
                     centerY.set(y);
                 }
             });
-            nodes[8] = createLine(fadeInX, highY, fadeOutX, highY, Cursor.V_RESIZE); // Top
+            nodes[8] = createLine(
+                    offsetFadeInX, highY, offsetFadeOutX, highY, Cursor.V_RESIZE); // Top
             setUpBackendUpdate(nodes[8]);
             nodes[8].setOnMouseDragged(event -> {
                 double y = event.getY();
@@ -447,7 +464,8 @@ public class Vibrato implements TrackItem {
                     amplitudeY.set(centerY.get() - y);
                 }
             });
-            nodes[9] = createLine(fadeInX, lowY, fadeOutX, lowY, Cursor.V_RESIZE); // Bottom
+            nodes[9] = createLine(
+                    offsetFadeInX, lowY, offsetFadeOutX, lowY, Cursor.V_RESIZE); // Bottom
             setUpBackendUpdate(nodes[9]);
             nodes[9].setOnMouseDragged(event -> {
                 double y = event.getY();
@@ -456,28 +474,31 @@ public class Vibrato implements TrackItem {
                     amplitudeY.set(y - centerY.get());
                 }
             });
-            nodes[10] = createLine(fadeInX, highY, fadeInX, lowY, Cursor.H_RESIZE); // Fade in
+            nodes[10] = createLine(
+                    offsetFadeInX, highY, offsetFadeInX, lowY, Cursor.H_RESIZE); // Fade in
             setUpBackendUpdate(nodes[10]);
             nodes[10].setOnMouseDragged(event -> {
-                double x = event.getX();
+                double x = event.getX() + offsetX;
                 if (x > startX.get() && x < maxX.get()) {
                     changed = true;
                     fadeInX.set(x);
                 }
             });
-            nodes[11] = createLine(fadeOutX, highY, fadeOutX, lowY, Cursor.H_RESIZE); // Fade out
+            nodes[11] = createLine(
+                    offsetFadeOutX, highY, offsetFadeOutX, lowY, Cursor.H_RESIZE); // Fade out
             setUpBackendUpdate(nodes[11]);
             nodes[11].setOnMouseDragged(event -> {
-                double x = event.getX();
+                double x = event.getX() + offsetX;
                 if (x > startX.get() && x < maxX.get()) {
                     changed = true;
                     fadeOutX.set(x);
                 }
             });
-            nodes[12] = createLine(startX, highBaseY, startX, lowBaseY, Cursor.H_RESIZE); // Start
+            nodes[12] = createLine(
+                    offsetStartX, highBaseY, offsetStartX, lowBaseY, Cursor.H_RESIZE); // Start
             setUpBackendUpdate(nodes[12]);
             nodes[12].setOnMouseDragged(event -> {
-                double x = event.getX();
+                double x = event.getX() + offsetX;
                 if (x > minX.get() && x < maxX.get()) {
                     changed = true;
                     startX.set(x);
@@ -489,9 +510,12 @@ public class Vibrato implements TrackItem {
                     frqSlopeX.set(x + (maxSliderX.get() - x) * (vibrato[8] + 100) / 200.0);
                 }
             });
-            nodes[13] = createSlider(frqX, baseY.subtract(centsToY(30)), "F"); // Frequency
-            nodes[14] = createSlider(phaseX, baseY, "P"); // Phase shift
-            nodes[15] = createSlider(frqSlopeX, baseY.add(centsToY(30)), "F'"); // Frequency slope
+            // Frequency slider.
+            nodes[13] = createSlider(frqX, offsetX, baseY.subtract(centsToY(30)), "F");
+            // Phase shift slider.
+            nodes[14] = createSlider(phaseX, offsetX, baseY, "P");
+            // Frequency slope slider.
+            nodes[15] = createSlider(frqSlopeX, offsetX, baseY.add(centsToY(30)), "F'");
             return nodes;
         }
 
@@ -523,7 +547,8 @@ public class Vibrato implements TrackItem {
 
         private StackPane createSlider(
                 DoubleProperty xProp,
-                ObservableDoubleValue y,
+                double offsetX,
+                DoubleExpression y,
                 String label) {
             double radius = 5;
             Circle point = new Circle(radius);
@@ -537,11 +562,11 @@ public class Vibrato implements TrackItem {
             text.setMouseTransparent(true);
 
             StackPane slider = new StackPane(point, text);
-            slider.translateXProperty().bind(xProp.subtract(radius));
-            slider.translateYProperty().bind(DoubleExpression.doubleExpression(y).subtract(radius));
+            slider.translateXProperty().bind(xProp.subtract(radius + offsetX));
+            slider.translateYProperty().bind(y.subtract(radius));
             setUpBackendUpdate(slider);
             slider.setOnMouseDragged(event -> {
-                double newX = event.getX() + slider.getTranslateX();
+                double newX = event.getX() + slider.getTranslateX() + offsetX;
                 if (newX >= startX.get() && newX <= maxSliderX.get()) {
                     changed = true;
                     xProp.set(newX);
