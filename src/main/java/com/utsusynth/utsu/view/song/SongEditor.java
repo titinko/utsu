@@ -83,6 +83,9 @@ public class SongEditor {
         this.quantizer = quantizer;
         this.scaler = scaler;
 
+        // Assign track to noteMap.
+        noteMap.setTrack(track);
+
         vibratoEditor = new SimpleBooleanProperty(false);
 
         // Initialize context menu here so we can reuse it everywhere.

@@ -20,7 +20,6 @@ public class ViewModule extends AbstractModule {
         bind(PitchbendFactory.class).asEagerSingleton();
         bind(CurveFactory.class).asEagerSingleton();
         bind(SongClipboard.class).asEagerSingleton();
-        bind(Track.class).asEagerSingleton();
     }
 
     @Provides

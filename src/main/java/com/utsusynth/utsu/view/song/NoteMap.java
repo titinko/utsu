@@ -24,19 +24,19 @@ import javafx.scene.Group;
 public class NoteMap {
     private final EnvelopeFactory envelopeFactory;
     private final PitchbendFactory pitchbendFactory;
-    private final Track track;
 
     // Maps absolute position (in ms) to track note's data.
     private Map<Integer, Note> noteMap;
     private Map<Integer, Envelope> envelopeMap;
     private Map<Integer, Pitchbend> pitchbendMap;
 
+    private Track track;
+
     @Inject
     public NoteMap(
-            EnvelopeFactory envelopeFactory, PitchbendFactory pitchbendFactory, Track track) {
+            EnvelopeFactory envelopeFactory, PitchbendFactory pitchbendFactory) {
         this.envelopeFactory = envelopeFactory;
         this.pitchbendFactory = pitchbendFactory;
-        this.track = track;
         clear();
     }
 
@@ -44,6 +44,10 @@ public class NoteMap {
         noteMap = new HashMap<>();
         envelopeMap = new HashMap<>();
         pitchbendMap = new HashMap<>();
+    }
+
+    void setTrack(Track track) {
+        this.track = track;
     }
 
     boolean hasNote(int position) {

@@ -150,7 +150,7 @@ public class Lyric implements TrackItem {
         activeNode.translateYProperty().bind(currentY);
         drawnActiveNodes.put(offsetX, activeNode);
 
-        Rectangle clip = new Rectangle(scaler.scaleX(Quantizer.TRACK_COL_WIDTH),
+        Rectangle clip = new Rectangle(scaler.scaleX(Quantizer.TRACK_COL_WIDTH) + 1,
                 scaler.scaleY(Quantizer.ROW_HEIGHT));
         clip.xProperty().bind(startX.subtract(offsetX).negate());
         activeNode.setClip(clip);
