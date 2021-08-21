@@ -44,19 +44,17 @@ public class ExternalProcessRunner {
     }
 
     private void watch(final InputStream inputStream) {
-        new Thread() {
-            public void run() {
-                BufferedReader input = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                try {
-                    while ((line = input.readLine()) != null) {
-                        // Uncomment this line to see output from resampler/wavtool.
-                        // System.out.println(line);
-                    }
-                } catch (IOException e) {
-                    errorLogger.logError(e);
+        new Thread(() -> {
+            BufferedReader input = new BufferedReader(new InputStreamReader(inputStream));
+            String line;
+            try {
+                while ((line = input.readLine()) != null) {
+                    // Uncomment this line to see output from resampler/wavtool.
+                    // System.out.println(line);
                 }
+            } catch (IOException e) {
+                errorLogger.logError(e);
             }
-        }.start();
+        }).start();
     }
 }

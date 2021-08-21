@@ -253,7 +253,7 @@ public class SongEditor {
         return measureWidth * (track.getNumMeasures() + 1); // Include pre-roll.
     }
 
-    public BooleanProperty clibboardFilledProperty() {
+    public BooleanProperty clipboardFilledProperty() {
         return clipboard.clipboardFilledProperty();
     }
 
@@ -267,6 +267,10 @@ public class SongEditor {
 
     public RegionBounds getSelectedTrack() {
         return playbackManager.getSelectedRegion();
+    }
+
+    public RegionBounds getVisibleTrack() {
+        return track.visibleRegion();
     }
 
     public void selectRegion(RegionBounds region) {

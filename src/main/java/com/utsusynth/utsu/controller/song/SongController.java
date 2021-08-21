@@ -324,11 +324,13 @@ public class SongController implements EditorController, Localizable {
                 undoService.canUndoProperty(),
                 undoService.canRedoProperty(),
                 songEditor.isAnythingSelectedProperty(),
-                songEditor.clibboardFilledProperty());
+                songEditor.clipboardFilledProperty());
 
         // Do scrolling after a short pause for viewport to establish itself.
         PauseTransition briefPause = new PauseTransition(Duration.millis(50));
-        briefPause.setOnFinished(event -> songEditor.scrollToPosition(0));
+        briefPause.setOnFinished(event -> {
+            songEditor.scrollToPosition(0);
+        });
         briefPause.play();
 
         // Set up localization.
@@ -366,7 +368,7 @@ public class SongController implements EditorController, Localizable {
                 scrollPaneBottom.widthProperty().subtract(Quantizer.SCROLL_BAR_WIDTH));
 
         // Scrollbar bindings, after scrollbars are generated.
-        PauseTransition briefPause = new PauseTransition(Duration.millis(10));
+        PauseTransition briefPause = new PauseTransition(Duration.millis(20));
         briefPause.setOnFinished(event -> {
             for (Node node : noteTrack.lookupAll(".scroll-bar")) {
                 if (!(node instanceof ScrollBar)) {
@@ -463,7 +465,7 @@ public class SongController implements EditorController, Localizable {
         } else if (new KeyCodeCombination(KeyCode.ENTER).match(keyEvent)) {
             Optional<Integer> focusNote = songEditor.getFocusNote();
             if (focusNote.isPresent()) {
-                if (!scrollPaneRegion().contains(focusNote.get())) {
+                if (!songEditor.getVisibleTrack().contains(focusNote.get())) {
                     songEditor.scrollToPosition(focusNote.get());
                 }
                 songEditor.openLyricInput(focusNote.get());
@@ -475,14 +477,14 @@ public class SongController implements EditorController, Localizable {
             if (focusNote.isPresent()) {
                 Optional<Integer> newFocus = song.get().getNextNote(focusNote.get());
                 if (newFocus.isPresent()) {
-                    if (!scrollPaneRegion().contains(newFocus.get())) {
+                    if (!songEditor.getVisibleTrack().contains(newFocus.get())) {
                         songEditor.scrollToPosition(newFocus.get());
                     }
                     songEditor.focusOnNote(newFocus.get());
                 }
             } else if (song.get().getNoteIterator().hasNext()) {
                 int positionMs = song.get().getNoteIterator().next().getDelta();
-                if (!scrollPaneRegion().contains(positionMs)) {
+                if (!songEditor.getVisibleTrack().contains(positionMs)) {
                     songEditor.scrollToPosition(positionMs);
                 }
                 songEditor.focusOnNote(positionMs);
@@ -494,14 +496,14 @@ public class SongController implements EditorController, Localizable {
             if (focusNote.isPresent()) {
                 Optional<Integer> newFocus = song.get().getPrevNote(focusNote.get());
                 if (newFocus.isPresent()) {
-                    if (!scrollPaneRegion().contains(newFocus.get())) {
+                    if (!songEditor.getVisibleTrack().contains(newFocus.get())) {
                         songEditor.scrollToPosition(newFocus.get());
                     }
                     songEditor.focusOnNote(newFocus.get());
                 }
             } else if (song.get().getNoteIterator().hasNext()) {
                 int positionMs = song.get().getNoteIterator().next().getDelta();
-                if (!scrollPaneRegion().contains(positionMs)) {
+                if (!songEditor.getVisibleTrack().contains(positionMs)) {
                     songEditor.scrollToPosition(positionMs);
                 }
                 songEditor.focusOnNote(positionMs);
@@ -523,26 +525,6 @@ public class SongController implements EditorController, Localizable {
             iconManager.deselectIcon(icon);
         });
         briefPause.play();
-    }
-
-    /**
-     * Returns region contained within scroll pane.
-     */
-    private RegionBounds scrollPaneRegion() {
-        double trackWidth = songEditor.getWidthX();
-        double viewportWidth = scrollPaneCenter.getViewportBounds().getWidth();
-        if (viewportWidth <= 0 || trackWidth <= 0) {
-            return RegionBounds.INVALID;
-        } else if (viewportWidth >= trackWidth) {
-            return RegionBounds.WHOLE_SONG;
-        } else {
-            double hvalue = scrollPaneCenter.getHvalue();
-            double leftX = hvalue * (trackWidth - viewportWidth);
-            double rightX = leftX + viewportWidth;
-            int startPos = RoundUtils.round(scaler.unscalePos(leftX));
-            int endPos = RoundUtils.round(scaler.unscalePos(rightX));
-            return new RegionBounds(startPos, endPos); // May be negative positions.
-        }
     }
 
     @Override

@@ -313,7 +313,7 @@ public class Track {
         }
     }
 
-    private RegionBounds visibleRegion() {
+    public RegionBounds visibleRegion() {
         Optional<ScrollBar> maybeHScroll = getScrollBar(noteTrack, Orientation.HORIZONTAL);
         if (maybeHScroll.isEmpty()) {
             return noteTrack == null ? RegionBounds.INVALID : RegionBounds.WHOLE_SONG;
