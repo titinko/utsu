@@ -101,10 +101,8 @@ public class BulkEditorConfigManager {
             System.out.println("Error: Failed to create config path.");
             return;
         }
-        if (portamentoData.size() <= 1) {
-            return; // Only write non-default data to file.
-        }
         try (PrintStream ps = new PrintStream(portamentoConfigPath)) {
+            // Only write non-default data to file.
             for (int i = 1; i < portamentoData.size(); i++) {
                 StringBuilder stringBuilder = new StringBuilder();
                 for (double pbs : portamentoData.get(i).getPBS()) {
@@ -174,10 +172,8 @@ public class BulkEditorConfigManager {
             System.out.println("Error: Failed to create config path.");
             return;
         }
-        if (vibratoData.size() <= 1) {
-            return; // Only write non-default data to file.
-        }
         try (PrintStream ps = new PrintStream(vibratoConfigPath)) {
+            // Only write non-default data to file.
             for (int i = 1; i < vibratoData.size(); i++) {
                 StringBuilder stringBuilder = new StringBuilder();
                 for (int param : vibratoData.get(i).getVibrato()) {
@@ -244,10 +240,8 @@ public class BulkEditorConfigManager {
             System.out.println("Error: Failed to create config path.");
             return;
         }
-        if (envelopeData.size() <= 1) {
-            return; // Only write non-default data to file.
-        }
         try (PrintStream ps = new PrintStream(envelopeConfigPath)) {
+            // Only write non-default data to file.
             for (int i = 1; i < envelopeData.size(); i++) {
                 StringBuilder stringBuilder = new StringBuilder();
                 for (double width : envelopeData.get(i).getWidths()) {

@@ -119,6 +119,18 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
+    private LyricEditorConfigManager provideLyricEditorConfigManager(
+            @SettingsPath File settingsPath) {
+        ImmutableList<String> defaultPrefixSuffixList = ImmutableList.of(
+                "Custom",
+                "C1-B7",
+                "↑",
+                "↓");
+        return new LyricEditorConfigManager(settingsPath, defaultPrefixSuffixList);
+    }
+
+    @Provides
+    @Singleton
     private Localizer provideLocalizer() {
         NativeLocale defaultLocale = new NativeLocale(new Locale("en"));
         ImmutableList<NativeLocale> allLocales = ImmutableList.of(

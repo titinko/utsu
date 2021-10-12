@@ -13,7 +13,6 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
-import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.EditorCallback;
 import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
@@ -21,6 +20,7 @@ import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.controller.common.MenuItemManager;
 import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
+import com.utsusynth.utsu.controller.song.LyricEditorController.LyricEditorType;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.ThemeManager;
@@ -1012,6 +1012,65 @@ public class SongController implements EditorController, Localizable {
                             };
                             modifyNotes(
                                     song.get().getNotes(regionToUpdate, filters), transformNote);
+                        }
+                    });
+            Scene scene = new Scene(editorPane);
+            themeManager.applyToScene(scene);
+            editorWindow.setScene(scene);
+            editorWindow.showAndWait();
+        } catch (IOException e) {
+            statusBar.setText("Error: Unable to open bulk editor.");
+            errorLogger.logError(e);
+        }
+    }
+
+    @Override
+    public void openLyricEditor(LyricEditorType editorType) {
+        // Open lyric editor modal.
+        Stage currentStage = (Stage) anchorCenter.getScene().getWindow();
+        if (!currentStage.isFocused()) {
+            return; // Only one modal at a time!
+        }
+        InputStream fxml = getClass().getResourceAsStream("/fxml/LyricEditorScene.fxml");
+        FXMLLoader loader = fxmlLoaderProvider.get();
+        try {
+            Stage editorWindow = new Stage();
+            editorWindow.setTitle(localizer.getMessage("menu.tools.lyricEditor"));
+            editorWindow.initModality(Modality.APPLICATION_MODAL);
+            editorWindow.initOwner(currentStage);
+            BorderPane editorPane = loader.load(fxml);
+            LyricEditorController controller = loader.getController();
+            controller.openEditor(
+                    editorType,
+                    songEditor.getSelectedTrack(),
+                    editorWindow,
+                    new LyricEditorCallback() {
+                        @Override
+                        public void insertLyrics(
+                                List<String> newLyrics, RegionBounds regionToUpdate) {
+                            // blah
+                        }
+
+                        @Override
+                        public void addPrefix(String prefixToAdd, RegionBounds regionToUpdate) {
+                            // blah
+                        }
+
+                        @Override
+                        public void removePrefix(
+                                String prefixToRemove, RegionBounds regionToUpdate) {
+                            // blah
+                        }
+
+                        @Override
+                        public void addSuffix(String suffixToAdd, RegionBounds regionToUpdate) {
+                            // blah
+                        }
+
+                        @Override
+                        public void removeSuffix(
+                                String suffixToRemove, RegionBounds regionToUpdate) {
+                            // blah
                         }
                     });
             Scene scene = new Scene(editorPane);

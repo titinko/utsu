@@ -11,6 +11,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.DiscreteScaler;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
+import com.utsusynth.utsu.controller.song.LyricEditorController.LyricEditorType;
 import com.utsusynth.utsu.files.ThemeManager;
 import de.jangassen.MenuToolkit;
 import javafx.animation.PauseTransition;
@@ -187,6 +188,12 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem envelopeEditorItem; // Value injected by FXMLLoader
     @FXML
+    private Menu lyricEditorMenu; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem insertLyricsItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem prefixSuffixItem; // Value injected by FXMLLoader
+    @FXML
     private Menu pluginsMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem openPluginItem; // Value injected by FXMLLoader
@@ -233,6 +240,9 @@ public class UtsuController implements Localizable {
         portamentoEditorItem.setText(bundle.getString("menu.tools.bulkEditor.portamento"));
         vibratoEditorItem.setText(bundle.getString("song.note.vibrato"));
         envelopeEditorItem.setText(bundle.getString("menu.tools.bulkEditor.envelope"));
+        lyricEditorMenu.setText(bundle.getString("menu.tools.lyricEditor"));
+        insertLyricsItem.setText(bundle.getString("menu.tools.lyricEditor.insertLyrics"));
+        prefixSuffixItem.setText(bundle.getString("menu.tools.lyricEditor.prefixSuffix"));
         pluginsMenu.setText(bundle.getString("menu.plugins"));
         openPluginItem.setText(bundle.getString("menu.plugins.openPlugin"));
         recentPluginsMenu.setText(bundle.getString("menu.plugins.recentPlugins"));
@@ -285,6 +295,10 @@ public class UtsuController implements Localizable {
                 .setAccelerator(new KeyCodeCombination(KeyCode.V, SHORTCUT_DOWN, SHIFT_DOWN));
         envelopeEditorItem
                 .setAccelerator(new KeyCodeCombination(KeyCode.E, SHORTCUT_DOWN, SHIFT_DOWN));
+        insertLyricsItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.I, SHORTCUT_DOWN, SHIFT_DOWN));
+        prefixSuffixItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.X, SHORTCUT_DOWN, SHIFT_DOWN));
         helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, SHORTCUT_DOWN, SHIFT_DOWN));
     }
 
@@ -732,6 +746,22 @@ public class UtsuController implements Localizable {
         if (!tabs.getTabs().isEmpty()) {
             String id = tabs.getSelectionModel().getSelectedItem().getId();
             editors.get(id).openBulkEditor(BulkEditorType.ENVELOPE);
+        }
+    }
+
+    @FXML
+    void openInsertLyricsEditor(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            String id = tabs.getSelectionModel().getSelectedItem().getId();
+            editors.get(id).openLyricEditor(LyricEditorType.INSERT_LYRICS);
+        }
+    }
+
+    @FXML
+    void openPrefixSuffixEditor(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            String id = tabs.getSelectionModel().getSelectedItem().getId();
+            editors.get(id).openLyricEditor(LyricEditorType.PREFIX_SUFFIX);
         }
     }
 

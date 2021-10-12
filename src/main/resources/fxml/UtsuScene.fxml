@@ -77,6 +77,12 @@
                         <MenuItem fx:id="envelopeEditorItem" mnemonicParsing="false" onAction="#openBulkEnvelopeEditor" text="Envelope" />
                     </items>
                   </Menu>
+                  <Menu fx:id="lyricEditorMenu" mnemonicParsing="false" text="Lyric Editor">
+                    <items>
+                      <MenuItem fx:id="insertLyricsItem" mnemonicParsing="false" onAction="#openInsertLyricsEditor" text="Insert Lyrics" />
+                        <MenuItem fx:id="prefixSuffixItem" mnemonicParsing="false" onAction="#openPrefixSuffixEditor" text="Prefix/Suffix" />
+                    </items>
+                  </Menu>
               </items>
             </Menu>
             <Menu fx:id="pluginsMenu" mnemonicParsing="false" text="Plugins" visible="false">

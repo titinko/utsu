@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.song.LyricEditorController">
+    <bottom>
+        <VBox BorderPane.alignment="CENTER">
+            <children>
+                <Separator>
+                    <VBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                    </VBox.margin>
+                </Separator>
+                <ButtonBar prefHeight="40.0">
+                    <buttons>
+                        <Button fx:id="applyAllButton" mnemonicParsing="false" onAction="#applyToAllNotes" text="Apply to All Notes" ButtonBar.buttonData="LEFT" />
+                        <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#cancelAndClose" text="Cancel" ButtonBar.buttonData="CANCEL_CLOSE" />
+                        <Button fx:id="applySelectionButton" defaultButton="true" mnemonicParsing="false" onAction="#applyToSelection" text="Apply to Selection" ButtonBar.buttonData="APPLY" />
+                    </buttons>
+                    <VBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                    </VBox.margin>
+                </ButtonBar>
+            </children>
+        </VBox>
+    </bottom>
+    <center>
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+            <tabs>
+                <Tab fx:id="insertLyricsTab" text="Insert lyrics">
+                    <content>
+                        <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="120.0" prefWidth="400.0" BorderPane.alignment="CENTER">
+                            <center>
+                                <VBox spacing="5.0" BorderPane.alignment="CENTER">
+                                    <children>
+                                        <Label fx:id="insertLyricsLabel" text="Insert lyrics separated by whitespace:" />
+                              <TextArea fx:id="lyricsTextArea" />
+                                        <HBox alignment="CENTER_RIGHT">
+                                            <children>
+                                                <Button fx:id="validateLyricsButton" mnemonicParsing="false" onAction="#validateLyrics" text="Validate" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                    </padding>
+                                </VBox>
+                            </center>
+                        </BorderPane>
+                    </content>
+                </Tab>
+                <Tab fx:id="prefixSuffixTab" text="Prefix/Suffix">
+                    <content>
+                        <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="120.0" prefWidth="400.0" BorderPane.alignment="CENTER">
+                            <center>
+                                <VBox spacing="5.0" BorderPane.alignment="CENTER">
+                                    <children>
+                                        <Label fx:id="textLabel" text="Text:" />
+                                        <TextField fx:id="prefixSuffixTextField" />
+                                        <HBox alignment="CENTER_RIGHT">
+                                            <children>
+                                                <Button mnemonicParsing="false" onAction="#addPrefixSuffix" text="→">
+                                                    <font>
+                                                        <Font size="14.0" />
+                                                    </font>
+                                                </Button>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                    </padding>
+                                </VBox>
+                            </center>
+                            <right>
+                                <AnchorPane fx:id="prefixSuffixListAnchor" minWidth="150.0" BorderPane.alignment="CENTER">
+                                    <BorderPane.margin>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                    </BorderPane.margin>
+                                </AnchorPane>
+                            </right>
+                            <left>
+                                <HBox BorderPane.alignment="CENTER">
+                                    <children>
+                                        <VBox spacing="5.0">
+                                            <children>
+                                                <Label fx:id="actionLabel" text="Action:">
+                                                    <font>
+                                                        <Font name="System Bold" size="13.0" />
+                                                    </font>
+                                                </Label>
+                                                <RadioButton fx:id="addRadioButton" mnemonicParsing="false" text="Add" />
+                                                <RadioButton fx:id="removeRadioButton" mnemonicParsing="false" text="Remove" />
+                                            </children>
+                                            <padding>
+                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                            </padding>
+                                        </VBox>
+                                        <Separator orientation="VERTICAL">
+                                 <HBox.margin>
+                                    <Insets bottom="5.0" top="5.0" />
+                                 </HBox.margin></Separator>
+                                        <VBox spacing="5.0">
+                                            <children>
+                                                <Label fx:id="targetLabel" text="Target:">
+                                                    <font>
+                                                        <Font name="System Bold" size="13.0" />
+                                                    </font>
+                                                </Label>
+                                                <RadioButton fx:id="prefixRadioButton" mnemonicParsing="false" text="Prefix" />
+                                                <RadioButton fx:id="suffixRadioButton" mnemonicParsing="false" text="Suffix" />
+                                            </children>
+                                            <padding>
+                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                            </padding>
+                                        </VBox>
+                                        <Separator orientation="VERTICAL">
+                                 <HBox.margin>
+                                    <Insets bottom="5.0" top="5.0" />
+                                 </HBox.margin></Separator>
+                                    </children>
+                                </HBox>
+                            </left>
+                        </BorderPane>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+</BorderPane>
