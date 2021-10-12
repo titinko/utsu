@@ -1026,6 +1026,9 @@ public class SongController implements EditorController, Localizable {
 
     private void modifyNotes(List<NoteData> oldNotes, Function<NoteData, NoteData> transform) {
         List<NoteData> newNotes = oldNotes.stream().map(transform).collect(Collectors.toList());
+        if (newNotes.isEmpty()) {
+            return;
+        }
         Runnable redoAction = () -> {
             int minMs = Integer.MAX_VALUE;
             int maxMs = 0;
