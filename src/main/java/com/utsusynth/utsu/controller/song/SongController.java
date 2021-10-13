@@ -1047,7 +1047,7 @@ public class SongController implements EditorController, Localizable {
                     new LyricEditorCallback() {
                         @Override
                         public void insertLyrics(
-                                List<String> newLyrics, RegionBounds regionToUpdate) {
+                                String[] newLyrics, RegionBounds regionToUpdate) {
                             // blah
                         }
 

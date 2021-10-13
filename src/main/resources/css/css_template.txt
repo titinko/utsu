@@ -14,6 +14,14 @@
     -fx-border-width: 0.5;
 }
 
+.success {
+	-fx-fill: $[SUCCESS];
+}
+
+.failure {
+    -fx-fill: $[FAILURE];
+}
+
 .playback-icon.not-selected {
     -fx-fill: $[PLAYBACK_BUTTON];
 }

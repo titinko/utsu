@@ -19,6 +19,8 @@ public class MenuItemManager {
     private final BooleanProperty portamentoEditorEnabled;
     private final BooleanProperty vibratoEditorEnabled;
     private final BooleanProperty envelopeEditorEnabled;
+    private final BooleanProperty insertLyricsEnabled;
+    private final BooleanProperty prefixSuffixEnabled;
 
     public MenuItemManager() {
         saveEnabled = new SimpleBooleanProperty(false);
@@ -35,6 +37,8 @@ public class MenuItemManager {
         portamentoEditorEnabled = new SimpleBooleanProperty(false);
         vibratoEditorEnabled = new SimpleBooleanProperty(false);
         envelopeEditorEnabled = new SimpleBooleanProperty(false);
+        insertLyricsEnabled = new SimpleBooleanProperty(false);
+        prefixSuffixEnabled = new SimpleBooleanProperty(false);
     }
 
     /** Initialize with default song settings. */
@@ -57,6 +61,8 @@ public class MenuItemManager {
         portamentoEditorEnabled.set(true);
         vibratoEditorEnabled.set(true);
         envelopeEditorEnabled.set(true);
+        insertLyricsEnabled.set(true);
+        prefixSuffixEnabled.set(true);
     }
 
     /** Initialize with default voicebank settings. */
@@ -75,6 +81,8 @@ public class MenuItemManager {
         portamentoEditorEnabled.set(false);
         vibratoEditorEnabled.set(false);
         envelopeEditorEnabled.set(false);
+        insertLyricsEnabled.set(false);
+        prefixSuffixEnabled.set(false);
     }
 
     public void bindProperties(
@@ -91,7 +99,9 @@ public class MenuItemManager {
             BooleanProperty propertiesDisabled,
             BooleanProperty portamentoEditorDisabled,
             BooleanProperty vibratoEditorDisabled,
-            BooleanProperty envelopeEditorDisabled) {
+            BooleanProperty envelopeEditorDisabled,
+            BooleanProperty insertLyricsDisabled,
+            BooleanProperty prefixSuffixDisabled) {
         saveDisabled.unbind();
         saveDisabled.bind(saveEnabled.not());
         saveAsDisabled.unbind();
@@ -120,6 +130,10 @@ public class MenuItemManager {
         vibratoEditorDisabled.bind(vibratoEditorEnabled.not());
         envelopeEditorDisabled.unbind();
         envelopeEditorDisabled.bind(envelopeEditorEnabled.not());
+        insertLyricsDisabled.unbind();
+        insertLyricsDisabled.bind(insertLyricsEnabled.not());
+        prefixSuffixDisabled.unbind();
+        prefixSuffixDisabled.bind(prefixSuffixEnabled.not());
     }
 
     public void enableSave() {

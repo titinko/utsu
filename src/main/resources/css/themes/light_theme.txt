@@ -6,6 +6,9 @@ ACCENT=#0096C9
 HIGHLIGHTED=azure
 HIGHLIGHTED_BORDER=skyblue
 
+SUCCESS=green
+FAILURE=red
+
 NOTE_TEXT=black
 NOTE=skyblue
 NOTE_BORDER=dodgerblue

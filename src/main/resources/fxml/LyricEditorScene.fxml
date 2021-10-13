@@ -13,8 +13,10 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
 
 <BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.song.LyricEditorController">
     <bottom>
@@ -49,8 +51,10 @@
                                     <children>
                                         <Label fx:id="insertLyricsLabel" text="Insert lyrics separated by whitespace:" />
                               <TextArea fx:id="lyricsTextArea" />
-                                        <HBox alignment="CENTER_RIGHT">
+                                        <HBox alignment="CENTER_RIGHT" spacing="5.0">
                                             <children>
+                                    <Text fx:id="validateResult" strokeType="OUTSIDE" strokeWidth="0.0" />
+                                    <Pane opacity="0.0" HBox.hgrow="ALWAYS" />
                                                 <Button fx:id="validateLyricsButton" mnemonicParsing="false" onAction="#validateLyrics" text="Validate" />
                                             </children>
                                         </HBox>

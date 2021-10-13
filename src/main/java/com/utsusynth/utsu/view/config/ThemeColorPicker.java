@@ -38,7 +38,8 @@ public class ThemeColorPicker implements Localizable {
                 "General",
                 ImmutableList.of(
                         ImmutableList.of("BASE", "ACCENT"),
-                        ImmutableList.of("HIGHLIGHTED", "HIGHLIGHTED_BORDER")));
+                        ImmutableList.of("HIGHLIGHTED", "HIGHLIGHTED_BORDER"),
+                        ImmutableList.of("SUCCESS", "FAILURE")));
         noteColors = makeColorSection(
                 "Note",
                 ImmutableList.of(

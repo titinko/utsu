@@ -14,6 +14,14 @@
     -fx-border-width: 0.5;
 }
 
+.success {
+	-fx-fill: #92ff77;
+}
+
+.failure {
+    -fx-fill: #ff9d89;
+}
+
 .playback-icon.not-selected {
     -fx-fill: steelblue;
 }

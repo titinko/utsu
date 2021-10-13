@@ -4,23 +4,18 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
-import com.utsusynth.utsu.files.BulkEditorConfigManager;
 import com.utsusynth.utsu.files.LyricEditorConfigManager;
-import com.utsusynth.utsu.view.song.BulkEditor;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -64,6 +59,8 @@ public class LyricEditorController implements Localizable {
     private Label insertLyricsLabel;
     @FXML
     private TextArea lyricsTextArea;
+    @FXML
+    private Text validateResult;
     @FXML
     private Button validateLyricsButton;
 
@@ -259,7 +256,17 @@ public class LyricEditorController implements Localizable {
 
     @FXML
     public void validateLyrics(ActionEvent event) {
-        // blah
+        String lyricText = lyricsTextArea.getText();
+        String[] lyrics = lyricText.trim().split("\\s+");
+        if (lyricText.trim().isEmpty() || lyrics.length == 0) {
+            validateResult.getStyleClass().clear();
+            validateResult.getStyleClass().add("failure");
+            validateResult.setText("Error: No lyrics found.");
+            return;
+        }
+        validateResult.getStyleClass().clear();
+        validateResult.getStyleClass().add("success");
+        validateResult.setText("Success: Would add " + lyrics.length + " lyric(s).");
     }
 
     @FXML
@@ -287,10 +294,15 @@ public class LyricEditorController implements Localizable {
 
     private void applyToNotes(RegionBounds regionToUpdate) {
         if (tabPane.getSelectionModel().getSelectedItem() == insertLyricsTab) {
-            callback.insertLyrics(new ArrayList<>(), regionToUpdate);
+            String lyricText = lyricsTextArea.getText();
+            String[] lyrics = lyricText.trim().split("\\s+");
+            if (lyricText.trim().isEmpty() || lyrics.length == 0) {
+                return;
+            }
+            callback.insertLyrics(lyrics, regionToUpdate);
         } else if (tabPane.getSelectionModel().getSelectedItem() == prefixSuffixTab) {
             if (prefixSuffixTextField.getText().isEmpty()) {
-                return; // TODO: Report error to user.
+                return;
             }
             if (addRadioButton.isSelected() && prefixRadioButton.isSelected()) {
                 callback.addPrefix(prefixSuffixTextField.getText(), regionToUpdate);

@@ -2,10 +2,8 @@ package com.utsusynth.utsu.controller.song;
 
 import com.utsusynth.utsu.common.RegionBounds;
 
-import java.util.List;
-
 public interface LyricEditorCallback {
-    void insertLyrics(List<String> newLyrics, RegionBounds regionToUpdate);
+    void insertLyrics(String[] newLyrics, RegionBounds regionToUpdate);
 
     void addPrefix(String prefixToAdd, RegionBounds regionToUpdate);
 
