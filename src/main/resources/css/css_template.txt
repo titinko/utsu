@@ -149,6 +149,10 @@
     -fx-background-insets: 0, 0 0 1 0;
 }
 
+.list-text {
+    -fx-fill: $[LYRIC_CONFIG_TEXT];
+}
+
 .list-cell:odd {
     -fx-background-color: $[TRACK_BORDER_THIN], $[TRACK_CELL_DARK];
     -fx-background-insets: 0, 0 0 1 0;

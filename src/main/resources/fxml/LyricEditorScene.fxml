@@ -45,7 +45,7 @@
             <tabs>
                 <Tab fx:id="insertLyricsTab" text="Insert lyrics">
                     <content>
-                        <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="120.0" prefWidth="400.0" BorderPane.alignment="CENTER">
+                        <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="120.0" prefWidth="450.0" BorderPane.alignment="CENTER">
                             <center>
                                 <VBox spacing="5.0" BorderPane.alignment="CENTER">
                                     <children>
@@ -69,7 +69,7 @@
                 </Tab>
                 <Tab fx:id="prefixSuffixTab" text="Prefix/Suffix">
                     <content>
-                        <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="120.0" prefWidth="400.0" BorderPane.alignment="CENTER">
+                        <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="120.0" prefWidth="450.0" BorderPane.alignment="CENTER">
                             <center>
                                 <VBox spacing="5.0" BorderPane.alignment="CENTER">
                                     <children>

@@ -20,6 +20,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.prefs.Preferences;
 import java.util.ResourceBundle;
@@ -159,7 +160,9 @@ public class LyricEditorController implements Localizable {
                         setGraphic(null);
                     } else {
                         BorderPane graphic = new BorderPane();
-                        graphic.setLeft(new Text(item));
+                        Text itemText = new Text(item);
+                        itemText.getStyleClass().add("list-text");
+                        graphic.setLeft(itemText);
                         Button closeButton = new Button("X");
                         closeButton.setOnAction(event -> {
                             if (getIndex() >= configManager.getNumDefaultPrefixSuffix()) {
@@ -221,6 +224,19 @@ public class LyricEditorController implements Localizable {
         applySelectionButton.setText(bundle.getString("bulkEditor.applySelection"));
         applyAllButton.setText(bundle.getString("bulkEditor.applyAll"));
         cancelButton.setText(bundle.getString("general.cancel"));
+
+        insertLyricsTab.setText(bundle.getString("menu.tools.lyricEditor.insertLyrics"));
+        insertLyricsLabel.setText(bundle.getString("lyricEditor.insertLyrics.instructions"));
+        validateLyricsButton.setText(bundle.getString("lyricEditor.insertLyrics.validate"));
+
+        prefixSuffixTab.setText(bundle.getString("menu.tools.lyricEditor.prefixSuffix"));
+        actionLabel.setText(bundle.getString("lyricEditor.prefixSuffix.action"));
+        addRadioButton.setText(bundle.getString("lyricEditor.prefixSuffix.action.add"));
+        removeRadioButton.setText(bundle.getString("lyricEditor.prefixSuffix.action.remove"));
+        targetLabel.setText(bundle.getString("lyricEditor.prefixSuffix.target"));
+        prefixRadioButton.setText(bundle.getString("lyricEditor.prefixSuffix.target.prefix"));
+        suffixRadioButton.setText(bundle.getString("lyricEditor.prefixSuffix.target.suffix"));
+        textLabel.setText(bundle.getString("lyricEditor.prefixSuffix.text"));
     }
 
     /** Secondary initialization. */
@@ -262,12 +278,15 @@ public class LyricEditorController implements Localizable {
         if (lyricText.trim().isEmpty() || lyrics.length == 0) {
             validateResult.getStyleClass().clear();
             validateResult.getStyleClass().add("failure");
-            validateResult.setText("Error: No lyrics found.");
+            validateResult.setText(
+                    localizer.getMessage("lyricEditor.insertLyrics.validateError"));
             return;
         }
         validateResult.getStyleClass().clear();
         validateResult.getStyleClass().add("success");
-        validateResult.setText("Success: Would add " + lyrics.length + " lyric(s).");
+        validateResult.setText(MessageFormat.format(
+                localizer.getMessage("lyricEditor.insertLyrics.validateSuccess"),
+                lyrics.length));
     }
 
     @FXML

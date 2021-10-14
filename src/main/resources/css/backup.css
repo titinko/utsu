@@ -140,6 +140,10 @@
     -fx-text-fill: black;
 }
 
+.list-text {
+    -fx-fill: black;
+}
+
 .list-cell:even {
 	-fx-background-color: lightgray, white;
 	-fx-background-insets: 0, 0 0 1 0;
