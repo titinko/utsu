@@ -1108,49 +1108,14 @@ public class SongController implements EditorController, Localizable {
                         }
 
                         @Override
-                        public void addPrefix(String prefixToAdd, RegionBounds regionToUpdate) {
-                            List<NoteData> notesToChange = new ArrayList<>();
-                            List<NoteData> newNotes = new ArrayList<>();
-                            for (NoteData noteData : song.get().getNotes(regionToUpdate)) {
-                                notesToChange.add(noteData);
-                                newNotes.add(noteData.withNewLyric(prefixToAdd));
-                            }
-                            updateNotes(notesToChange, newNotes);
-                        }
-
-                        @Override
-                        public void removePrefix(
-                                String prefixToRemove, RegionBounds regionToUpdate) {
-                            List<NoteData> notesToChange = new ArrayList<>();
-                            List<NoteData> newNotes = new ArrayList<>();
-                            for (NoteData noteData : song.get().getNotes(regionToUpdate)) {
-                                notesToChange.add(noteData);
-                                newNotes.add(noteData.withNewLyric(prefixToRemove));
-                            }
-                            updateNotes(notesToChange, newNotes);
-                        }
-
-                        @Override
-                        public void addSuffix(String suffixToAdd, RegionBounds regionToUpdate) {
-                            List<NoteData> notesToChange = new ArrayList<>();
-                            List<NoteData> newNotes = new ArrayList<>();
-                            for (NoteData noteData : song.get().getNotes(regionToUpdate)) {
-                                notesToChange.add(noteData);
-                                newNotes.add(noteData.withNewLyric(suffixToAdd));
-                            }
-                            updateNotes(notesToChange, newNotes);
-                        }
-
-                        @Override
-                        public void removeSuffix(
-                                String suffixToRemove, RegionBounds regionToUpdate) {
-                            List<NoteData> notesToChange = new ArrayList<>();
-                            List<NoteData> newNotes = new ArrayList<>();
-                            for (NoteData noteData : song.get().getNotes(regionToUpdate)) {
-                                notesToChange.add(noteData);
-                                newNotes.add(noteData.withNewLyric(suffixToRemove));
-                            }
-                            updateNotes(notesToChange, newNotes);
+                        public void transformLyric(
+                                Function<NoteData, NoteData> transform,
+                                RegionBounds regionToUpdate) {
+                            List<NoteData> oldNotes = song.get().getNotes(regionToUpdate);
+                            List<NoteData> newNotes = oldNotes.stream()
+                                    .map(transform)
+                                    .collect(Collectors.toList());
+                            updateNotes(oldNotes, newNotes);
                         }
                     });
             Scene scene = new Scene(editorPane);

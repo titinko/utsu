@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.RegionBounds;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.files.LyricEditorConfigManager;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -19,7 +20,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
+import java.util.Optional;
 import java.util.prefs.Preferences;
 import java.util.ResourceBundle;
 
@@ -301,19 +302,76 @@ public class LyricEditorController implements Localizable {
             }
             callback.insertLyrics(lyrics, regionToUpdate);
         } else if (tabPane.getSelectionModel().getSelectedItem() == prefixSuffixTab) {
-            if (prefixSuffixTextField.getText().isEmpty()) {
+            if (prefixSuffixTextField.getText().isEmpty() || prefixSuffixList == null) {
                 return;
             }
+            String prefixSuffix = prefixSuffixTextField.getText();
+            // Assumes that 2nd item in prefix suffix list is the special pitch one.
+            boolean isPitch = prefixSuffix.equals(prefixSuffixList.getItems().get(1));
+
             if (addRadioButton.isSelected() && prefixRadioButton.isSelected()) {
-                callback.addPrefix(prefixSuffixTextField.getText(), regionToUpdate);
+                callback.transformLyric(noteData -> {
+                    if (isPitch) {
+                        return noteData; // No pitch prefixes allowed.
+                    }
+                    return noteData.withNewLyric(prefixSuffix + noteData.getLyric());
+                }, regionToUpdate);
             } else if (removeRadioButton.isSelected() && prefixRadioButton.isSelected()) {
-                callback.removePrefix(prefixSuffixTextField.getText(), regionToUpdate);
+                callback.transformLyric(noteData -> {
+                    if (isPitch) {
+                        return noteData; // No pitch prefixes allowed.
+                    }
+                    if (noteData.getLyric().startsWith(prefixSuffix)) {
+                        return noteData.withNewLyric(
+                                noteData.getLyric().substring(prefixSuffix.length()));
+                    }
+                    return noteData;
+                }, regionToUpdate);
             } else if (addRadioButton.isSelected() && suffixRadioButton.isSelected()) {
-                callback.addSuffix(prefixSuffixTextField.getText(), regionToUpdate);
+                callback.transformLyric(noteData -> {
+                    if (isPitch) {
+                        String pitchString = extractPitch(noteData.getTrueLyric());
+                        if (!pitchString.isEmpty()
+                                && extractPitch(Optional.of(noteData.getLyric())).isEmpty()) {
+                            return noteData.withNewLyric(noteData.getLyric() + pitchString);
+                        }
+                        return noteData;
+                    }
+                    return noteData.withNewLyric(noteData.getLyric() + prefixSuffix);
+                }, regionToUpdate);
             } else if (removeRadioButton.isSelected() && suffixRadioButton.isSelected()) {
-                callback.addSuffix(prefixSuffixTextField.getText(), regionToUpdate);
+                callback.transformLyric(noteData -> {
+                    if (isPitch) {
+                        String pitchString = extractPitch(Optional.of(noteData.getLyric()));
+                        if (!pitchString.isEmpty()) {
+                            return noteData.withNewLyric(noteData.getLyric().substring(
+                                    0, noteData.getLyric().length() - pitchString.length()));
+                        }
+                    }
+                    if (noteData.getLyric().endsWith(prefixSuffix)) {
+                        return noteData.withNewLyric(noteData.getLyric().substring(
+                                0, noteData.getLyric().length() - prefixSuffix.length()));
+                    }
+                    return noteData;
+                }, regionToUpdate);
             }
         }
+    }
+
+    private static String extractPitch(Optional<String> lyric) {
+        if (lyric.isEmpty()) {
+            return "";
+        }
+        for (String pitch : PitchUtils.PITCHES) {
+            for (int i = 1; i <= 7; i++) {
+                String fullPitch = pitch + i;
+                if (lyric.get().endsWith(fullPitch)
+                        || lyric.get().endsWith(fullPitch.toLowerCase())) {
+                    return fullPitch;
+                }
+            }
+        }
+        return "";
     }
 
     @FXML
