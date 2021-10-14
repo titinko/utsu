@@ -107,6 +107,19 @@ public class NoteData {
         return this.configData;
     }
 
+    public NoteData withNewLyric(String newLyric) {
+        return new NoteData(
+                position,
+                duration,
+                pitch,
+                newLyric,
+                Optional.empty(), // Clear true lyric.
+                envelope,
+                pitchbend,
+                configData
+        );
+    }
+
     public NoteData withEnvelope(EnvelopeData envelope) {
         return new NoteData(
                 position,

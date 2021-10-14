@@ -1024,6 +1024,51 @@ public class SongController implements EditorController, Localizable {
         }
     }
 
+    /**
+     * Can modify a set of notes, but cannot modify lyric, position, or duration. For those fields
+     * use updateNotes instead.
+     */
+    private void modifyNotes(List<NoteData> oldNotes, Function<NoteData, NoteData> transform) {
+        List<NoteData> newNotes = oldNotes.stream().map(transform).collect(Collectors.toList());
+        if (newNotes.isEmpty()) {
+            return;
+        }
+        Runnable redoAction = () -> {
+            for (NoteData noteData : newNotes) {
+                song.get().modifyNote(noteData);
+            }
+            onSongChange();
+            songEditor.selectRegion(getRegionBounds(newNotes));
+            songEditor.refreshSelected();
+        };
+        Runnable undoAction = () -> {
+            for (NoteData noteData : oldNotes) {
+                song.get().modifyNote(noteData);
+            }
+            onSongChange();
+            songEditor.selectRegion(getRegionBounds(oldNotes));
+            songEditor.refreshSelected();
+        };
+        // Apply changes and save redo/undo for these changes.
+        redoAction.run();
+        undoService.setMostRecentAction(redoAction, undoAction);
+    }
+
+    /** Utility method to get the region surrounding a series of notes. */
+    private static RegionBounds getRegionBounds(List<NoteData> notes) {
+        int minMs = Integer.MAX_VALUE;
+        int maxMs = 0;
+        for (NoteData noteData : notes) {
+            if (minMs > noteData.getPosition()) {
+                minMs = noteData.getPosition();
+            }
+            if (maxMs < noteData.getPosition()) {
+                maxMs = noteData.getPosition() + noteData.getDuration();
+            }
+        }
+        return new RegionBounds(minMs, maxMs);
+    }
+
     @Override
     public void openLyricEditor(LyricEditorType editorType) {
         // Open lyric editor modal.
@@ -1048,29 +1093,64 @@ public class SongController implements EditorController, Localizable {
                         @Override
                         public void insertLyrics(
                                 String[] newLyrics, RegionBounds regionToUpdate) {
-                            // blah
+                            List<NoteData> notesToChange = new ArrayList<>();
+                            List<NoteData> newNotes = new ArrayList<>();
+                            int lyricIndex = 0;
+                            for (NoteData noteData : song.get().getNotes(regionToUpdate)) {
+                                if (lyricIndex >= newLyrics.length) {
+                                    break;
+                                }
+                                notesToChange.add(noteData);
+                                newNotes.add(noteData.withNewLyric(newLyrics[lyricIndex]));
+                                lyricIndex++;
+                            }
+                            updateNotes(notesToChange, newNotes);
                         }
 
                         @Override
                         public void addPrefix(String prefixToAdd, RegionBounds regionToUpdate) {
-                            // blah
+                            List<NoteData> notesToChange = new ArrayList<>();
+                            List<NoteData> newNotes = new ArrayList<>();
+                            for (NoteData noteData : song.get().getNotes(regionToUpdate)) {
+                                notesToChange.add(noteData);
+                                newNotes.add(noteData.withNewLyric(prefixToAdd));
+                            }
+                            updateNotes(notesToChange, newNotes);
                         }
 
                         @Override
                         public void removePrefix(
                                 String prefixToRemove, RegionBounds regionToUpdate) {
-                            // blah
+                            List<NoteData> notesToChange = new ArrayList<>();
+                            List<NoteData> newNotes = new ArrayList<>();
+                            for (NoteData noteData : song.get().getNotes(regionToUpdate)) {
+                                notesToChange.add(noteData);
+                                newNotes.add(noteData.withNewLyric(prefixToRemove));
+                            }
+                            updateNotes(notesToChange, newNotes);
                         }
 
                         @Override
                         public void addSuffix(String suffixToAdd, RegionBounds regionToUpdate) {
-                            // blah
+                            List<NoteData> notesToChange = new ArrayList<>();
+                            List<NoteData> newNotes = new ArrayList<>();
+                            for (NoteData noteData : song.get().getNotes(regionToUpdate)) {
+                                notesToChange.add(noteData);
+                                newNotes.add(noteData.withNewLyric(suffixToAdd));
+                            }
+                            updateNotes(notesToChange, newNotes);
                         }
 
                         @Override
                         public void removeSuffix(
                                 String suffixToRemove, RegionBounds regionToUpdate) {
-                            // blah
+                            List<NoteData> notesToChange = new ArrayList<>();
+                            List<NoteData> newNotes = new ArrayList<>();
+                            for (NoteData noteData : song.get().getNotes(regionToUpdate)) {
+                                notesToChange.add(noteData);
+                                newNotes.add(noteData.withNewLyric(suffixToRemove));
+                            }
+                            updateNotes(notesToChange, newNotes);
                         }
                     });
             Scene scene = new Scene(editorPane);
@@ -1083,42 +1163,30 @@ public class SongController implements EditorController, Localizable {
         }
     }
 
-    private void modifyNotes(List<NoteData> oldNotes, Function<NoteData, NoteData> transform) {
-        List<NoteData> newNotes = oldNotes.stream().map(transform).collect(Collectors.toList());
+    /**
+     * Modify anything about a set of notes, including lyric, positions, and quantity of notes.
+     */
+    private void updateNotes(List<NoteData> oldNotes, List<NoteData> newNotes) {
         if (newNotes.isEmpty()) {
             return;
         }
         Runnable redoAction = () -> {
-            int minMs = Integer.MAX_VALUE;
-            int maxMs = 0;
-            for (NoteData noteData : newNotes) {
-                song.get().modifyNote(noteData);
-                if (minMs > noteData.getPosition()) {
-                    minMs = noteData.getPosition();
-                }
-                if (maxMs < noteData.getPosition() + noteData.getDuration()) {
-                    maxMs = noteData.getPosition() + noteData.getDuration();
-                }
-            }
+            songEditor.deleteNotesFromController(oldNotes);
+            song.get().addNotes(newNotes);
+            songEditor.addNotesFromController(
+                    newNotes.get(0).getPosition(),
+                    newNotes.get(oldNotes.size() - 1).getPosition(),
+                    newNotes);
             onSongChange();
-            songEditor.selectRegion(new RegionBounds(minMs, maxMs));
-            songEditor.refreshSelected();
         };
         Runnable undoAction = () -> {
-            int minMs = Integer.MAX_VALUE;
-            int maxMs = 0;
-            for (NoteData noteData : oldNotes) {
-                song.get().modifyNote(noteData);
-                if (minMs > noteData.getPosition()) {
-                    minMs = noteData.getPosition();
-                }
-                if (maxMs < noteData.getPosition()) {
-                    maxMs = noteData.getPosition() + noteData.getDuration();
-                }
-            }
+            songEditor.deleteNotesFromController(newNotes);
+            song.get().addNotes(oldNotes);
+            songEditor.addNotesFromController(
+                    oldNotes.get(0).getPosition(),
+                    oldNotes.get(oldNotes.size() - 1).getPosition(),
+                    oldNotes);
             onSongChange();
-            songEditor.selectRegion(new RegionBounds(minMs, maxMs));
-            songEditor.refreshSelected();
         };
         // Apply changes and save redo/undo for these changes.
         redoAction.run();

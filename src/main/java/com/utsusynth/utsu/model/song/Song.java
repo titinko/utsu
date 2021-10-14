@@ -382,7 +382,11 @@ public class Song {
     }
 
     public LinkedList<NoteData> getNotes() {
-        return getNotes(RegionBounds.WHOLE_SONG, new ArrayList<>());
+        return getNotes(RegionBounds.WHOLE_SONG);
+    }
+
+    public LinkedList<NoteData> getNotes(RegionBounds bounds) {
+        return getNotes(bounds, new ArrayList<>());
     }
 
     public LinkedList<NoteData> getNotes(RegionBounds bounds, List<FilterType> filters) {

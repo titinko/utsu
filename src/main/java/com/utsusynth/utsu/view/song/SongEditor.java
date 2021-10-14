@@ -170,6 +170,17 @@ public class SongEditor {
         track.setNumMeasures((lastNote.getPosition() / Quantizer.COL_WIDTH / 4) + 4);
 
         // Add all notes.
+        addNotes(notes);
+        return track.getNoteTrack();
+    }
+
+    /** Add new notes to the view from the controller. */
+    public void addNotesFromController(int firstPosition, int lastPosition, List<NoteData> notes) {
+        addNotes(notes);
+        refreshNotes(firstPosition, lastPosition);
+    }
+
+    private void addNotes(List<NoteData> notes) {
         NoteData prevNote = notes.get(0);
         for (NoteData note : notes) {
             Note newNote = noteFactory.createNote(
@@ -203,7 +214,17 @@ public class SongEditor {
             noteMap.addNoteElement(newNote);
             prevNote = note;
         }
-        return track.getNoteTrack();
+    }
+
+    /** Called by controller, deletes notes from the view. */
+    public void deleteNotesFromController(List<NoteData> notes) {
+        List<Note> displayedNotes = new ArrayList<>();
+        for (NoteData note : notes) {
+            if (noteMap.hasNote(note.getPosition())) {
+                displayedNotes.add(noteMap.getNote(note.getPosition()));
+            }
+        }
+        deleteNotes(displayedNotes);
     }
 
     public ListView<TrackItemSet> getDynamicsElement() {
