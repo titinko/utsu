@@ -543,22 +543,14 @@ public class SongEditor {
     }
 
     public void focusOnNote(int position) {
+        System.out.println("Focus on note.");
         if (!noteMap.hasNote(position)) {
             return;
-        }
-        // If old focus has lyric open, new focus should have it open too.
-        boolean shouldOpenLyricInput = false;
-        List<Note> highlightedNotes = playbackManager.getHighlightedNotes();
-        if (!highlightedNotes.isEmpty()) {
-            shouldOpenLyricInput = highlightedNotes.get(0).isLyricInputOpen();
         }
         Note newFocus = noteMap.getNote(position);
         playbackManager.clearHighlights();
         playbackManager.highlightNote(newFocus);
         playbackManager.realign();
-        if (shouldOpenLyricInput) {
-            newFocus.openLyricInput();
-        }
     }
 
     public void openLyricInput(int position) {

@@ -524,10 +524,6 @@ public class Note implements TrackItem, Comparable<Note> {
         for (Pane note : drawnNotes.values()) {
             note.getStyleClass().set(2, highlighted ? "highlighted" : "not-highlighted");
         }
-
-        if (!isHighlighted) {
-            lyric.closeTextFieldIfNeeded();
-        }
     }
 
     public boolean isValid() {
@@ -557,13 +553,9 @@ public class Note implements TrackItem, Comparable<Note> {
         this.croppingEnabled = croppingEnabled;
     }
 
-    public boolean isLyricInputOpen() {
-        return lyric.isTextFieldOpen();
-    }
-
     public void openLyricInput() {
         if (!lyric.isTextFieldOpen()) {
-            lyric.openTextField(); // Don't open it text field already open.
+            lyric.openTextField(); // Don't open if text field already open.
         }
     }
 
@@ -622,7 +614,6 @@ public class Note implements TrackItem, Comparable<Note> {
 
     private void deleteNote() {
         contextMenu.hide();
-        lyric.closeTextFieldIfNeeded();
         track.deleteNote(this);
     }
 

@@ -5,9 +5,11 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.track.TrackItem;
 import javafx.beans.property.*;
+import javafx.geometry.Bounds;
 import javafx.scene.Group;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -19,8 +21,6 @@ public class Lyric implements TrackItem {
     private final HashMap<Double, HBox> drawnHBoxes;
     private final HashMap<Double, Label> drawnLyrics;
     private final HashMap<Double, Label> drawnAliases;
-    private final HashMap<Double, TextField> drawnTextFields;
-    private final HashMap<Double, Group> drawnActiveNodes;
     private final HashSet<Integer> drawnColumns;
     private final Scaler scaler;
 
@@ -48,8 +48,6 @@ public class Lyric implements TrackItem {
         drawnHBoxes = new HashMap<>();
         drawnLyrics = new HashMap<>();
         drawnAliases = new HashMap<>();
-        drawnTextFields = new HashMap<>();
-        drawnActiveNodes = new HashMap<>();
         drawnColumns = new HashSet<>();
     }
 
@@ -92,12 +90,12 @@ public class Lyric implements TrackItem {
     }
 
     @Override
-    public Group redraw() {
+    public HBox redraw() {
         return redraw(0);
     }
 
     @Override
-    public Group redraw(double offsetX) {
+    public HBox redraw(double offsetX) {
         Label lyricText = new Label();
         lyricText.textProperty().bind(lyric);
         lyricText.getStyleClass().add("track-note-text");
@@ -114,47 +112,15 @@ public class Lyric implements TrackItem {
         HBox lyricAndAlias = new HBox(lyricText, aliasText);
         lyricAndAlias.setMouseTransparent(true);
         lyricAndAlias.visibleProperty().bind(showLyrics);
+        lyricAndAlias.translateXProperty().bind(startX.subtract(offsetX));
+        lyricAndAlias.translateYProperty().bind(currentY);
         drawnHBoxes.put(offsetX, lyricAndAlias);
-
-        TextField textField = new TextField();
-        textField.setFont(Font.font(9));
-        textField.setMaxHeight(scaler.scaleY(Quantizer.ROW_HEIGHT) - 2);
-        textField.setMaxWidth(Quantizer.TEXT_FIELD_WIDTH);
-        textField.setOnAction(event -> closeTextFieldIfNeeded());
-        // Removing focus closes the text field unless another text field gets focus.
-        textField.focusedProperty().addListener(event -> {
-            for (TextField tf : drawnTextFields.values()) {
-                if (tf.isFocused()) {
-                    return;
-                }
-            }
-            closeTextFieldIfNeeded();
-        });
-        // A change to the focused text field is copied to all others.
-        textField.textProperty().addListener((obs, oldValue, newValue) -> {
-            if (oldValue.equals(newValue) || !textField.isFocused()) {
-                return;
-            }
-            for (TextField tf : drawnTextFields.values()) {
-                if (!tf.isFocused()) {
-                    tf.setText(textField.getText());
-                }
-            }
-        });
-        drawnTextFields.put(offsetX, textField);
-
-        // Initialize with text active.
-        Group activeNode = new Group();
-        activeNode.getChildren().add(editMode.get() ? textField : lyricAndAlias);
-        activeNode.translateXProperty().bind(startX.subtract(offsetX));
-        activeNode.translateYProperty().bind(currentY);
-        drawnActiveNodes.put(offsetX, activeNode);
 
         Rectangle clip = new Rectangle(scaler.scaleX(Quantizer.TRACK_COL_WIDTH) + 1,
                 scaler.scaleY(Quantizer.ROW_HEIGHT));
         clip.xProperty().bind(startX.subtract(offsetX).negate());
-        activeNode.setClip(clip);
-        return activeNode;
+        lyricAndAlias.setClip(clip);
+        return lyricAndAlias;
     }
 
     @Override
@@ -174,8 +140,6 @@ public class Lyric implements TrackItem {
         drawnHBoxes.remove(offsetX);
         drawnLyrics.remove(offsetX);
         drawnAliases.remove(offsetX);
-        drawnTextFields.remove(offsetX);
-        drawnActiveNodes.remove(offsetX);
     }
 
     @Override
@@ -184,8 +148,6 @@ public class Lyric implements TrackItem {
         drawnHBoxes.clear();
         drawnLyrics.clear();
         drawnAliases.clear();
-        drawnTextFields.clear();
-        drawnActiveNodes.clear();
     }
 
     public String getLyric() {
@@ -204,18 +166,38 @@ public class Lyric implements TrackItem {
     }
 
     public void openTextField() {
-        editMode.set(true);
-        for (double offsetX : drawnActiveNodes.keySet()) {
-            Group activeNode = drawnActiveNodes.get(offsetX);
-            TextField textField = drawnTextFields.get(offsetX);
-
-            activeNode.getChildren().clear();
-            activeNode.getChildren().add(textField);
-            textField.setText(lyric.get());
-            textField.requestFocus();
-        }
-        for (TextField textField : drawnTextFields.values()) {
-            textField.selectAll();
+        ContextMenu contextMenu = new ContextMenu();
+        TextField textField = new TextField();
+        textField.setText(lyric.get());
+        textField.selectAll();
+        textField.setOnAction(action -> contextMenu.hide());
+        textField.setOnKeyPressed(event -> {
+            if (event.getCode().equals(KeyCode.TAB)) {
+                // TODO: Open lyric input on next note.
+                contextMenu.hide();
+            }
+        });
+        MenuItem menuItem = new CustomMenuItem(textField, false);
+        contextMenu.getScene().focusOwnerProperty().addListener(event -> {
+            if (!contextMenu.getScene().getFocusOwner().equals(textField)) {
+                textField.requestFocus(); // Only allow focus on the text field.
+            }
+        });
+        contextMenu.getItems().add(menuItem);
+        for (double offsetX : drawnHBoxes.keySet()) {
+            HBox activeNode = drawnHBoxes.get(offsetX);
+            Bounds screenPosition = activeNode.localToScreen(activeNode.getBoundsInLocal());
+            contextMenu.show(activeNode, screenPosition.getMinX(), screenPosition.getMinY());
+            contextMenu.setOnHidden(action -> {
+                String oldLyric = lyric.get();
+                if (!textField.getText().equals(oldLyric)) {
+                    setVisibleLyric(textField.getText());
+                    trackNote.replaceSongLyric(oldLyric, textField.getText());
+                }
+                editMode.set(false);
+            });
+            editMode.set(true);
+            return;
         }
     }
 
@@ -223,35 +205,11 @@ public class Lyric implements TrackItem {
         return editMode.get();
     }
 
-    public void closeTextFieldIfNeeded() {
-        if (isTextFieldOpen()) {
-            editMode.set(false);
-            String oldLyric = lyric.get();
-            String newLyric = oldLyric;
-
-            for (double offsetX : drawnActiveNodes.keySet()) {
-                Group activeNode = drawnActiveNodes.get(offsetX);
-                activeNode.getChildren().clear();
-                activeNode.getChildren().add(drawnHBoxes.get(offsetX));
-
-                TextField textField = drawnTextFields.get(offsetX);
-                if (!textField.getText().equals(oldLyric)) {
-                    newLyric = textField.getText();
-                }
-            }
-            setVisibleLyric(newLyric);
-            trackNote.replaceSongLyric(oldLyric, newLyric);
-        }
-    }
-
     public void registerLyric() {
         trackNote.setSongLyric(lyric.get());
     }
 
     private void adjustLyricAndAlias() {
-        if (editMode.get()) {
-            return;
-        }
         for (double offsetX : drawnHBoxes.keySet()) {
             HBox hBox = drawnHBoxes.get(offsetX);
             hBox.getChildren().clear();
