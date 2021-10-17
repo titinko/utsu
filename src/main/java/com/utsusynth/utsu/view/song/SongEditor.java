@@ -543,7 +543,6 @@ public class SongEditor {
     }
 
     public void focusOnNote(int position) {
-        System.out.println("Focus on note.");
         if (!noteMap.hasNote(position)) {
             return;
         }
@@ -634,11 +633,12 @@ public class SongEditor {
                     public void onDragged(double absoluteX, double absoluteY) {
                         // Draw selection rectangle.
                         double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
+                        double startX = Math.max(measureWidth, curX);
                         double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
                         double endY = Math.min(column.getHeight(), Math.max(0, absoluteY));
-                        selectionBox.setStartX(Math.min(curX, endX));
+                        selectionBox.setStartX(Math.min(startX, endX));
                         selectionBox.setStartY(Math.min(curY, endY));
-                        selectionBox.setWidth(Math.abs(endX - curX));
+                        selectionBox.setWidth(Math.abs(endX - startX));
                         selectionBox.setHeight(Math.abs(endY - curY));
                         track.insertItem(track.getNoteTrack(), selectionBox);
                         // Update highlighted notes.
@@ -684,10 +684,10 @@ public class SongEditor {
                         double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
                         double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
                         int quantSize = quantizer.getQuant();
-                        int startMs = RoundUtils.round(
-                                scaler.unscalePos(curX) / quantSize) * quantSize;
-                        int endMs = RoundUtils.round(
-                                scaler.unscalePos(endX) / quantSize) * quantSize;
+                        int startMs = Math.max(0, RoundUtils.round(
+                                scaler.unscalePos(curX) / quantSize) * quantSize);
+                        int endMs = Math.max(0, RoundUtils.round(
+                                scaler.unscalePos(endX) / quantSize) * quantSize);
                         if (endMs > startMs) {
                             // Draw selection rectangle.
                             int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
@@ -708,10 +708,10 @@ public class SongEditor {
                         double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
                         double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
                         int quantSize = quantizer.getQuant();
-                        int startMs = RoundUtils.round(
-                                scaler.unscalePos(curX) / quantSize) * quantSize;
-                        int endMs = RoundUtils.round(
-                                scaler.unscalePos(endX) / quantSize) * quantSize;
+                        int startMs = Math.max(0, RoundUtils.round(
+                                scaler.unscalePos(curX) / quantSize) * quantSize);
+                        int endMs = Math.max(0, RoundUtils.round(
+                                scaler.unscalePos(endX) / quantSize) * quantSize);
                         // Create new note if size would be nonzero.
                         if (endMs > startMs) {
                             int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
