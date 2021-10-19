@@ -82,7 +82,7 @@ public class Ust12Writer {
             // Write extra data in plugin format.
             ps.println("@preuttr=" + note.getRealPreutter());
             ps.println("@overlap=" + note.getFadeIn());
-            ps.println("@stpoint=" + note.getAutoStartPoint());
+            ps.println("@stpoint=" + note.getRealStartPoint());
 
             // Write lyric data if readily available.
             if (!note.getTrueLyric().isEmpty()) {

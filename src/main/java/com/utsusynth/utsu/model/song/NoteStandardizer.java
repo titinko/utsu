@@ -13,10 +13,11 @@ import java.util.Optional;
 public class NoteStandardizer {
     // This function should be called in the order: last note -> first note
     void standardize(Optional<Note> prev, Note note, Optional<Note> next, Voicebank voicebank) {
+        double consonantScaleFactor = Math.pow(2, 1 - (note.getVelocity() / 100.0));
         double realPreutter = 0;
         double realDuration = note.getDuration();
         double realOverlap;
-        double autoStartPoint = 0;
+        double realStartPoint = note.getStartPoint() * consonantScaleFactor;
         String trueLyric = "";
 
         // Find lyric config, applying auto-aliasing if necessary.
@@ -28,10 +29,10 @@ public class NoteStandardizer {
             trueLyric = config.get().getTrueLyric();
 
             // Note preutter and overlap can override those in the config.
-            realPreutter = note.getPreutter().isPresent() ? note.getPreutter().get()
-                    : config.get().getPreutterance();
-            realOverlap = note.getOverlap().isPresent() ? note.getOverlap().get()
-                    : config.get().getOverlap();
+            realPreutter = (note.getPreutter().isPresent() ? note.getPreutter().get()
+                    : config.get().getPreutterance()) * consonantScaleFactor;
+            realOverlap = (note.getOverlap().isPresent() ? note.getOverlap().get()
+                    : config.get().getOverlap()) * consonantScaleFactor;
 
             // Check correction factor.
             if (prev.isPresent()) {
@@ -43,7 +44,7 @@ public class NoteStandardizer {
                     double oldPreutter = realPreutter;
                     realPreutter *= correctionFactor;
                     realOverlap *= correctionFactor;
-                    autoStartPoint += oldPreutter - realPreutter;
+                    realStartPoint += oldPreutter - realPreutter;
                 }
                 // Added through trial and error to reduce timing issues.
                 if (realPreutter > note.getDelta()) {
@@ -51,7 +52,7 @@ public class NoteStandardizer {
                     double oldPreutter = realPreutter;
                     realPreutter *= correctionFactor;
                     realOverlap *= correctionFactor;
-                    autoStartPoint += oldPreutter - realPreutter;
+                    realStartPoint += oldPreutter - realPreutter;
                 }
                 // Added through trial and error to reduce timing issues.
                 if (realOverlap > note.getDelta()) {
@@ -59,7 +60,7 @@ public class NoteStandardizer {
                     double oldPreutter = realPreutter;
                     realPreutter *= correctionFactor;
                     realOverlap *= correctionFactor;
-                    autoStartPoint += oldPreutter - realPreutter;
+                    realStartPoint += oldPreutter - realPreutter;
                 }
             }
             realDuration = getAdjustedLength(voicebank, note, trueLyric, realPreutter, next);
@@ -94,7 +95,7 @@ public class NoteStandardizer {
         // Set overlap.
         note.setRealPreutter(realPreutter);
         note.setRealDuration(realDuration);
-        note.setAutoStartPoint(autoStartPoint);
+        note.setRealStartPoint(realStartPoint);
         note.setTrueLyric(trueLyric);
 
         // TODO: Enforce pitchbend size/location limits.

@@ -31,7 +31,6 @@ public class Wavtool {
             boolean triggerSynthesis) {
         String outputFilePath = outputFile.getAbsolutePath();
         String inputFilePath = inputFile.getAbsolutePath();
-        double startPoint = note.getStartPoint() + note.getAutoStartPoint();
         String[] envelope = note.getFullEnvelope();
 
         double boundedOverlap = Math.max(0, Math.min(note.getFadeIn(), noteLength));
@@ -43,14 +42,12 @@ public class Wavtool {
         double scaleFactor = 125 / song.getTempo();
         double scaledExpectedDelta = expectedDelta * scaleFactor;
         double scaledNoteLength = noteLength * scaleFactor;
-        double scaledOverlap = boundedOverlap * scaleFactor;
-        double scaledStartPoint = startPoint * scaleFactor;
 
         // Check that current length matches expected length and correct any discrepancies.
         if (scaledExpectedDelta > totalDelta && Math.abs(scaledExpectedDelta - totalDelta) > 0.01) {
             double timingCorrection = scaledExpectedDelta - totalDelta;
-            if (scaledOverlap > timingCorrection) {
-                scaledOverlap -= timingCorrection;
+            if (boundedOverlap > timingCorrection) {
+                boundedOverlap -= timingCorrection;
                 System.out.println("Corrected note timing by " + timingCorrection + " ms.");
             }
         }
@@ -60,7 +57,7 @@ public class Wavtool {
                 wavtoolPath.getAbsolutePath(),
                 outputFilePath,
                 inputFilePath,
-                Double.toString(scaledStartPoint),
+                Double.toString(note.getRealStartPoint()),
                 Double.toString(scaledNoteLength),
                 envelope[0], // p1
                 envelope[1], // p2
@@ -69,12 +66,12 @@ public class Wavtool {
                 envelope[4], // v2
                 envelope[5], // v3
                 envelope[6], // v4
-                Double.toString(scaledOverlap), // overlap
+                Double.toString(boundedOverlap), // overlap
                 envelope[8], // p4
                 envelope[9], // p5
                 envelope[10], // v5
                 triggerSynthesis ? "LAST_NOTE" : ""); // Triggers final song processing.
-        totalDelta += scaledNoteLength - scaledOverlap;
+        totalDelta += scaledNoteLength - boundedOverlap;
     }
 
     // Unlike in addNewNote, values are already scaled for tempo here.

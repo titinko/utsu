@@ -297,12 +297,12 @@ public class Engine {
                 }
                 continue;
             }
-            System.out.println(config.get());
+            // System.out.println(config.get());
 
             // Adjust note length based on preutterance/overlap.
             double adjustedLength =
                     note.getRealDuration() > -1 ? note.getRealDuration() : note.getDuration();
-            System.out.println("Length is " + adjustedLength);
+            System.out.println("Real duration is " + note.getRealDuration());
 
             // Calculate pitchbends.
             int firstStep = getFirstPitchStep(totalDelta, preutter);

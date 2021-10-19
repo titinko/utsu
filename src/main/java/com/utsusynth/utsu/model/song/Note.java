@@ -40,7 +40,7 @@ public class Note {
     // These are set in SongNoteStandardizer.
     private double realPreutter;
     private double realDuration;
-    private double autoStartPoint; // This is added to the user-added startPoint.
+    private double realStartPoint;
     private String trueLyric; // Note's lyric after processing and formatting.
     private Optional<File> cacheFile; // Result of applying resampler to this note.
 
@@ -70,7 +70,7 @@ public class Note {
 
         this.realPreutter = 0;
         this.realDuration = -1; // Should be ignored if not explicitly set.
-        this.autoStartPoint = 0;
+        this.realStartPoint = 0;
         this.trueLyric = ""; // Defaults to "" if no lyric is found.
         this.cacheFile = Optional.empty();
     }
@@ -425,12 +425,12 @@ public class Note {
         this.realDuration = realDuration;
     }
 
-    public double getAutoStartPoint() {
-        return this.autoStartPoint;
+    public double getRealStartPoint() {
+        return this.realStartPoint;
     }
 
-    public void setAutoStartPoint(double autoStartPoint) {
-        this.autoStartPoint = autoStartPoint;
+    public void setRealStartPoint(double autoStartPoint) {
+        this.realStartPoint = autoStartPoint;
     }
 
     public String getTrueLyric() {
