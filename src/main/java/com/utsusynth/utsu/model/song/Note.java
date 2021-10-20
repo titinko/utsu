@@ -39,7 +39,7 @@ public class Note {
     // Values calculated in-program and not saved to any file.
     // These are set in SongNoteStandardizer.
     private double realPreutter;
-    private double realDuration;
+    private double realDuration; // What real duration would be with default tempo.
     private double realStartPoint;
     private String trueLyric; // Note's lyric after processing and formatting.
     private Optional<File> cacheFile; // Result of applying resampler to this note.

@@ -38,25 +38,9 @@ public class NoteStandardizer {
             if (prev.isPresent()) {
                 double maxLength = note.getDelta() - (prev.get().getDuration() / 2.0);
                 // The original correction factor code.
-                double comparator = (realPreutter - realOverlap) * 0.888;
+                double comparator = (realPreutter - realOverlap);
                 if (comparator > maxLength) {
                     double correctionFactor = maxLength / comparator;
-                    double oldPreutter = realPreutter;
-                    realPreutter *= correctionFactor;
-                    realOverlap *= correctionFactor;
-                    realStartPoint += oldPreutter - realPreutter;
-                }
-                // Added through trial and error to reduce timing issues.
-                if (realPreutter > note.getDelta()) {
-                    double correctionFactor = note.getDelta() / realPreutter;
-                    double oldPreutter = realPreutter;
-                    realPreutter *= correctionFactor;
-                    realOverlap *= correctionFactor;
-                    realStartPoint += oldPreutter - realPreutter;
-                }
-                // Added through trial and error to reduce timing issues.
-                if (realOverlap > note.getDelta()) {
-                    double correctionFactor = note.getDelta() / realOverlap;
                     double oldPreutter = realPreutter;
                     realPreutter *= correctionFactor;
                     realOverlap *= correctionFactor;
@@ -86,7 +70,7 @@ public class NoteStandardizer {
                 fullEnvelope[2] = Double.toString(envWidths[2] * shrinkFactor);
                 fullEnvelope[9] = Double.toString(envWidths[4] * shrinkFactor);
                 note.setEnvelope(fullEnvelope);
-            }
+             }
 
             // Adjust the envelopes to match overlap.
             note.setFadeIn(realOverlap);

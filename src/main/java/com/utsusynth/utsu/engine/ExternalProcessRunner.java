@@ -30,11 +30,11 @@ public class ExternalProcessRunner {
 
     public void runProcess(File workingDir, String... args) {
         // Uncomment these lines to see calls to resampler/wavtool.
-        // StringBuilder argString = new StringBuilder();
-        // for (String arg : args) {
-        //     argString.append(arg.substring(Math.max(arg.lastIndexOf('\\') + 1, 0))).append(' ');
-        // }
-        // System.out.println(argString);
+        //StringBuilder argString = new StringBuilder();
+        //for (String arg : args) {
+        //    argString.append(arg.substring(Math.max(arg.lastIndexOf('\\') + 1, 0))).append(' ');
+        //}
+        //System.out.println(argString);
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.redirectErrorStream(true);
         if (workingDir != null) {

@@ -254,9 +254,13 @@ public class Engine {
                 String pitch = PitchUtils.noteNumToPitch(note.getNoteNum());
                 config = voicebank.getLyricConfig(prevLyric, note.getLyric(), pitch);
                 if (config.isPresent()) {
-                    note.setTrueLyric(config.get().getTrueLyric());
+                    System.out.println("Would set true lyric.");
+                    //note.setTrueLyric(config.get().getTrueLyric());
                 }
             }
+
+            // Get scale factor. TODO: Override with note tempo.
+            double scaleFactor = 125.0 / song.getTempo();
 
             // Find preutterance of current and next notes.
             double preutter = note.getRealPreutter();
@@ -268,8 +272,9 @@ public class Engine {
             // Possible silence before first note.
             if (isFirstNote) {
                 if (notes.getCurDelta() - preutter > bounds.getMinMs()) {
-                    double firstNoteDelta = notes.getCurDelta() - preutter - bounds.getMinMs();
-                    addSilence(firstNoteDelta, 0, song, finalSong, executor, futures);
+                    double firstNoteDelta =
+                            (notes.getCurDelta() - bounds.getMinMs()) * scaleFactor - preutter;
+                    addSilence(firstNoteDelta, 0, finalSong, executor, futures);
                 }
                 isFirstNote = false;
             }
@@ -279,18 +284,17 @@ public class Engine {
                 System.out.println("Could not find config for lyric: " + note.getLyric());
                 if (notes.peekNext().isPresent()) {
                     addSilence(
-                            note.getLength() - notes.peekNext().get().getRealPreutter(),
-                            totalDelta,
-                            song,
+                            note.getLength() * scaleFactor
+                                    - notes.peekNext().get().getRealPreutter(),
+                            totalDelta * scaleFactor,
                             finalSong,
                             executor,
                             futures);
                 } else {
                     // Case where the last note in the song is silent.
                     addFinalSilence(
-                            note.getLength(),
-                            totalDelta,
-                            song,
+                            note.getLength() * scaleFactor,
+                            totalDelta * scaleFactor,
                             finalSong,
                             executor,
                             futures);
@@ -300,9 +304,17 @@ public class Engine {
             // System.out.println(config.get());
 
             // Adjust note length based on preutterance/overlap.
+            double nextNoteEncroachment = 0;
+            if (notes.peekNext().isPresent() && areNotesTouching(
+                    Optional.of(note), voicebank, nextPreutter, song.getTempo())) {
+                Note nextNote = notes.peekNext().get();
+                double scaledGap = (note.getLength() - note.getDuration()) * scaleFactor;
+                nextNoteEncroachment = nextNote.getTrueLyric().isEmpty()
+                        ? 0 : nextNote.getRealPreutter() - scaledGap - nextNote.getFadeIn();
+            }
             double adjustedLength =
-                    note.getRealDuration() > -1 ? note.getRealDuration() : note.getDuration();
-            System.out.println("Real duration is " + note.getRealDuration());
+                    (note.getDuration() * scaleFactor) + preutter - nextNoteEncroachment;
+            System.out.println("Real duration is " + adjustedLength);
 
             // Calculate pitchbends.
             int firstStep = getFirstPitchStep(totalDelta, preutter);
@@ -311,11 +323,12 @@ public class Engine {
 
             // Apply resampler in separate thread and schedule wavtool.
             final LyricConfig curConfig = config.get();
-            final boolean includeOverlap =
-                    areNotesTouching(notes.peekPrev(), voicebank, Optional.of(preutter));
+            final boolean includeOverlap = areNotesTouching(
+                    notes.peekPrev(), voicebank, Optional.of(preutter), song.getTempo());
             final boolean isLastNote = notes.peekNext().isEmpty();
             final int currentTotalDelta = totalDelta;
             final double expectedDelta = totalDelta - preutter;
+            final double noteAddOn = preutter - nextNoteEncroachment;
             futures.add(executor.submit(() -> {
                 // Re-samples lyric and puts result into renderedNote file.
                 File renderedNote;
@@ -340,6 +353,9 @@ public class Engine {
                 }
                 return () -> {
                     // Append rendered note to output file using wavtool.
+                    // System.out.println(
+                    //         note.getLyric() + ": " + note.getDuration() + "@" + song.getTempo()
+                    //                 + "+" + noteAddOn + ", STP=" + note.getRealStartPoint());
                     wavtool.addNewNote(
                             getWavtoolPath(),
                             song,
@@ -354,19 +370,19 @@ public class Engine {
             }));
 
             // Possible silence after each note.
-            if (notes.peekNext().isPresent()
-                    && !areNotesTouching(Optional.of(note), voicebank, nextPreutter)) {
+            if (notes.peekNext().isPresent() && !areNotesTouching(
+                    Optional.of(note), voicebank, nextPreutter, song.getTempo())) {
                 // Add silence
                 double silenceLength;
                 if (nextPreutter.isPresent()) {
-                    silenceLength = note.getLength() - note.getDuration() - nextPreutter.get();
+                    silenceLength = (note.getLength() - note.getDuration()) * scaleFactor
+                            - nextPreutter.get();
                 } else {
-                    silenceLength = note.getLength() - note.getDuration();
+                    silenceLength = (note.getLength() - note.getDuration()) * scaleFactor;
                 }
                 addSilence(
                         silenceLength,
-                        totalDelta + note.getDuration(),
-                        song,
+                        (totalDelta + note.getDuration()) * scaleFactor,
                         finalSong,
                         executor,
                         futures);
@@ -400,23 +416,20 @@ public class Engine {
     private void addSilence(
             double duration,
             double totalDelta,
-            Song song,
             File finalSong,
             ExecutorService executor,
             ArrayList<Future<Runnable>> futures) {
         if (duration <= 0.0) {
             return;
         }
-        double trueDuration = duration * (125.0 / song.getTempo());
-        double trueDelta = totalDelta * (125.0 / song.getTempo());
         File renderedSilence = cacheManager.createSilenceCache();
         futures.add(executor.submit(() -> {
-            resampler.resampleSilence(getResamplerPath(), renderedSilence, trueDuration);
+            resampler.resampleSilence(getResamplerPath(), renderedSilence, duration);
             return () -> {
                 wavtool.addSilence(
                         getWavtoolPath(),
-                        trueDuration,
-                        trueDelta,
+                        duration,
+                        totalDelta,
                         renderedSilence,
                         finalSong,
                         false);
@@ -427,13 +440,11 @@ public class Engine {
     private void addFinalSilence(
             double duration,
             double totalDelta,
-            Song song,
             File finalSong,
             ExecutorService executor,
             ArrayList<Future<Runnable>> futures) {
         // The final note must be passed to the wavtool.
-        double trueDuration = Math.max(duration, 0) * (125.0 / song.getTempo());
-        double trueDelta = totalDelta * (125.0 / song.getTempo());
+        double trueDuration = Math.max(duration, 0);
         File renderedSilence = cacheManager.createSilenceCache();
         futures.add(executor.submit(() -> {
             resampler.resampleSilence(getResamplerPath(), renderedSilence, trueDuration);
@@ -441,7 +452,7 @@ public class Engine {
                 wavtool.addSilence(
                         getWavtoolPath(),
                         trueDuration,
-                        trueDelta,
+                        totalDelta,
                         renderedSilence,
                         finalSong,
                         true);
@@ -470,7 +481,8 @@ public class Engine {
     private static boolean areNotesTouching(
             Optional<Note> note,
             Voicebank voicebank,
-            Optional<Double> nextPreutter) {
+            Optional<Double> nextPreutter,
+            double tempo) {
         if (note.isEmpty() || nextPreutter.isEmpty()) {
             return false;
         }
@@ -480,7 +492,8 @@ public class Engine {
             return false;
         }
 
-        double preutterance = Math.min(nextPreutter.get(), note.get().getLength());
-        return !(preutterance + note.get().getDuration() < note.get().getLength());
+        double scaleFactor = 125.0 / tempo;
+        double scaledGap = (note.get().getLength() - note.get().getDuration()) * scaleFactor;
+        return scaledGap <= nextPreutter.get();
     }
 }

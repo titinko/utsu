@@ -366,7 +366,7 @@ public class Track {
 
     public void removeItem(ListView<TrackItemSet> track, TrackItem trackItem) {
         for (Integer colNum : trackItem.getColumns()) {
-            if (colNum < 0) {
+            if (colNum < 0 || track.getItems().size() <= colNum) {
                 continue;
             }
             TrackItemSet itemSet = track.getItems().get(colNum);
