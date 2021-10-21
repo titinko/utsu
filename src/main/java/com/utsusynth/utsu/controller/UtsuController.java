@@ -15,7 +15,11 @@ import com.utsusynth.utsu.controller.song.LyricEditorController.LyricEditorType;
 import com.utsusynth.utsu.files.ThemeManager;
 import de.jangassen.MenuToolkit;
 import javafx.animation.PauseTransition;
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -30,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.prefs.Preferences;
 
 import static javafx.scene.input.KeyCombination.*;
 
@@ -38,6 +43,7 @@ import static javafx.scene.input.KeyCombination.*;
  */
 public class UtsuController implements Localizable {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+    private static final int maxRecentFiles = 15;
 
     // All available checkbox menu items.
     public enum CheckboxType {
@@ -50,6 +56,8 @@ public class UtsuController implements Localizable {
 
     // User session data goes here.
     private final Map<String, EditorController> editors;
+    private final ObservableList<File> recentFiles;
+    private final Preferences utsuPreferences;
 
     // Helper classes go here.
     private final ThemeManager themeManager;
@@ -81,7 +89,9 @@ public class UtsuController implements Localizable {
         this.saveWarningProvider = saveWarningProvider;
         this.fxmlLoaderProvider = fxmlLoaders;
 
-        this.editors = new HashMap<>();
+        editors = new HashMap<>();
+        recentFiles = FXCollections.emptyObservableList();
+        utsuPreferences = Preferences.userRoot().node("utsu");
     }
 
     // Provide setup for other controllers.
@@ -96,7 +106,7 @@ public class UtsuController implements Localizable {
         // Create keyboard shortcuts.
         createMenuKeyboardShortcuts();
 
-        // TODO: Resurrect Mac-specific preferences code once nsmenufx supports jlink.
+        // Adjust menus on Mac to feel more native.
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("mac")) {
             MenuToolkit macToolkit = MenuToolkit.toolkit();
@@ -107,6 +117,33 @@ public class UtsuController implements Localizable {
             appMenu.getItems().add(3, new SeparatorMenuItem());
             macToolkit.setApplicationMenu(appMenu);
         }
+
+        // Set up recent files.
+        for (String filename : utsuPreferences.get("recentFiles", "").split(":")) {
+            try {
+                if (!filename.isEmpty() && recentFiles.size() < maxRecentFiles) {
+                    recentFiles.add(new File(filename));
+                }
+            } catch (Exception e) {
+                // Don't throw exception for a non-critical thing like this.
+                System.out.println("Warning: Un-parseable filenames in recent files.");
+            }
+        }
+        recentFiles.addListener((ListChangeListener<File>) change -> {
+            while (change.next()) {
+                if (change.wasAdded()) {
+                    if (recentFiles.size() > maxRecentFiles) {
+                        recentFiles.remove(maxRecentFiles, recentFiles.size());
+                    }
+                    StringBuilder builder = new StringBuilder();
+                    for (File file : recentFiles) {
+                        builder.append(file.getAbsolutePath()).append(":");
+                    }
+                    utsuPreferences.put("recentFiles", builder.toString());
+                }
+            }
+        });
+
 
         // Set up status bar.
         statusBar.initialize(statusLabel.textProperty(), loadingBar.progressProperty());
@@ -131,6 +168,10 @@ public class UtsuController implements Localizable {
     private MenuItem openSongItem; // Value injected by FXMLLoader
     @FXML
     private MenuItem openVoicebankItem; // Value injected by FXMLLoader
+    @FXML
+    private Menu openRecentMenu; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem clearRecentsItem; // Value injected by FXMLLoader
     @FXML
     private MenuItem saveItem; // Value injected by FXMLLoader
     @FXML
@@ -212,6 +253,8 @@ public class UtsuController implements Localizable {
         newVoicebankItem.setText(bundle.getString("menu.file.new.voicebank"));
         openSongItem.setText(bundle.getString("menu.file.openSong"));
         openVoicebankItem.setText(bundle.getString("menu.file.openVoicebank"));
+        openRecentMenu.setText(bundle.getString("menu.file.openRecent"));
+        clearRecentsItem.setText(bundle.getString("menu.file.openRecent.clear"));
         saveItem.setText(bundle.getString("general.save"));
         saveAsItem.setText(bundle.getString("menu.file.saveFileAs"));
         exportToWavItem.setText(bundle.getString("menu.file.exportWav"));
@@ -541,6 +584,12 @@ public class UtsuController implements Localizable {
             switchToExistingFile(e.getAlreadyOpenFile());
             closeTab(newTab);
         }
+    }
+
+    @FXML
+    void clearRecents(ActionEvent event) {
+        recentFiles.clear();
+        utsuPreferences.put("recentFiles", "");
     }
 
     /**

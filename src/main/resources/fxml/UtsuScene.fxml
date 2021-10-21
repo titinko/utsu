@@ -27,6 +27,11 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="openSongItem" mnemonicParsing="false" onAction="#openSong" text="Open Song..." />
                   <MenuItem fx:id="openVoicebankItem" mnemonicParsing="false" onAction="#openVoicebank" text="Open Voicebank..." />
+                  <Menu fx:id="openRecentMenu" mnemonicParsing="false" text="Open Recent">
+                    <items>
+                      <MenuItem fx:id="clearRecentsItem" mnemonicParsing="false" onAction="#clearRecents" text="Clear " />
+                    </items>
+                  </Menu>
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="saveItem" disable="true" mnemonicParsing="false" onAction="#saveFile" text="Save" />
                   <MenuItem fx:id="saveAsItem" mnemonicParsing="false" onAction="#saveFileAs" text="Save As..." />
