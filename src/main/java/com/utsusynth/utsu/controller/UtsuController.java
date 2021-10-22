@@ -15,11 +15,8 @@ import com.utsusynth.utsu.controller.song.LyricEditorController.LyricEditorType;
 import com.utsusynth.utsu.files.ThemeManager;
 import de.jangassen.MenuToolkit;
 import javafx.animation.PauseTransition;
-import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -54,9 +51,23 @@ public class UtsuController implements Localizable {
         SONG, VOICEBANK,
     }
 
+    // Tiny class to keep a file in a menu item.
+    private class FileMenuItem extends MenuItem {
+        private final File file;
+
+        private FileMenuItem(File file) {
+            super(file.getName());
+            this.file = file;
+            setOnAction(action -> openRecentFile(file));
+        }
+
+        private String getAbsolutePath() {
+            return file.getAbsolutePath();
+        }
+    }
+
     // User session data goes here.
     private final Map<String, EditorController> editors;
-    private final ObservableList<File> recentFiles;
     private final Preferences utsuPreferences;
 
     // Helper classes go here.
@@ -90,7 +101,6 @@ public class UtsuController implements Localizable {
         this.fxmlLoaderProvider = fxmlLoaders;
 
         editors = new HashMap<>();
-        recentFiles = FXCollections.emptyObservableList();
         utsuPreferences = Preferences.userRoot().node("utsu");
     }
 
@@ -119,31 +129,27 @@ public class UtsuController implements Localizable {
         }
 
         // Set up recent files.
+        ArrayList<FileMenuItem> recentFiles = new ArrayList<>();
         for (String filename : utsuPreferences.get("recentFiles", "").split(":")) {
             try {
                 if (!filename.isEmpty() && recentFiles.size() < maxRecentFiles) {
-                    recentFiles.add(new File(filename));
+                    recentFiles.add(new FileMenuItem(new File(filename)));
                 }
             } catch (Exception e) {
                 // Don't throw exception for a non-critical thing like this.
                 System.out.println("Warning: Un-parseable filenames in recent files.");
             }
         }
-        recentFiles.addListener((ListChangeListener<File>) change -> {
-            while (change.next()) {
-                if (change.wasAdded()) {
-                    if (recentFiles.size() > maxRecentFiles) {
-                        recentFiles.remove(maxRecentFiles, recentFiles.size());
-                    }
-                    StringBuilder builder = new StringBuilder();
-                    for (File file : recentFiles) {
-                        builder.append(file.getAbsolutePath()).append(":");
-                    }
-                    utsuPreferences.put("recentFiles", builder.toString());
+        openRecentMenu.getItems().addAll(0, recentFiles);
+        openRecentMenu.getItems().addListener((ListChangeListener<MenuItem>) change -> {
+            StringBuilder builder = new StringBuilder();
+            for (MenuItem menuItem : openRecentMenu.getItems()) {
+                if (menuItem instanceof FileMenuItem) {
+                    builder.append(((FileMenuItem) menuItem).getAbsolutePath()).append(":");
                 }
             }
+            utsuPreferences.put("recentFiles", builder.toString());
         });
-
 
         // Set up status bar.
         statusBar.initialize(statusLabel.textProperty(), loadingBar.progressProperty());
@@ -503,9 +509,14 @@ public class UtsuController implements Localizable {
                 @Override
                 public void openVoicebank(File location) {
                     Tab newTab = createEditor(EditorType.VOICEBANK);
+                    if (newTab == null) {
+                        return;
+                    }
                     try {
-                        editors.get(newTab.getId()).open(location);
+                        EditorController editor = editors.get(newTab.getId());
+                        editor.open(location);
                         newTab.setText(location.getName());
+                        addRecentFile(editor.getOpenFile());
                     } catch (FileAlreadyOpenException e) {
                         switchToExistingFile(e.getAlreadyOpenFile());
                         closeTab(newTab);
@@ -555,10 +566,15 @@ public class UtsuController implements Localizable {
     @FXML
     void openSong(ActionEvent event) {
         Tab newTab = createEditor(EditorType.SONG);
+        if (newTab == null) {
+            return;
+        }
         try {
-            Optional<String> songName = editors.get(newTab.getId()).open();
+            EditorController editor = editors.get(newTab.getId());
+            Optional<String> songName = editor.open();
             if (songName.isPresent()) {
                 newTab.setText(songName.get());
+                addRecentFile(editor.getOpenFile());
             } else {
                 closeTab(newTab);
             }
@@ -572,10 +588,15 @@ public class UtsuController implements Localizable {
     @FXML
     void openVoicebank(ActionEvent event) {
         Tab newTab = createEditor(EditorType.VOICEBANK);
+        if (newTab == null) {
+            return;
+        }
         try {
-            Optional<String> voicebankName = editors.get(newTab.getId()).open();
+            EditorController editor = editors.get(newTab.getId());
+            Optional<String> voicebankName = editor.open();
             if (voicebankName.isPresent()) {
                 newTab.setText(voicebankName.get());
+                addRecentFile(editor.getOpenFile());
             } else {
                 closeTab(newTab);
             }
@@ -586,10 +607,42 @@ public class UtsuController implements Localizable {
         }
     }
 
+    /** Called when a new file is added to the Open Recent menu. */
+    private void addRecentFile(File location) {
+        openRecentMenu.getItems().add(0, new FileMenuItem(location));
+        openRecentMenu.getItems().removeIf(menuItem ->
+            openRecentMenu.getItems().indexOf(menuItem) >= maxRecentFiles
+                    && (menuItem instanceof FileMenuItem));
+    }
+
+    /** Called by any menu item created in the Open Recent menu. */
+    private void openRecentFile(File location) {
+        EditorType editorType; // Estimate editor type based on file type.
+        if (location.isFile()) {
+            editorType = EditorType.SONG;
+        } else if (location.isDirectory()) {
+            editorType = EditorType.VOICEBANK;
+        } else {
+            statusBar.setText("Error: Unable to open " + location.getName());
+            return;
+        }
+        Tab newTab = createEditor(editorType);
+        if (newTab == null) {
+            return;
+        }
+        try {
+            EditorController editor = editors.get(newTab.getId());
+            editor.open(location);
+            newTab.setText(location.getName());
+        } catch (FileAlreadyOpenException e) {
+            switchToExistingFile(e.getAlreadyOpenFile());
+            closeTab(newTab);
+        }
+    }
+
     @FXML
     void clearRecents(ActionEvent event) {
-        recentFiles.clear();
-        utsuPreferences.put("recentFiles", "");
+        openRecentMenu.getItems().removeIf(menuItem -> menuItem instanceof FileMenuItem);
     }
 
     /**
@@ -615,10 +668,8 @@ public class UtsuController implements Localizable {
     void saveFile(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            Optional<String> filename = editors.get(curTab.getId()).save();
-            if (filename.isPresent()) {
-                curTab.setText(filename.get());
-            }
+            EditorController editor = editors.get(curTab.getId());
+            editor.save().ifPresent(curTab::setText);
         }
     }
 
@@ -626,10 +677,9 @@ public class UtsuController implements Localizable {
     void saveFileAs(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
-            Optional<String> filename = editors.get(curTab.getId()).saveAs();
-            if (filename.isPresent()) {
-                curTab.setText(filename.get());
-            }
+            EditorController editor = editors.get(curTab.getId());
+            editor.saveAs().ifPresent(curTab::setText);
+            addRecentFile(editor.getOpenFile());
         }
     }
 

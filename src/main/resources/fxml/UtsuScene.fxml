@@ -29,6 +29,7 @@
                   <MenuItem fx:id="openVoicebankItem" mnemonicParsing="false" onAction="#openVoicebank" text="Open Voicebank..." />
                   <Menu fx:id="openRecentMenu" mnemonicParsing="false" text="Open Recent">
                     <items>
+                        <SeparatorMenuItem mnemonicParsing="false" />
                       <MenuItem fx:id="clearRecentsItem" mnemonicParsing="false" onAction="#clearRecents" text="Clear " />
                     </items>
                   </Menu>
