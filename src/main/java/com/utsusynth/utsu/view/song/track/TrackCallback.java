@@ -1,9 +1,9 @@
 package com.utsusynth.utsu.view.song.track;
 
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.Pane;
 
 public interface TrackCallback {
-    VBox createNoteColumn(int colNum);
+    Pane createNoteColumn(int colNum);
 
-    VBox createDynamicsColumn(int colNum);
+    Pane createDynamicsColumn(int colNum);
 }

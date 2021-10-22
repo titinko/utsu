@@ -113,13 +113,13 @@ public class SongEditor {
         model = callback;
         track.initialize(new TrackCallback() {
             @Override
-            public VBox createNoteColumn(int colNum) {
+            public Pane createNoteColumn(int colNum) {
                 return createNoteColumnInternal(colNum);
             }
 
             @Override
-            public VBox createDynamicsColumn(int colNum) {
-                return createDyanmicsColumnInternal(colNum);
+            public Pane createDynamicsColumn(int colNum) {
+                return createDynamicsColumnInternal(colNum);
             }
         }, new DragHandler() {
             @Override
@@ -569,16 +569,18 @@ public class SongEditor {
         track.reset();
     }
 
-    private VBox createNoteColumnInternal(int colNum) {
+    private Pane createNoteColumnInternal(int colNum) {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH);
         double rowHeight = scaler.scaleY(Quantizer.ROW_HEIGHT);
 
-        VBox column = new VBox();
+        Pane column = new Pane();
+        int curRow = 0;
         for (int octave = 7; octave > 0; octave--) {
             for (String pitch : PitchUtils.REVERSE_PITCHES) {
                 // Add row to track.
                 Pane newCell = new Pane();
                 newCell.setPrefSize(colWidth, rowHeight);
+                newCell.setTranslateY(curRow * rowHeight);
                 newCell.getStyleClass().add("track-cell");
                 if (colNum >= 4) {
                     newCell.getStyleClass()
@@ -592,13 +594,14 @@ public class SongEditor {
                     newCell.getStyleClass().add("measure-end");
                 }
                 column.getChildren().add(newCell);
+                curRow++;
             }
         }
         activateNoteColumn(column, colNum);
         return column;
     }
 
-    private void activateNoteColumn(VBox column, int colNum) {
+    private void activateNoteColumn(Pane column, int colNum) {
         column.setOnMousePressed(event -> {
             double offsetX = colNum * scaler.scaleX(Quantizer.COL_WIDTH);
             // End any leftover drag action.
@@ -633,9 +636,11 @@ public class SongEditor {
                     public void onDragged(double absoluteX, double absoluteY) {
                         // Draw selection rectangle.
                         double measureWidth = 4 * scaler.scaleX(Quantizer.COL_WIDTH);
+                        double measureHeight =
+                                scaler.scaleY(Quantizer.ROW_HEIGHT) * PitchUtils.TOTAL_NUM_PITCHES;
                         double startX = Math.max(measureWidth, curX);
                         double endX = Math.min(getWidthX(), Math.max(measureWidth, absoluteX));
-                        double endY = Math.min(column.getHeight(), Math.max(0, absoluteY));
+                        double endY = Math.min(measureHeight, Math.max(0, absoluteY));
                         selectionBox.setStartX(Math.min(startX, endX));
                         selectionBox.setStartY(Math.min(curY, endY));
                         selectionBox.setWidth(Math.abs(endX - startX));
@@ -739,20 +744,21 @@ public class SongEditor {
         });
     }
 
-    private VBox createDyanmicsColumnInternal(int colNum) {
+    private Pane createDynamicsColumnInternal(int colNum) {
         double colWidth = scaler.scaleX(Quantizer.COL_WIDTH);
         double rowHeight = 50;
 
-        VBox newDynamics = new VBox();
-        AnchorPane topCell = new AnchorPane();
+        Pane newDynamics = new Pane();
+        Pane topCell = new AnchorPane();
         topCell.setPrefSize(colWidth, rowHeight);
         topCell.getStyleClass().add("dynamics-top-cell");
         if (colNum % 4 == 0) {
             topCell.getStyleClass().add("measure-start");
         }
 
-        AnchorPane bottomCell = new AnchorPane();
+        Pane bottomCell = new AnchorPane();
         bottomCell.setPrefSize(colWidth, rowHeight);
+        bottomCell.setTranslateY(rowHeight);
         bottomCell.getStyleClass().add("dynamics-bottom-cell");
         if (colNum % 4 == 0) {
             bottomCell.getStyleClass().add("measure-start");

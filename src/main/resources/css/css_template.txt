@@ -9,6 +9,14 @@
     -fx-background-color: derive(-fx-base,45%);
 }
 
+.scroll-bar:horizontal {
+    -fx-pref-height: 16px;
+}
+
+.scroll-bar:vertical {
+    -fx-pref-width: 16px;
+}
+
 .separator:horizontal *.line {
     -fx-border-color: derive(-fx-color,-23%);
     -fx-border-width: 0.5;

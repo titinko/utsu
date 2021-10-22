@@ -49,11 +49,7 @@
                      </content>
                   </ScrollPane>
                   <Separator orientation="VERTICAL" />
-                  <ScrollPane fx:id="scrollPaneCenter" fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" minViewportHeight="315.0" minViewportWidth="600.0" vvalue="0.5" HBox.hgrow="ALWAYS">
-                     <content>
-                      <AnchorPane fx:id="anchorCenter" />
-                     </content>
-                  </ScrollPane>
+                  <AnchorPane fx:id="anchorCenter" minHeight="315.0" minWidth="600.0" HBox.hgrow="ALWAYS"/>
                </children>
          <BorderPane.margin>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -64,10 +60,10 @@
       <HBox minWidth="600.0" prefHeight="100.0" prefWidth="900.0" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
             <AnchorPane maxHeight="100.0" maxWidth="98.0" minWidth="98.0" />
-            <ScrollPane fx:id="scrollPaneBottom" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="600.0" vbarPolicy="ALWAYS" vmax="0.0" HBox.hgrow="ALWAYS">
-              <content>
-                <AnchorPane fx:id="anchorBottom" maxHeight="100.0" minHeight="100.0" />
-              </content>
+            <ScrollPane fx:id="scrollPaneBottom" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" minViewportHeight="100.0" minViewportWidth="600.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">
+               <content>
+                  <AnchorPane fx:id="anchorBottom" maxHeight="100.0" minHeight="100.0" />
+               </content>
             </ScrollPane>
          </children>
          <BorderPane.margin>

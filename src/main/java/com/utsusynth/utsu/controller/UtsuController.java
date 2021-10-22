@@ -130,7 +130,7 @@ public class UtsuController implements Localizable {
 
         // Set up recent files.
         ArrayList<FileMenuItem> recentFiles = new ArrayList<>();
-        for (String filename : utsuPreferences.get("recentFiles", "").split(":")) {
+        for (String filename : utsuPreferences.get("recentFiles", "").split("\\|")) {
             try {
                 if (!filename.isEmpty() && recentFiles.size() < maxRecentFiles) {
                     recentFiles.add(new FileMenuItem(new File(filename)));
@@ -145,7 +145,7 @@ public class UtsuController implements Localizable {
             StringBuilder builder = new StringBuilder();
             for (MenuItem menuItem : openRecentMenu.getItems()) {
                 if (menuItem instanceof FileMenuItem) {
-                    builder.append(((FileMenuItem) menuItem).getAbsolutePath()).append(":");
+                    builder.append(((FileMenuItem) menuItem).getAbsolutePath()).append("|");
                 }
             }
             utsuPreferences.put("recentFiles", builder.toString());

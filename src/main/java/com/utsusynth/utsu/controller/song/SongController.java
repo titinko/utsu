@@ -105,9 +105,6 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="anchorCenter"
     private AnchorPane anchorCenter; // Value injected by FXMLLoader
 
-    @FXML // fx:id="scrollPaneCenter"
-    private ScrollPane scrollPaneCenter; // Value injected by FXMLLoader
-
     @FXML // fx:id="scrollPaneBottom"
     private ScrollPane scrollPaneBottom; // Value injected by FXMLLoader
 
@@ -231,9 +228,6 @@ public class SongController implements EditorController, Localizable {
             }
         });
         scrollPaneLeft.setVvalue(0.5);
-        scrollPaneCenter.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPaneCenter.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPaneBottom.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         // Context menu for voicebank icon.
         ContextMenu iconContextMenu = new ContextMenu();
@@ -309,6 +303,7 @@ public class SongController implements EditorController, Localizable {
 
         iconManager.setRewindIcon(rewindIcon);
         rewindIcon.setOnMousePressed(event -> iconManager.selectIcon(rewindIcon));
+        rewindIcon.setOnMousePressed(event -> iconManager.selectIcon(rewindIcon));
         rewindIcon.setOnMouseReleased(event -> iconManager.deselectIcon(rewindIcon));
         iconManager.setPlayIcon(playPauseIcon);
         playPauseIcon.setOnMousePressed(event -> iconManager.selectIcon(playPauseIcon));
@@ -361,8 +356,8 @@ public class SongController implements EditorController, Localizable {
 
         // Cross-editor bindings.
         ListView<TrackItemSet> noteTrack = songEditor.createNewTrack(song.get().getNotes());
-        noteTrack.prefWidthProperty().bind(scrollPaneCenter.widthProperty());
-        noteTrack.prefHeightProperty().bind(scrollPaneCenter.heightProperty());
+        noteTrack.prefWidthProperty().bind(anchorCenter.widthProperty());
+        noteTrack.prefHeightProperty().bind(anchorCenter.heightProperty());
         ListView<TrackItemSet> dynamicsTrack = songEditor.getDynamicsElement();
         dynamicsTrack.prefWidthProperty().bind(
                 scrollPaneBottom.widthProperty().subtract(Quantizer.SCROLL_BAR_WIDTH));
@@ -370,6 +365,9 @@ public class SongController implements EditorController, Localizable {
         // Scrollbar bindings, after scrollbars are generated.
         PauseTransition briefPause = new PauseTransition(Duration.millis(20));
         briefPause.setOnFinished(event -> {
+            for (Node node : noteTrack.lookupAll(".scroll-pane")) {
+                System.out.println("Node found! " + node);
+            }
             for (Node node : noteTrack.lookupAll(".scroll-bar")) {
                 if (!(node instanceof ScrollBar)) {
                     continue;
@@ -377,7 +375,6 @@ public class SongController implements EditorController, Localizable {
                 ScrollBar scrollBar = (ScrollBar) node;
                 if (scrollBar.getOrientation() == Orientation.VERTICAL) {
                     // TODO: Call this only once.
-                    scrollBar.setPrefWidth(Quantizer.SCROLL_BAR_WIDTH);
                     scrollBar.setValue(scrollPaneLeft.getVvalue() * scrollBar.getMax());
                     scrollPaneLeft.vvalueProperty().addListener((obs, oldValue, newValue) -> {
                         if (!oldValue.equals(newValue)) {
@@ -390,7 +387,6 @@ public class SongController implements EditorController, Localizable {
                         }
                     });
                 } else if (scrollBar.getOrientation() == Orientation.HORIZONTAL) {
-                    scrollBar.setPrefHeight(Quantizer.SCROLL_BAR_WIDTH);
                     for (Node dynamicsNode : dynamicsTrack.lookupAll(".scroll-bar")) {
                         if (!(dynamicsNode instanceof ScrollBar)) {
                             continue;
