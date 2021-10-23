@@ -28,7 +28,9 @@ public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
     private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
-    private static final Pattern PITCH_PATTERN =
+    private static final Pattern PREFIX_PATTERN =
+            Pattern.compile("([a-gA-G]#?[1-7])\\t(\\S.*)");
+    private static final Pattern SUFFIX_PATTERN =
             Pattern.compile("([a-gA-G]#?[1-7])\\t\\S*\\t(\\S.*)");
 
     private final AssetManager assetManager;
@@ -163,11 +165,16 @@ public class VoicebankReader {
         String pitchData = readConfigFile(pitchMapFile);
         for (String rawLine : pitchData.split("\n")) {
             String line = rawLine.trim();
-            // TODO: Handle the case of prefixes rather than suffixes.
-            Matcher matcher = PITCH_PATTERN.matcher(line);
-            if (matcher.find()) {
-                String pitch = matcher.group(1);
-                String suffix = matcher.group(2);
+            Matcher prefixMatcher = PREFIX_PATTERN.matcher(line);
+            if (prefixMatcher.find()) {
+                String pitch = prefixMatcher.group(1);
+                String prefix = prefixMatcher.group(2);
+                builder.addPitchPrefix(pitch, prefix);
+            }
+            Matcher suffixMatcher = SUFFIX_PATTERN.matcher(line);
+            if (suffixMatcher.find()) {
+                String pitch = suffixMatcher.group(1);
+                String suffix = suffixMatcher.group(2);
                 builder.addPitchSuffix(pitch, suffix);
             }
         }

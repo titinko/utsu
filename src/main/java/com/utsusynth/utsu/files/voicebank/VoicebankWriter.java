@@ -115,14 +115,16 @@ public class VoicebankWriter {
                         continue;
                     }
                     // Don't try to save Unicode characters to prefix.map.
-                    String pitchCharset = getCharset(data.getPitch() + data.getSuffix());
+                    String pitchCharset = getCharset(
+                            data.getPitch() +data.getPrefix() + data.getSuffix());
                     if (charset.equals("SJIS") && !pitchCharset.equals("SJIS")) {
                         continue;
                     }
-                    ps.print(data.getPitch() + "\t\t" + data.getSuffix() + "\n");
+                    ps.print(data.getPitch()
+                            + "\t" + data.getPrefix() +
+                            "\t" + data.getSuffix() + "\n");
                 }
                 ps.flush();
-                ps.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 // TODO: Handle this.
                 errorLogger.logError(e);

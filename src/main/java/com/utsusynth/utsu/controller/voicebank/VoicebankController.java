@@ -39,7 +39,6 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.DirectoryChooser;
 
 import java.io.File;
-import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -90,8 +89,8 @@ public class VoicebankController implements EditorController, Localizable {
     @FXML // fx:id="descriptionTextArea"
     private TextArea descriptionTextArea; // Value injected by FXMLLoader
 
-    @FXML // fx:id="suffixTextField"
-    private TextField suffixTextField;
+    @FXML // fx:id="prefisSuffixTextField"
+    private TextField prefixSuffixTextField;
 
     @Inject
     public VoicebankController(
@@ -243,6 +242,8 @@ public class VoicebankController implements EditorController, Localizable {
     private Tab descriptionTab; // Value injected by FXMLLoader
     @FXML // fx:id="pitchTab"
     private Tab pitchTab; // Value injected by FXMLLoader
+    @FXML // fx:id="applyPrefixButton"
+    private Button applyPrefixButton; // Value injected by FXMLLoader
     @FXML // fx:id="applySuffixButton"
     private Button applySuffixButton; // Value injected by FXMLLoader
     @FXML // fx:id="offsetLabel"
@@ -263,7 +264,8 @@ public class VoicebankController implements EditorController, Localizable {
         descriptionTab.setText(bundle.getString("voice.descriptionTab"));
         descriptionTextArea.setPromptText(bundle.getString("voice.descriptionPrompt"));
         pitchTab.setText(bundle.getString("voice.pitchTab"));
-        applySuffixButton.setText(bundle.getString("general.apply"));
+        applyPrefixButton.setText(bundle.getString("general.apply") + " (P)");
+        applySuffixButton.setText(bundle.getString("general.apply") + " (S)");
         offsetLabel.setText(bundle.getString("voice.offset"));
         cutoffLabel.setText(bundle.getString("voice.cutoff"));
         consonantLabel.setText(bundle.getString("voice.consonant"));
@@ -453,9 +455,18 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @FXML
+    public void applyPrefix(ActionEvent event) {
+        String prefix =
+                prefixSuffixTextField.getText() != null ? prefixSuffixTextField.getText() : "";
+        pitchEditor.setPrefixForSelected(prefix);
+        onVoicebankChange();
+    }
+
+    @FXML
     public void applySuffix(ActionEvent event) {
-        String suffix = suffixTextField.getText() != null ? suffixTextField.getText() : "";
-        pitchEditor.setSelected(suffix);
+        String suffix =
+                prefixSuffixTextField.getText() != null ? prefixSuffixTextField.getText() : "";
+        pitchEditor.setSuffixForSelected(suffix);
         onVoicebankChange();
     }
 

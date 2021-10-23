@@ -47,10 +47,25 @@ public class PitchEditor implements Localizable {
         pitchCol.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
         pitchCol.setResizable(false);
         pitchCol.setSortable(false);
+        TableColumn<PitchMapData, String> prefixCol = new TableColumn<>("Prefix");
+        prefixCol.setCellValueFactory(data -> data.getValue().prefixProperty());
+        prefixCol.setCellFactory(col -> new EditableCell<>(stringToString));
+        prefixCol.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
+        prefixCol.setResizable(false);
+        prefixCol.setSortable(false);
+        prefixCol.setOnEditCommit(event -> {
+            PitchMapData pitchData = event.getRowValue();
+            String oldPrefix = event.getOldValue();
+            String newPrefix = event.getNewValue();
+            model.recordAction(
+                    () -> pitchData.prefixProperty().set(newPrefix),
+                    () -> pitchData.prefixProperty().set(oldPrefix));
+            pitchData.prefixProperty().set(newPrefix);
+        });
         TableColumn<PitchMapData, String> suffixCol = new TableColumn<>("Suffix");
         suffixCol.setCellValueFactory(data -> data.getValue().suffixProperty());
         suffixCol.setCellFactory(col -> new EditableCell<>(stringToString));
-        suffixCol.prefWidthProperty().bind(table.widthProperty().multiply(0.63));
+        suffixCol.prefWidthProperty().bind(table.widthProperty().multiply(0.33));
         suffixCol.setResizable(false);
         suffixCol.setSortable(false);
         suffixCol.setOnEditCommit(event -> {
@@ -62,12 +77,15 @@ public class PitchEditor implements Localizable {
                     () -> pitchData.suffixProperty().set(oldSuffix));
             pitchData.suffixProperty().set(newSuffix);
         });
-        table.getColumns().setAll(ImmutableList.of(pitchCol, suffixCol));
+        table.getColumns().setAll(ImmutableList.of(pitchCol, prefixCol, suffixCol));
 
         // Populate with pitch data.
         while (pitchIterator.hasNext()) {
             PitchMapData data = pitchIterator.next();
             pitches.add(data);
+            data.prefixProperty().addListener(event -> {
+                model.setPitch(data);
+            });
             data.suffixProperty().addListener(event -> {
                 model.setPitch(data);
             });
@@ -77,7 +95,26 @@ public class PitchEditor implements Localizable {
         return table;
     }
 
-    public void setSelected(String suffix) {
+    public void setPrefixForSelected(String prefix) {
+        List<String> oldPrefixes = table.getSelectionModel().getSelectedItems().stream()
+                .map(PitchMapData::getPrefix).collect(Collectors.toList());
+        List<PitchMapData> selected =
+                ImmutableList.copyOf(table.getSelectionModel().getSelectedItems());
+        Runnable redoAction = () -> {
+            for (PitchMapData data : selected) {
+                data.prefixProperty().set(prefix);
+            }
+        };
+        Runnable undoAction = () -> {
+            for (int i = 0; i < selected.size(); i++) {
+                selected.get(i).prefixProperty().set(oldPrefixes.get(i));
+            }
+        };
+        model.recordAction(redoAction, undoAction);
+        redoAction.run();
+    }
+
+    public void setSuffixForSelected(String suffix) {
         List<String> oldSuffixes = table.getSelectionModel().getSelectedItems().stream()
                 .map(PitchMapData::getSuffix).collect(Collectors.toList());
         List<PitchMapData> selected =
@@ -104,11 +141,12 @@ public class PitchEditor implements Localizable {
     public void localize(ResourceBundle bundle) {
         if (table != null) {
             table.getColumns().get(0).setText(bundle.getString("voice.pitch"));
-            table.getColumns().get(1).setText(bundle.getString("voice.suffix"));
+            table.getColumns().get(1).setText(bundle.getString("voice.prefix"));
+            table.getColumns().get(2).setText(bundle.getString("voice.suffix"));
         }
     }
 
-    private class EditableCell<T> extends TableCell<PitchMapData, T> {
+    private static class EditableCell<T> extends TableCell<PitchMapData, T> {
         private final TextField textField;
         private final StringConverter<T> converter;
 

@@ -68,8 +68,13 @@ public class Voicebank {
             return this;
         }
 
+        public Builder addPitchPrefix(String pitch, String prefix) {
+            newVoicebank.pitchMap.putPrefix(pitch, prefix);
+            return this;
+        }
+
         public Builder addPitchSuffix(String pitch, String suffix) {
-            newVoicebank.pitchMap.put(pitch, suffix);
+            newVoicebank.pitchMap.putSuffix(pitch, suffix);
             return this;
         }
 
@@ -132,11 +137,12 @@ public class Voicebank {
     }
 
     public Optional<LyricConfig> getLyricConfig(String prevLyric, String lyric, String pitch) {
-        String prefix = getVowel(prevLyric) + " "; // Most common VCV format.
-        String suffix = pitchMap.get(pitch); // Pitch suffix.
+        String vcvPrefix = getVowel(prevLyric) + " "; // Most common VCV format.
+        String prefix = pitchMap.getPrefix(pitch); // Pitch prefix.
+        String suffix = pitchMap.getSuffix(pitch); // Pitch suffix.
 
         // Check all possible prefix/lyric/suffix combinations.
-        for (String combo : allCombinations(prefix, lyric, suffix)) {
+        for (String combo : allCombinations(prefix, vcvPrefix, lyric, suffix)) {
             if (lyricConfigs.hasLyric(combo)) {
                 return Optional.of(lyricConfigs.getConfig(combo));
             }
@@ -149,7 +155,7 @@ public class Voicebank {
                 continue;
             }
 
-            for (String combo : allCombinations(prefix, convertedLyric, suffix)) {
+            for (String combo : allCombinations(prefix, vcvPrefix, convertedLyric, suffix)) {
                 if (lyricConfigs.hasLyric(combo)) {
                     matches.add(lyricConfigs.getConfig(combo));
                 }
@@ -177,9 +183,18 @@ public class Voicebank {
         return ' ';
     }
 
-    private List<String> allCombinations(String prefix, String lyric, String suffix) {
+    private List<String> allCombinations(
+            String prefix, String vcvPrefix, String lyric, String suffix) {
         // Try to get the lyric with as much detail as possible.
-        return ImmutableList.of(prefix + lyric + suffix, lyric + suffix, prefix + lyric, lyric);
+        return ImmutableList.of(
+                prefix + vcvPrefix + lyric + suffix,
+                prefix + vcvPrefix + lyric,
+                vcvPrefix + lyric + suffix,
+                prefix + lyric + suffix,
+                lyric + suffix,
+                prefix + lyric,
+                vcvPrefix + lyric,
+                lyric);
     }
 
     /**
@@ -257,14 +272,16 @@ public class Voicebank {
             @Override
             public PitchMapData next() {
                 String pitch = pitchIterator.next();
-                return new PitchMapData(pitch, pitchMap.get(pitch));
+                return new PitchMapData(
+                        pitch, pitchMap.getPrefix(pitch), pitchMap.getSuffix(pitch));
             }
         };
     }
 
     public void setPitchData(PitchMapData data) {
         // Replace value that has changed, leave others the same.
-        pitchMap.put(data.getPitch(), data.getSuffix());
+        pitchMap.putPrefix(data.getPitch(), data.getPrefix());
+        pitchMap.putSuffix(data.getPitch(), data.getSuffix());
     }
 
     private boolean generateFrq(File wavFile) {

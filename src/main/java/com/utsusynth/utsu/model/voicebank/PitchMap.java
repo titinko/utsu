@@ -8,9 +8,11 @@ import com.utsusynth.utsu.common.utils.PitchUtils;
 
 public class PitchMap {
     private final ImmutableList<String> pitches;
+    private final Map<String, String> prefixes;
     private final Map<String, String> suffixes;
 
     public PitchMap() {
+        prefixes = new HashMap<>();
         suffixes = new HashMap<>();
         ImmutableList.Builder<String> pitchBuilder = ImmutableList.builder();
         for (int octave = 7; octave > 0; octave--) {
@@ -21,14 +23,25 @@ public class PitchMap {
         pitches = pitchBuilder.build();
     }
 
-    public String get(String pitch) {
+    public String getPrefix(String pitch) {
+        if (prefixes.containsKey(pitch)) {
+            return prefixes.get(pitch);
+        }
+        return "";
+    }
+
+    public String getSuffix(String pitch) {
         if (suffixes.containsKey(pitch)) {
             return suffixes.get(pitch);
         }
         return "";
     }
 
-    public void put(String pitch, String suffix) {
+    public void putPrefix(String pitch, String prefix) {
+        prefixes.put(pitch, prefix);
+    }
+
+    public void putSuffix(String pitch, String suffix) {
         suffixes.put(pitch, suffix);
     }
 

@@ -118,8 +118,13 @@
                                 <ScrollPane fx:id="pitchPane" fitToHeight="true" fitToWidth="true" minViewportHeight="0.0" prefViewportWidth="250.0" />
                                     <AnchorPane minHeight="180.0" prefWidth="122.0" styleClass="pitch-whitespace">
                                        <children>
-                                          <TextField fx:id="suffixTextField" layoutX="12.0" layoutY="63.0" prefHeight="27.0" prefWidth="100.0" />
-                                          <Button fx:id="applySuffixButton" layoutX="32.0" layoutY="109.0" mnemonicParsing="false" onAction="#applySuffix" text="Apply" />
+                                          <VBox alignment="CENTER" layoutX="10.0" layoutY="30.0" spacing="15.0">
+                                             <children>
+                                                <TextField fx:id="prefixSuffixTextField" prefHeight="27.0" prefWidth="100.0" />
+                                                <Button fx:id="applyPrefixButton" mnemonicParsing="false" onAction="#applyPrefix" text="Apply (P)" />
+                                                <Button fx:id="applySuffixButton" mnemonicParsing="false" onAction="#applySuffix" text="Apply (S)" />
+                                             </children>
+                                          </VBox>
                                        </children>
                                        <opaqueInsets>
                                           <Insets />
