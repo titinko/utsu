@@ -13,6 +13,7 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.EditorCallback;
 import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
@@ -30,6 +31,7 @@ import com.utsusynth.utsu.files.song.Ust20Reader;
 import com.utsusynth.utsu.files.song.Ust20Writer;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
+import com.utsusynth.utsu.model.voicebank.Voicebank;
 import com.utsusynth.utsu.view.song.Piano;
 import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
@@ -52,6 +54,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
@@ -233,14 +236,34 @@ public class SongController implements EditorController, Localizable {
         ContextMenu iconContextMenu = new ContextMenu();
         MenuItem openVoicebankItem = new MenuItem("Open Voicebank");
         openVoicebankItem.setOnAction(event -> callback.openVoicebank(song.get().getVoiceDir()));
-        iconContextMenu.getItems().add(openVoicebankItem);
+        MenuItem changeVoicebankItem = new MenuItem("Change...");
+        changeVoicebankItem.setOnAction(event -> {
+            DirectoryChooser dc = new DirectoryChooser();
+            dc.setTitle("Select voicebank");
+            File file = dc.showDialog(null);
+            if (file != null
+                    && !file.getAbsolutePath().equals(song.get().getVoiceDir().getAbsolutePath())) {
+                new Thread(() -> {
+                    song.setSong(song.get().toBuilder().setVoiceDirectory(file).build());
+                    String newName = song.get().getVoicebank().getName(); // Loads voicebank.
+                    song.get().clearAllCacheValues();
+                    Platform.runLater(() -> {
+                        onSongChange();
+                        refreshView();
+                        statusBar.setText("Changed voicebank to " + newName + ".");
+                    });
+                }).start();
+            }
+        });
+        iconContextMenu.getItems().addAll(openVoicebankItem, changeVoicebankItem);
         iconContextMenu.setOnShowing(event -> {
             openVoicebankItem.setText(localizer.getMessage("song.openCurrentVoicebank"));
+            changeVoicebankItem.setText(localizer.getMessage("properties.change"));
         });
-        voicebankImage.setOnContextMenuRequested((event -> {
+        voicebankImage.setOnMouseClicked(event -> {
             iconContextMenu.hide();
             iconContextMenu.show(voicebankImage, event.getScreenX(), event.getScreenY());
-        }));
+        });
 
         quantizeChoiceBox.setItems(FXCollections.observableArrayList(
                 "1/4",
