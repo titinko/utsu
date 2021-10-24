@@ -235,6 +235,7 @@ public class Engine {
 
         int startPosition = bounds.getMinMs();
         int totalDelta = notes.getCurDelta(); // Absolute position of current note.
+        double scaleFactor = 125.0 / song.getTempo(); // TODO: Override with note tempo.
         Voicebank voicebank = song.getVoicebank();
         boolean isFirstNote = true;
         final File finalSong = cacheManager.createRenderedCache();
@@ -258,9 +259,6 @@ public class Engine {
                     //note.setTrueLyric(config.get().getTrueLyric());
                 }
             }
-
-            // Get scale factor. TODO: Override with note tempo.
-            double scaleFactor = 125.0 / song.getTempo();
 
             // Find preutterance of current and next notes.
             double preutter = note.getRealPreutter();
@@ -352,10 +350,6 @@ public class Engine {
                     renderedNote = note.getCacheFile().get();
                 }
                 return () -> {
-                    // Append rendered note to output file using wavtool.
-                    // System.out.println(
-                    //         note.getLyric() + ": " + note.getDuration() + "@" + song.getTempo()
-                    //                 + "+" + noteAddOn + ", STP=" + note.getRealStartPoint());
                     wavtool.addNewNote(
                             getWavtoolPath(),
                             song,
@@ -390,7 +384,7 @@ public class Engine {
         }
 
         // When resampler finishes, run wavtool on notes in sequential order.
-        wavtool.startRender(startPosition);
+        wavtool.startRender(startPosition * scaleFactor);
         for (int i = 0; i < futures.size(); i++) {
             try {
                 double curProgress = i * 1.0 / futures.size();

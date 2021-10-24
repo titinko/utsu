@@ -245,6 +245,7 @@ public class SongPropertiesController implements Localizable {
     void applyProperties(ActionEvent event) {
         new Thread(() -> {
             boolean shouldClearCache = !engine.getResamplerPath().equals(resamplerPath)
+                    || !songContainer.get().getFlags().equals(flagsTF.getText())
                     || !songContainer.get().getVoiceDir().equals(voicebankContainer.getLocation());
             songContainer.setSong(
                     songContainer.get().toBuilder().setProjectName(projectNameTF.getText())

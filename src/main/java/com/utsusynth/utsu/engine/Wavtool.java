@@ -4,7 +4,6 @@ import java.io.File;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.Note;
-import com.utsusynth.utsu.model.voicebank.LyricConfig;
 
 public class Wavtool {
     private final ExternalProcessRunner runner;
@@ -15,7 +14,7 @@ public class Wavtool {
         this.runner = runner;
     }
 
-    void startRender(int startDelta) {
+    void startRender(double startDelta) {
         totalDelta = startDelta;
     }
 
