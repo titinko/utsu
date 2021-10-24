@@ -1,2 +1,0 @@
-name=Iona CV
-image=iona.bmp
