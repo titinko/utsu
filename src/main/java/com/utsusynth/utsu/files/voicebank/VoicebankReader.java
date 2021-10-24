@@ -28,6 +28,8 @@ public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
     private static final Pattern LYRIC_PATTERN = Pattern.compile("(.+\\.wav)=([^,]*),");
+    private static final Pattern LYRIC_CONFIG_PATTERN =
+            Pattern.compile("([^,]*),([^,]*),([^,]*),([^,]*),([^,]*)");
     private static final Pattern PREFIX_PATTERN =
             Pattern.compile("([a-gA-G]#?[1-7])\\t(\\S.*)");
     private static final Pattern SUFFIX_PATTERN =
@@ -142,10 +144,15 @@ public class VoicebankReader {
                     // If no alias provided, use the file name as an adhoc alias.
                     lyricName = fileName.substring(0, fileName.length() - 4);
                 }
-                String[] configValues = line.substring(matcher.end()).split(",");
-                if (configValues.length != 5 || fileName == null || lyricName == null) {
+                Matcher configMatcher = LYRIC_CONFIG_PATTERN.matcher(line.substring(matcher.end()));
+                if (!configMatcher.find() || configMatcher.groupCount() != 5 || fileName == null) {
                     System.out.println("Received unexpected results while parsing oto.ini");
                     continue;
+                }
+                String[] configValues = new String[5];
+                for (int i = 0; i < 5; i++) {
+                    configValues[i] = configMatcher.group(i + 1).equals("")
+                            ? "0" : configMatcher.group(i + 1);
                 }
                 // Search for a frq file.
                 String frqName = fileName.substring(0, fileName.length() - 4) + "_wav.frq";

@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.prefs.Preferences;
 
 import static javafx.scene.input.KeyCombination.*;
@@ -609,10 +610,15 @@ public class UtsuController implements Localizable {
 
     /** Called when a new file is added to the Open Recent menu. */
     private void addRecentFile(File location) {
+        Predicate<MenuItem> removePredicate = menuItem -> {
+            if (!(menuItem instanceof  FileMenuItem)) {
+                return false;
+            }
+            return ((FileMenuItem) menuItem).getAbsolutePath().equals(location.getAbsolutePath())
+                    || openRecentMenu.getItems().indexOf(menuItem) >= maxRecentFiles - 1;
+        };
+        openRecentMenu.getItems().removeIf(removePredicate);
         openRecentMenu.getItems().add(0, new FileMenuItem(location));
-        openRecentMenu.getItems().removeIf(menuItem ->
-            openRecentMenu.getItems().indexOf(menuItem) >= maxRecentFiles
-                    && (menuItem instanceof FileMenuItem));
     }
 
     /** Called by any menu item created in the Open Recent menu. */
@@ -634,6 +640,7 @@ public class UtsuController implements Localizable {
             EditorController editor = editors.get(newTab.getId());
             editor.open(location);
             newTab.setText(location.getName());
+            addRecentFile(location);
         } catch (FileAlreadyOpenException e) {
             switchToExistingFile(e.getAlreadyOpenFile());
             closeTab(newTab);
