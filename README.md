@@ -2,7 +2,7 @@
 
 Compatible (in theory) with all voicebanks, files, and engines created with or for the UTAU software--however, the two programs have no code in common and both user features and backend processing can and will be different.
 
-Supported languages: English, Español, Français, 日本語, 中文, Italiano, Bahasa Indonesia, Português Brasileiro, русский, հայերեն, Nederlands
+Supported languages: English, Español, Français, 日本語, 中文, Italiano, Bahasa Indonesia, Português Brasileiro, русский, հայերեն, Nederlands, 한국인, čeština
 
 Discord: https://discord.gg/c7PMdzM972
 
