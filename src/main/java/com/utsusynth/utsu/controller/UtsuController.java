@@ -369,6 +369,9 @@ public class UtsuController implements Localizable {
                 .match(keyEvent)) {
             zoomOutV(null);
             return true;
+        } else if (new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN).match(keyEvent)) {
+            selectAll(null);
+            return true;
         } else if (!tabs.getTabs().isEmpty()) {
             Tab curTab = tabs.getSelectionModel().getSelectedItem();
             return editors.get(curTab.getId()).onKeyPressed(keyEvent);
