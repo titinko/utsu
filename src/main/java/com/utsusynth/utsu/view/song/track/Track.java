@@ -2,7 +2,7 @@ package com.utsusynth.utsu.view.song.track;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;

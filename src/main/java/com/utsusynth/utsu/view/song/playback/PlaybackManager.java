@@ -5,8 +5,7 @@ import java.util.TreeSet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.utsusynth.utsu.common.RegionBounds;
-import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;

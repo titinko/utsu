@@ -3,7 +3,7 @@ package com.utsusynth.utsu.view.song;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.data.*;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -33,7 +33,6 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.util.*;

@@ -2,11 +2,10 @@ package com.utsusynth.utsu.view.song;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+
 import com.google.inject.Inject;
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
@@ -19,7 +18,6 @@ import com.utsusynth.utsu.view.song.note.pitch.PitchbendCallback;
 import com.utsusynth.utsu.view.song.note.pitch.PitchbendFactory;
 import com.utsusynth.utsu.view.song.track.Track;
 import javafx.beans.property.BooleanProperty;
-import javafx.scene.Group;
 
 public class NoteMap {
     private final EnvelopeFactory envelopeFactory;

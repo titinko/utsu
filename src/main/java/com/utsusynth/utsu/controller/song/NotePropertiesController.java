@@ -3,7 +3,7 @@ package com.utsusynth.utsu.controller.song;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.i18n.Localizable;

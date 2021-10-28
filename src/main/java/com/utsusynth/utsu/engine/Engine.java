@@ -1,7 +1,7 @@
 package com.utsusynth.utsu.engine;
 
 import com.google.common.base.Function;
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;

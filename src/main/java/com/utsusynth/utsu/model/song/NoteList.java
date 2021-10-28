@@ -3,7 +3,7 @@ package com.utsusynth.utsu.model.song;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
 

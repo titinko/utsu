@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.controller.song;
 
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.enums.FilterType;

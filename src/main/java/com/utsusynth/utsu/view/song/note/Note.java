@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Optional;
 
 import com.google.common.collect.ImmutableSet;
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.NoteConfigData;
 import com.utsusynth.utsu.common.data.NoteData;

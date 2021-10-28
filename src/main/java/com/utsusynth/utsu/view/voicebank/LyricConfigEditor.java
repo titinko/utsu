@@ -372,6 +372,10 @@ public class LyricConfigEditor {
         return wavData.get().getLengthMs();
     }
 
+    private void createSpectrogram() {
+        //FastFourier
+    }
+
     private void populateFrqValues(
             ObservableList<Data<Number, Number>> frqSamples,
             File wavFile,

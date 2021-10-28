@@ -2,7 +2,7 @@ package com.utsusynth.utsu.model.song;
 
 import java.util.Iterator;
 import java.util.Optional;
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 
 /**
  * Iterator over song notes using a linked list implementation.

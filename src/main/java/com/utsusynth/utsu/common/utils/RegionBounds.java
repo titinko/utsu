@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.common;
+package com.utsusynth.utsu.common.utils;
 
 /**
  * A utility class that represents a 1-dimensional region and can determine whether a note is in

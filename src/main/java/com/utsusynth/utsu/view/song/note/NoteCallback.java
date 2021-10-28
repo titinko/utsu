@@ -1,6 +1,6 @@
 package com.utsusynth.utsu.view.song.note;
 
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.view.song.DragHandler;
 
 /**

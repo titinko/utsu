@@ -3,7 +3,7 @@ package com.utsusynth.utsu.files.song;
 import java.io.PrintStream;
 import java.util.Optional;
 import com.google.common.collect.ImmutableList;
-import com.utsusynth.utsu.common.RegionBounds;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.NoteIterator;
