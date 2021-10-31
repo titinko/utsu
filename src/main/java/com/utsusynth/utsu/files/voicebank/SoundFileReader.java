@@ -79,12 +79,14 @@ public class SoundFileReader {
         try (AudioInputStream input = AudioSystem.getAudioInputStream(wavFile)) {
             int numFrames = (int) input.getFrameLength();
             double lengthMs = numFrames / input.getFormat().getFrameRate() * 1000;
-            if (input.getFormat().getSampleSizeInBits() != 16) {
-                statusBar.setText("Error: Does not support sample sizes other than 16 bit.");
+            int bitsPerSample = input.getFormat().getSampleSizeInBits();
+            if (bitsPerSample != 8 && bitsPerSample != 16) {
+                statusBar.setText("Error: Does not support sample sizes other than 8 or 16 bit.");
                 return Optional.empty();
             }
-            if (input.getFormat().getEncoding() != Encoding.PCM_SIGNED) {
-                statusBar.setText("Error: Does not support encodings other than PCM_SIGNED.");
+            Encoding encoding = input.getFormat().getEncoding();
+            if (encoding != Encoding.PCM_SIGNED && encoding != Encoding.PCM_UNSIGNED) {
+                statusBar.setText("Error: Does not support encodings other than PCM.");
                 return Optional.empty();
             }
 
@@ -99,18 +101,23 @@ public class SoundFileReader {
             byteBuffer.order(
                     input.getFormat().isBigEndian() ? ByteOrder.BIG_ENDIAN
                             : ByteOrder.LITTLE_ENDIAN);
-            ShortBuffer shortBuffer = byteBuffer.asShortBuffer();
+            ShortBuffer shortBuffer = byteBuffer.asShortBuffer(); // Use if 16 bits per sample.
 
-            int[] samples = new int[numFrames];
+            double[] samples = new double[numFrames];
+            double maxAmplitude = Math.pow(2.0, bitsPerSample - 1);
             for (int i = 0; i < numFrames; i++) {
                 for (int channel = 0; channel < input.getFormat().getChannels(); channel++) {
-                    int sample = shortBuffer.get();
+                    short sample = bitsPerSample == 16 ? shortBuffer.get() : byteBuffer.get();
                     if (channel == 0) {
-                        samples[i] = sample;
+                        if (encoding.equals(Encoding.PCM_UNSIGNED)) {
+                            sample -= (int) maxAmplitude;
+                        }
+                        samples[i] = sample / maxAmplitude;
                     }
                 }
             }
-            if (shortBuffer.hasRemaining()) {
+            if ((bitsPerSample == 16 && shortBuffer.hasRemaining())
+                    || (bitsPerSample == 8 && byteBuffer.hasRemaining())) {
                 statusBar.setText("Warning: Parts of wav file were left unread.");
             }
             input.close();

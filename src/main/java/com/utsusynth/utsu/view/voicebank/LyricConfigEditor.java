@@ -28,7 +28,6 @@ import javafx.scene.shape.Line;
 import javafx.util.Duration;
 
 public class LyricConfigEditor {
-    private static final int MAX_AMPLITUDE = 32767;
     private static final double SCALE_X = 0.8;
     private static final int HEIGHT = 150;
     private static MediaPlayer mediaPlayer; // Used for audio playback.
@@ -348,9 +347,9 @@ public class LyricConfigEditor {
         xAxis.setTickLabelGap(-15);
         NumberAxis yAxis = new NumberAxis();
         yAxis.setAutoRanging(false);
-        yAxis.setLowerBound(-MAX_AMPLITUDE);
-        yAxis.setUpperBound(MAX_AMPLITUDE);
-        yAxis.setTickUnit(MAX_AMPLITUDE / 5.0);
+        yAxis.setLowerBound(-1);
+        yAxis.setUpperBound(1);
+        yAxis.setTickUnit(0.2);
         yAxis.setSide(Side.RIGHT);
         yAxis.setOpacity(0);
         yAxis.setTickLabelsVisible(false);
@@ -400,8 +399,8 @@ public class LyricConfigEditor {
                 // Scale to a value of [-10, 10] to make a good logistic function input.
                 double scaledFrq = (frqValue - avgFreq) * 10 / avgFreq;
                 // Apply logistic function to enhance central values.
-                double squashedFrq = (MAX_AMPLITUDE * 2 / (1 + Math.exp(-scaledFrq)));
-                frqSamples.add(new Data<>(currentTimeMs, squashedFrq - MAX_AMPLITUDE));
+                double squashedFrq = (2.0 / (1.0 + Math.exp(-scaledFrq)));
+                frqSamples.add(new Data<>(currentTimeMs, squashedFrq - 1));
                 currentTimeMs += msPerFrqValue;
             }
         }
