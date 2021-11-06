@@ -39,4 +39,27 @@ public class FFTUtils {
         }
         return result;
     }
+
+    /**
+     * Apply a standard hamming window to a discrete signal so FFT can read frequencies better.
+     */
+    public static double[] hammingWindow(double[] signal, int startIndex, int length) {
+        double[] result = new double[length];
+        for (int i = startIndex; i < startIndex + length; i++) {
+            result[i - startIndex] =
+                    signal[i] * (0.54 - (0.46 * Math.cos(2.0 * i * Math.PI / length)));
+        }
+        return result;
+    }
+
+    /**
+     * Convert a double array to a Complex array.
+     */
+    public static Complex[] toComplex(double[] signal) {
+        Complex[] result = new Complex[signal.length];
+        for (int i = 0; i < signal.length; i++) {
+            result[i] = new Complex(signal[i], 0);
+        }
+        return result;
+    }
 }

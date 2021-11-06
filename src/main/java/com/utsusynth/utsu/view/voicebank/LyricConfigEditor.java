@@ -34,6 +34,7 @@ public class LyricConfigEditor {
 
     private final Group controlBars;
     private final SoundFileReader soundFileReader;
+    private final Spectrogram spectrogram;
     private final Localizer localizer;
 
     private Optional<LyricConfigData> configData;
@@ -46,8 +47,10 @@ public class LyricConfigEditor {
     private double[] cachedConfig;
 
     @Inject
-    public LyricConfigEditor(SoundFileReader soundFileReader, Localizer localizer) {
+    public LyricConfigEditor(
+            SoundFileReader soundFileReader, Spectrogram spectrogram, Localizer localizer) {
         this.soundFileReader = soundFileReader;
+        this.spectrogram = spectrogram;
         this.localizer = localizer;
 
         // Initialize with dummy data.
@@ -80,10 +83,8 @@ public class LyricConfigEditor {
         curLength -= cutoffLength;
         double consonantLength = Math.max(Math.min(config.consonantProperty().get(), curLength), 0);
 
-        System.out.println(chart.getTranslateX() + " and width = " + chart.getWidth());
         double totalX = lengthMs * SCALE_X;
         double offsetBarX = offsetLength * SCALE_X;
-        System.out.println("Offset: " + offsetLength);
         double consonantBarX = (offsetLength + consonantLength) * SCALE_X;
         double cutoffBarX = (lengthMs - cutoffLength) * SCALE_X;
         double preutterBarX = Math.min(
@@ -313,14 +314,14 @@ public class LyricConfigEditor {
         // Populate wav chart data.
         File pathToWav = config.getPathToFile();
         Optional<WavData> wavData = soundFileReader.loadWavData(pathToWav);
-        double msPerSample;
         if (wavData.isEmpty()) {
             chart = new LineChart<>(new NumberAxis(), new NumberAxis());
             chart.setMouseTransparent(true);
             chart.setOpacity(0); // Make chart invisible if wav file can't be read.
             return 0.0;
         }
-        msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
+        // spectrogram.createSpectrogram(wavData.get(), HEIGHT);
+        double msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
         System.out.println("Sound length " + wavData.get().getLengthMs());
         double currentTimeMs = msPerSample / 2; // Data point is halfway through sample.
         double ampSum = 0;
@@ -369,10 +370,6 @@ public class LyricConfigEditor {
         populateFrqValues(frqSamples, pathToWav, wavData);
 
         return wavData.get().getLengthMs();
-    }
-
-    private void createSpectrogram() {
-        //FastFourier
     }
 
     private void populateFrqValues(
