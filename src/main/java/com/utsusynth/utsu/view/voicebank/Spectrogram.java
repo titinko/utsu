@@ -1,15 +1,16 @@
 package com.utsusynth.utsu.view.voicebank;
 
+import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.common.utils.Complex;
 import com.utsusynth.utsu.common.utils.FFTUtils;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Draws a wave spectrogram for the WAV files of lyrics.
@@ -18,12 +19,17 @@ public class Spectrogram {
     /**
      * Size of each window FFT is applied on. Must be a power of 2.
      */
-    private static final int WAV_WINDOW_SIZE = 2048;
+    private static final int WAV_WINDOW_SIZE = 1024;
 
     /**
      * Distance between each window. Must be a power of 2.
      */
-    private static final int WAV_HOP_SIZE = 512;
+    private static final int WAV_HOP_SIZE = 1024;
+
+    /**
+     * Default color of the spectrogram.
+     */
+    private static final Color DEFAULT_COLOR = Color.CORNFLOWERBLUE;
 
     public Spectrogram() {
         // TODO: Inject any necessary tools.
@@ -37,14 +43,10 @@ public class Spectrogram {
         List<Integer> freqFilters = createFreqFilters(height, sampleRate);
 
         int totalNumHops = (numSamples + WAV_HOP_SIZE - WAV_WINDOW_SIZE) / WAV_HOP_SIZE;
-        System.out.println("Spectrogram: num hops = " + totalNumHops);
 
         WritableImage spectrogram = new WritableImage(totalNumHops, height);
         // TODO: Do this for every hop in parallel.
         for (int hop = 0; hop < totalNumHops; hop++) {
-            if (hop != 0) {
-                break;
-            }
             double[] window = FFTUtils.hammingWindow(
                     wavData.getSamples(), hop * WAV_HOP_SIZE, WAV_WINDOW_SIZE);
             Complex[] frequencies = FFTUtils.fft(FFTUtils.toComplex(window)); // FFT results.
@@ -87,29 +89,30 @@ public class Spectrogram {
             }
 
             for (int i = 0; i < magnitudes.length; i++) {
-                System.out.print(i + " " + magnitudes[i] + ", ");
+                int colorIndex = Math.max(0, Math.min(height - 1,
+                        RoundUtils.round(magnitudes[i] * height / 100.0)));
+                spectrogram.getPixelWriter().setColor(
+                        hop, height - (i + 1), colorScale.get(colorIndex));
             }
-            System.out.println();
         }
-
         return spectrogram;
     }
 
-    private List<Color> createColorScale(int height) {
-        // Use one color for every pixel of height, so scale can be drawn on the side if needed.
-        ArrayList<Color> colorScale = new ArrayList<>(height);
-        int blackToColorSteps = height / 2;
+    private List<Color> createColorScale(int numColors) {
+        // Num colors is a multiple of height, so scale can be drawn on the side if needed.
+        ArrayList<Color> colorScale = new ArrayList<>(numColors);
+        int blackToColorSteps = numColors / 2;
         for (int i = 0; i < blackToColorSteps; i++) {
-            colorScale.add(Color.BLACK.interpolate(Color.AZURE, i * 1.0 / blackToColorSteps));
+            colorScale.add(Color.BLACK.interpolate(DEFAULT_COLOR, i * 1.0 / blackToColorSteps));
         }
-        int colorToWhiteSteps = height - blackToColorSteps; // Can handle an odd height.
+        int colorToWhiteSteps = numColors - blackToColorSteps;
         for (int i = 0; i < colorToWhiteSteps; i++) {
-            colorScale.add(Color.AZURE.interpolate(Color.WHITE, i * 1.0 / colorToWhiteSteps));
+            colorScale.add(DEFAULT_COLOR.interpolate(Color.WHITE, i * 1.0 / colorToWhiteSteps));
         }
         return colorScale;
     }
 
-    private ArrayList<Integer> createFreqFilters(int height, double sampleRate) {
+    private ImmutableList<Integer> createFreqFilters(int height, double sampleRate) {
         // Min cycle length in seconds. FFT frequency bands will be based on this value.
         double minCycleLen = WAV_WINDOW_SIZE / sampleRate;
         int numBins = WAV_WINDOW_SIZE / 2; // Number of frequency bins returned by FFT.
@@ -124,23 +127,20 @@ public class Spectrogram {
         }
 
         // Convert from Hz to the nearest preceding index in FFT output.
-        ArrayList<Integer> freqFilters = new ArrayList<>(height + 2);
+        Integer[] freqFilters = new Integer[height + 2];
         int index = 0;
         for (int fftIndex = 1; fftIndex <= numBins; fftIndex++) {
             double freqInHz = fftIndex / minCycleLen;
             if (freqInHz >= hzFilters.get(index)) {
-                freqFilters.add(fftIndex - 1);
+                freqFilters[index] = fftIndex - 1;
                 index++;
             }
             if (index == height + 2) {
                 break;
             }
         }
-        freqFilters.set(height + 1, numBins);
-        if (freqFilters.size() != height + 2) {
-            System.out.println("Error: Size of frequency bins was too small!");
-        }
-        return freqFilters;
+        freqFilters[height + 1] = numBins;
+        return ImmutableList.copyOf(freqFilters);
     }
 
     private static double melTransform(double freqInHz) {

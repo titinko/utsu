@@ -9,6 +9,8 @@ import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.files.voicebank.SoundFileReader;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Side;
@@ -18,8 +20,11 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
@@ -37,7 +42,10 @@ public class LyricConfigEditor {
     private final Spectrogram spectrogram;
     private final Localizer localizer;
 
+    private final BooleanProperty showSpectrogram;
+
     private Optional<LyricConfigData> configData;
+    private WavData wavData;
     private LyricConfigCallback model;
     private GridPane background;
     private LineChart<Number, Number> chart;
@@ -59,6 +67,7 @@ public class LyricConfigEditor {
         chart = new LineChart<>(new NumberAxis(), new NumberAxis());
         chart.setOpacity(0);
         controlBars = new Group();
+        showSpectrogram = new SimpleBooleanProperty(false);
     }
 
     /** Initialize editor with data from the controller. */
@@ -115,14 +124,20 @@ public class LyricConfigEditor {
         playItem.setOnAction(event -> playSound());
         MenuItem playItemWithResampler = new MenuItem("Play with resampler");
         playItemWithResampler.setOnAction(event -> playSoundWithResampler(100));
-
         MenuItem playItemWithResamplerNoModulation =
                 new MenuItem("Play with resampler (no modulation)");
         playItemWithResamplerNoModulation.setOnAction(event -> playSoundWithResampler(0));
+        CheckMenuItem spectrogramItem = new CheckMenuItem("Spectrogram");
+        spectrogramItem.setSelected(showSpectrogram.get());
+        showSpectrogram.bind(spectrogramItem.selectedProperty());
 
         ContextMenu contextMenu = new ContextMenu();
         contextMenu.getItems().addAll(
-                playItem, playItemWithResampler, playItemWithResamplerNoModulation);
+                playItem,
+                playItemWithResampler,
+                playItemWithResamplerNoModulation,
+                new SeparatorMenuItem(),
+                spectrogramItem);
         contextMenu.setOnShowing(event -> playItem.setText(localizer.getMessage("voice.play")));
         contextMenu.setOnShowing(event -> playItemWithResampler.setText(
                 localizer.getMessage("voice.playWithResampler")));
@@ -222,6 +237,16 @@ public class LyricConfigEditor {
         return controlBars;
     }
 
+    public ImageView createSpectrogram() {
+        if (wavData != null) {
+            ImageView imageView = new ImageView(spectrogram.createSpectrogram(wavData, HEIGHT));
+            imageView.setFitWidth(wavData.getLengthMs() * SCALE_X);
+            imageView.visibleProperty().bind(showSpectrogram);
+            return imageView;
+        }
+        return new ImageView();
+    }
+
     /**
      * Play a note using the resampler.
      * The note is played using pitch C4 (midi 60) for 2 seconds.
@@ -313,20 +338,19 @@ public class LyricConfigEditor {
 
         // Populate wav chart data.
         File pathToWav = config.getPathToFile();
-        Optional<WavData> wavData = soundFileReader.loadWavData(pathToWav);
-        if (wavData.isEmpty()) {
+        Optional<WavData> maybeWavData = soundFileReader.loadWavData(pathToWav);
+        if (maybeWavData.isEmpty()) {
             chart = new LineChart<>(new NumberAxis(), new NumberAxis());
             chart.setMouseTransparent(true);
             chart.setOpacity(0); // Make chart invisible if wav file can't be read.
             return 0.0;
         }
-        // spectrogram.createSpectrogram(wavData.get(), HEIGHT);
-        double msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
-        System.out.println("Sound length " + wavData.get().getLengthMs());
+        wavData = maybeWavData.get();
+        double msPerSample = wavData.getLengthMs() / wavData.getSamples().length;
         double currentTimeMs = msPerSample / 2; // Data point is halfway through sample.
         double ampSum = 0;
-        for (int i = 0; i < wavData.get().getSamples().length; i++) {
-            ampSum += Math.abs(wavData.get().getSamples()[i]);
+        for (int i = 0; i < wavData.getSamples().length; i++) {
+            ampSum += Math.abs(wavData.getSamples()[i]);
             if (i % 100 == 0) {
                 // Only render every 100th sample to avoid overloading the frontend.
                 double ampValue = i % 200 == 0 ? ampSum / 100.0 : ampSum / -100.0;
@@ -339,7 +363,7 @@ public class LyricConfigEditor {
         NumberAxis xAxis = new NumberAxis();
         xAxis.setAutoRanging(false);
         xAxis.setLowerBound(0);
-        xAxis.setUpperBound(wavData.get().getLengthMs());
+        xAxis.setUpperBound(wavData.getLengthMs());
         xAxis.setTickUnit(100);
         xAxis.setSide(Side.TOP);
         xAxis.setTickLabelsVisible(true);
@@ -363,23 +387,20 @@ public class LyricConfigEditor {
         chart.setVerticalZeroLineVisible(false);
         chart.setCreateSymbols(false);
         chart.setPrefHeight(HEIGHT);
-        chart.setPrefWidth(wavData.get().getLengthMs() * SCALE_X);
+        chart.setPrefWidth(wavData.getLengthMs() * SCALE_X);
         chart.getData().setAll(ImmutableList.of(waveform, frequency));
 
         // Populate frequency chart data.
-        populateFrqValues(frqSamples, pathToWav, wavData);
+        populateFrqValues(frqSamples, pathToWav);
 
-        return wavData.get().getLengthMs();
+        return wavData.getLengthMs();
     }
 
-    private void populateFrqValues(
-            ObservableList<Data<Number, Number>> frqSamples,
-            File wavFile,
-            Optional<WavData> wavData) {
-        if (!wavData.isPresent()) {
-            return; // Don't bother populating frq data if there is no wav data.
+    private void populateFrqValues(ObservableList<Data<Number, Number>> frqSamples, File wavFile) {
+        if (wavData == null) {
+            return; // Don't bother populating frq values if wav data not present.
         }
-        double msPerSample = wavData.get().getLengthMs() / wavData.get().getSamples().length;
+        double msPerSample = wavData.getLengthMs() / wavData.getSamples().length;
 
         // Populate frequency chart data.
         String wavName = wavFile.getName();

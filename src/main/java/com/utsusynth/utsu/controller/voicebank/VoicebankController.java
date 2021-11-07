@@ -147,6 +147,7 @@ public class VoicebankController implements EditorController, Localizable {
                 // Load lyric config editor.
                 anchorBottom.getChildren().clear();
                 anchorBottom.getChildren().add(configEditor.createConfigEditor(lyricData));
+                anchorBottom.getChildren().add(configEditor.createSpectrogram());
                 anchorBottom.getChildren().add(configEditor.getControlElement());
                 anchorBottom.getChildren().add(configEditor.getChartElement());
                 bindLabelsAndControlBars(configEditor.getControlElement());
@@ -213,6 +214,7 @@ public class VoicebankController implements EditorController, Localizable {
                 // Reload lyric config editor.
                 anchorBottom.getChildren().clear();
                 anchorBottom.getChildren().add(configEditor.createConfigEditor(lyricData));
+                anchorBottom.getChildren().add(configEditor.createSpectrogram());
                 anchorBottom.getChildren().add(configEditor.getControlElement());
                 anchorBottom.getChildren().add(configEditor.getChartElement());
                 bindLabelsAndControlBars(configEditor.getControlElement());
