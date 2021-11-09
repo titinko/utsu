@@ -197,7 +197,7 @@
     -fx-background-color: derive(-fx-color,-23%), $[VOWEL_FILL]
 }
 
-.config-whitespace {
+.lyric-config-whitespace {
     -fx-background-insets: 0, 1 0 1 1;
     -fx-background-color: derive(-fx-color,-23%), $[VOWEL_FILL]
 }
@@ -338,6 +338,10 @@
 }
 
 .theme-settings.highlighted {
+    -fx-background-color: derive(-fx-color,-18%);
+}
+
+.lyric-config-settings.highlighted {
     -fx-background-color: derive(-fx-color,-18%);
 }
 

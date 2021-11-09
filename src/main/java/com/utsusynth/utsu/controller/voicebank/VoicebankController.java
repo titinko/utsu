@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.controller.voicebank;
 
+import com.google.common.base.CharMatcher;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.LyricConfigData;
@@ -151,7 +152,7 @@ public class VoicebankController implements EditorController, Localizable {
                 // Load lyric config editor.
                 anchorBottom.getChildren().clear();
                 anchorBottom.getChildren().addAll(configEditor.createConfigEditor(lyricData));
-                configVBox.getChildren().addAll();
+                configVBox.getChildren().setAll(configEditor.createConfigSidebar());
                 bindLabelsAndControlBars(configEditor.getControlElement());
             }
 
@@ -216,7 +217,7 @@ public class VoicebankController implements EditorController, Localizable {
                 // Reload lyric config editor.
                 anchorBottom.getChildren().clear();
                 anchorBottom.getChildren().addAll(configEditor.createConfigEditor(lyricData));
-                configVBox.getChildren().addAll();
+                configVBox.getChildren().setAll(configEditor.createConfigSidebar());
                 bindLabelsAndControlBars(configEditor.getControlElement());
             }
 
@@ -508,13 +509,21 @@ public class VoicebankController implements EditorController, Localizable {
             label.onMouseEnteredProperty().bindBidirectional(controlBar.onMouseEnteredProperty());
             label.setOnMouseEntered(event -> {
                 onMouseEntered.handle(event);
-                label.setFont(Font.font("verdana", FontWeight.EXTRA_BOLD, 12));
+                if (CharMatcher.ascii().matchesAllOf(label.getText())) {
+                    label.setFont(Font.font("verdana", FontWeight.EXTRA_BOLD, 12));
+                } else {
+                    label.setUnderline(true);
+                }
             });
             EventHandler<? super MouseEvent> onMouseExited = controlBar.getOnMouseExited();
             label.onMouseExitedProperty().bindBidirectional(controlBar.onMouseExitedProperty());
             label.setOnMouseExited(event -> {
                 onMouseExited.handle(event);
-                label.setFont(Font.font("verdana", FontWeight.NORMAL, 12));
+                if (CharMatcher.ascii().matchesAllOf(label.getText())) {
+                    label.setFont(Font.font("verdana", FontWeight.NORMAL, 12));
+                } else {
+                    label.setUnderline(false);
+                }
             });
         }
     }

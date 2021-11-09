@@ -32,7 +32,7 @@ public class Spectrogram {
     /**
      * Default color of the spectrogram.
      */
-    private static final Color DEFAULT_COLOR = Color.CORNFLOWERBLUE;
+    private static final Color DEFAULT_COLOR = Color.DARKGOLDENROD;
 
     private final ThemeManager themeManager;
 

@@ -3,6 +3,8 @@ package com.utsusynth.utsu.view.voicebank;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.FrequencyData;
@@ -14,6 +16,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
@@ -22,16 +25,15 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
 
 public class LyricConfigEditor {
@@ -44,6 +46,9 @@ public class LyricConfigEditor {
     private final Spectrogram spectrogram;
     private final Localizer localizer;
 
+    private final BooleanProperty isPlaying;
+    private final BooleanProperty showFrequency;
+    private final BooleanProperty showWaveform;
     private final BooleanProperty showSpectrogram;
 
     private LyricConfigCallback model;
@@ -73,6 +78,9 @@ public class LyricConfigEditor {
         controlBars = new Group();
         spectrogramView = new ImageView();
 
+        isPlaying = new SimpleBooleanProperty(false);
+        showFrequency = new SimpleBooleanProperty(true);
+        showWaveform = new SimpleBooleanProperty(true);
         showSpectrogram = new SimpleBooleanProperty(false);
         showSpectrogram.addListener(obs -> {
             if (!showSpectrogram.get() || spectrogramView == null
@@ -148,17 +156,10 @@ public class LyricConfigEditor {
         MenuItem playItemWithResamplerNoModulation =
                 new MenuItem("Play with resampler (no modulation)");
         playItemWithResamplerNoModulation.setOnAction(event -> playSoundWithResampler(0));
-        CheckMenuItem spectrogramItem = new CheckMenuItem("Spectrogram");
-        spectrogramItem.setSelected(showSpectrogram.get());
-        showSpectrogram.bind(spectrogramItem.selectedProperty());
 
         ContextMenu contextMenu = new ContextMenu();
         contextMenu.getItems().addAll(
-                playItem,
-                playItemWithResampler,
-                playItemWithResamplerNoModulation,
-                new SeparatorMenuItem(),
-                spectrogramItem);
+                playItem, playItemWithResampler, playItemWithResamplerNoModulation);
         contextMenu.setOnShowing(event -> playItem.setText(localizer.getMessage("voice.play")));
         contextMenu.setOnShowing(event -> playItemWithResampler.setText(
                 localizer.getMessage("voice.playWithResampler")));
@@ -252,6 +253,14 @@ public class LyricConfigEditor {
 
     public Group getControlElement() {
         return controlBars;
+    }
+
+    public List<Node> createConfigSidebar() {
+        return ImmutableList.of(
+                createLabelButton("▶", "Play", isPlaying),
+                createLabelButton("F", "Show Frequency", showFrequency),
+                createLabelButton("W", "Show Waveform", showWaveform),
+                createLabelButton("S", "Show Spectrogram", showSpectrogram));
     }
 
     public void redrawSpectrogram() {
@@ -402,6 +411,9 @@ public class LyricConfigEditor {
         chart.setPrefHeight(HEIGHT);
         chart.setPrefWidth(wavData.getLengthMs() * SCALE_X);
         chart.getData().setAll(ImmutableList.of(waveform, frequency));
+        waveform.getNode().visibleProperty().bind(showWaveform);
+        chart.horizontalZeroLineVisibleProperty().bind(showWaveform);
+        frequency.getNode().visibleProperty().bind(showFrequency);
 
         // Populate frequency chart data.
         populateFrqValues(frqSamples, pathToWav);
@@ -435,5 +447,43 @@ public class LyricConfigEditor {
                 currentTimeMs += msPerFrqValue;
             }
         }
+    }
+
+    private Label createLabelButton(String icon, String altText, BooleanProperty toggle) {
+        Label button = new Label(icon);
+        button.setPrefWidth(15);
+        button.setAlignment(Pos.CENTER);
+
+        if (CharMatcher.ascii().matchesAllOf(icon)) {
+            button.setFont(Font.font("verdana", FontWeight.NORMAL, 12));
+        }
+        Tooltip.install(button, new Tooltip(altText));
+        button.setOnMouseEntered(event -> {
+            if (CharMatcher.ascii().matchesAllOf(icon)) {
+                button.setFont(Font.font("verdana", FontWeight.EXTRA_BOLD, 12));
+            } else {
+                button.setUnderline(true);
+            }
+        });
+        button.setOnMouseExited(event -> {
+            if (CharMatcher.ascii().matchesAllOf(icon)) {
+                button.setFont(Font.font("verdana", FontWeight.NORMAL, 12));
+            } else {
+                button.setUnderline(false);
+            }
+        });
+        button.getStyleClass().add("lyric-config-settings");
+        if (toggle.get()) {
+            button.getStyleClass().add("highlighted");
+        }
+        button.setOnMouseClicked(event -> {
+            toggle.set(!toggle.get());
+            if (toggle.get()) {
+                button.getStyleClass().add("highlighted");
+            } else {
+                button.getStyleClass().remove("highlighted");
+            }
+        });
+        return button;
     }
 }

@@ -22,7 +22,7 @@
    <bottom>
       <HBox maxHeight="150.0" prefHeight="150.0" prefWidth="700.0" BorderPane.alignment="CENTER">
          <children>
-            <VBox fx:id="configVBox" alignment="TOP_CENTER" minWidth="20.0" prefWidth="20.0" spacing="5.0" styleClass="config-whitespace" />
+            <VBox fx:id="configVBox" alignment="TOP_CENTER" minWidth="20.0" prefWidth="20.0" spacing="5.0" styleClass="lyric-config-whitespace" />
             <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="AS_NEEDED" minViewportHeight="150.0" minViewportWidth="400.0" vbarPolicy="NEVER" vmax="0.0" HBox.hgrow="ALWAYS">
               <content>
                 <AnchorPane fx:id="anchorBottom" minHeight="150.0" />

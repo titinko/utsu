@@ -210,7 +210,7 @@
     -fx-background-color: lightgray, white
 }
 
-.config-whitespace {
+.lyric-config-whitespace {
     -fx-background-insets: 0, 1 0 1 1;
     -fx-background-color: lightgray, white
 }
@@ -334,6 +334,10 @@
 }
 
 .theme-settings.highlighted {
+    -fx-background-color: derive(-fx-color,-18%);
+}
+
+.lyric-config-settings.highlighted {
     -fx-background-color: derive(-fx-color,-18%);
 }
 
