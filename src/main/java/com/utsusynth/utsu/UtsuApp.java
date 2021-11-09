@@ -106,7 +106,7 @@ public class UtsuApp extends Application {
 
         // Set up an event that runs every time a mouse scroll occurs.
         primaryStage.addEventFilter(ScrollEvent.SCROLL, scrollEvent ->{
-            if (controller.OnScroll(scrollEvent)){
+            if (controller.onScroll(scrollEvent)){
                 scrollEvent.consume();
             }
         });

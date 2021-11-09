@@ -46,6 +46,7 @@ FRQ_LOADING=#ffda7c
 
 WAVEFORM_LINE=royalblue
 FRQ_LINE=crimson
+SPECTROGRAM=royalblue
 
 OFFSET_CUTOFF_FILL=lightgray
 OFFSET_CUTOFF_LINE=darkgray

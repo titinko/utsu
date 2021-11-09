@@ -33,6 +33,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -73,6 +74,9 @@ public class VoicebankController implements EditorController, Localizable {
 
     @FXML // fx:id="otoPane"
     private HBox otoPane; // Value injected by FXMLLoader
+
+    @FXML // fx:id="configVBox"
+    private VBox configVBox; // Value injected by FXMLLoader
 
     @FXML // fx:id="anchorBottom"
     private AnchorPane anchorBottom; // Value injected by FXMLLoader
@@ -146,10 +150,8 @@ public class VoicebankController implements EditorController, Localizable {
             public void displayLyric(LyricConfigData lyricData) {
                 // Load lyric config editor.
                 anchorBottom.getChildren().clear();
-                anchorBottom.getChildren().add(configEditor.createConfigEditor(lyricData));
-                anchorBottom.getChildren().add(configEditor.createSpectrogram());
-                anchorBottom.getChildren().add(configEditor.getControlElement());
-                anchorBottom.getChildren().add(configEditor.getChartElement());
+                anchorBottom.getChildren().addAll(configEditor.createConfigEditor(lyricData));
+                configVBox.getChildren().addAll();
                 bindLabelsAndControlBars(configEditor.getControlElement());
             }
 
@@ -213,10 +215,8 @@ public class VoicebankController implements EditorController, Localizable {
             public void refreshEditor(LyricConfigData lyricData) {
                 // Reload lyric config editor.
                 anchorBottom.getChildren().clear();
-                anchorBottom.getChildren().add(configEditor.createConfigEditor(lyricData));
-                anchorBottom.getChildren().add(configEditor.createSpectrogram());
-                anchorBottom.getChildren().add(configEditor.getControlElement());
-                anchorBottom.getChildren().add(configEditor.getChartElement());
+                anchorBottom.getChildren().addAll(configEditor.createConfigEditor(lyricData));
+                configVBox.getChildren().addAll();
                 bindLabelsAndControlBars(configEditor.getControlElement());
             }
 
@@ -341,6 +341,11 @@ public class VoicebankController implements EditorController, Localizable {
             // No need to override default key behavior.
             return false;
         }
+    }
+
+    @Override
+    public void onThemeChanged() {
+        configEditor.redrawSpectrogram();
     }
 
     @Override

@@ -197,6 +197,11 @@
     -fx-background-color: derive(-fx-color,-23%), $[VOWEL_FILL]
 }
 
+.config-whitespace {
+    -fx-background-insets: 0, 1 0 1 1;
+    -fx-background-color: derive(-fx-color,-23%), $[VOWEL_FILL]
+}
+
 .frq-cell {
 	-fx-background-insets: 0, 1 0 1 0;
 	-fx-alignment: center;

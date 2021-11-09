@@ -545,6 +545,11 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
+    public void onThemeChanged() {
+        // No manual theme handling needed for songs right now.
+    }
+
+    @Override
     public Optional<String> open() throws FileAlreadyOpenException {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");

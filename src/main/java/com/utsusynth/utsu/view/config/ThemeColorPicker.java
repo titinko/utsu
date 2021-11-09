@@ -75,7 +75,7 @@ public class ThemeColorPicker implements Localizable {
                                 "FRQ_PRESENT",
                                 "FRQ_ABSENT",
                                 "FRQ_LOADING"),
-                        ImmutableList.of("WAVEFORM_LINE", "FRQ_LINE"),
+                        ImmutableList.of("WAVEFORM_LINE", "FRQ_LINE", "SPECTROGRAM"),
                         ImmutableList.of(
                                 "OFFSET_CUTOFF_FILL",
                                 "OFFSET_CUTOFF_LINE",

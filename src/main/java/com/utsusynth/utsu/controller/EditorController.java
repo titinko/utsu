@@ -38,6 +38,12 @@ public interface EditorController {
     boolean onKeyPressed(KeyEvent keyEvent);
 
     /**
+     * Called whenever the current theme changes. Useful for when a theme's color is used outside
+     * of CSS which is handled automatically.
+     */
+    void onThemeChanged();
+
+    /**
      * Opens a file/directory in this tab.
      *
      * @return What to name the tab, or nothing if open was canceled.

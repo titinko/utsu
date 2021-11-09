@@ -161,6 +161,13 @@ public class UtsuController implements Localizable {
                 loadingBar.setVisible(true);
             }
         });
+
+        // Add a listener for theme changes.
+        themeManager.getCurrentTheme().addListener(obs -> {
+            for (Tab tab : tabs.getTabs()) {
+                editors.get(tab.getId()).onThemeChanged();
+            }
+        });
     }
 
     @FXML
@@ -387,7 +394,7 @@ public class UtsuController implements Localizable {
      *
      * @return true if an override behavior was found, false otherwise
      */
-    public boolean OnScroll(ScrollEvent scrollEvent) {
+    public boolean onScroll(ScrollEvent scrollEvent) {
         if (!scrollEvent.isShortcutDown()) return false;
         double value = scrollEvent.getDeltaY();
         if (scrollEvent.isAltDown()) {

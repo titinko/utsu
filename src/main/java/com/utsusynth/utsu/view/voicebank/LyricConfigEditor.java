@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.view.voicebank;
 
 import java.io.File;
+import java.util.List;
 import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -16,6 +17,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart.Data;
@@ -44,11 +46,14 @@ public class LyricConfigEditor {
 
     private final BooleanProperty showSpectrogram;
 
-    private Optional<LyricConfigData> configData;
-    private WavData wavData;
     private LyricConfigCallback model;
+
+    // Recreated on each call to createConfigEditor.
+    private LyricConfigData configData;
+    private WavData wavData;
     private GridPane background;
     private LineChart<Number, Number> chart;
+    private ImageView spectrogramView;
 
     // Temporary cache values.
     private boolean changed = false;
@@ -62,12 +67,21 @@ public class LyricConfigEditor {
         this.localizer = localizer;
 
         // Initialize with dummy data.
-        configData = Optional.empty();
         background = new GridPane();
         chart = new LineChart<>(new NumberAxis(), new NumberAxis());
         chart.setOpacity(0);
         controlBars = new Group();
+        spectrogramView = new ImageView();
+
         showSpectrogram = new SimpleBooleanProperty(false);
+        showSpectrogram.addListener(obs -> {
+            if (!showSpectrogram.get() || spectrogramView == null
+                    || spectrogramView.getImage() != null || wavData == null) {
+                return;
+            }
+            spectrogramView.setImage(spectrogram.createSpectrogram(wavData, HEIGHT));
+        });
+
     }
 
     /** Initialize editor with data from the controller. */
@@ -75,9 +89,16 @@ public class LyricConfigEditor {
         model = callback;
     }
 
-    public GridPane createConfigEditor(LyricConfigData config) {
-        this.configData = Optional.of(config);
+    public List<Node> createConfigEditor(LyricConfigData config) {
+        this.configData = config;
         double lengthMs = createLineChart(config);
+
+        boolean drawSpec = showSpectrogram.get() && wavData != null;
+        spectrogramView = drawSpec ? new ImageView(spectrogram.createSpectrogram(wavData, HEIGHT))
+                : new ImageView();
+        spectrogramView.setFitWidth(lengthMs * SCALE_X);
+        spectrogramView.setMouseTransparent(true);
+        spectrogramView.visibleProperty().bind(showSpectrogram);
 
         background = new GridPane();
         double curLength = lengthMs;
@@ -226,25 +247,17 @@ public class LyricConfigEditor {
             config.overlapProperty().set(newOverlapX / SCALE_X);
         });
 
-        return background;
-    }
-
-    public LineChart<Number, Number> getChartElement() {
-        return chart;
+        return ImmutableList.of(background, spectrogramView, controlBars, chart);
     }
 
     public Group getControlElement() {
         return controlBars;
     }
 
-    public ImageView createSpectrogram() {
-        if (wavData != null) {
-            ImageView imageView = new ImageView(spectrogram.createSpectrogram(wavData, HEIGHT));
-            imageView.setFitWidth(wavData.getLengthMs() * SCALE_X);
-            imageView.visibleProperty().bind(showSpectrogram);
-            return imageView;
+    public void redrawSpectrogram() {
+        if (spectrogramView != null && wavData != null) {
+            spectrogramView.setImage(spectrogram.createSpectrogram(wavData, HEIGHT));
         }
-        return new ImageView();
     }
 
     /**
@@ -252,24 +265,24 @@ public class LyricConfigEditor {
      * The note is played using pitch C4 (midi 60) for 2 seconds.
      */
     public void playSoundWithResampler(int modulation) {
-        if (!configData.isPresent()) {
+        if (configData == null) {
             return;
         }
-        model.playLyricWithResampler(configData.get(), modulation);
+        model.playLyricWithResampler(configData, modulation);
     }
 
     public void playSound() {
-        if (!configData.isPresent()) {
+        if (configData == null) {
             return;
         }
         // TODO: Consider moving this code to the engine.
-        Media media = new Media(configData.get().getPathToFile().toURI().toString());
+        Media media = new Media(configData.getPathToFile().toURI().toString());
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setOnReady(() -> {
             double lengthMs = media.getDuration().toMillis();
             double offsetLengthMs =
-                    Math.max(Math.min(configData.get().offsetProperty().get(), lengthMs), 0);
-            double cutoffLengthMs = configData.get().cutoffProperty().get();
+                    Math.max(Math.min(configData.offsetProperty().get(), lengthMs), 0);
+            double cutoffLengthMs = configData.cutoffProperty().get();
             if (cutoffLengthMs >= 0) {
                 cutoffLengthMs = Math.max(Math.min(cutoffLengthMs, lengthMs - offsetLengthMs), 0);
             } else {

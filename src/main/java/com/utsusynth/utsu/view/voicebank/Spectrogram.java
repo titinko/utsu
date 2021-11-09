@@ -1,16 +1,19 @@
 package com.utsusynth.utsu.view.voicebank;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.WavData;
 import com.utsusynth.utsu.common.utils.Complex;
 import com.utsusynth.utsu.common.utils.FFTUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.files.ThemeManager;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Draws a wave spectrogram for the WAV files of lyrics.
@@ -31,8 +34,11 @@ public class Spectrogram {
      */
     private static final Color DEFAULT_COLOR = Color.CORNFLOWERBLUE;
 
-    public Spectrogram() {
-        // TODO: Inject any necessary tools.
+    private final ThemeManager themeManager;
+
+    @Inject
+    public Spectrogram(ThemeManager themeManager) {
+        this.themeManager = themeManager;
     }
 
     public Image createSpectrogram(WavData wavData, int height) {
@@ -99,15 +105,18 @@ public class Spectrogram {
     }
 
     private List<Color> createColorScale(int numColors) {
+        Map<String, Color> colorMap = themeManager.getCurrentTheme().get().getColorMap();
+        Color color = colorMap.getOrDefault("SPECTROGRAM", DEFAULT_COLOR);
+
         // Num colors is a multiple of height, so scale can be drawn on the side if needed.
         ArrayList<Color> colorScale = new ArrayList<>(numColors);
         int blackToColorSteps = numColors / 2;
         for (int i = 0; i < blackToColorSteps; i++) {
-            colorScale.add(Color.BLACK.interpolate(DEFAULT_COLOR, i * 1.0 / blackToColorSteps));
+            colorScale.add(Color.BLACK.interpolate(color, i * 1.0 / blackToColorSteps));
         }
         int colorToWhiteSteps = numColors - blackToColorSteps;
         for (int i = 0; i < colorToWhiteSteps; i++) {
-            colorScale.add(DEFAULT_COLOR.interpolate(Color.WHITE, i * 1.0 / colorToWhiteSteps));
+            colorScale.add(color.interpolate(Color.WHITE, i * 1.0 / colorToWhiteSteps));
         }
         return colorScale;
     }
