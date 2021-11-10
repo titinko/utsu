@@ -43,6 +43,7 @@ public class ThemeManager {
     private final ObservableList<Theme> themes;
     private final ObjectProperty<Theme> currentTheme;
 
+    private Runnable onThemeChange;
     private String templateData;
     private Scene primaryScene;
 
@@ -98,6 +99,10 @@ public class ThemeManager {
         });
     }
 
+    public void setOnThemeChange(Runnable runnable) {
+        onThemeChange = runnable;
+    }
+
     public void setPrimaryTheme(Scene scene) {
         primaryScene = scene;
         applyToScene(primaryScene);
@@ -127,6 +132,7 @@ public class ThemeManager {
         } else {
             scene.getStylesheets().add(css);
         }
+        onThemeChange.run();
     }
 
     public Theme duplicateTheme(Theme themeToCopy, String newName) {

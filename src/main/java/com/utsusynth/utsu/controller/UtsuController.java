@@ -163,7 +163,7 @@ public class UtsuController implements Localizable {
         });
 
         // Add a listener for theme changes.
-        themeManager.getCurrentTheme().addListener(obs -> {
+        themeManager.setOnThemeChange(() -> {
             for (Tab tab : tabs.getTabs()) {
                 editors.get(tab.getId()).onThemeChanged();
             }

@@ -59,6 +59,7 @@ public class LyricConfigEditor {
     private GridPane background;
     private LineChart<Number, Number> chart;
     private ImageView spectrogramView;
+    private Label playButton; // May be null.
 
     // Temporary cache values.
     private boolean changed = false;
@@ -79,6 +80,19 @@ public class LyricConfigEditor {
         spectrogramView = new ImageView();
 
         isPlaying = new SimpleBooleanProperty(false);
+        isPlaying.addListener(obs -> {
+            if (isPlaying.get()) {
+                if (playButton != null && playButton.getStyleClass().stream().noneMatch(
+                        str -> str.equals("highlighted"))) {
+                    playButton.getStyleClass().add("highlighted");
+                }
+                playSoundInternal();
+            } else {
+                if (playButton != null) {
+                    playButton.getStyleClass().remove("highlighted");
+                }
+            }
+        });
         showFrequency = new SimpleBooleanProperty(true);
         showWaveform = new SimpleBooleanProperty(true);
         showSpectrogram = new SimpleBooleanProperty(false);
@@ -256,8 +270,9 @@ public class LyricConfigEditor {
     }
 
     public List<Node> createConfigSidebar() {
+        playButton = createLabelButton("▶", "Play", isPlaying);
         return ImmutableList.of(
-                createLabelButton("▶", "Play", isPlaying),
+                playButton,
                 createLabelButton("F", "Show Frequency", showFrequency),
                 createLabelButton("W", "Show Waveform", showWaveform),
                 createLabelButton("S", "Show Spectrogram", showSpectrogram));
@@ -281,7 +296,12 @@ public class LyricConfigEditor {
     }
 
     public void playSound() {
+        isPlaying.set(true);
+    }
+
+    private void playSoundInternal() {
         if (configData == null) {
+            isPlaying.set(false);
             return;
         }
         // TODO: Consider moving this code to the engine.
@@ -300,6 +320,9 @@ public class LyricConfigEditor {
             mediaPlayer.setStartTime(Duration.millis(offsetLengthMs));
             mediaPlayer.setStopTime(Duration.millis(lengthMs - cutoffLengthMs));
             mediaPlayer.play();
+            mediaPlayer.setOnEndOfMedia(() -> {
+                isPlaying.set(false);
+            });
         });
     }
 
@@ -478,9 +501,9 @@ public class LyricConfigEditor {
         }
         button.setOnMouseClicked(event -> {
             toggle.set(!toggle.get());
-            if (toggle.get()) {
+            if (toggle.get() && !button.getStyleClass().contains("highlighted")) {
                 button.getStyleClass().add("highlighted");
-            } else {
+            } else if (!toggle.get()) {
                 button.getStyleClass().remove("highlighted");
             }
         });
