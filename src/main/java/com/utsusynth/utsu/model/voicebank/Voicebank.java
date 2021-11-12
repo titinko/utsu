@@ -28,7 +28,7 @@ public class Voicebank {
     private String description; // Contents of readme.txt
     private String imageName; // Example: "img.bmp"
 
-    public class Builder {
+    public static class Builder {
         private final Voicebank newVoicebank;
 
         private Builder(Voicebank newVoicebank) {
@@ -60,27 +60,23 @@ public class Voicebank {
             return this;
         }
 
-        public Builder addLyric(LyricConfig config, boolean hasFrq) {
+        public void addLyric(LyricConfig config, boolean hasFrq) {
             newVoicebank.lyricConfigs.addConfig(config);
             if (hasFrq) {
                 newVoicebank.soundFiles.add(config.getPathToFile());
             }
-            return this;
         }
 
-        public Builder addPitchPrefix(String pitch, String prefix) {
+        public void addPitchPrefix(String pitch, String prefix) {
             newVoicebank.pitchMap.putPrefix(pitch, prefix);
-            return this;
         }
 
-        public Builder addPitchSuffix(String pitch, String suffix) {
+        public void addPitchSuffix(String pitch, String suffix) {
             newVoicebank.pitchMap.putSuffix(pitch, suffix);
-            return this;
         }
 
-        public Builder addConversionGroup(String... members) {
+        public void addConversionGroup(String... members) {
             newVoicebank.conversionSet.addGroup(members);
-            return this;
         }
 
         public Voicebank build() {
@@ -232,11 +228,8 @@ public class Voicebank {
 
     public Optional<LyricConfigData> getLyricData(String trueLyric) {
         Optional<LyricConfig> config = getLyricConfig("", trueLyric, "");
-        if (config.isPresent()) {
-            return Optional.of(
-                    config.get().getData(soundFiles.contains(config.get().getPathToFile())));
-        }
-        return Optional.empty();
+        return config.map(lyricConfig -> lyricConfig.getData(
+                soundFiles.contains(lyricConfig.getPathToFile())));
     }
 
     public boolean addLyricData(LyricConfigData data) {

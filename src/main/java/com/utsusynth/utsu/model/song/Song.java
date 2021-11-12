@@ -44,7 +44,7 @@ public class Song {
     private NoteList noteList;
 
     // Pitchbends, kept in a format suitable for rendering.
-    private PitchCurve pitchbends;
+    private final PitchCurve pitchbends;
 
     public class Builder {
         private final Song newSong;

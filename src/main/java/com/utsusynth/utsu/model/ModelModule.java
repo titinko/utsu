@@ -11,12 +11,7 @@ import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.SongManager;
 import com.utsusynth.utsu.model.song.pitch.PitchCurve;
 import com.utsusynth.utsu.model.song.pitch.portamento.PortamentoFactory;
-import com.utsusynth.utsu.model.voicebank.DisjointLyricSet;
-import com.utsusynth.utsu.model.voicebank.LyricConfigMap;
-import com.utsusynth.utsu.model.voicebank.PitchMap;
-import com.utsusynth.utsu.model.voicebank.Voicebank;
-import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
-import com.utsusynth.utsu.model.voicebank.VoicebankManager;
+import com.utsusynth.utsu.model.voicebank.*;
 
 public class ModelModule extends AbstractModule {
 
@@ -44,5 +39,10 @@ public class ModelModule extends AbstractModule {
             DisjointLyricSet conversionSet,
             FrqGenerator frqGen) {
         return new Voicebank(configMap, pitchMap, conversionSet, new HashSet<>(), frqGen);
+    }
+
+    @Provides
+    private PresampConfig provideEmptyPresampConfig() {
+        return new PresampConfig();
     }
 }

@@ -15,9 +15,9 @@ public class DisjointLyricSet {
         disjointSet = new HashMap<>();
     }
 
-    public DisjointLyricSet addGroup(String... members) {
+    public void addGroup(String... members) {
         if (members.length == 0) {
-            return this;
+            return;
         }
         HashSet<String> group = new HashSet<>();
         for (String member : members) {
@@ -28,7 +28,6 @@ public class DisjointLyricSet {
                 disjointSet.put(member, group);
             }
         }
-        return this;
     }
 
     public HashSet<String> getGroup(String member) {
