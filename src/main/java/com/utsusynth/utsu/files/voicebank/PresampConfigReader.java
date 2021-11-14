@@ -26,7 +26,7 @@ public class PresampConfigReader {
         while (curLine >= 0 && curLine < lines.length) {
             curLine = parseSection(lines, curLine, presampBuilder);
         }
-        return new PresampConfig();
+        return presampBuilder.build();
     }
 
     private int parseSection(String[] lines, int sectionStart, PresampConfig.Builder builder) {
@@ -95,6 +95,26 @@ public class PresampConfigReader {
             if (HEADER_PATTERN.matcher(line).matches()) {
                 return i;
             }
+            String[] splitLine = line.split("=");
+            if (splitLine.length < 3) {
+                printWarning("[CONSONANT]");
+                continue;
+            }
+            String consonant = splitLine[0];
+            if (consonant.isEmpty()) {
+                printWarning("[CONSONANT]");
+                continue;
+            }
+            String[] matchingLyrics = splitLine[1].split(",");
+            for (String lyric : matchingLyrics) {
+                if (!lyric.isEmpty()) {
+                    builder.addConsonantMapping(lyric, consonant);
+                }
+            }
+            builder.addConsonantOverlap(consonant, splitLine[2].equals("1"));
+            if (splitLine.length > 3) {
+                // TODO: VCLENGTH parameter.
+            }
         }
         return -1;
     }
@@ -115,15 +135,73 @@ public class PresampConfigReader {
             if (HEADER_PATTERN.matcher(line).matches()) {
                 return i;
             }
+            String[] splitLine = line.split("=");
+            if (splitLine.length != 2 || splitLine[0].isEmpty() || splitLine[1].isEmpty()) {
+                printWarning("[REPLACE]");
+                continue;
+            }
+            builder.addLyricReplacement(splitLine);
         }
         return -1;
     }
 
     private int parseAlias(String[] lines, int sectionStart, PresampConfig.Builder builder) {
         for (int i = sectionStart; i < lines.length; i++) {
-            String line = lines[i].trim();
-            if (HEADER_PATTERN.matcher(line).matches()) {
+            if (HEADER_PATTERN.matcher(lines[i].trim()).matches()) {
                 return i;
+            }
+            String[] splitLine = lines[i].split("=");
+            if (splitLine.length != 2 || splitLine[1].isEmpty()) {
+                continue;
+            }
+            String[] format = splitLine[1].split(",");
+            switch (splitLine[0]) {
+                case "VCV":
+                case "vcv":
+                    builder.setVcvFormat(format);
+                    break;
+                case "BEGINNING_CV":
+                case "beginning_cv":
+                    builder.setBeginningCvFormat(format);
+                    break;
+                case "CROSS_CV":
+                case "cross_cv":
+                    builder.setCrossCvFormat(format);
+                    break;
+                case "VC":
+                case "vc":
+                    builder.setVcFormat(format);
+                    break;
+                case "CV":
+                case "cv":
+                    builder.setCvFormat(format);
+                    break;
+                case "C":
+                case "c":
+                    builder.setCFormat(format);
+                    break;
+                case "LONG_V":
+                case "long_v":
+                    builder.setLongVFormat(format);
+                    break;
+                case "VCPAD":
+                case "vcpad":
+                    builder.setVcpadFormat(format);
+                    break;
+                case "VCVPAD":
+                case "vcvpad":
+                    builder.setVcvpadFormat(format);
+                    break;
+                case "ENDING1":
+                case "ending1":
+                    builder.setEnding1Format(format);
+                    break;
+                case "ENDING2":
+                case "ending2":
+                    builder.setEnding2Format(format);
+                    break;
+                default:
+                    printWarning("[ALIAS]");
             }
         }
         return -1;

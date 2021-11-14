@@ -1,5 +1,6 @@
 package com.utsusynth.utsu.model;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -43,6 +44,11 @@ public class ModelModule extends AbstractModule {
 
     @Provides
     private PresampConfig provideEmptyPresampConfig() {
-        return new PresampConfig();
+        return new PresampConfig(
+                new HashMap<>(),
+                new HashMap<>(),
+                new HashMap<>(),
+                new HashMap<>(),
+                new HashSet<>());
     }
 }
