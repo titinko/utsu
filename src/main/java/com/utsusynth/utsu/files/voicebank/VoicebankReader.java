@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.PreferencesManager;
+import com.utsusynth.utsu.model.voicebank.PresampConfig;
 import org.apache.commons.io.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provider;
@@ -37,15 +38,18 @@ public class VoicebankReader {
 
     private final AssetManager assetManager;
     private final PreferencesManager preferencesManager;
+    private final PresampConfigReader presampConfigReader;
     private final Provider<Voicebank> voicebankProvider;
 
     @Inject
     public VoicebankReader(
             AssetManager assetManager,
             PreferencesManager preferencesManager,
+            PresampConfigReader presampConfigReader,
             Provider<Voicebank> voicebankProvider) {
         this.assetManager = assetManager;
         this.preferencesManager = preferencesManager;
+        this.presampConfigReader = presampConfigReader;
         this.voicebankProvider = voicebankProvider;
     }
 
@@ -122,6 +126,9 @@ public class VoicebankReader {
             parsePitchMap(pathToVoicebank.toPath().resolve(pitchMapName).toFile(), builder);
         }
 
+        // Parse presamp.ini file, if present.
+        parsePresampConfig(pathToVoicebank.toPath().resolve("presamp.ini").toFile(), builder);
+
         // Parse conversion set for romaji-hiragana-katakana conversion.
         readLyricConversionsFromFile(builder);
 
@@ -184,6 +191,19 @@ public class VoicebankReader {
                 String suffix = suffixMatcher.group(2);
                 builder.addPitchSuffix(pitch, suffix);
             }
+        }
+    }
+
+    private void parsePresampConfig(File presampConfigFile, Voicebank.Builder builder) {
+        String presampData = readConfigFile(presampConfigFile);
+        if (presampData.isEmpty()) {
+            return; // For now, don't include any default presamp.ini data.
+        }
+        PresampConfig presampConfig = presampConfigReader.loadPresampConfig(presampData);
+
+        // Add all lyric replacements to UTSU's default lyric replacements for this voicebank.
+        for (String[] conversionGroup : presampConfig.getLyricReplacements()) {
+            builder.addConversionGroup(conversionGroup);
         }
     }
 

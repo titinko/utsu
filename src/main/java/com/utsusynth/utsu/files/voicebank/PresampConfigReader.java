@@ -100,12 +100,12 @@ public class PresampConfigReader {
             }
             String[] splitLine = line.split("=");
             if (splitLine.length < 4) {
-                printWarning("[VOWEL]");
+                printWarning("[VOWEL]", line);
                 continue;
             }
             String vowel = splitLine[0];
             if (vowel.isEmpty()) {
-                printWarning("[VOWEL]");
+                printWarning("[VOWEL]", line);
                 continue;
             }
             String[] matchingSuffixes = splitLine[2].split(",");
@@ -117,7 +117,7 @@ public class PresampConfigReader {
             try {
                 builder.addVowelVolume(vowel, Integer.valueOf(splitLine[3]));
             } catch (NumberFormatException e) {
-                printWarning("[VOWEL]");
+                printWarning("[VOWEL]", line);
                 builder.addVowelVolume(vowel, Integer.valueOf(splitLine[3]));
             }
         }
@@ -132,12 +132,12 @@ public class PresampConfigReader {
             }
             String[] splitLine = line.split("=");
             if (splitLine.length < 3) {
-                printWarning("[CONSONANT]");
+                printWarning("[CONSONANT]", line);
                 continue;
             }
             String consonant = splitLine[0];
             if (consonant.isEmpty()) {
-                printWarning("[CONSONANT]");
+                printWarning("[CONSONANT]", line);
                 continue;
             }
             String[] matchingLyrics = splitLine[1].split(",");
@@ -178,7 +178,7 @@ public class PresampConfigReader {
             }
             String[] splitLine = line.split("=");
             if (splitLine.length != 2 || splitLine[0].isEmpty() || splitLine[1].isEmpty()) {
-                printWarning("[REPLACE]");
+                printWarning("[REPLACE]", line);
                 continue;
             }
             builder.addLyricReplacement(splitLine);
@@ -197,7 +197,7 @@ public class PresampConfigReader {
             }
             Optional<AliasType> aliasType = getAliasType(splitLine[0]);
             if (aliasType.isEmpty()) {
-                printWarning("[ALIAS]");
+                printWarning("[ALIAS]", splitLine[0]);
             } else {
                 builder.setAliasFormat(aliasType.get(), splitLine[1].split(","));
             }
@@ -228,7 +228,9 @@ public class PresampConfigReader {
             case "cvvc":
                 return Optional.of(AliasType.CVVC);
             case "BEGINNING_CV":
+            case "BEGINING_CV": // It's mispelled in the original spec...
             case "beginning_cv":
+            case "begining_cv":
                 return Optional.of(AliasType.BEGINNING_CV);
             case "CROSS_CV":
             case "cross_cv":
@@ -318,7 +320,7 @@ public class PresampConfigReader {
             }
             Optional<AliasType> aliasType = getAliasType(line);
             if (aliasType.isEmpty()) {
-                printWarning("[ALIAS_PRIORITY]");
+                printWarning("[ALIAS_PRIORITY]", line);
             } else {
                 priorityBuilder.add(aliasType.get());
             }
@@ -342,7 +344,7 @@ public class PresampConfigReader {
             }
             Optional<AliasType> aliasType = getAliasType(line);
             if (aliasType.isEmpty()) {
-                printWarning("[ALIAS_PRIORITY_DIFAPPEND]");
+                printWarning("[ALIAS_PRIORITY_DIFAPPEND]", line);
             } else {
                 priorityBuilder.add(aliasType.get());
             }
@@ -366,7 +368,7 @@ public class PresampConfigReader {
             }
             Optional<AliasType> aliasType = getAliasType(line);
             if (aliasType.isEmpty()) {
-                printWarning("[ALIAS_PRIORITY_DIFAPPEND]");
+                printWarning("[ALIAS_PRIORITY_DIFAPPEND]", line);
             } else {
                 priorityBuilder.add(aliasType.get());
             }
@@ -456,7 +458,8 @@ public class PresampConfigReader {
         return -1;
     }
 
-    private static void printWarning(String section) {
-        System.out.println("Warning: Unexpected value in " + section + " section of presamp.ini.");
+    private static void printWarning(String section, String context) {
+        System.out.println(
+                "Warning: Unexpected value in " + section + " section of presamp.ini:" + context);
     }
 }

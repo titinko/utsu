@@ -260,4 +260,8 @@ public class PresampConfig {
                 .setEndFlag(endFlag)
                 .setSuffixOrder(suffixOrder);
     }
+
+    public Set<String[]> getLyricReplacements() {
+        return lyricReplacements;
+    }
 }
