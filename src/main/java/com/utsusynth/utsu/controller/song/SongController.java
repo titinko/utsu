@@ -84,7 +84,6 @@ public class SongController implements EditorController, Localizable {
     private final Piano piano;
     private final Localizer localizer;
     private final Quantizer quantizer;
-    private final Scaler scaler;
     private final UndoService undoService;
     private final MenuItemManager menuItemManager;
     private final StatusBar statusBar;
@@ -135,7 +134,6 @@ public class SongController implements EditorController, Localizable {
             Piano piano,
             Localizer localizer,
             Quantizer quantizer,
-            Scaler scaler,
             UndoService undoService,
             MenuItemManager menuItemManager,
             StatusBar statusBar,
@@ -153,7 +151,6 @@ public class SongController implements EditorController, Localizable {
         this.piano = piano;
         this.localizer = localizer;
         this.quantizer = quantizer;
-        this.scaler = scaler;
         this.undoService = undoService;
         this.menuItemManager = menuItemManager;
         this.statusBar = statusBar;
@@ -226,6 +223,11 @@ public class SongController implements EditorController, Localizable {
             @Override
             public BooleanProperty getCheckboxValue(CheckboxType checkboxType) {
                 return callback.getCheckboxValue(checkboxType);
+            }
+
+            @Override
+            public AnchorPane getLyricPane() {
+                return anchorCenter;
             }
         });
         scrollPaneLeft.setVvalue(0.5);

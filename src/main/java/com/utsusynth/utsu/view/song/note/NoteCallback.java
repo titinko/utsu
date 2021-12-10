@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.song.note;
 
 import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.view.song.DragHandler;
+import javafx.scene.layout.AnchorPane;
 
 /**
  * A way of communicating TrackNote information back to its parent Track.
@@ -52,4 +53,6 @@ public interface NoteCallback {
     void startDrag(DragHandler dragHandler);
 
     void clearCache(Note note);
+
+    AnchorPane getLyricPane();
 }

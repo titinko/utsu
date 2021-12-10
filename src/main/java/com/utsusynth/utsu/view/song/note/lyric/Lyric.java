@@ -4,15 +4,15 @@ import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.track.TrackItem;
+import javafx.animation.PauseTransition;
 import javafx.beans.property.*;
 import javafx.geometry.Bounds;
-import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
+import javafx.util.Duration;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -166,37 +166,40 @@ public class Lyric implements TrackItem {
     }
 
     public void openTextField() {
-        ContextMenu contextMenu = new ContextMenu();
+        closeTextFieldIfNeeded();
+        AnchorPane lyricPane = trackNote.getLyricPane();
         TextField textField = new TextField();
+        textField.setMaxWidth(Quantizer.TEXT_FIELD_WIDTH);
+        textField.setMaxHeight(Quantizer.TEXT_FIELD_HEIGHT);
         textField.setText(lyric.get());
         textField.selectAll();
-        textField.setOnAction(action -> contextMenu.hide());
-        textField.setOnKeyPressed(event -> {
-            if (event.getCode().equals(KeyCode.TAB)) {
-                // TODO: Open lyric input on next note.
-                contextMenu.hide();
+        textField.setOnAction(action -> closeTextFieldIfNeeded());
+        textField.focusedProperty().addListener(event -> {
+            if (!textField.isFocused()) {
+                closeTextFieldIfNeeded();
             }
         });
-        MenuItem menuItem = new CustomMenuItem(textField, false);
-        contextMenu.getScene().focusOwnerProperty().addListener(event -> {
-            if (!contextMenu.getScene().getFocusOwner().equals(textField)) {
-                textField.requestFocus(); // Only allow focus on the text field.
-            }
-        });
-        contextMenu.getItems().add(menuItem);
         for (double offsetX : drawnHBoxes.keySet()) {
             HBox activeNode = drawnHBoxes.get(offsetX);
-            Bounds screenPosition = activeNode.localToScreen(activeNode.getBoundsInLocal());
-            contextMenu.show(activeNode, screenPosition.getMinX(), screenPosition.getMinY());
-            contextMenu.setOnHidden(action -> {
-                String oldLyric = lyric.get();
-                if (!textField.getText().equals(oldLyric)) {
-                    setVisibleLyric(textField.getText());
-                    trackNote.replaceSongLyric(oldLyric, textField.getText());
-                }
-                editMode.set(false);
-            });
+            Bounds lyricScreenPosition = activeNode.localToScreen(activeNode.getBoundsInLocal());
+            // Find bounds
+            Bounds paneScreenPosition = lyricPane.localToScreen(lyricPane.getBoundsInLocal());
+            textField.setTranslateX(Math.max(
+                    0,
+                    Math.min(
+                        lyricPane.getWidth() - Quantizer.TEXT_FIELD_WIDTH,
+                        lyricScreenPosition.getMinX() - paneScreenPosition.getMinX())));
+            textField.setTranslateY(Math.max(
+                    0,
+                    Math.min(
+                            lyricPane.getHeight() - Quantizer.TEXT_FIELD_HEIGHT,
+                            lyricScreenPosition.getMinY() - paneScreenPosition.getMinY())));
+            lyricPane.getChildren().add(textField);
             editMode.set(true);
+            PauseTransition briefPause = new PauseTransition(Duration.millis(50));
+            briefPause.setOnFinished(event -> textField.requestFocus());
+            briefPause.play();
+            // textField.requestFocus();
             return;
         }
     }
@@ -205,11 +208,34 @@ public class Lyric implements TrackItem {
         return editMode.get();
     }
 
+    public void closeTextFieldIfNeeded() {
+        if (!isTextFieldOpen()) {
+            return;
+        }
+        editMode.set(false);
+        String oldLyric = lyric.get();
+        String newLyric = oldLyric;
+        AnchorPane lyricPane = trackNote.getLyricPane();
+        for (Node child : lyricPane.getChildren()) {
+            if (child instanceof TextField) {
+                newLyric = ((TextField) child).getText();
+            }
+        }
+        lyricPane.getChildren().removeIf(child -> child instanceof TextField);
+        if (!oldLyric.equals(newLyric)) {
+            setVisibleLyric(newLyric);
+            trackNote.replaceSongLyric(oldLyric, newLyric);
+        }
+    }
+
     public void registerLyric() {
         trackNote.setSongLyric(lyric.get());
     }
 
     private void adjustLyricAndAlias() {
+        if (editMode.get()) {
+            return;
+        }
         for (double offsetX : drawnHBoxes.keySet()) {
             HBox hBox = drawnHBoxes.get(offsetX);
             hBox.getChildren().clear();

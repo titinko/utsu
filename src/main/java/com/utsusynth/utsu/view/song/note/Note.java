@@ -25,11 +25,9 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.*;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
@@ -132,6 +130,11 @@ public class Note implements TrackItem, Comparable<Note> {
                     lyric.setVisibleLyric(oldLyric);
                     thisNote.track.updateNote(thisNote);
                 });
+            }
+
+            @Override
+            public AnchorPane getLyricPane() {
+                return thisNote.track.getLyricPane();
             }
         }, this.startX, this.widthX, this.currentY, showLyrics, showAliases);
     }
@@ -524,6 +527,10 @@ public class Note implements TrackItem, Comparable<Note> {
         for (Pane note : drawnNotes.values()) {
             note.getStyleClass().set(2, highlighted ? "highlighted" : "not-highlighted");
         }
+
+        if (!isHighlighted) {
+            lyric.closeTextFieldIfNeeded();
+        }
     }
 
     public boolean isValid() {
@@ -551,6 +558,10 @@ public class Note implements TrackItem, Comparable<Note> {
     /** Will need to redraw the note for this change to take effect. */
     public void setCroppingEnabled(boolean croppingEnabled) {
         this.croppingEnabled = croppingEnabled;
+    }
+
+    public boolean isLyricInputOpen() {
+        return lyric.isTextFieldOpen();
     }
 
     public void openLyricInput() {
@@ -614,6 +625,7 @@ public class Note implements TrackItem, Comparable<Note> {
 
     private void deleteNote() {
         contextMenu.hide();
+        lyric.closeTextFieldIfNeeded();
         track.deleteNote(this);
     }
 

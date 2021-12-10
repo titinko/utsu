@@ -6,6 +6,7 @@ import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.NoteUpdateData;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
 import javafx.beans.property.BooleanProperty;
+import javafx.scene.layout.AnchorPane;
 
 import java.util.List;
 import java.util.Set;
@@ -58,4 +59,9 @@ public interface SongCallback {
      * Fetches the value of any global checkbox menu item.
      */
     BooleanProperty getCheckboxValue(CheckboxType checkboxType);
+
+    /**
+     * Fetches core anchor pane from controller for placing lyric boxes.
+     */
+    AnchorPane getLyricPane();
 }

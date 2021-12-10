@@ -6,6 +6,7 @@ public class Quantizer {
     public static final int ROW_HEIGHT = 20;
     public static final int SCROLL_BAR_WIDTH = 16; // If changing here, change css as well.
     public static final int TEXT_FIELD_WIDTH = 60; // Enforce a constant text field size.
+    public static final int TEXT_FIELD_HEIGHT = 14; // Enforce a constant text field size.
     public static final int TRACK_COL_WIDTH = COL_WIDTH; // Not guaranteed to be equal.
 
     /* The number of ms in one quant. */

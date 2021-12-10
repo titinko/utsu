@@ -26,10 +26,7 @@ import com.utsusynth.utsu.view.song.track.TrackCallback;
 import com.utsusynth.utsu.view.song.track.TrackItem;
 import com.utsusynth.utsu.view.song.track.TrackItemSet;
 import javafx.beans.property.*;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.ListView;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -545,10 +542,19 @@ public class SongEditor {
         if (!noteMap.hasNote(position)) {
             return;
         }
+        // If old focus has lyric open, new focus should have it open too.
+        boolean shouldOpenLyricInput = false;
+        List<Note> highlightedNotes = playbackManager.getHighlightedNotes();
+        if (!highlightedNotes.isEmpty()) {
+            shouldOpenLyricInput = highlightedNotes.get(0).isLyricInputOpen();
+        }
         Note newFocus = noteMap.getNote(position);
         playbackManager.clearHighlights();
         playbackManager.highlightNote(newFocus);
         playbackManager.realign();
+        if (shouldOpenLyricInput) {
+            newFocus.openLyricInput();
+        }
     }
 
     public void openLyricInput(int position) {
@@ -930,6 +936,11 @@ public class SongEditor {
                 // Clear current note's cache if current note is not highlighted.
                 model.clearCache(note.getAbsPositionMs(), note.getAbsPositionMs());
             }
+        }
+
+        @Override
+        public AnchorPane getLyricPane() {
+            return model.getLyricPane();
         }
     };
 
