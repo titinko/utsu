@@ -12,7 +12,6 @@ import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
-import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.EditorCallback;
 import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
