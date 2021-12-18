@@ -2,6 +2,7 @@ package com.utsusynth.utsu.model.song.converters.jp;
 
 import com.utsusynth.utsu.common.data.NoteContextData;
 import com.utsusynth.utsu.common.data.NoteData;
+import com.utsusynth.utsu.common.data.VoicebankData;
 import com.utsusynth.utsu.common.enums.ReclistType;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
 
@@ -9,7 +10,7 @@ import java.util.List;
 
 public class JpCvToJpVcvConverter implements ReclistConverter {
     @Override
-    public List<NoteData> apply(List<NoteContextData> notes) {
+    public List<NoteData> apply(List<NoteContextData> notes, VoicebankData voicebankData) {
         return null;
     }
 

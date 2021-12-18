@@ -1,5 +1,8 @@
 package com.utsusynth.utsu.model.voicebank;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -10,6 +13,20 @@ import java.util.Set;
  */
 public class DisjointLyricSet {
     private final Map<String, Set<String>> disjointSet;
+
+    public class Reader {
+        private final Map<String, Set<String>> readonlyDisjointSet;
+        private Reader(Map<String, Set<String>> readonlyDisjointSet) {
+            this.readonlyDisjointSet = readonlyDisjointSet;
+        }
+
+        public ImmutableSet<String> getGroup(String member) {
+            if (readonlyDisjointSet.containsKey(member)) {
+                return ImmutableSet.copyOf(readonlyDisjointSet.get(member));
+            }
+            return ImmutableSet.of();
+        }
+    }
 
     public DisjointLyricSet() {
         disjointSet = new HashMap<>();
@@ -36,6 +53,11 @@ public class DisjointLyricSet {
             group.addAll(disjointSet.get(member));
         }
         return group;
+    }
+
+    /** Returns a readonly view of a disjoint lyric set, useful for plugins. */
+    public Reader getReader() {
+        return new Reader(disjointSet);
     }
 
     private void merge(Set<String> oldGroup, Set<String> newGroup) {

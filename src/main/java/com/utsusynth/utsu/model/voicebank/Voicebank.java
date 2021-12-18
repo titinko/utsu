@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import com.utsusynth.utsu.common.data.PitchMapData;
+import com.utsusynth.utsu.common.data.VoicebankData;
 import com.utsusynth.utsu.engine.FrqGenerator;
 
 import java.io.File;
@@ -306,6 +307,11 @@ public class Voicebank {
                 data.setFrqStatus(FrqStatus.INVALID);
             }
         }
+    }
+
+    /** Get readonly data about the voicebank. Useful for plugins. */
+    public VoicebankData getReadonlyData() {
+        return new VoicebankData(conversionSet.getReader());
     }
 
     public String getName() {

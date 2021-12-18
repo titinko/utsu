@@ -2,7 +2,7 @@ package com.utsusynth.utsu.common.data;
 
 import java.util.Optional;
 
-/** Information about a note and its preceeding and succeeding notes if prsent. */
+/** Information about a note and its preceeding and succeeding notes if present. */
 public class NoteContextData {
     private final NoteData note;
     private final Optional<NoteData> prev;
