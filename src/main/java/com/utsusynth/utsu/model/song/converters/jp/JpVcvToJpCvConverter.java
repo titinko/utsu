@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class JpVcvToJpCvConverter implements ReclistConverter {
     @Override
     public List<NoteData> apply(List<NoteContextData> notes, VoicebankData voicebankData) {
-        List<NoteData> newNotes = notes.stream().map(noteContext -> {
+        return notes.stream().map(noteContext -> {
             NoteData note = noteContext.getNote();
             int index = note.getLyric().indexOf(" ");
             if (index == -1) {
@@ -24,7 +24,6 @@ public class JpVcvToJpCvConverter implements ReclistConverter {
             }
             return note.withNewLyric(newLyric);
         }).collect(Collectors.toList());
-        return newNotes;
     }
 
     @Override
