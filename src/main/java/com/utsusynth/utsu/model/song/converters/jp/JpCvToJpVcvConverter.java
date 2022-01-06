@@ -5,6 +5,7 @@ import com.utsusynth.utsu.common.data.NoteContextData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.VoicebankData;
 import com.utsusynth.utsu.common.enums.ReclistType;
+import com.utsusynth.utsu.common.utils.LyricUtils;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
 import com.utsusynth.utsu.model.voicebank.DisjointLyricSet;
 
@@ -30,13 +31,9 @@ public class JpCvToJpVcvConverter implements ReclistConverter {
         if (prevLyric.isEmpty()) {
             return Optional.of('-'); // Return dash if there appears to be no previous note.
         }
-        for (String converted : conversionSet.getGroup(prevLyric)) {
-            if (CharMatcher.ascii().matchesAllOf(converted) && !converted.isEmpty()) {
-                return Optional.of(converted.toLowerCase().charAt(converted.length() - 1));
-            }
-        }
-        // No vowel found.
-        return Optional.empty();
+        String vowel = LyricUtils.guessJpVowel(prevLyric, conversionSet);
+        return vowel.isEmpty() ? Optional.empty() : Optional.of(vowel.charAt(0));
+
     }
 
     @Override
