@@ -28,11 +28,11 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
 
     @Override
     public ReclistType getFrom() {
-        return ReclistType.JP_VCV;
+        return ReclistType.JP_CV;
     }
 
     @Override
     public ReclistType getTo() {
-        return ReclistType.JP_CV;
+        return ReclistType.JP_CVVC;
     }
 }

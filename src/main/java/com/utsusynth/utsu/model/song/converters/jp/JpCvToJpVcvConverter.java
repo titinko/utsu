@@ -1,6 +1,5 @@
 package com.utsusynth.utsu.model.song.converters.jp;
 
-import com.google.common.base.CharMatcher;
 import com.utsusynth.utsu.common.data.NoteContextData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.VoicebankData;
@@ -26,7 +25,7 @@ public class JpCvToJpVcvConverter implements ReclistConverter {
     }
 
     // Finds the vowel sound of previous lyric by converting to ASCII and taking the last character.
-    private Optional<Character> guessPrefix(
+    private static Optional<Character> guessPrefix(
             String prevLyric, DisjointLyricSet.Reader conversionSet) {
         if (prevLyric.isEmpty()) {
             return Optional.of('-'); // Return dash if there appears to be no previous note.

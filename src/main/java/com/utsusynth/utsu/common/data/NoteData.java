@@ -120,6 +120,18 @@ public class NoteData {
         );
     }
 
+    public NoteData withDuration(int newDuration) {
+        return new NoteData(
+                position,
+                newDuration,
+                pitch,
+                lyric,
+                trueLyric,
+                envelope,
+                pitchbend,
+                configData);
+    }
+
     public NoteData withEnvelope(EnvelopeData envelope) {
         return new NoteData(
                 position,
