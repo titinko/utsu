@@ -311,7 +311,8 @@ public class Voicebank {
 
     /** Get readonly data about the voicebank. Useful for plugins. */
     public VoicebankData getReadonlyData() {
-        return new VoicebankData(conversionSet.getReader());
+        return new VoicebankData(
+                conversionSet.getReader(), lyricConfigs.getReader(), pitchMap.getReader());
     }
 
     public String getName() {

@@ -1,5 +1,7 @@
 package com.utsusynth.utsu.model.voicebank;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.*;
 
 /**
@@ -10,6 +12,20 @@ public class LyricConfigMap {
 
     private final SortedMap<String, SortedSet<LyricConfig>> configSets;
     private final Map<String, LyricConfig> configMap;
+
+    public static class Reader {
+        private final Map<String, LyricConfig> readonlyConfigMap;
+        private Reader(Map<String, LyricConfig> readonlyConfigMap) {
+            this.readonlyConfigMap = readonlyConfigMap;
+        }
+
+        public Optional<LyricConfig> getConfig(String lyric) {
+            if (readonlyConfigMap.containsKey(lyric)) {
+                return Optional.of(readonlyConfigMap.get(lyric));
+            }
+            return Optional.empty();
+        }
+    }
 
     public LyricConfigMap() {
         configSets = new TreeMap<>();
@@ -32,7 +48,7 @@ public class LyricConfigMap {
         if (configSets.containsKey(category)) {
             return configSets.get(category).iterator();
         }
-        return new TreeSet<LyricConfig>().iterator();
+        return Collections.emptyIterator();
     }
 
     /**
@@ -85,5 +101,10 @@ public class LyricConfigMap {
             }
         }
         configMap.remove(lyric);
+    }
+
+    /** Returns a readonly view of a lyric config map, useful for plugins. */
+    public Reader getReader() {
+        return new Reader(configMap);
     }
 }

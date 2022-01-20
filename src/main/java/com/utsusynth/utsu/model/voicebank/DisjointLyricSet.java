@@ -13,7 +13,7 @@ import java.util.Set;
 public class DisjointLyricSet {
     private final Map<String, Set<String>> disjointSet;
 
-    public class Reader {
+    public static class Reader {
         private final Map<String, Set<String>> readonlyDisjointSet;
         private Reader(Map<String, Set<String>> readonlyDisjointSet) {
             this.readonlyDisjointSet = readonlyDisjointSet;

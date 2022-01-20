@@ -3,13 +3,39 @@ package com.utsusynth.utsu.model.voicebank;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 
 public class PitchMap {
     private final ImmutableList<String> pitches;
     private final Map<String, String> prefixes;
     private final Map<String, String> suffixes;
+
+    public static class Reader {
+        private final Map<String, String> readonlyPrefixes;
+        private final Map<String, String> readonlySuffixes;
+        private Reader(Map<String, String> readonlyPrefixes, Map<String, String> readonlySuffixes) {
+            this.readonlyPrefixes = readonlyPrefixes;
+            this.readonlySuffixes = readonlySuffixes;
+        }
+
+        public String getPrefix(String pitch) {
+            if (readonlyPrefixes.containsKey(pitch)) {
+                return readonlyPrefixes.get(pitch);
+            }
+            return "";
+        }
+
+        public String getSuffix(String pitch) {
+            if (readonlySuffixes.containsKey(pitch)) {
+                return readonlySuffixes.get(pitch);
+            }
+            return "";
+        }
+    }
 
     public PitchMap() {
         prefixes = new HashMap<>();
@@ -47,5 +73,10 @@ public class PitchMap {
 
     public Iterator<String> getOrderedPitches() {
         return pitches.iterator();
+    }
+
+    /** Returns a readonly view of a pitch map, useful for plugins. */
+    public Reader getReader() {
+        return new Reader(prefixes, suffixes);
     }
 }

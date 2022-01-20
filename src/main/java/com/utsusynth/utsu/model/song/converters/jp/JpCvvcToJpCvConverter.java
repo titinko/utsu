@@ -9,7 +9,6 @@ import com.utsusynth.utsu.common.utils.LyricUtils;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class JpCvvcToJpCvConverter implements ReclistConverter {
     @Override

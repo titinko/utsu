@@ -7,7 +7,7 @@ import java.io.File;
 
 /**
  * Internal representation of the configuration of a single lyric in a voicebank. Parsed from an
- * oto.ini or oto_ini.txt file.
+ * oto.ini or oto_ini.txt file. Should be immutable.
  */
 public class LyricConfig implements Comparable<LyricConfig> {
     public static final String MAIN_CATEGORY = "Main";
@@ -16,11 +16,11 @@ public class LyricConfig implements Comparable<LyricConfig> {
     private final String fileName; // example: C3/de.wav
     private final String category; // example: C3
     private final String trueLyric; // example: de
-    private double offset; // Time in wav file before note starts, in ms.
-    private double consonant; // Time in wav file before consonant ends, in ms.
-    private double cutoff; // Time in wav file before note ends, in ms.
-    private double preutterance; // Number of ms that go before note officially starts.
-    private double overlap; // Number of ms that overlap with previous note.
+    private final double offset; // Time in wav file before note starts, in ms.
+    private final double consonant; // Time in wav file before consonant ends, in ms.
+    private final double cutoff; // Time in wav file before note ends, in ms.
+    private final double preutterance; // Number of ms that go before note officially starts.
+    private final double overlap; // Number of ms that overlap with previous note.
 
     /**
      * Used when reading from file.
