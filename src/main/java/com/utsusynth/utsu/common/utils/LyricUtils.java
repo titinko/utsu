@@ -13,12 +13,12 @@ public class LyricUtils {
     /** Extract common prefixes. */
     public static String guessPrefix(String lyric) {
         String curLyric = lyric;
-        String curPrefix = "";
+        StringBuilder curPrefix = new StringBuilder();
         // JP VCV prefix.
         for (Character vowel : JP_VOWELS) {
             String vcvPrefix = vowel + " ";
             if (curLyric.startsWith(vcvPrefix)) {
-                curPrefix += vcvPrefix;
+                curPrefix.append(vcvPrefix);
                 break;
             }
         }
@@ -28,12 +28,12 @@ public class LyricUtils {
             for (int octave = 1; octave <= PitchUtils.NUM_OCTAVES; octave++) {
                 String pitchPrefix = pitch + octave;
                 if (curLyric.startsWith(pitchPrefix)) {
-                    curPrefix += pitchPrefix;
+                    curPrefix.append(pitchPrefix);
                     break;
                 }
             }
         }
-        return curPrefix;
+        return curPrefix.toString();
     }
 
     /** Extract common suffixes. */
