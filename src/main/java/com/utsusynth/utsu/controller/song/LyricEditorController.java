@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.controller.song;
 
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.enums.ReclistType;
 import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
@@ -17,6 +18,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -87,6 +89,18 @@ public class LyricEditorController implements Localizable {
     private TextField prefixSuffixTextField;
     @FXML
     private AnchorPane prefixSuffixListAnchor;
+
+    /* Reclist converter elements. */
+    @FXML
+    private Tab reclistConverterTab;
+    @FXML
+    private VBox reclistConverterVBox;
+    @FXML
+    private ChoiceBox<ReclistType> fromChoiceBox;
+    @FXML
+    private ChoiceBox<ReclistType> toChoiceBox;
+    @FXML
+    private CheckBox presampIniCheckBox;
 
     @Inject
     public LyricEditorController(
