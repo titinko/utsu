@@ -2,6 +2,7 @@ package com.utsusynth.utsu;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.*;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.EnvelopeData;
@@ -15,6 +16,12 @@ import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.*;
 import com.utsusynth.utsu.files.*;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
+import com.utsusynth.utsu.model.song.converters.ReclistConverter;
+import com.utsusynth.utsu.model.song.converters.ReclistConverterMap;
+import com.utsusynth.utsu.model.song.converters.jp.JpCvToJpCvvcConverter;
+import com.utsusynth.utsu.model.song.converters.jp.JpCvToJpVcvConverter;
+import com.utsusynth.utsu.model.song.converters.jp.JpCvvcToJpCvConverter;
+import com.utsusynth.utsu.model.song.converters.jp.JpVcvToJpCvConverter;
 import javafx.fxml.FXMLLoader;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -41,6 +48,12 @@ public class UtsuModule extends AbstractModule {
     public @interface SettingsPath {
     }
 
+    @BindingAnnotation
+    @Target({PARAMETER, METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ReclistConverters {
+    }
+
     @Override
     protected void configure() {
         bind(StatusBar.class).asEagerSingleton();
@@ -49,6 +62,7 @@ public class UtsuModule extends AbstractModule {
         bind(FileNameFixer.class).asEagerSingleton();
         bind(IconManager.class).asEagerSingleton();
         bind(VoicebankReader.class).asEagerSingleton();
+        bind(ReclistConverterMap.class).asEagerSingleton();
         bind(Scaler.class).to(DiscreteScaler.class);
     }
 
@@ -70,6 +84,17 @@ public class UtsuModule extends AbstractModule {
     private File provideSettingsPath(@Version String curVersion) {
         File homePath = new File(System.getProperty("user.home"));
         return new File(homePath, ".utsu/" + curVersion);
+    }
+
+    @Provides
+    @ReclistConverters
+    private ImmutableSet<ReclistConverter> provideReclistConverters() {
+        return ImmutableSet.of(
+                new JpCvToJpCvvcConverter(),
+                new JpCvToJpVcvConverter(),
+                new JpCvvcToJpCvConverter(),
+                new JpVcvToJpCvConverter()
+        );
     }
 
     @Provides

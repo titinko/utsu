@@ -28,4 +28,8 @@ public class NoteContextData {
     public Optional<NoteData> getNext() {
         return next;
     }
+
+    public NoteContextData withNewLyric(String newLyric) {
+        return new NoteContextData(note.withNewLyric(newLyric), prev, next);
+    }
 }

@@ -7,11 +7,14 @@ import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.files.LyricEditorConfigManager;
+import com.utsusynth.utsu.model.song.converters.ReclistConverter;
+import com.utsusynth.utsu.model.song.converters.ReclistConverterMap;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -23,6 +26,8 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.prefs.Preferences;
 import java.util.ResourceBundle;
@@ -37,6 +42,7 @@ public class LyricEditorController implements Localizable {
     private static final double LIST_HEIGHT = 110;
 
     private final LyricEditorConfigManager configManager;
+    private final ReclistConverterMap converterMap;
     private final Localizer localizer;
 
     private LyricEditorCallback callback;
@@ -104,8 +110,11 @@ public class LyricEditorController implements Localizable {
 
     @Inject
     public LyricEditorController(
-            LyricEditorConfigManager configManager, Localizer localizer) {
+            LyricEditorConfigManager configManager,
+            ReclistConverterMap converterMap,
+            Localizer localizer) {
         this.configManager = configManager;
+        this.converterMap = converterMap;
         this.localizer = localizer;
     }
 
@@ -153,6 +162,18 @@ public class LyricEditorController implements Localizable {
 
         ObservableList<String> prefixSuffixConfig = configManager.getPrefixSuffixConfig();
         prefixSuffixListAnchor.getChildren().add(createPrefixSuffixList(prefixSuffixConfig));
+
+        // Initialize reclist converter elements.
+        fromChoiceBox.setItems(FXCollections.observableArrayList(converterMap.keySet()));
+        fromChoiceBox.setOnAction(event -> {
+            HashMap<ReclistType, List<ReclistConverter>> pathMap =
+                    converterMap.traverseReclists(fromChoiceBox.getValue());
+            toChoiceBox.setItems(FXCollections.observableArrayList(pathMap.keySet()));
+            if (!toChoiceBox.getItems().isEmpty()) {
+                toChoiceBox.setValue(toChoiceBox.getItems().get(0));
+            }
+        });
+        fromChoiceBox.setValue(fromChoiceBox.getItems().get(0));
 
         localizer.localize(this);
     }
@@ -251,6 +272,9 @@ public class LyricEditorController implements Localizable {
         prefixRadioButton.setText(bundle.getString("lyricEditor.prefixSuffix.target.prefix"));
         suffixRadioButton.setText(bundle.getString("lyricEditor.prefixSuffix.target.suffix"));
         textLabel.setText(bundle.getString("lyricEditor.prefixSuffix.text"));
+
+        reclistConverterTab.setText("Reclist converter");
+        presampIniCheckBox.setText("Use presamp.ini");
     }
 
     /** Secondary initialization. */
@@ -345,9 +369,9 @@ public class LyricEditorController implements Localizable {
             if (addRadioButton.isSelected() && prefixRadioButton.isSelected()) {
                 callback.transformLyric(noteData -> {
                     if (isPitch) {
-                        String pitchString = extractStartPitch(noteData.getTrueLyric());
+                        String pitchString = extractStartPitch(noteData.getTrueLyric().orElse(""));
                         if (!pitchString.isEmpty()
-                                && extractStartPitch(Optional.of(noteData.getLyric())).isEmpty()) {
+                                && extractStartPitch(noteData.getLyric()).isEmpty()) {
                             return noteData.withNewLyric(pitchString + noteData.getLyric());
                         }
                         return noteData;
@@ -357,7 +381,7 @@ public class LyricEditorController implements Localizable {
             } else if (removeRadioButton.isSelected() && prefixRadioButton.isSelected()) {
                 callback.transformLyric(noteData -> {
                     if (isPitch) {
-                        String pitchString = extractStartPitch(Optional.of(noteData.getLyric()));
+                        String pitchString = extractStartPitch(noteData.getLyric());
                         if (!pitchString.isEmpty()) {
                             return noteData.withNewLyric(
                                     noteData.getLyric().substring(pitchString.length()));
@@ -373,9 +397,9 @@ public class LyricEditorController implements Localizable {
             } else if (addRadioButton.isSelected() && suffixRadioButton.isSelected()) {
                 callback.transformLyric(noteData -> {
                     if (isPitch) {
-                        String pitchString = extractEndPitch(noteData.getTrueLyric());
+                        String pitchString = extractEndPitch(noteData.getTrueLyric().orElse(""));
                         if (!pitchString.isEmpty()
-                                && extractEndPitch(Optional.of(noteData.getLyric())).isEmpty()) {
+                                && extractEndPitch(noteData.getLyric()).isEmpty()) {
                             return noteData.withNewLyric(noteData.getLyric() + pitchString);
                         }
                         return noteData;
@@ -385,7 +409,7 @@ public class LyricEditorController implements Localizable {
             } else if (removeRadioButton.isSelected() && suffixRadioButton.isSelected()) {
                 callback.transformLyric(noteData -> {
                     if (isPitch) {
-                        String pitchString = extractEndPitch(Optional.of(noteData.getLyric()));
+                        String pitchString = extractEndPitch(noteData.getLyric());
                         if (!pitchString.isEmpty()) {
                             return noteData.withNewLyric(noteData.getLyric().substring(
                                     0, noteData.getLyric().length() - pitchString.length()));
@@ -402,15 +426,15 @@ public class LyricEditorController implements Localizable {
         }
     }
 
-    private static String extractStartPitch(Optional<String> lyric) {
+    private static String extractStartPitch(String lyric) {
         if (lyric.isEmpty()) {
             return "";
         }
         for (String pitch : PitchUtils.PITCHES) {
             for (int i = 1; i <= 7; i++) {
                 String fullPitch = pitch + i;
-                if (lyric.get().startsWith(fullPitch)
-                        || lyric.get().startsWith(fullPitch.toLowerCase())) {
+                if (lyric.startsWith(fullPitch)
+                        || lyric.startsWith(fullPitch.toLowerCase())) {
                     return fullPitch;
                 }
             }
@@ -418,15 +442,15 @@ public class LyricEditorController implements Localizable {
         return "";
     }
 
-    private static String extractEndPitch(Optional<String> lyric) {
+    private static String extractEndPitch(String lyric) {
         if (lyric.isEmpty()) {
             return "";
         }
         for (String pitch : PitchUtils.PITCHES) {
             for (int i = 1; i <= 7; i++) {
                 String fullPitch = pitch + i;
-                if (lyric.get().endsWith(fullPitch)
-                        || lyric.get().endsWith(fullPitch.toLowerCase())) {
+                if (lyric.endsWith(fullPitch)
+                        || lyric.endsWith(fullPitch.toLowerCase())) {
                     return fullPitch;
                 }
             }
