@@ -423,6 +423,16 @@ public class LyricEditorController implements Localizable {
                     return noteData;
                 }, regionToUpdate);
             }
+        } else if (tabPane.getSelectionModel().getSelectedItem() == reclistConverterTab) {
+            if (fromChoiceBox.getValue() == null || toChoiceBox.getValue() == null) {
+                return;
+            }
+            HashMap<ReclistType, List<ReclistConverter>> pathMap =
+                    converterMap.traverseReclists(fromChoiceBox.getValue());
+            if (!pathMap.containsKey(toChoiceBox.getValue())) {
+                return;
+            }
+            callback.convertReclist(pathMap.get(toChoiceBox.getValue()), regionToUpdate);
         }
     }
 

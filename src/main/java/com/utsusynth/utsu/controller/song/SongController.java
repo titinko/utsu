@@ -29,6 +29,7 @@ import com.utsusynth.utsu.files.song.Ust20Reader;
 import com.utsusynth.utsu.files.song.Ust20Writer;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
+import com.utsusynth.utsu.model.song.converters.ReclistConverter;
 import com.utsusynth.utsu.view.song.Piano;
 import com.utsusynth.utsu.view.song.SongCallback;
 import com.utsusynth.utsu.view.song.SongEditor;
@@ -1139,6 +1140,19 @@ public class SongController implements EditorController, Localizable {
                                     .map(transform)
                                     .collect(Collectors.toList());
                             updateNotes(oldNotes, newNotes);
+                        }
+
+                        @Override
+                        public void convertReclist(
+                                List<ReclistConverter> path, RegionBounds regionToUpdate) {
+                            VoicebankData voicebankData =
+                                    song.get().getVoicebank().getReadonlyData();
+                            for (ReclistConverter converter : path) {
+                                List<NoteContextData> oldNotes =
+                                        song.get().getNotesInContext(regionToUpdate);
+                                List<NoteData> newNotes = converter.apply(oldNotes, voicebankData);
+                                updateNotes(song.get().getNotes(regionToUpdate), newNotes);
+                            }
                         }
                     });
             Scene scene = new Scene(editorPane);

@@ -1,10 +1,7 @@
 package com.utsusynth.utsu.model.song;
 
+import com.utsusynth.utsu.common.data.*;
 import com.utsusynth.utsu.common.utils.RegionBounds;
-import com.utsusynth.utsu.common.data.MutateResponse;
-import com.utsusynth.utsu.common.data.NoteData;
-import com.utsusynth.utsu.common.data.NoteUpdateData;
-import com.utsusynth.utsu.common.data.PitchbendData;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
 import com.utsusynth.utsu.common.utils.PitchUtils;
@@ -95,7 +92,7 @@ public class Song {
             return this;
         }
 
-        public Builder addNote(Note note) {
+        public void addNote(Note note) {
             Optional<Note> prevNote = noteListBuilder.getLatestNote();
 
             // Add this note to the list of notes.
@@ -108,17 +105,14 @@ public class Song {
                     note.getPitchbends(),
                     prevNote.isPresent() ? prevNote.get().getNoteNum() : note.getNoteNum(),
                     note.getNoteNum());
-            return this;
         }
 
-        public Builder addRestNote(Note note) {
+        public void addRestNote(Note note) {
             noteListBuilder.appendRestNote(note);
-            return this;
         }
 
-        public Builder addInvalidNote(Note note) {
+        public void addInvalidNote(Note note) {
             noteListBuilder.appendInvalidNote(note.getDelta(), note.getLength());
-            return this;
         }
 
         public Song build() {
@@ -444,6 +438,28 @@ public class Song {
                             Optional.of(note.getEnvelope()),
                             Optional.of(note.getPitchbends()),
                             Optional.of(note.getConfigData())));
+        }
+        return notes;
+    }
+
+    public LinkedList<NoteContextData> getNotesInContext(RegionBounds bounds) {
+        LinkedList<NoteContextData> notes = new LinkedList<>();
+        NoteIterator iterator = noteList.boundedIterator(bounds);
+        while (iterator.hasNext()) {
+            Note note = iterator.next();
+            // Get previous note if connected.
+            Optional<NoteData> prevData = Optional.empty();
+            Optional<Note> prev = iterator.peekPrev();
+            if (prev.isPresent() && prev.get().getDuration() == prev.get().getLength()) {
+                prevData = Optional.of(getNote(iterator.getCurDelta() - note.getDelta()));
+            }
+            // Get next note if connected.
+            Optional<NoteData> nextData = Optional.empty();
+            if (iterator.hasNext() && note.getDuration() == note.getLength()) {
+                nextData = Optional.of(getNote(iterator.getCurDelta() + note.getLength()));
+            }
+            NoteData noteData = getNote(iterator.getCurDelta());
+            notes.add(new NoteContextData(noteData, prevData, nextData));
         }
         return notes;
     }

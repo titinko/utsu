@@ -25,8 +25,12 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
                 NoteData next = noteContextData.getNext().get();
                 vcNote = makeVcNote(note, next.getLyric(), voicebankData);
             }
-            vcNote.ifPresent(output::add);
-            output.add(note);
+            if (vcNote.isPresent()) {
+                output.add(note.withDuration(note.getDuration() - vcNote.get().getDuration()));
+                output.add(vcNote.get());
+            } else {
+                output.add(note);
+            }
         }
         return output.build();
     }

@@ -10,6 +10,10 @@ import java.util.Optional;
 public class LyricUtils {
     public static final ImmutableList<Character> JP_VOWELS =
             ImmutableList.of('a', 'i', 'u', 'e', 'o', 'n');
+    public static final ImmutableList<String> JP_CONSONANTS =
+            ImmutableList.of("k", "s", "t", "n", "h", "f", "m", "r", "y", "w", "ch", "gy", "py",
+                    "ry", "ng", "ny", "r", "hy", "by", "b", "d", "g", "j", "p", "sh", "ky", "z",
+                    "my");
     /** Extract common prefixes. */
     public static String guessPrefix(String lyric) {
         String curLyric = lyric;
@@ -70,9 +74,15 @@ public class LyricUtils {
         // Convert to ASCII and check last character.
         for (String converted : conversionSet.getGroup(lyric)) {
             if (CharMatcher.ascii().matchesAllOf(converted) && !converted.isEmpty()) {
-                char lastChar = converted.toLowerCase().charAt(converted.length() - 1);
-                if (JP_VOWELS.contains(lastChar)) {
-                    return String.valueOf(lastChar);
+                if (converted.length() > 1) {
+                    String firstTwoChars = converted.substring(0, 2);
+                    if (JP_CONSONANTS.contains(firstTwoChars)) {
+                        return firstTwoChars;
+                    }
+                }
+                String firstChar = converted.substring(0, 1);
+                if (JP_CONSONANTS.contains(firstChar)) {
+                    return firstChar;
                 }
             }
         }

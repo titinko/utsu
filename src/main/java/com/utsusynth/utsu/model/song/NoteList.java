@@ -181,7 +181,7 @@ public class NoteList implements Iterable<Note> {
      */
     NoteNode removeNote(int deltaToRemove) {
         NoteNode toRemove;
-        if (!head.isPresent()) {
+        if (head.isEmpty()) {
             // TODO: Throw an error here.
             return null;
         } else if (head.get().getNote().getDelta() == deltaToRemove) {
