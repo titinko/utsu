@@ -37,6 +37,7 @@ public class LyricEditorController implements Localizable {
     public enum LyricEditorType {
         INSERT_LYRICS,
         PREFIX_SUFFIX,
+        RECLIST_CONVERTER,
     }
 
     private static final double LIST_HEIGHT = 110;
@@ -273,8 +274,8 @@ public class LyricEditorController implements Localizable {
         suffixRadioButton.setText(bundle.getString("lyricEditor.prefixSuffix.target.suffix"));
         textLabel.setText(bundle.getString("lyricEditor.prefixSuffix.text"));
 
-        reclistConverterTab.setText("Reclist converter");
-        presampIniCheckBox.setText("Use presamp.ini");
+        reclistConverterTab.setText(bundle.getString("menu.tools.lyricEditor.reclistConverter"));
+        presampIniCheckBox.setText(bundle.getString("lyricEditor.reclistConverter.usePresampIni"));
     }
 
     /** Secondary initialization. */
@@ -291,6 +292,8 @@ public class LyricEditorController implements Localizable {
             tabPane.getSelectionModel().select(insertLyricsTab);
         } else if (editorType.equals(LyricEditorType.PREFIX_SUFFIX)) {
             tabPane.getSelectionModel().select(prefixSuffixTab);
+        } else if (editorType.equals(LyricEditorType.RECLIST_CONVERTER)) {
+            tabPane.getSelectionModel().select(reclistConverterTab);
         }
 
         // Bind list height strictly to window size.

@@ -249,6 +249,8 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem prefixSuffixItem; // Value injected by FXMLLoader
     @FXML
+    private MenuItem reclistConverterItem; // Value injected by FXMLLoader
+    @FXML
     private Menu pluginsMenu; // Value injected by FXMLLoader
     @FXML
     private MenuItem openPluginItem; // Value injected by FXMLLoader
@@ -300,6 +302,7 @@ public class UtsuController implements Localizable {
         lyricEditorMenu.setText(bundle.getString("menu.tools.lyricEditor"));
         insertLyricsItem.setText(bundle.getString("menu.tools.lyricEditor.insertLyrics"));
         prefixSuffixItem.setText(bundle.getString("menu.tools.lyricEditor.prefixSuffix"));
+        reclistConverterItem.setText(bundle.getString("menu.tools.lyricEditor.reclistConverter"));
         pluginsMenu.setText(bundle.getString("menu.plugins"));
         openPluginItem.setText(bundle.getString("menu.plugins.openPlugin"));
         recentPluginsMenu.setText(bundle.getString("menu.plugins.recentPlugins"));
@@ -356,6 +359,8 @@ public class UtsuController implements Localizable {
                 .setAccelerator(new KeyCodeCombination(KeyCode.I, SHORTCUT_DOWN, SHIFT_DOWN));
         prefixSuffixItem
                 .setAccelerator(new KeyCodeCombination(KeyCode.X, SHORTCUT_DOWN, SHIFT_DOWN));
+        reclistConverterItem
+                .setAccelerator(new KeyCodeCombination(KeyCode.C, SHORTCUT_DOWN, SHIFT_DOWN));
         helpMenu.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, SHORTCUT_DOWN, SHIFT_DOWN));
     }
 
@@ -880,6 +885,14 @@ public class UtsuController implements Localizable {
         if (!tabs.getTabs().isEmpty()) {
             String id = tabs.getSelectionModel().getSelectedItem().getId();
             editors.get(id).openLyricEditor(LyricEditorType.PREFIX_SUFFIX);
+        }
+    }
+
+    @FXML
+    void openReclistConverterEditor(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            String id = tabs.getSelectionModel().getSelectedItem().getId();
+            editors.get(id).openLyricEditor(LyricEditorType.RECLIST_CONVERTER);
         }
     }
 

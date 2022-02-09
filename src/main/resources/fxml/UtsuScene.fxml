@@ -87,6 +87,7 @@
                     <items>
                       <MenuItem fx:id="insertLyricsItem" mnemonicParsing="false" onAction="#openInsertLyricsEditor" text="Insert Lyrics" />
                         <MenuItem fx:id="prefixSuffixItem" mnemonicParsing="false" onAction="#openPrefixSuffixEditor" text="Prefix/Suffix" />
+                        <MenuItem fx:id="reclistConverterItem" mnemonicParsing="false" onAction="#openReclistConverterEditor" text="Reclist Converter" />
                     </items>
                   </Menu>
               </items>
