@@ -28,7 +28,6 @@ import javafx.stage.Stage;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.prefs.Preferences;
 import java.util.ResourceBundle;
 

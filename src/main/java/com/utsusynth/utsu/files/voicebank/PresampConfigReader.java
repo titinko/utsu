@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.files.voicebank;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.model.voicebank.PresampConfig;
@@ -181,7 +182,7 @@ public class PresampConfigReader {
                 printWarning("[REPLACE]", line);
                 continue;
             }
-            builder.addLyricReplacement(splitLine);
+            builder.addLyricReplacement(ImmutableSet.copyOf(splitLine));
         }
         return -1;
     }
@@ -199,7 +200,8 @@ public class PresampConfigReader {
             if (aliasType.isEmpty()) {
                 printWarning("[ALIAS]", splitLine[0]);
             } else {
-                builder.setAliasFormat(aliasType.get(), splitLine[1].split(","));
+                builder.setAliasFormat(
+                        aliasType.get(), ImmutableList.copyOf(splitLine[1].split(",")));
             }
         }
         return -1;
@@ -212,7 +214,7 @@ public class PresampConfigReader {
                 return i;
             }
             if (!lines[i].isEmpty()) {
-                builder.setAliasFormat(aliasType, lines[i].split(","));
+                builder.setAliasFormat(aliasType, ImmutableList.copyOf(lines[i].split(",")));
             }
 
         }

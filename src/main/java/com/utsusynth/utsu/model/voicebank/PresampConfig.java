@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.model.voicebank;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.*;
 
@@ -27,7 +28,7 @@ public class PresampConfig {
 
     // Set of all lyric replacements specified in the presamp file. Can be merged with the larger
     // voicebank's official lyric conversion set.
-    private final Set<String[]> lyricReplacements;
+    private final Set<ImmutableSet<String>> lyricReplacements;
 
     public enum AliasType {
         VCV, // "a ka"
@@ -43,8 +44,7 @@ public class PresampConfig {
         ENDING_1, // "a R"
         ENDING_2, // "a-"
     }
-    private final Map<AliasType, String[]> aliasFormats;
-
+    private final Map<AliasType, ImmutableList<String>> aliasFormats;
 
     // List of prefixes to ignore when modifying lyrics.
     private final Set<String> prefixes;
@@ -130,11 +130,11 @@ public class PresampConfig {
             newConfig.neverVcv.add(lyric);
         }
 
-        public void addLyricReplacement(String[] replacementSet) {
+        public void addLyricReplacement(ImmutableSet<String> replacementSet) {
             newConfig.lyricReplacements.add(replacementSet);
         }
 
-        public void setAliasFormat(AliasType aliasType, String[] format) {
+        public void setAliasFormat(AliasType aliasType, ImmutableList<String> format) {
             newConfig.aliasFormats.put(aliasType, format);
         }
 
@@ -207,6 +207,110 @@ public class PresampConfig {
         }
     }
 
+    public static class Reader {
+        private final PresampConfig readonlyConfig;
+
+        private Reader(PresampConfig readonlyConfig) {
+            this.readonlyConfig = readonlyConfig;
+        }
+
+        public String getVowelMapping(String key) {
+            return readonlyConfig.vowelMappings.get(key);
+        }
+
+        public int getVowelVolume(String vowel) {
+            return readonlyConfig.vowelVolumes.get(vowel);
+        }
+
+        public String getConsonantMapping(String key) {
+            return readonlyConfig.consonantMappings.get(key);
+        }
+
+        public boolean getConsonantOverlap(String consonant) {
+            return readonlyConfig.consonantOverlaps.get(consonant);
+        }
+
+        public VcLength getVcLengthOverride(String consonant) {
+            return readonlyConfig.vcLengthOverrides.get(consonant);
+        }
+
+        public boolean isNeverVcv(String lyric) {
+            return readonlyConfig.neverVcv.contains(lyric);
+        }
+
+        public ImmutableSet<ImmutableSet<String>> getLyricReplacements() {
+            return ImmutableSet.copyOf(readonlyConfig.lyricReplacements);
+        }
+
+        public ImmutableList<String> getAliasFormat(AliasType aliasType) {
+            if (!readonlyConfig.aliasFormats.containsKey(aliasType)) {
+                return ImmutableList.of();
+            }
+            return readonlyConfig.aliasFormats.get(aliasType);
+        }
+
+        // public void setAliasFormat(AliasType aliasType, String[] format) {
+        //     newConfig.aliasFormats.put(aliasType, format);
+        // }
+
+        public ImmutableSet<String> getPrefixes() {
+            return ImmutableSet.copyOf(readonlyConfig.prefixes);
+        }
+
+        public ImmutableSet<SuffixType> getSuffixTypes() {
+            return ImmutableSet.copyOf(readonlyConfig.suffixes.keySet());
+        }
+
+        public ImmutableSet<String> getSuffixes(SuffixType suffixType) {
+            return ImmutableSet.copyOf(readonlyConfig.suffixes.get(suffixType));
+        }
+
+        public boolean allowsUnderbarSuffix(SuffixType suffixType) {
+            return readonlyConfig.allowUnderbarSuffixes.contains(suffixType);
+        }
+
+        public boolean excludesRepeatSuffix(SuffixType suffixType) {
+            return readonlyConfig.excludeRepeatsSuffixes.contains(suffixType);
+        }
+
+
+        public ImmutableList<AliasType> getAliasPriorityDifpitch() {
+            return readonlyConfig.aliasPriorityDifpitch;
+        }
+
+        public ImmutableList<AliasType> getAliasPriorityDifappend() {
+            return readonlyConfig.aliasPriorityDifappend;
+        }
+
+        public ImmutableList<AliasType> getAliasPriority() {
+            return readonlyConfig.aliasPriority;
+        }
+
+        public boolean getEnableSplitting() {
+            return readonlyConfig.enableSplitting;
+        }
+
+        public boolean getMustVc() {
+            return readonlyConfig.mustVC;
+        }
+
+        public String getConsonantFlags() {
+            return readonlyConfig.consonantFlags;
+        }
+
+        public VcLength getVcLength() {
+            return readonlyConfig.vcLength;
+        }
+
+        public EndFlag getEndFlag() {
+            return readonlyConfig.endFlag;
+        }
+
+        public String getSuffixOrder() {
+            return readonlyConfig.suffixOrder;
+        }
+    }
+
     public PresampConfig(
             Map<String, String> vowelMappings,
             Map<String, Integer> vowelVolumes,
@@ -214,8 +318,8 @@ public class PresampConfig {
             Map<String, Boolean> consonantOverlaps,
             Map<String, VcLength> vcLengthOverrides,
             Set<String> neverVcv,
-            Set<String[]> lyricReplacements,
-            Map<AliasType, String[]> aliasFormats,
+            Set<ImmutableSet<String>> lyricReplacements,
+            Map<AliasType, ImmutableList<String>> aliasFormats,
             Set<String> prefixes,
             Map<SuffixType, Set<String>> suffixes,
             Set<SuffixType> allowUnderbarSuffixes,
@@ -236,20 +340,24 @@ public class PresampConfig {
 
     public Builder toBuilder() {
         // Returns the builder of a new PresampConfig with this one's attributes.
-        // The old config's final fields are used--the objects are not regenerated.
+        // Shallow copies work only for data structures containing immutable values.
+        Map<SuffixType, Set<String>> newSuffixes = new HashMap<>();
+        for (SuffixType suffixType : suffixes.keySet()) {
+            newSuffixes.put(suffixType, new HashSet<>(suffixes.get(suffixType)));
+        }
         return new Builder(new PresampConfig(
-                vowelMappings,
-                vowelVolumes,
-                consonantMappings,
-                consonantOverlaps,
-                vcLengthOverrides,
-                neverVcv,
-                lyricReplacements,
-                aliasFormats,
-                prefixes,
-                suffixes,
-                allowUnderbarSuffixes,
-                excludeRepeatsSuffixes))
+                new HashMap<>(vowelMappings),
+                new HashMap<>(vowelVolumes),
+                new HashMap<>(consonantMappings),
+                new HashMap<>(consonantOverlaps),
+                new HashMap<>(vcLengthOverrides),
+                new HashSet<>(neverVcv),
+                new HashSet<>(lyricReplacements),
+                new HashMap<>(aliasFormats),
+                new HashSet<>(prefixes),
+                newSuffixes,
+                new HashSet<>(allowUnderbarSuffixes),
+                new HashSet<>(excludeRepeatsSuffixes)))
                 .setAliasPriority(aliasPriority)
                 .setAliasPriorityDifappend(aliasPriorityDifappend)
                 .setAliasPriorityDifpitch(aliasPriorityDifpitch)
@@ -261,7 +369,12 @@ public class PresampConfig {
                 .setSuffixOrder(suffixOrder);
     }
 
-    public Set<String[]> getLyricReplacements() {
+    public Set<ImmutableSet<String>> getLyricReplacements() {
         return lyricReplacements;
+    }
+
+    /** Returns a readonly view of a presamp config, useful for plugins. */
+    public Reader getReader() {
+        return new Reader(this);
     }
 }

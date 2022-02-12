@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.utsusynth.utsu.engine.FrqGenerator;
@@ -41,24 +42,27 @@ public class ModelModule extends AbstractModule {
             LyricConfigMap configMap,
             PitchMap pitchMap,
             DisjointLyricSet conversionSet,
-            FrqGenerator frqGen) {
-        return new Voicebank(configMap, pitchMap, conversionSet, new HashSet<>(), frqGen);
+            FrqGenerator frqGen,
+            PresampConfig presampConfig) {
+        return new Voicebank(
+                configMap, pitchMap, conversionSet, new HashSet<>(), frqGen, presampConfig);
     }
 
     @Provides
     private PresampConfig provideEmptyPresampConfig() {
-        Map<AliasType, String[]> formats = new HashMap<>();
-        formats.put(AliasType.VCV, new String[] {"%v%%VCVPAD%%CV%"}); // "a ka"
-        formats.put(AliasType.BEGINNING_CV, new String[] {"-%VCVPAD%%CV%"}); // "- ka"
-        formats.put(AliasType.CROSS_CV, new String[] {"*%VCVPAD%%CV%"}); // "* ka"
-        formats.put(AliasType.VC, new String[] {"%v%%vcpad%%c%", "%c%%vcpad%%c%"}); // "a k", "k k"
-        formats.put(AliasType.CV, new String[] {"%CV%", "%c%%V%"}); // "ka", "ka"
-        formats.put(AliasType.C, new String[] {"%c%"}); // "k"
-        formats.put(AliasType.LONG_V, new String[] {"%V%-"}); // "a-"
-        formats.put(AliasType.VCPAD, new String[] {" "});
-        formats.put(AliasType.VCVPAD, new String[] {" "});
-        formats.put(AliasType.ENDING_1, new String[] {"%v%%VCPAD%R"}); // "a R"
-        formats.put(AliasType.ENDING_2, new String[] {"-"});
+        Map<AliasType, ImmutableList<String>> formats = new HashMap<>();
+        formats.put(AliasType.VCV, ImmutableList.of("%v%%VCVPAD%%CV%")); // "a ka"
+        formats.put(AliasType.BEGINNING_CV, ImmutableList.of("-%VCVPAD%%CV%")); // "- ka"
+        formats.put(AliasType.CROSS_CV, ImmutableList.of("*%VCVPAD%%CV%")); // "* ka"
+        formats.put(
+                AliasType.VC, ImmutableList.of("%v%%vcpad%%c%", "%c%%vcpad%%c%")); // "a k", "k k"
+        formats.put(AliasType.CV, ImmutableList.of("%CV%", "%c%%V%")); // "ka", "ka"
+        formats.put(AliasType.C, ImmutableList.of("%c%")); // "k"
+        formats.put(AliasType.LONG_V, ImmutableList.of("%V%-")); // "a-"
+        formats.put(AliasType.VCPAD, ImmutableList.of(" "));
+        formats.put(AliasType.VCVPAD, ImmutableList.of(" "));
+        formats.put(AliasType.ENDING_1, ImmutableList.of("%v%%VCPAD%R")); // "a R"
+        formats.put(AliasType.ENDING_2, ImmutableList.of("-"));
         return new PresampConfig(
                 new HashMap<>(),
                 new HashMap<>(),

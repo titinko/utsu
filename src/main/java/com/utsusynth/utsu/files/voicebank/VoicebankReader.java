@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -200,10 +201,11 @@ public class VoicebankReader {
             return; // For now, don't include any default presamp.ini data.
         }
         PresampConfig presampConfig = presampConfigReader.loadPresampConfig(presampData);
+        builder.setPresampConfig(presampConfig);
 
         // Add all lyric replacements to UTSU's default lyric replacements for this voicebank.
-        for (String[] conversionGroup : presampConfig.getLyricReplacements()) {
-            builder.addConversionGroup(conversionGroup);
+        for (ImmutableSet<String> conversionGroup : presampConfig.getLyricReplacements()) {
+            builder.addConversionGroup((String[]) conversionGroup.toArray());
         }
     }
 

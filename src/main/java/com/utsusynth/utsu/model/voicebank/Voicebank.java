@@ -22,6 +22,7 @@ public class Voicebank {
     private final PitchMap pitchMap;
     private final Set<File> soundFiles;
     private final FrqGenerator frqGenerator;
+    private PresampConfig presampConfig; // Immutable value.
 
     private File pathToVoicebank; // Example: "/Library/Iona.utau/"
     private String name; // Example: "Iona"
@@ -80,6 +81,10 @@ public class Voicebank {
             newVoicebank.conversionSet.addGroup(members);
         }
 
+        public void setPresampConfig(PresampConfig presampConfig) {
+            newVoicebank.presampConfig = presampConfig;
+        }
+
         public Voicebank build() {
             if (newVoicebank.pathToVoicebank == null) {
                 // TODO: Handle this.
@@ -94,12 +99,14 @@ public class Voicebank {
             PitchMap pitchMap,
             DisjointLyricSet conversionSet,
             Set<File> soundFiles,
-            FrqGenerator frqGenerator) {
+            FrqGenerator frqGenerator,
+            PresampConfig presampConfig) {
         this.lyricConfigs = lyricConfigs;
         this.pitchMap = pitchMap;
         this.conversionSet = conversionSet;
         this.soundFiles = soundFiles;
         this.frqGenerator = frqGenerator;
+        this.presampConfig = presampConfig;
 
         // Default values.
         this.name = "";
@@ -117,9 +124,13 @@ public class Voicebank {
                         this.pitchMap,
                         this.conversionSet,
                         this.soundFiles,
-                        this.frqGenerator)).setPathToVoicebank(this.pathToVoicebank)
-                .setName(this.name).setAuthor(this.author)
-                .setDescription(this.description).setImageName(this.imageName);
+                        this.frqGenerator,
+                        this.presampConfig))
+                .setPathToVoicebank(this.pathToVoicebank)
+                .setName(this.name)
+                .setAuthor(this.author)
+                .setDescription(this.description)
+                .setImageName(this.imageName);
     }
 
     /**
@@ -312,7 +323,10 @@ public class Voicebank {
     /** Get readonly data about the voicebank. Useful for plugins. */
     public VoicebankData getReadonlyData() {
         return new VoicebankData(
-                conversionSet.getReader(), lyricConfigs.getReader(), pitchMap.getReader());
+                conversionSet.getReader(),
+                lyricConfigs.getReader(),
+                pitchMap.getReader(),
+                presampConfig.getReader());
     }
 
     public String getName() {
