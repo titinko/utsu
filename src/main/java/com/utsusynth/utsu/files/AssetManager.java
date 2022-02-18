@@ -98,7 +98,7 @@ public class AssetManager {
             System.out.println("Error: Failed to create config path.");
             return false;
         }
-        copyFile(CONFIG_SOURCE, configPath, "lyric_conversions.txt", "LYRIC_CONVERSIONS");
+        copyFile(CONFIG_SOURCE, configPath, "presamp.ini", "DEFAULT_PRESAMP_INI");
 
         // Write versions.
         writeVersions(currentVersions, assetPath);
@@ -163,8 +163,8 @@ public class AssetManager {
         return new File(executablesPath, "frq0003gen");
     }
 
-    public File getLyricConversionFile() {
-        return new File(configPath, "lyric_conversions.txt");
+    public File getDefaultPresampIniFile() {
+        return new File(configPath, "presamp.ini");
     }
 
     private File copyFile(

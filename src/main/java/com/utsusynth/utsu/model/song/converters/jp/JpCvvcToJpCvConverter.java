@@ -38,19 +38,19 @@ public class JpCvvcToJpCvConverter implements ReclistConverter {
             return false; // The first note will not be VC.
         }
         String prevVowel = LyricUtils.guessJpVowel(
-                noteContext.getPrev().get().getLyric(), voicebankData.getLyricConversions());
+                noteContext.getPrev().get().getLyric(), voicebankData);
         if (noteContext.getNext().isEmpty()) {
             return noteContext.getNote().getLyric().equals(prevVowel + " -");
         }
         String nextConsonant = LyricUtils.guessJpConsonant(
-                noteContext.getNext().get().getLyric(), voicebankData.getLyricConversions());
+                noteContext.getNext().get().getLyric(), voicebankData);
         return noteContext.getNote().getLyric().equals(prevVowel + " " + nextConsonant);
     }
 
     private static boolean followedByVc(
             String lyric, String nextLyric, VoicebankData voicebankData) {
-        String vowel = LyricUtils.guessJpVowel(lyric, voicebankData.getLyricConversions());
-        String nextVowel = LyricUtils.guessJpVowel(nextLyric, voicebankData.getLyricConversions());
+        String vowel = LyricUtils.guessJpVowel(lyric, voicebankData);
+        String nextVowel = LyricUtils.guessJpVowel(nextLyric, voicebankData);
         return !(vowel.isEmpty()) && nextVowel.isEmpty() && nextLyric.startsWith(vowel + " ");
     }
 

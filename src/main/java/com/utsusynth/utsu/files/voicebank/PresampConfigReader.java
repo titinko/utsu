@@ -19,26 +19,21 @@ import java.util.regex.Pattern;
 public class PresampConfigReader {
     private static final Pattern HEADER_PATTERN = Pattern.compile("\\[[A-Z0-9]+\\]");
 
-    private final Provider<PresampConfig> presampConfigProvider;
-
-    @Inject
-    public PresampConfigReader(Provider<PresampConfig> presampConfigProvider) {
-        this.presampConfigProvider = presampConfigProvider;
-    }
-
-    public PresampConfig loadPresampConfig(String fileContents) {
+    public PresampConfig loadPresampConfig(PresampConfig.Builder builder, String fileContents) {
         String[] lines = fileContents.split("\n");
-        PresampConfig.Builder presampBuilder = presampConfigProvider.get().toBuilder();
         int curLine = 0;
         while (curLine >= 0 && curLine < lines.length) {
-            curLine = parseSection(lines, curLine, presampBuilder);
+            curLine = parseSection(lines, curLine, builder);
         }
-        return presampBuilder.build();
+        return builder.build();
     }
 
     private int parseSection(String[] lines, int sectionStart, PresampConfig.Builder builder) {
         String header = lines[sectionStart].trim();
-        if (!HEADER_PATTERN.matcher(header).matches()) {
+        if (header.isEmpty()) {
+            // This is sometimes expected.
+            return sectionStart + 1;
+        } else if (!HEADER_PATTERN.matcher(header).matches()) {
             // Report parse section not called on section header warning.
             System.out.println("Parse header not called on section header.");
             return -1;
@@ -94,6 +89,9 @@ public class PresampConfigReader {
     }
 
     private int parseVowel(String[] lines, int sectionStart, PresampConfig.Builder builder) {
+        builder.clearVowelMappings();
+        builder.clearVowelVolumes();
+
         for (int i = sectionStart; i < lines.length; i++) {
             String line = lines[i].trim();
             if (HEADER_PATTERN.matcher(line).matches()) {
@@ -126,6 +124,10 @@ public class PresampConfigReader {
     }
 
     private int parseConsonant(String[] lines, int sectionStart, PresampConfig.Builder builder) {
+        builder.clearConsonantMappings();
+        builder.clearConsonantOverlaps();
+        builder.clearVcLengthOverrides();
+
         for (int i = sectionStart; i < lines.length; i++) {
             String line = lines[i].trim();
             if (HEADER_PATTERN.matcher(line).matches()) {
@@ -157,6 +159,8 @@ public class PresampConfigReader {
     }
 
     private int parsePriority(String[] lines, int sectionStart, PresampConfig.Builder builder) {
+        builder.clearNeverVcv();
+
         for (int i = sectionStart; i < lines.length; i++) {
             String line = lines[i].trim();
             if (HEADER_PATTERN.matcher(line).matches()) {
@@ -172,6 +176,8 @@ public class PresampConfigReader {
     }
 
     private int parseReplace(String[] lines, int sectionStart, PresampConfig.Builder builder) {
+        builder.clearLyricReplacements();
+
         for (int i = sectionStart; i < lines.length; i++) {
             String line = lines[i].trim();
             if (HEADER_PATTERN.matcher(line).matches()) {
@@ -188,6 +194,8 @@ public class PresampConfigReader {
     }
 
     private int parseAlias(String[] lines, int sectionStart, PresampConfig.Builder builder) {
+        builder.clearAliasFormats();
+
         for (int i = sectionStart; i < lines.length; i++) {
             if (HEADER_PATTERN.matcher(lines[i].trim()).matches()) {
                 return i;
@@ -267,6 +275,8 @@ public class PresampConfigReader {
     }
 
     private int parsePre(String[] lines, int sectionStart, PresampConfig.Builder builder) {
+        builder.clearPrefixes();
+
         for (int i = sectionStart; i < lines.length; i++) {
             if (HEADER_PATTERN.matcher(lines[i].trim()).matches()) {
                 return i;
@@ -294,6 +304,10 @@ public class PresampConfigReader {
             int sectionStart,
             PresampConfig.Builder builder,
             SuffixType suffixType) {
+        builder.clearAllowUnderbarSuffixes();
+        builder.clearExcludeRepeatsSuffixes();
+        builder.clearSuffixes();
+
         for (int i = sectionStart; i < lines.length; i++) {
             if (HEADER_PATTERN.matcher(lines[i].trim()).matches()) {
                 return i;

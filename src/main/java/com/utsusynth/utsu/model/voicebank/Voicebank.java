@@ -2,6 +2,7 @@ package com.utsusynth.utsu.model.voicebank;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import com.utsusynth.utsu.common.data.PitchMapData;
@@ -77,7 +78,7 @@ public class Voicebank {
             newVoicebank.pitchMap.putSuffix(pitch, suffix);
         }
 
-        public void addConversionGroup(String... members) {
+        public void addConversionGroup(ImmutableSet<String> members) {
             newVoicebank.conversionSet.addGroup(members);
         }
 

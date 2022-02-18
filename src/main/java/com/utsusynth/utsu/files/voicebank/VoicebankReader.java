@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,17 +40,23 @@ public class VoicebankReader {
     private final PreferencesManager preferencesManager;
     private final PresampConfigReader presampConfigReader;
     private final Provider<Voicebank> voicebankProvider;
+    private final Provider<PresampConfig> presampConfigProvider;
+
+    // Cache the default presamp.ini file here to avoid rereading every time.
+    private PresampConfig defaultPresampConfig;
 
     @Inject
     public VoicebankReader(
             AssetManager assetManager,
             PreferencesManager preferencesManager,
             PresampConfigReader presampConfigReader,
-            Provider<Voicebank> voicebankProvider) {
+            Provider<Voicebank> voicebankProvider,
+            Provider<PresampConfig> presampConfigProvider) {
         this.assetManager = assetManager;
         this.preferencesManager = preferencesManager;
         this.presampConfigReader = presampConfigReader;
         this.voicebankProvider = voicebankProvider;
+        this.presampConfigProvider = presampConfigProvider;
     }
 
     public File getDefaultPath() {
@@ -127,11 +132,8 @@ public class VoicebankReader {
             parsePitchMap(pathToVoicebank.toPath().resolve(pitchMapName).toFile(), builder);
         }
 
-        // Parse presamp.ini file, if present.
+        // Parse presamp.ini file if present, otherwise use default presamp config.
         parsePresampConfig(pathToVoicebank.toPath().resolve("presamp.ini").toFile(), builder);
-
-        // Parse conversion set for romaji-hiragana-katakana conversion.
-        readLyricConversionsFromFile(builder);
 
         return builder.build();
     }
@@ -196,24 +198,22 @@ public class VoicebankReader {
     }
 
     private void parsePresampConfig(File presampConfigFile, Voicebank.Builder builder) {
-        String presampData = readConfigFile(presampConfigFile);
-        if (presampData.isEmpty()) {
-            return; // For now, don't include any default presamp.ini data.
+        // Read default presamp.ini data if needed.
+        if (defaultPresampConfig == null) {
+            String defaultData = readConfigFile(assetManager.getDefaultPresampIniFile());
+            PresampConfig.Builder presampBuilder = presampConfigProvider.get().toBuilder();
+            defaultPresampConfig =
+                    presampConfigReader.loadPresampConfig(presampBuilder, defaultData);
         }
-        PresampConfig presampConfig = presampConfigReader.loadPresampConfig(presampData);
+        // Override any fields populated in the voicebank's presamp.ini file.
+        String presampData = readConfigFile(presampConfigFile);
+        PresampConfig presampConfig = presampConfigReader.loadPresampConfig(
+                defaultPresampConfig.toBuilder(), presampData);
         builder.setPresampConfig(presampConfig);
 
-        // Add all lyric replacements to UTSU's default lyric replacements for this voicebank.
+        // Add all lyric replacements for this voicebank.
         for (ImmutableSet<String> conversionGroup : presampConfig.getLyricReplacements()) {
-            builder.addConversionGroup((String[]) conversionGroup.toArray());
-        }
-    }
-
-    /* Gets disjoint set used for romaji-hiragana-katakana conversions. */
-    private void readLyricConversionsFromFile(Voicebank.Builder builder) {
-        String conversionData = readConfigFile(assetManager.getLyricConversionFile());
-        for (String line : conversionData.split("\n")) {
-            builder.addConversionGroup(line.trim().split(","));
+            builder.addConversionGroup(conversionGroup);
         }
     }
 

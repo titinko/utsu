@@ -106,40 +106,80 @@ public class PresampConfig {
             this.newConfig = newConfig;
         }
 
+        public void clearVowelMappings() {
+            newConfig.vowelMappings.clear();
+        }
+
         public void addVowelMapping(String key, String vowel) {
             newConfig.vowelMappings.put(key, vowel);
+        }
+
+        public void clearVowelVolumes() {
+            newConfig.vowelVolumes.clear();
         }
 
         public void addVowelVolume(String vowel, Integer volume) {
             newConfig.vowelVolumes.put(vowel, volume);
         }
 
+        public void clearConsonantMappings() {
+            newConfig.consonantMappings.clear();
+        }
+
         public void addConsonantMapping(String key, String consonant) {
             newConfig.consonantMappings.put(key, consonant);
+        }
+
+        public void clearConsonantOverlaps() {
+            newConfig.consonantOverlaps.clear();
         }
 
         public void addConsonantOverlap(String consonant, Boolean overlap) {
             newConfig.consonantOverlaps.put(consonant, overlap);
         }
 
+        public void clearVcLengthOverrides() {
+            newConfig.vcLengthOverrides.clear();
+        }
+
         public void addVcLengthOverride(String consonant, VcLength override) {
             newConfig.vcLengthOverrides.put(consonant, override);
+        }
+
+        public void clearNeverVcv() {
+            newConfig.neverVcv.clear();
         }
 
         public void addNeverVcv(String lyric) {
             newConfig.neverVcv.add(lyric);
         }
 
+        public void clearLyricReplacements() {
+            newConfig.lyricReplacements.clear();
+        }
+
         public void addLyricReplacement(ImmutableSet<String> replacementSet) {
             newConfig.lyricReplacements.add(replacementSet);
+        }
+
+        public void clearAliasFormats() {
+            newConfig.aliasFormats.clear();
         }
 
         public void setAliasFormat(AliasType aliasType, ImmutableList<String> format) {
             newConfig.aliasFormats.put(aliasType, format);
         }
 
+        public void clearPrefixes() {
+            newConfig.prefixes.clear();
+        }
+
         public void addPrefix(String prefix) {
             newConfig.prefixes.add(prefix);
+        }
+
+        public void clearSuffixes() {
+            newConfig.suffixes.clear();
         }
 
         public void addSuffix(SuffixType suffixType, String suffix) {
@@ -149,8 +189,16 @@ public class PresampConfig {
             newConfig.suffixes.get(suffixType).add(suffix);
         }
 
+        public void clearAllowUnderbarSuffixes() {
+            newConfig.allowUnderbarSuffixes.clear();
+        }
+
         public void addAllowUnderbarSuffix(SuffixType suffixType) {
             newConfig.allowUnderbarSuffixes.add(suffixType);
+        }
+
+        public void clearExcludeRepeatsSuffixes() {
+            newConfig.excludeRepeatsSuffixes.clear();
         }
 
         public void addExcludeRepeatsSuffix(SuffixType suffixType) {
@@ -214,12 +262,20 @@ public class PresampConfig {
             this.readonlyConfig = readonlyConfig;
         }
 
+        public boolean hasVowelMapping(String key) {
+            return readonlyConfig.vowelMappings.containsKey(key);
+        }
+
         public String getVowelMapping(String key) {
             return readonlyConfig.vowelMappings.get(key);
         }
 
         public int getVowelVolume(String vowel) {
             return readonlyConfig.vowelVolumes.get(vowel);
+        }
+
+        public boolean hasConsonantMapping(String key) {
+            return readonlyConfig.consonantMappings.containsKey(key);
         }
 
         public String getConsonantMapping(String key) {

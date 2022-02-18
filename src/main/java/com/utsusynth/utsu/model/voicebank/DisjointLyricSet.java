@@ -23,7 +23,7 @@ public class DisjointLyricSet {
             if (readonlyDisjointSet.containsKey(member)) {
                 return ImmutableSet.copyOf(readonlyDisjointSet.get(member));
             }
-            return ImmutableSet.of();
+            return ImmutableSet.of(member);
         }
     }
 
@@ -31,8 +31,8 @@ public class DisjointLyricSet {
         disjointSet = new HashMap<>();
     }
 
-    public void addGroup(String... members) {
-        if (members.length == 0) {
+    public void addGroup(ImmutableSet<String> members) {
+        if (members.isEmpty()) {
             return;
         }
         HashSet<String> group = new HashSet<>();
@@ -46,12 +46,11 @@ public class DisjointLyricSet {
         }
     }
 
-    public HashSet<String> getGroup(String member) {
-        HashSet<String> group = new HashSet<>();
+    public ImmutableSet<String> getGroup(String member) {
         if (disjointSet.containsKey(member)) {
-            group.addAll(disjointSet.get(member));
+            return ImmutableSet.copyOf(disjointSet.get(member));
         }
-        return group;
+        return ImmutableSet.of(member);
     }
 
     /** Returns a readonly view of a disjoint lyric set, useful for plugins. */

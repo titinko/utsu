@@ -2,7 +2,9 @@ package com.utsusynth.utsu.common.utils;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.utsusynth.utsu.common.data.VoicebankData;
 import com.utsusynth.utsu.model.voicebank.DisjointLyricSet;
+import com.utsusynth.utsu.model.voicebank.PresampConfig;
 
 import java.util.Optional;
 
@@ -55,9 +57,16 @@ public class LyricUtils {
     }
 
     /** Guess vowel for a japanese lyric. */
-    public static String guessJpVowel(String lyric, DisjointLyricSet.Reader conversionSet) {
-        // Convert to ASCII and check last character.
-        for (String converted : conversionSet.getGroup(lyric)) {
+    public static String guessJpVowel(String lyric, VoicebankData voicebankData) {
+        PresampConfig.Reader presampConfig = voicebankData.getPresampConfig();
+        for (String converted : voicebankData.getLyricConversions().getGroup(lyric)) {
+            for (int i = converted.length() - 1; i >= 0; i--) {
+                String potentialVowel = converted.substring(i);
+                if (presampConfig.hasVowelMapping(potentialVowel)) {
+                    return presampConfig.getVowelMapping(potentialVowel);
+                }
+            }
+            // Convert to ASCII and check last character.
             if (CharMatcher.ascii().matchesAllOf(converted) && !converted.isEmpty()) {
                 char lastChar = converted.toLowerCase().charAt(converted.length() - 1);
                 if (JP_VOWELS.contains(lastChar)) {
@@ -70,20 +79,13 @@ public class LyricUtils {
     }
 
     // Guess consonant.
-    public static String guessJpConsonant(String lyric, DisjointLyricSet.Reader conversionSet) {
-        // Convert to ASCII and check last character.
-        for (String converted : conversionSet.getGroup(lyric)) {
-            if (CharMatcher.ascii().matchesAllOf(converted) && !converted.isEmpty()) {
-                if (converted.length() > 1) {
-                    String firstTwoChars = converted.substring(0, 2);
-                    if (JP_CONSONANTS.contains(firstTwoChars)) {
-                        return firstTwoChars;
-                    }
-                }
-                String firstChar = converted.substring(0, 1);
-                if (JP_CONSONANTS.contains(firstChar)) {
-                    return firstChar;
-                }
+    public static String guessJpConsonant(String lyric, VoicebankData voicebankData) {
+        PresampConfig.Reader presampConfig = voicebankData.getPresampConfig();
+        for (String converted : voicebankData.getLyricConversions().getGroup(lyric)) {
+            if (presampConfig.hasConsonantMapping(converted)) {
+                return presampConfig.getConsonantMapping(converted);
+            } else if (presampConfig.hasVowelMapping(converted)) {
+                return presampConfig.getVowelMapping(converted);
             }
         }
         // No consonant found.
