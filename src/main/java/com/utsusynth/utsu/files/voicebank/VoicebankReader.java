@@ -63,6 +63,15 @@ public class VoicebankReader {
         return preferencesManager.getVoicebank();
     }
 
+    public PresampConfig getDefaultPresampConfig() {
+        // Read default presamp.ini data if needed.
+        String defaultData = readConfigFile(assetManager.getDefaultPresampIniFile());
+        PresampConfig.Builder presampBuilder = presampConfigProvider.get().toBuilder();
+        defaultPresampConfig =
+                presampConfigReader.loadPresampConfig(presampBuilder, defaultData);
+        return defaultPresampConfig;
+    }
+
     public Voicebank loadVoicebankFromDirectory(File sourceDir) {
         Voicebank.Builder builder = voicebankProvider.get().toBuilder();
 
@@ -198,23 +207,11 @@ public class VoicebankReader {
     }
 
     private void parsePresampConfig(File presampConfigFile, Voicebank.Builder builder) {
-        // Read default presamp.ini data if needed.
-        if (defaultPresampConfig == null) {
-            String defaultData = readConfigFile(assetManager.getDefaultPresampIniFile());
-            PresampConfig.Builder presampBuilder = presampConfigProvider.get().toBuilder();
-            defaultPresampConfig =
-                    presampConfigReader.loadPresampConfig(presampBuilder, defaultData);
-        }
         // Override any fields populated in the voicebank's presamp.ini file.
         String presampData = readConfigFile(presampConfigFile);
         PresampConfig presampConfig = presampConfigReader.loadPresampConfig(
-                defaultPresampConfig.toBuilder(), presampData);
+                getDefaultPresampConfig().toBuilder(), presampData);
         builder.setPresampConfig(presampConfig);
-
-        // Add all lyric replacements for this voicebank.
-        for (ImmutableSet<String> conversionGroup : presampConfig.getLyricReplacements()) {
-            builder.addConversionGroup(conversionGroup);
-        }
     }
 
     private String readConfigFile(File file) {

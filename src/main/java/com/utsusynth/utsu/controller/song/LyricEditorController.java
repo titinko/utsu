@@ -100,8 +100,6 @@ public class LyricEditorController implements Localizable {
     @FXML
     private Tab reclistConverterTab;
     @FXML
-    private VBox reclistConverterVBox;
-    @FXML
     private ChoiceBox<ReclistType> fromChoiceBox;
     @FXML
     private ChoiceBox<ReclistType> toChoiceBox;
@@ -434,7 +432,10 @@ public class LyricEditorController implements Localizable {
             if (!pathMap.containsKey(toChoiceBox.getValue())) {
                 return;
             }
-            callback.convertReclist(pathMap.get(toChoiceBox.getValue()), regionToUpdate);
+            callback.convertReclist(
+                    pathMap.get(toChoiceBox.getValue()),
+                    presampIniCheckBox.isSelected(),
+                    regionToUpdate);
         }
     }
 

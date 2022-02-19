@@ -58,6 +58,20 @@ public class DisjointLyricSet {
         return new Reader(disjointSet);
     }
 
+    /** Creates a deepcopy of this lyric set. */
+    public DisjointLyricSet deepcopy() {
+        DisjointLyricSet deepcopy = new DisjointLyricSet();
+        for (Set<String> group : disjointSet.values()) {
+            deepcopy.addGroup(ImmutableSet.copyOf(group));
+        }
+        return deepcopy;
+    }
+
+    /** Removes all groups from this lyric set. */
+    public void clear() {
+        disjointSet.clear();
+    }
+
     private void merge(Set<String> oldGroup, Set<String> newGroup) {
         for (String member : oldGroup) {
             newGroup.add(member);

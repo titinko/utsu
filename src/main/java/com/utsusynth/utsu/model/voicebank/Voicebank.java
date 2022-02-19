@@ -18,7 +18,7 @@ import java.util.*;
  */
 public class Voicebank {
     // TODO: Once you have a VoicebankManager, consider sharing between voicebanks.
-    private final DisjointLyricSet conversionSet;
+    // private final DisjointLyricSet conversionSet;
     private final LyricConfigMap lyricConfigs;
     private final PitchMap pitchMap;
     private final Set<File> soundFiles;
@@ -78,10 +78,6 @@ public class Voicebank {
             newVoicebank.pitchMap.putSuffix(pitch, suffix);
         }
 
-        public void addConversionGroup(ImmutableSet<String> members) {
-            newVoicebank.conversionSet.addGroup(members);
-        }
-
         public void setPresampConfig(PresampConfig presampConfig) {
             newVoicebank.presampConfig = presampConfig;
         }
@@ -98,13 +94,11 @@ public class Voicebank {
     public Voicebank(
             LyricConfigMap lyricConfigs,
             PitchMap pitchMap,
-            DisjointLyricSet conversionSet,
             Set<File> soundFiles,
             FrqGenerator frqGenerator,
             PresampConfig presampConfig) {
         this.lyricConfigs = lyricConfigs;
         this.pitchMap = pitchMap;
-        this.conversionSet = conversionSet;
         this.soundFiles = soundFiles;
         this.frqGenerator = frqGenerator;
         this.presampConfig = presampConfig;
@@ -123,7 +117,6 @@ public class Voicebank {
                 new Voicebank(
                         this.lyricConfigs,
                         this.pitchMap,
-                        this.conversionSet,
                         this.soundFiles,
                         this.frqGenerator,
                         this.presampConfig))
@@ -158,7 +151,7 @@ public class Voicebank {
         }
 
         SortedSet<LyricConfig> matches = new TreeSet<>();
-        for (String convertedLyric : conversionSet.getGroup(lyric)) {
+        for (String convertedLyric : presampConfig.getLyricConversions().getGroup(lyric)) {
             if (convertedLyric.equals(lyric)) {
                 // Don't check the same lyric twice.
                 continue;
@@ -183,7 +176,7 @@ public class Voicebank {
         if (prevLyric.isEmpty()) {
             return '-'; // Return dash if there appears to be no previous note.
         }
-        for (String convertedLyric : conversionSet.getGroup(prevLyric)) {
+        for (String convertedLyric : presampConfig.getLyricConversions().getGroup(prevLyric)) {
             if (CharMatcher.ascii().matchesAllOf(convertedLyric)) {
                 return convertedLyric.toLowerCase().charAt(convertedLyric.length() - 1);
             }
@@ -324,10 +317,7 @@ public class Voicebank {
     /** Get readonly data about the voicebank. Useful for plugins. */
     public VoicebankData getReadonlyData() {
         return new VoicebankData(
-                conversionSet.getReader(),
-                lyricConfigs.getReader(),
-                pitchMap.getReader(),
-                presampConfig.getReader());
+                lyricConfigs.getReader(), pitchMap.getReader(), presampConfig.getReader());
     }
 
     public String getName() {

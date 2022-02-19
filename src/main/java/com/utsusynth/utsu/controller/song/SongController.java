@@ -27,6 +27,7 @@ import com.utsusynth.utsu.files.song.Ust12Reader;
 import com.utsusynth.utsu.files.song.Ust12Writer;
 import com.utsusynth.utsu.files.song.Ust20Reader;
 import com.utsusynth.utsu.files.song.Ust20Writer;
+import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
@@ -91,6 +92,7 @@ public class SongController implements EditorController, Localizable {
     private final Ust20Reader ust20Reader;
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
+    private final VoicebankReader voicebankReader;
     private final IconManager iconManager;
     private final ThemeManager themeManager;
     private final ExternalProcessRunner processRunner;
@@ -141,6 +143,7 @@ public class SongController implements EditorController, Localizable {
             Ust20Reader ust20Reader,
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
+            VoicebankReader voicebankReader,
             IconManager iconManager,
             ThemeManager themeManager,
             ExternalProcessRunner processRunner,
@@ -158,6 +161,7 @@ public class SongController implements EditorController, Localizable {
         this.ust20Reader = ust20Reader;
         this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
+        this.voicebankReader = voicebankReader;
         this.iconManager = iconManager;
         this.themeManager = themeManager;
         this.processRunner = processRunner;
@@ -1144,9 +1148,16 @@ public class SongController implements EditorController, Localizable {
 
                         @Override
                         public void convertReclist(
-                                List<ReclistConverter> path, RegionBounds regionToUpdate) {
+                                List<ReclistConverter> path,
+                                boolean usePresampConfig,
+                                RegionBounds regionToUpdate) {
                             VoicebankData voicebankData =
                                     song.get().getVoicebank().getReadonlyData();
+                            if (!usePresampConfig) {
+                                // Override with default presamp config if needed.
+                                voicebankData = voicebankData.withPresampConfig(
+                                        voicebankReader.getDefaultPresampConfig().getReader());
+                            }
                             for (ReclistConverter converter : path) {
                                 List<NoteContextData> oldNotes =
                                         song.get().getNotesInContext(regionToUpdate);
@@ -1177,7 +1188,7 @@ public class SongController implements EditorController, Localizable {
             song.get().addNotes(newNotes);
             songEditor.addNotesFromController(
                     newNotes.get(0).getPosition(),
-                    newNotes.get(oldNotes.size() - 1).getPosition(),
+                    newNotes.get(newNotes.size() - 1).getPosition(),
                     newNotes);
             onSongChange();
         };

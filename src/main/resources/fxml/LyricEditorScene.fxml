@@ -148,7 +148,7 @@
                     <content>
                         <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="120.0" prefWidth="450.0" BorderPane.alignment="CENTER">
                             <center>
-                                <VBox fx:id="reclistConverterVBox" spacing="5.0" BorderPane.alignment="CENTER">
+                                <VBox spacing="5.0" BorderPane.alignment="CENTER">
                                     <children>
                               <HBox alignment="CENTER" prefHeight="50.0" spacing="10.0">
                                  <children>

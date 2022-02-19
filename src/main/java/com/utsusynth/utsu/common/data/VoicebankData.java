@@ -19,11 +19,10 @@ public class VoicebankData {
     private final PresampConfig.Reader presampConfig;
 
     public VoicebankData(
-            DisjointLyricSet.Reader lyricConversions,
             LyricConfigMap.Reader lyricConfigs,
             PitchMap.Reader pitchMap,
             PresampConfig.Reader presampConfig) {
-        this.lyricConversions = lyricConversions;
+        this.lyricConversions = presampConfig.getLyricConversions();
         this.lyricConfigs = lyricConfigs;
         this.pitchMap = pitchMap;
         this.presampConfig = presampConfig;
@@ -43,5 +42,9 @@ public class VoicebankData {
 
     public PresampConfig.Reader getPresampConfig() {
         return presampConfig;
+    }
+
+    public VoicebankData withPresampConfig(PresampConfig.Reader newPresampConfig) {
+        return new VoicebankData(lyricConfigs, pitchMap, newPresampConfig);
     }
 }

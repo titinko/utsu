@@ -176,7 +176,7 @@ public class PresampConfigReader {
     }
 
     private int parseReplace(String[] lines, int sectionStart, PresampConfig.Builder builder) {
-        builder.clearLyricReplacements();
+        builder.clearLyricConversions();
 
         for (int i = sectionStart; i < lines.length; i++) {
             String line = lines[i].trim();
@@ -188,7 +188,7 @@ public class PresampConfigReader {
                 printWarning("[REPLACE]", line);
                 continue;
             }
-            builder.addLyricReplacement(ImmutableSet.copyOf(splitLine));
+            builder.addLyricConversionSet(ImmutableSet.copyOf(splitLine));
         }
         return -1;
     }

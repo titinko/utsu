@@ -26,9 +26,8 @@ public class PresampConfig {
     // Set of lyrics for which VCV should never be used even if present. CVVC is fine.
     private final Set<String> neverVcv;
 
-    // Set of all lyric replacements specified in the presamp file. Can be merged with the larger
-    // voicebank's official lyric conversion set.
-    private final Set<ImmutableSet<String>> lyricReplacements;
+    // Official lyric conversion sets for this voicebank.
+    private final DisjointLyricSet lyricConversions;
 
     public enum AliasType {
         VCV, // "a ka"
@@ -154,12 +153,12 @@ public class PresampConfig {
             newConfig.neverVcv.add(lyric);
         }
 
-        public void clearLyricReplacements() {
-            newConfig.lyricReplacements.clear();
+        public void clearLyricConversions() {
+            newConfig.lyricConversions.clear();
         }
 
-        public void addLyricReplacement(ImmutableSet<String> replacementSet) {
-            newConfig.lyricReplacements.add(replacementSet);
+        public void addLyricConversionSet(ImmutableSet<String> replacementSet) {
+            newConfig.lyricConversions.addGroup(replacementSet);
         }
 
         public void clearAliasFormats() {
@@ -294,8 +293,8 @@ public class PresampConfig {
             return readonlyConfig.neverVcv.contains(lyric);
         }
 
-        public ImmutableSet<ImmutableSet<String>> getLyricReplacements() {
-            return ImmutableSet.copyOf(readonlyConfig.lyricReplacements);
+        public DisjointLyricSet.Reader getLyricConversions() {
+            return readonlyConfig.lyricConversions.getReader();
         }
 
         public ImmutableList<String> getAliasFormat(AliasType aliasType) {
@@ -304,10 +303,6 @@ public class PresampConfig {
             }
             return readonlyConfig.aliasFormats.get(aliasType);
         }
-
-        // public void setAliasFormat(AliasType aliasType, String[] format) {
-        //     newConfig.aliasFormats.put(aliasType, format);
-        // }
 
         public ImmutableSet<String> getPrefixes() {
             return ImmutableSet.copyOf(readonlyConfig.prefixes);
@@ -374,7 +369,7 @@ public class PresampConfig {
             Map<String, Boolean> consonantOverlaps,
             Map<String, VcLength> vcLengthOverrides,
             Set<String> neverVcv,
-            Set<ImmutableSet<String>> lyricReplacements,
+            DisjointLyricSet lyricConversions,
             Map<AliasType, ImmutableList<String>> aliasFormats,
             Set<String> prefixes,
             Map<SuffixType, Set<String>> suffixes,
@@ -386,7 +381,7 @@ public class PresampConfig {
         this.consonantOverlaps = consonantOverlaps;
         this.vcLengthOverrides = vcLengthOverrides;
         this.neverVcv = neverVcv;
-        this.lyricReplacements = lyricReplacements;
+        this.lyricConversions = lyricConversions;
         this.aliasFormats = aliasFormats;
         this.prefixes = prefixes;
         this.suffixes = suffixes;
@@ -408,7 +403,7 @@ public class PresampConfig {
                 new HashMap<>(consonantOverlaps),
                 new HashMap<>(vcLengthOverrides),
                 new HashSet<>(neverVcv),
-                new HashSet<>(lyricReplacements),
+                lyricConversions.deepcopy(),
                 new HashMap<>(aliasFormats),
                 new HashSet<>(prefixes),
                 newSuffixes,
@@ -425,8 +420,8 @@ public class PresampConfig {
                 .setSuffixOrder(suffixOrder);
     }
 
-    public Set<ImmutableSet<String>> getLyricReplacements() {
-        return lyricReplacements;
+    public DisjointLyricSet getLyricConversions() {
+        return lyricConversions;
     }
 
     /** Returns a readonly view of a presamp config, useful for plugins. */

@@ -12,5 +12,6 @@ public interface LyricEditorCallback {
 
     void transformLyric(Function<NoteData, NoteData> transform, RegionBounds regionToUpdate);
 
-    void convertReclist(List<ReclistConverter> path, RegionBounds regionToUpdate);
+    void convertReclist(
+            List<ReclistConverter> path, boolean usePresampIni, RegionBounds regionToUpdate);
 }

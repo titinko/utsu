@@ -41,15 +41,13 @@ public class ModelModule extends AbstractModule {
     private Voicebank provideEmptyVoicebank(
             LyricConfigMap configMap,
             PitchMap pitchMap,
-            DisjointLyricSet conversionSet,
             FrqGenerator frqGen,
             PresampConfig presampConfig) {
-        return new Voicebank(
-                configMap, pitchMap, conversionSet, new HashSet<>(), frqGen, presampConfig);
+        return new Voicebank(configMap, pitchMap, new HashSet<>(), frqGen, presampConfig);
     }
 
     @Provides
-    private PresampConfig provideEmptyPresampConfig() {
+    private PresampConfig provideEmptyPresampConfig(DisjointLyricSet conversionSet) {
         Map<AliasType, ImmutableList<String>> formats = new HashMap<>();
         formats.put(AliasType.VCV, ImmutableList.of("%v%%VCVPAD%%CV%")); // "a ka"
         formats.put(AliasType.BEGINNING_CV, ImmutableList.of("-%VCVPAD%%CV%")); // "- ka"
@@ -70,7 +68,7 @@ public class ModelModule extends AbstractModule {
                 new HashMap<>(),
                 new HashMap<>(),
                 new HashSet<>(),
-                new HashSet<>(),
+                conversionSet,
                 formats,
                 new HashSet<>(),
                 new HashMap<>(),
