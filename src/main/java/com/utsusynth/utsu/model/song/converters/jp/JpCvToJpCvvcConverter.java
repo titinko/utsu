@@ -8,6 +8,7 @@ import com.utsusynth.utsu.common.enums.ReclistType;
 import com.utsusynth.utsu.common.utils.LyricUtils;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
+import com.utsusynth.utsu.model.voicebank.PresampConfig;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +38,7 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
 
     private Optional<NoteData> makeVcNote(
             NoteData note, String nextLyric, VoicebankData voicebankData) {
-        String vcLyric = makeVcLyric(note.getLyric(), nextLyric, voicebankData);
+        Optional<String> vcLyric = makeVcLyric(note.getLyric(), nextLyric, voicebankData);
         if (vcLyric.isEmpty()) {
             return Optional.empty();
         }
@@ -46,22 +47,35 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
             return Optional.empty();
         }
         int vcStart = note.getPosition() + note.getDuration() - vcLength;
-        return Optional.of(new NoteData(vcStart, vcLength, note.getPitch(), vcLyric));
+        return Optional.of(new NoteData(vcStart, vcLength, note.getPitch(), vcLyric.get()));
     }
 
-    private String makeVcLyric(String prevLyric, String nextLyric, VoicebankData voicebankData) {
-        String vowel = LyricUtils.guessJpVowel(prevLyric, voicebankData);
-        if (vowel.isEmpty()) {
-            return "";
-        }
-        if (nextLyric.isEmpty()) {
-            return vowel + " -";
-        }
-        String cons = LyricUtils.guessJpConsonant(nextLyric, voicebankData);
-        if (cons.isEmpty()) {
-            return "";
-        }
-        return vowel + " " + cons;
+    //private String makeVcLyric(String prevLyric, String nextLyric, VoicebankData voicebankData) {
+    //    String vowel = LyricUtils.guessJpVowel(prevLyric, voicebankData);
+    //    if (vowel.isEmpty()) {
+    //        return "";
+    //    }
+    //    if (nextLyric.isEmpty()) {
+    //        return vowel + " -";
+    //    }
+    //    String cons = LyricUtils.guessJpConsonant(nextLyric, voicebankData);
+    //    if (cons.isEmpty()) {
+    //        return "";
+    //    }
+    //    return vowel + " " + cons;
+    //}
+
+    private static Optional<String> makeVcLyric(
+            String prevLyric, String nextLyric, VoicebankData voicebankData) {
+        Optional<String> prevVowel = LyricUtils.guessJpVowel(prevLyric, voicebankData);
+        Optional<String> nextConsonant = LyricUtils.guessJpConsonant(nextLyric, voicebankData);
+        String endVc = voicebankData.getPresampConfig().parseAlias(
+                PresampConfig.AliasType.VC,
+                "",
+                nextConsonant,
+                prevVowel,
+                Optional.empty());
+        return endVc.isEmpty() ? Optional.empty() : Optional.of(endVc);
     }
 
     private int guessVcLength(

@@ -2,8 +2,10 @@ package com.utsusynth.utsu.model.voicebank;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.utsusynth.utsu.common.utils.PresampConfigUtils;
 
 import java.util.*;
+import java.util.regex.Matcher;
 
 /**
  * Configuration parsed from a voicebank's presamp.ini file, if present.
@@ -37,11 +39,12 @@ public class PresampConfig {
         VC, // "a k", "k k"
         CV, // "ka", "ka"
         C, // "k"
+        V, // "a"
         LONG_V, // "a-"
         VCPAD, // Padding used in VC lyrics.
         VCVPAD, // Padding used in VCV lyrics.
-        ENDING_1, // "a R"
-        ENDING_2, // "a-"
+        ENDING_1, // "a R" (appended after the end of last note)
+        ENDING_2, // "-" (appended to last note before rest)
     }
     private final Map<AliasType, ImmutableList<String>> aliasFormats;
 
@@ -297,11 +300,71 @@ public class PresampConfig {
             return readonlyConfig.lyricConversions.getReader();
         }
 
-        public ImmutableList<String> getAliasFormat(AliasType aliasType) {
+        public ImmutableList<String> getAliasFormatList(AliasType aliasType) {
             if (!readonlyConfig.aliasFormats.containsKey(aliasType)) {
                 return ImmutableList.of();
             }
             return readonlyConfig.aliasFormats.get(aliasType);
+        }
+
+        public String parseAlias(AliasType aliasType, String backup) {
+            return parseAlias(
+                    aliasType, backup, Optional.empty(), Optional.empty(), Optional.empty());
+        }
+
+        public String parseAlias(
+                AliasType aliasType,
+                String backup,
+                Optional<String> cValue,
+                Optional<String> vValue,
+                Optional<String> cvValue) {
+            return parseAliasInternal(aliasType, 0, cValue, vValue, cvValue).orElse(backup);
+        }
+
+        private Optional<String> parseAliasInternal(
+                AliasType aliasType,
+                int layer,
+                Optional<String> cValue,
+                Optional<String> vValue,
+                Optional<String> cvValue) {
+            // Protect against infinite recursion. No reasonable config will recurse >10 times.
+            if (layer > 10) {
+                return Optional.empty();
+            }
+            if (aliasType.equals(AliasType.C)) {
+                return cValue;
+            } else if (aliasType.equals(AliasType.V)) {
+                return vValue;
+            } else if (aliasType.equals(AliasType.CV)) {
+                return cvValue;
+            }
+            for (String aliasFormat : getAliasFormatList(aliasType)) {
+                StringBuilder parsed = new StringBuilder();
+                int curIndex = 0;
+                boolean error = false;
+                Matcher matcher = PresampConfigUtils.ALIAS_TYPE_PATTERN.matcher(aliasFormat);
+                while (matcher.find()) {
+                    if (PresampConfigUtils.getAliasType(matcher.group(1)).isEmpty()) {
+                        error = true;
+                        break;
+                    }
+                    AliasType aliasMatch = PresampConfigUtils.getAliasType(matcher.group(1)).get();
+                    Optional<String> parsedMatch =
+                            parseAliasInternal(aliasMatch, layer + 1, cValue, vValue, cvValue);
+                    if (parsedMatch.isEmpty()) {
+                        error = true;
+                        break;
+                    }
+                    parsed.append(aliasFormat, curIndex, matcher.start());
+                    parsed.append(parsedMatch.get());
+                    curIndex = matcher.end();
+                }
+                if (!error) {
+                    parsed.append(aliasFormat.substring(curIndex));
+                    return Optional.of(parsed.toString());
+                }
+            }
+            return Optional.empty();
         }
 
         public ImmutableSet<String> getPrefixes() {

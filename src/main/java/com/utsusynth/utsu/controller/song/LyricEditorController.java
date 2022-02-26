@@ -162,6 +162,8 @@ public class LyricEditorController implements Localizable {
         prefixSuffixListAnchor.getChildren().add(createPrefixSuffixList(prefixSuffixConfig));
 
         // Initialize reclist converter elements.
+        Preferences reclistConverterPrefs =
+                Preferences.userRoot().node("utsu/lyricEditor/reclistConverter");
         fromChoiceBox.setItems(FXCollections.observableArrayList(converterMap.keySet()));
         fromChoiceBox.setOnAction(event -> {
             HashMap<ReclistType, List<ReclistConverter>> pathMap =
@@ -172,6 +174,10 @@ public class LyricEditorController implements Localizable {
             }
         });
         fromChoiceBox.setValue(fromChoiceBox.getItems().get(0));
+        presampIniCheckBox.setSelected(reclistConverterPrefs.getBoolean("usePresampIni", true));
+        presampIniCheckBox.setOnAction(event -> {
+            reclistConverterPrefs.putBoolean("usePresampIni", presampIniCheckBox.isSelected());
+        });
 
         localizer.localize(this);
     }

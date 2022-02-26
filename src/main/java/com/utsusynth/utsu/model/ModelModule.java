@@ -48,19 +48,6 @@ public class ModelModule extends AbstractModule {
 
     @Provides
     private PresampConfig provideEmptyPresampConfig(DisjointLyricSet conversionSet) {
-        Map<AliasType, ImmutableList<String>> formats = new HashMap<>();
-        formats.put(AliasType.VCV, ImmutableList.of("%v%%VCVPAD%%CV%")); // "a ka"
-        formats.put(AliasType.BEGINNING_CV, ImmutableList.of("-%VCVPAD%%CV%")); // "- ka"
-        formats.put(AliasType.CROSS_CV, ImmutableList.of("*%VCVPAD%%CV%")); // "* ka"
-        formats.put(
-                AliasType.VC, ImmutableList.of("%v%%vcpad%%c%", "%c%%vcpad%%c%")); // "a k", "k k"
-        formats.put(AliasType.CV, ImmutableList.of("%CV%", "%c%%V%")); // "ka", "ka"
-        formats.put(AliasType.C, ImmutableList.of("%c%")); // "k"
-        formats.put(AliasType.LONG_V, ImmutableList.of("%V%-")); // "a-"
-        formats.put(AliasType.VCPAD, ImmutableList.of(" "));
-        formats.put(AliasType.VCVPAD, ImmutableList.of(" "));
-        formats.put(AliasType.ENDING_1, ImmutableList.of("%v%%VCPAD%R")); // "a R"
-        formats.put(AliasType.ENDING_2, ImmutableList.of("-"));
         return new PresampConfig(
                 new HashMap<>(),
                 new HashMap<>(),
@@ -69,7 +56,7 @@ public class ModelModule extends AbstractModule {
                 new HashMap<>(),
                 new HashSet<>(),
                 conversionSet,
-                formats,
+                new HashMap<>(),
                 new HashSet<>(),
                 new HashMap<>(),
                 new HashSet<>(),
