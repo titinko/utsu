@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.common.utils;
 
 import com.utsusynth.utsu.model.voicebank.PresampConfig.AliasType;
+import com.utsusynth.utsu.model.voicebank.PresampConfig.SuffixType;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -8,6 +9,7 @@ import java.util.regex.Pattern;
 /* Common operations to perform using a presamp.ini common in several plugins. */
 public class PresampConfigUtils {
     public static final Pattern ALIAS_TYPE_PATTERN = Pattern.compile("%([^%]+)%");
+    public static final Pattern SUFFIX_TYPE_PATTERN = ALIAS_TYPE_PATTERN;
 
     public static Optional<AliasType> getAliasType(String aliasName) {
         switch (aliasName) {
@@ -52,6 +54,22 @@ public class PresampConfigUtils {
             case "ENDING2":
             case "ending2":
                 return Optional.of(AliasType.ENDING_2);
+            default:
+                return Optional.empty();
+        }
+    }
+
+    public static Optional<SuffixType> getSuffixType(String suffixName) {
+        switch (suffixName) {
+            case "NUM":
+            case "num":
+                return Optional.of(SuffixType.NUM);
+            case "APPEND":
+            case "append":
+                return Optional.of(SuffixType.APPEND);
+            case "PITCH":
+            case "pitch":
+                return Optional.of(SuffixType.PITCH);
             default:
                 return Optional.empty();
         }

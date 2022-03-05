@@ -50,21 +50,6 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
         return Optional.of(new NoteData(vcStart, vcLength, note.getPitch(), vcLyric.get()));
     }
 
-    //private String makeVcLyric(String prevLyric, String nextLyric, VoicebankData voicebankData) {
-    //    String vowel = LyricUtils.guessJpVowel(prevLyric, voicebankData);
-    //    if (vowel.isEmpty()) {
-    //        return "";
-    //    }
-    //    if (nextLyric.isEmpty()) {
-    //        return vowel + " -";
-    //    }
-    //    String cons = LyricUtils.guessJpConsonant(nextLyric, voicebankData);
-    //    if (cons.isEmpty()) {
-    //        return "";
-    //    }
-    //    return vowel + " " + cons;
-    //}
-
     private static Optional<String> makeVcLyric(
             String prevLyric, String nextLyric, VoicebankData voicebankData) {
         Optional<String> prevVowel = LyricUtils.guessJpVowel(prevLyric, voicebankData);

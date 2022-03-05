@@ -1,6 +1,5 @@
 package com.utsusynth.utsu.model.song.converters.jp;
 
-import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.NoteContextData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.VoicebankData;

@@ -62,7 +62,8 @@ public class PresampConfig {
     // Suffix types for which repeats are excluded, i.e. "ka22" -> "ka2" (2 not repeated).
     private final Set<SuffixType> excludeRepeatsSuffixes;
     // Suffix ordering. Default: number (if duplicates exist) -> append (W) -> pitch (C4)
-    private String suffixOrder = "%num%%append%%pitch%";
+    private ImmutableList<SuffixType> suffixOrder = ImmutableList.of(
+            SuffixType.NUM, SuffixType.APPEND, SuffixType.PITCH);
 
     private ImmutableList<AliasType> aliasPriority = ImmutableList.of(
             AliasType.VCV, AliasType.CVVC, AliasType.CROSS_CV, AliasType.CV, AliasType.BEGINNING_CV
@@ -247,7 +248,7 @@ public class PresampConfig {
             return this;
         }
 
-        public Builder setSuffixOrder(String suffixOrder) {
+        public Builder setSuffixOrder(ImmutableList<SuffixType> suffixOrder) {
             newConfig.suffixOrder = suffixOrder;
             return this;
         }
@@ -371,12 +372,11 @@ public class PresampConfig {
             return ImmutableSet.copyOf(readonlyConfig.prefixes);
         }
 
-        public ImmutableSet<SuffixType> getSuffixTypes() {
-            return ImmutableSet.copyOf(readonlyConfig.suffixes.keySet());
-        }
-
         public ImmutableSet<String> getSuffixes(SuffixType suffixType) {
-            return ImmutableSet.copyOf(readonlyConfig.suffixes.get(suffixType));
+            if (readonlyConfig.suffixes.containsKey(suffixType)) {
+                return ImmutableSet.copyOf(readonlyConfig.suffixes.get(suffixType));
+            }
+            return ImmutableSet.of();
         }
 
         public boolean allowsUnderbarSuffix(SuffixType suffixType) {
@@ -387,6 +387,9 @@ public class PresampConfig {
             return readonlyConfig.excludeRepeatsSuffixes.contains(suffixType);
         }
 
+        public ImmutableList<SuffixType> getSuffixOrder() {
+            return readonlyConfig.suffixOrder;
+        }
 
         public ImmutableList<AliasType> getAliasPriorityDifpitch() {
             return readonlyConfig.aliasPriorityDifpitch;
@@ -418,10 +421,6 @@ public class PresampConfig {
 
         public EndFlag getEndFlag() {
             return readonlyConfig.endFlag;
-        }
-
-        public String getSuffixOrder() {
-            return readonlyConfig.suffixOrder;
         }
     }
 

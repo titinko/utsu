@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.model.song;
 
 import com.utsusynth.utsu.common.data.*;
+import com.utsusynth.utsu.common.utils.LyricUtils;
 import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
@@ -458,6 +459,7 @@ public class Song {
             if (iterator.hasNext() && note.getDuration() == note.getLength()) {
                 nextData = Optional.of(getNote(iterator.getCurDelta() + note.getLength()));
             }
+            // Get main lyric, prefix, and suffix.
             NoteData noteData = getNote(iterator.getCurDelta());
             notes.add(new NoteContextData(noteData, prevData, nextData));
         }

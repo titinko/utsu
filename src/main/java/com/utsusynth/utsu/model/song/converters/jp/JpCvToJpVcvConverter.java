@@ -19,14 +19,20 @@ public class JpCvToJpVcvConverter implements ReclistConverter {
         PresampConfig.Reader presampConfig = voicebankData.getPresampConfig();
         return notes.stream().map(noteContext -> {
             NoteData note = noteContext.getNote();
+            // Get prefix, suffix, and stripped lyric.
+            String prefix = LyricUtils.guessJpPrefix(note.getLyric(), voicebankData);
+            String suffix = LyricUtils.guessJpSuffix(note.getLyric(), voicebankData);
+            String strippedLyric = note.getLyric().substring(
+                    prefix.length(), note.getLyric().length() - suffix.length());
+
             String prevLyric = noteContext.getPrev().map(NoteData::getLyric).orElse("");
-            String newLyric = presampConfig.parseAlias(
+            String newStrippedLyric = presampConfig.parseAlias(
                     AliasType.VCV,
                     /* backup= */ note.getLyric(),
                     /* cValue= */Optional.empty(),
                     /* vValue= */guessPrefix(prevLyric, voicebankData),
                     /* cvValue= */ Optional.of(note.getLyric()));
-            return note.withNewLyric(newLyric);
+            return note.withNewLyric(prefix + newStrippedLyric + suffix);
         }).collect(Collectors.toList());
     }
 
@@ -35,7 +41,9 @@ public class JpCvToJpVcvConverter implements ReclistConverter {
         if (prevLyric.isEmpty()) {
             return Optional.of("-"); // Return dash if there appears to be no previous note.
         }
-        return LyricUtils.guessJpVowel(prevLyric, voicebankData);
+        String prevSuffix = LyricUtils.guessJpSuffix(prevLyric, voicebankData);
+        String strippedPrevLyric = prevLyric.substring(0, prevLyric.length() - prevSuffix.length());
+        return LyricUtils.guessJpVowel(strippedPrevLyric, voicebankData);
     }
 
     @Override

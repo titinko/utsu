@@ -12,6 +12,7 @@ import com.utsusynth.utsu.model.voicebank.PresampConfig.SuffixType;
 import com.utsusynth.utsu.model.voicebank.PresampConfig.VcLength;
 
 import java.util.Optional;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -249,7 +250,14 @@ public class PresampConfigReader {
             if (HEADER_PATTERN.matcher(line).matches()) {
                 return i;
             } else if (!line.isEmpty()) {
-                builder.setSuffixOrder(line);
+                Matcher matcher = PresampConfigUtils.SUFFIX_TYPE_PATTERN.matcher(line);
+                ImmutableList.Builder<SuffixType> suffixOrderBuilder = ImmutableList.builder();
+                while(matcher.find()) {
+                    Optional<SuffixType> suffixType =
+                            PresampConfigUtils.getSuffixType(matcher.group(1));
+                    suffixType.ifPresent(suffixOrderBuilder::add);
+                }
+                builder.setSuffixOrder(suffixOrderBuilder.build());
             }
         }
         return -1;

@@ -1,52 +1,53 @@
 package com.utsusynth.utsu.common.utils;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableList;
 import com.utsusynth.utsu.common.data.VoicebankData;
 import com.utsusynth.utsu.model.voicebank.PresampConfig;
+import com.utsusynth.utsu.model.voicebank.PresampConfig.SuffixType;
 
 import java.util.Optional;
 
 /** Common operations to perform on a lyric. */
 public class LyricUtils {
-    public static final ImmutableList<Character> JP_VOWELS =
-            ImmutableList.of('a', 'i', 'u', 'e', 'o', 'n');
-
     /** Extract common prefixes. */
-    public static String guessPrefix(String lyric) {
-        String curLyric = lyric;
-        StringBuilder curPrefix = new StringBuilder();
-        // JP VCV prefix.
-        for (Character vowel : JP_VOWELS) {
-            String vcvPrefix = vowel + " ";
-            if (curLyric.startsWith(vcvPrefix)) {
-                curPrefix.append(vcvPrefix);
-                break;
+    public static String guessJpPrefix(String lyric, VoicebankData voicebankData) {
+        for (String prefix : voicebankData.getPresampConfig().getPrefixes()) {
+            if (lyric.startsWith(prefix)) {
+                return prefix;
             }
         }
-        curLyric = curLyric.substring(curPrefix.length());
-        // Pitch.
-        for (String pitch : PitchUtils.PITCHES) {
-            for (int octave = 1; octave <= PitchUtils.NUM_OCTAVES; octave++) {
-                String pitchPrefix = pitch + octave;
-                if (curLyric.startsWith(pitchPrefix)) {
-                    curPrefix.append(pitchPrefix);
-                    break;
-                }
-            }
-        }
-        return curPrefix.toString();
+        return "";
     }
 
     /** Extract common suffixes. */
-    public static String guessSuffix(String lyric) {
-        // Pitch.
-        for (String pitch : PitchUtils.PITCHES) {
-            for (int octave = 1; octave <= PitchUtils.NUM_OCTAVES; octave++) {
-                String pitchSuffix = pitch + octave;
-                if (lyric.endsWith(pitchSuffix)) {
-                    return pitchSuffix;
+    public static String guessJpSuffix(String lyric, VoicebankData voicebankData) {
+        PresampConfig.Reader presampConfig = voicebankData.getPresampConfig();
+        String curLyric = lyric;
+        StringBuilder suffix = new StringBuilder();
+        for (SuffixType suffixType : presampConfig.getSuffixOrder().reverse()) {
+            String newSuffix = guessJpSuffix(curLyric, suffixType, voicebankData);
+            suffix.append(newSuffix);
+            curLyric = curLyric.substring(0, curLyric.length() - newSuffix.length());
+            if (!presampConfig.excludesRepeatSuffix(suffixType)) {
+                // Get repeat suffixes if necessary.
+                while (!newSuffix.isEmpty()) {
+                    newSuffix = guessJpSuffix(curLyric, suffixType, voicebankData);
+                    suffix.append(newSuffix);
+                    curLyric = curLyric.substring(0, curLyric.length() - newSuffix.length());
                 }
+            }
+        }
+        return suffix.toString();
+    }
+
+    private static String guessJpSuffix(
+            String lyric, SuffixType suffixType, VoicebankData voicebankData) {
+        for (String suffix : voicebankData.getPresampConfig().getSuffixes(suffixType)) {
+            if (voicebankData.getPresampConfig().allowsUnderbarSuffix(suffixType)
+                    && lyric.endsWith("_" + suffix)) {
+                return "_" + suffix;
+            }
+            if (lyric.endsWith(suffix)) {
+                return suffix;
             }
         }
         return "";
