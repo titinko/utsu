@@ -4,6 +4,7 @@ import com.utsusynth.utsu.common.data.NoteContextData;
 import com.utsusynth.utsu.common.data.NoteData;
 import com.utsusynth.utsu.common.data.VoicebankData;
 import com.utsusynth.utsu.common.enums.ReclistType;
+import com.utsusynth.utsu.common.utils.LyricUtils;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
 import com.utsusynth.utsu.model.voicebank.PresampConfig.AliasType;
 
@@ -15,16 +16,21 @@ public class JpVcvToJpCvConverter implements ReclistConverter {
     public List<NoteData> apply(List<NoteContextData> notes, VoicebankData voicebankData) {
         return notes.stream().map(noteContext -> {
             NoteData note = noteContext.getNote();
+            // Get prefix, suffix, and stripped lyric.
+            String prefix = LyricUtils.guessJpPrefix(note.getLyric(), voicebankData);
+            String suffix = LyricUtils.guessJpSuffix(note.getLyric(), voicebankData);
+            String strippedLyric = LyricUtils.stripPrefixSuffix(note.getLyric(), prefix, suffix);
+
             String vcvPad = voicebankData.getPresampConfig().parseAlias(AliasType.VCVPAD, " ");
-            int index = note.getLyric().indexOf(vcvPad);
+            int index = strippedLyric.indexOf(vcvPad);
             if (index == -1) {
                 return note;
             }
-            String newLyric = note.getLyric().substring(index + vcvPad.length());
-            if (newLyric.isEmpty()) {
+            String newStrippedLyric = strippedLyric.substring(index + vcvPad.length());
+            if (newStrippedLyric.isEmpty()) {
                 return note;
             }
-            return note.withNewLyric(newLyric);
+            return note.withNewLyric(prefix + newStrippedLyric + suffix);
         }).collect(Collectors.toList());
     }
 

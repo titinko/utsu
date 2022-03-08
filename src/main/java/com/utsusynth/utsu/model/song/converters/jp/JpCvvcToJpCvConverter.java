@@ -17,50 +17,72 @@ public class JpCvvcToJpCvConverter implements ReclistConverter {
     public List<NoteData> apply(List<NoteContextData> notes, VoicebankData voicebankData) {
         ImmutableList.Builder<NoteData> output = ImmutableList.builder();
         for (NoteContextData noteContextData : notes) {
-            if (looksLikeVc(noteContextData, voicebankData)) {
-                continue; // Remove note if it appears to be VC.
-            }
             NoteData note = noteContextData.getNote();
+            String strippedLyric = stripLyric(note.getLyric(), voicebankData);
+            Optional<String> strippedPrevLyric = noteContextData.getPrev().map(
+                    prev -> stripLyric(prev.getLyric(), voicebankData));
+            Optional<String> strippedNextLyric = noteContextData.getNext().map(
+                    next -> stripLyric(next.getLyric(), voicebankData));
+
+            // Remove note if it appears to be VC.
+            if (looksLikeVc(
+                    noteContextData,
+                    strippedLyric,
+                    strippedPrevLyric,
+                    strippedNextLyric,
+                    voicebankData)) {
+                continue;
+            }
+
+            // Lengthen note if it appears to be followed by a normal VC.
             if (noteContextData.getNext().isPresent()
+                    && strippedNextLyric.isPresent()
                     && followedByNonEndVc(
-                            note.getLyric(),
-                            noteContextData.getNext().get().getLyric(),
+                            strippedLyric,
+                            strippedNextLyric.get(),
                             voicebankData)) {
                 int nextDuration = noteContextData.getNext().get().getDuration();
                 output.add(note.withDuration(note.getDuration() + nextDuration));
-                continue; // Lengthen note if it appears to be followed by a normal VC.
+                continue;
             }
             output.add(noteContextData.getNote());
         }
         return output.build();
     }
 
-    private static boolean looksLikeVc(NoteContextData noteContext, VoicebankData voicebankData) {
-        if (noteContext.getPrev().isEmpty()) {
+    private static boolean looksLikeVc(
+            NoteContextData noteContext,
+            String strippedLyric,
+            Optional<String> strippedPrevLyric,
+            Optional<String> strippedNextLyric,
+            VoicebankData voicebankData) {
+        if (strippedPrevLyric.isEmpty()) {
             return false; // The first note will not be VC.
         }
-        Optional<String> prevVowel = LyricUtils.guessJpVowel(
-                noteContext.getPrev().get().getLyric(), voicebankData);
+        Optional<String> prevVowel =
+                LyricUtils.guessJpVowel(strippedPrevLyric.get(), voicebankData);
         if (noteContext.getNext().isEmpty() ||
+                strippedNextLyric.isEmpty() ||
                 (noteContext.getNote().getPosition() + noteContext.getNote().getDuration()
                     < noteContext.getNext().get().getPosition())) {
             // Check for an ending VC when there's no adjoining next note.
             Optional<String> endVc = guessEndVcLyric(voicebankData, prevVowel);
-            return endVc.isPresent() && noteContext.getNote().getLyric().equals(endVc.get());
+            return endVc.isPresent() && strippedLyric.equals(endVc.get());
         }
-        Optional<String> nextConsonant = LyricUtils.guessJpConsonant(
-                noteContext.getNext().get().getLyric(), voicebankData);
+        Optional<String> nextConsonant =
+                LyricUtils.guessJpConsonant(strippedNextLyric.get(), voicebankData);
         Optional<String> vcLyric = guessVcLyric(voicebankData, nextConsonant, prevVowel);
-        return vcLyric.isPresent() && noteContext.getNote().getLyric().equals(vcLyric.get());
+        return vcLyric.isPresent() && strippedLyric.equals(vcLyric.get());
     }
 
     private static boolean followedByNonEndVc(
-            String lyric, String nextLyric, VoicebankData voicebankData) {
-        Optional<String> vowel = LyricUtils.guessJpVowel(lyric, voicebankData);
+            String strippedLyric, String strippedNextLyric, VoicebankData voicebankData) {
+        Optional<String> vowel = LyricUtils.guessJpVowel(strippedLyric, voicebankData);
         Optional<String> vcEnd = guessEndVcLyric(voicebankData, vowel);
         Optional<String> partialVc = guessVcLyric(voicebankData, Optional.of(""), vowel);
-        boolean followedByEndVc = vcEnd.isPresent() && nextLyric.equals(vcEnd.get());
-        boolean followedByVc = partialVc.isPresent() && nextLyric.startsWith(partialVc.get());
+        boolean followedByEndVc = vcEnd.isPresent() && strippedNextLyric.equals(vcEnd.get());
+        boolean followedByVc =
+                partialVc.isPresent() && strippedNextLyric.startsWith(partialVc.get());
         return followedByVc && !followedByEndVc; // End VC can look like VC.
     }
 
@@ -86,6 +108,12 @@ public class JpCvvcToJpCvConverter implements ReclistConverter {
                 prevVowel,
                 Optional.empty());
         return endVc.isEmpty() ? Optional.empty() : Optional.of(endVc);
+    }
+
+    private static String stripLyric(String lyric, VoicebankData voicebankData) {
+        String prefix = LyricUtils.guessJpPrefix(lyric, voicebankData);
+        String suffix = LyricUtils.guessJpSuffix(lyric, voicebankData);
+        return LyricUtils.stripPrefixSuffix(lyric, prefix, suffix);
     }
 
     @Override

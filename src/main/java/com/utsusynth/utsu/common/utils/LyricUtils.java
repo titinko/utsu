@@ -39,6 +39,13 @@ public class LyricUtils {
         return suffix.toString();
     }
 
+    public static String stripPrefixSuffix(String lyric, String prefix, String suffix) {
+        if (prefix.length() + suffix.length() >= lyric.length()) {
+            return lyric;
+        }
+        return lyric.substring(prefix.length(), lyric.length() - suffix.length());
+    }
+
     private static String guessJpSuffix(
             String lyric, SuffixType suffixType, VoicebankData voicebankData) {
         for (String suffix : voicebankData.getPresampConfig().getSuffixes(suffixType)) {

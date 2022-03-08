@@ -52,15 +52,24 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
 
     private static Optional<String> makeVcLyric(
             String prevLyric, String nextLyric, VoicebankData voicebankData) {
-        Optional<String> prevVowel = LyricUtils.guessJpVowel(prevLyric, voicebankData);
-        Optional<String> nextConsonant = LyricUtils.guessJpConsonant(nextLyric, voicebankData);
+        String prevPrefix = LyricUtils.guessJpPrefix(prevLyric, voicebankData);
+        String prevSuffix = LyricUtils.guessJpSuffix(prevLyric, voicebankData);
+        String strippedPrevLyric = LyricUtils.stripPrefixSuffix(prevLyric, prevPrefix, prevSuffix);
+        Optional<String> prevVowel = LyricUtils.guessJpVowel(strippedPrevLyric, voicebankData);
+
+        String nextPrefix = LyricUtils.guessJpPrefix(nextLyric, voicebankData);
+        String nextSuffix = LyricUtils.guessJpSuffix(nextLyric, voicebankData);
+        String strippedNextLyric = LyricUtils.stripPrefixSuffix(nextLyric, nextPrefix, nextSuffix);
+        Optional<String> nextConsonant =
+                LyricUtils.guessJpConsonant(strippedNextLyric, voicebankData);
+
         String endVc = voicebankData.getPresampConfig().parseAlias(
                 PresampConfig.AliasType.VC,
                 "",
                 nextConsonant,
                 prevVowel,
                 Optional.empty());
-        return endVc.isEmpty() ? Optional.empty() : Optional.of(endVc);
+        return endVc.isEmpty() ? Optional.empty() : Optional.of(prevPrefix + endVc + prevSuffix);
     }
 
     private int guessVcLength(
@@ -86,7 +95,8 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
         return Math.min(max, defaultLength);
     }
 
-    private Optional<LyricConfig> guessLyricConfig(String lyric, String pitch, VoicebankData voicebankData) {
+    private Optional<LyricConfig> guessLyricConfig(
+            String lyric, String pitch, VoicebankData voicebankData) {
         String prefix = voicebankData.getPitchMap().getPrefix(pitch);
         String suffix = voicebankData.getPitchMap().getSuffix(pitch);
         String[] possibleLyrics =

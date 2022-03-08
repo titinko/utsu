@@ -22,16 +22,15 @@ public class JpCvToJpVcvConverter implements ReclistConverter {
             // Get prefix, suffix, and stripped lyric.
             String prefix = LyricUtils.guessJpPrefix(note.getLyric(), voicebankData);
             String suffix = LyricUtils.guessJpSuffix(note.getLyric(), voicebankData);
-            String strippedLyric = note.getLyric().substring(
-                    prefix.length(), note.getLyric().length() - suffix.length());
+            String strippedLyric = LyricUtils.stripPrefixSuffix(note.getLyric(), prefix, suffix);
 
             String prevLyric = noteContext.getPrev().map(NoteData::getLyric).orElse("");
             String newStrippedLyric = presampConfig.parseAlias(
                     AliasType.VCV,
-                    /* backup= */ note.getLyric(),
+                    /* backup= */ strippedLyric,
                     /* cValue= */Optional.empty(),
                     /* vValue= */guessPrefix(prevLyric, voicebankData),
-                    /* cvValue= */ Optional.of(note.getLyric()));
+                    /* cvValue= */ Optional.of(strippedLyric));
             return note.withNewLyric(prefix + newStrippedLyric + suffix);
         }).collect(Collectors.toList());
     }
