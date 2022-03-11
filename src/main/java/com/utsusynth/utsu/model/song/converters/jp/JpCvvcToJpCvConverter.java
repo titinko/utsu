@@ -61,10 +61,7 @@ public class JpCvvcToJpCvConverter implements ReclistConverter {
         }
         Optional<String> prevVowel =
                 LyricUtils.guessJpVowel(strippedPrevLyric.get(), voicebankData);
-        if (noteContext.getNext().isEmpty() ||
-                strippedNextLyric.isEmpty() ||
-                (noteContext.getNote().getPosition() + noteContext.getNote().getDuration()
-                    < noteContext.getNext().get().getPosition())) {
+        if (noteContext.getNext().isEmpty() || strippedNextLyric.isEmpty()) {
             // Check for an ending VC when there's no adjoining next note.
             Optional<String> endVc = guessEndVcLyric(voicebankData, prevVowel);
             return endVc.isPresent() && strippedLyric.equals(endVc.get());

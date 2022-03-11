@@ -448,15 +448,18 @@ public class Song {
         NoteIterator iterator = noteList.boundedIterator(bounds);
         while (iterator.hasNext()) {
             Note note = iterator.next();
+            NoteNode context = noteList.getNote(iterator.getCurDelta()); // Ignores bounds.
+
             // Get previous note if connected.
             Optional<NoteData> prevData = Optional.empty();
-            Optional<Note> prev = iterator.peekPrev();
-            if (prev.isPresent() && prev.get().getDuration() == prev.get().getLength()) {
+            Optional<NoteNode> prev = context.getPrev();
+            if (prev.isPresent()
+                    && prev.get().getNote().getDuration() == prev.get().getNote().getLength()) {
                 prevData = Optional.of(getNote(iterator.getCurDelta() - note.getDelta()));
             }
             // Get next note if connected.
             Optional<NoteData> nextData = Optional.empty();
-            if (iterator.hasNext() && note.getDuration() == note.getLength()) {
+            if (context.getNext().isPresent() && note.getDuration() == note.getLength()) {
                 nextData = Optional.of(getNote(iterator.getCurDelta() + note.getLength()));
             }
             // Get main lyric, prefix, and suffix.

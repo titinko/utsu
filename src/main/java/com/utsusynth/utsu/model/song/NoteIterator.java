@@ -42,7 +42,7 @@ public class NoteIterator implements Iterator<Note> {
 
     @Override
     public Note next() {
-        if (!curNode.isPresent()) {
+        if (curNode.isEmpty()) {
             return null;
         }
         Note note = curNode.get().getNote();

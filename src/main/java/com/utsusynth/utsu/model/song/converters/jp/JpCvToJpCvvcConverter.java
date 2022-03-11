@@ -8,7 +8,7 @@ import com.utsusynth.utsu.common.enums.ReclistType;
 import com.utsusynth.utsu.common.utils.LyricUtils;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
-import com.utsusynth.utsu.model.voicebank.PresampConfig;
+import com.utsusynth.utsu.model.voicebank.PresampConfig.AliasType;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,19 +19,32 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
         ImmutableList.Builder<NoteData> output = ImmutableList.builder();
         for (NoteContextData noteContextData : notes) {
             NoteData note = noteContextData.getNote();
-            Optional<NoteData> vcNote;
+            Optional<NoteData> vcNote = Optional.empty();
             if (noteContextData.getNext().isEmpty()) {
-                vcNote = makeVcNote(note, "", voicebankData);
+                switch(voicebankData.getPresampConfig().getEndFlag()) {
+                    case USE_ENDING_1:
+                        vcNote = makeEndVcNote(note, voicebankData);
+                        break;
+                    case USE_ENDING_2:
+                        note = note.withNewLyric(addEnding2(note.getLyric(), voicebankData));
+                        break;
+                    case USE_BOTH_ENDINGS:
+                        vcNote = makeEndVcNote(note, voicebankData);
+                        note = note.withNewLyric(addEnding2(note.getLyric(), voicebankData));
+                        break;
+                    case NO_AUTOMATIC_ENDINGS:
+                    default:
+                        // Do nothing.
+                }
             } else {
                 NoteData next = noteContextData.getNext().get();
                 vcNote = makeVcNote(note, next.getLyric(), voicebankData);
+                if (vcNote.isPresent()) {
+                    note = note.withDuration(note.getDuration() - vcNote.get().getDuration());
+                }
             }
-            if (vcNote.isPresent()) {
-                output.add(note.withDuration(note.getDuration() - vcNote.get().getDuration()));
-                output.add(vcNote.get());
-            } else {
-                output.add(note);
-            }
+            output.add(note);
+            vcNote.ifPresent(output::add);
         }
         return output.build();
     }
@@ -63,13 +76,13 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
         Optional<String> nextConsonant =
                 LyricUtils.guessJpConsonant(strippedNextLyric, voicebankData);
 
-        String endVc = voicebankData.getPresampConfig().parseAlias(
-                PresampConfig.AliasType.VC,
+        String vc = voicebankData.getPresampConfig().parseAlias(
+                AliasType.VC,
                 "",
                 nextConsonant,
                 prevVowel,
                 Optional.empty());
-        return endVc.isEmpty() ? Optional.empty() : Optional.of(prevPrefix + endVc + prevSuffix);
+        return vc.isEmpty() ? Optional.empty() : Optional.of(prevPrefix + vc + prevSuffix);
     }
 
     private int guessVcLength(
@@ -95,7 +108,40 @@ public class JpCvToJpCvvcConverter implements ReclistConverter {
         return Math.min(max, defaultLength);
     }
 
-    private Optional<LyricConfig> guessLyricConfig(
+    private Optional<NoteData> makeEndVcNote(NoteData note, VoicebankData voicebankData) {
+        Optional<String> vcLyric = makeEndVcLyric(note.getLyric(), voicebankData);
+        if (vcLyric.isEmpty()) {
+            return Optional.empty();
+        }
+        // TODO: Try the length of entire oto of end VC note.
+        int vcLength = 120;
+        int vcStart = note.getPosition() + note.getDuration();
+        return Optional.of(new NoteData(vcStart, vcLength, note.getPitch(), vcLyric.get()));
+    }
+
+    private static Optional<String> makeEndVcLyric(String prevLyric, VoicebankData voicebankData) {
+        String prevPrefix = LyricUtils.guessJpPrefix(prevLyric, voicebankData);
+        String prevSuffix = LyricUtils.guessJpSuffix(prevLyric, voicebankData);
+        String strippedPrevLyric = LyricUtils.stripPrefixSuffix(prevLyric, prevPrefix, prevSuffix);
+        Optional<String> prevVowel = LyricUtils.guessJpVowel(strippedPrevLyric, voicebankData);
+        String endVc = voicebankData.getPresampConfig().parseAlias(
+                AliasType.ENDING_1,
+                "",
+                Optional.empty(),
+                prevVowel,
+                Optional.empty());
+        return endVc.isEmpty() ? Optional.empty() : Optional.of(prevPrefix + endVc + prevSuffix);
+    }
+
+    private static String addEnding2(String lyric, VoicebankData voicebankData) {
+        String prefix = LyricUtils.guessJpPrefix(lyric, voicebankData);
+        String suffix = LyricUtils.guessJpSuffix(lyric, voicebankData);
+        String strippedLyric = LyricUtils.stripPrefixSuffix(lyric, prefix, suffix);
+        String ending2 = voicebankData.getPresampConfig().parseAlias(AliasType.ENDING_2, "");
+        return prefix + strippedLyric + ending2 + suffix;
+    }
+
+    private static Optional<LyricConfig> guessLyricConfig(
             String lyric, String pitch, VoicebankData voicebankData) {
         String prefix = voicebankData.getPitchMap().getPrefix(pitch);
         String suffix = voicebankData.getPitchMap().getSuffix(pitch);
