@@ -392,9 +392,6 @@ public class SongController implements EditorController, Localizable {
         // Scrollbar bindings, after scrollbars are generated.
         PauseTransition briefPause = new PauseTransition(Duration.millis(20));
         briefPause.setOnFinished(event -> {
-            for (Node node : noteTrack.lookupAll(".scroll-pane")) {
-                System.out.println("Node found! " + node);
-            }
             for (Node node : noteTrack.lookupAll(".scroll-bar")) {
                 if (!(node instanceof ScrollBar)) {
                     continue;
@@ -1151,19 +1148,33 @@ public class SongController implements EditorController, Localizable {
                                 List<ReclistConverter> path,
                                 boolean usePresampConfig,
                                 RegionBounds regionToUpdate) {
-                            VoicebankData voicebankData =
-                                    song.get().getVoicebank().getReadonlyData();
-                            if (!usePresampConfig) {
-                                // Override with default presamp config if needed.
-                                voicebankData = voicebankData.withPresampConfig(
-                                        voicebankReader.getDefaultPresampConfig().getReader());
-                            }
-                            for (ReclistConverter converter : path) {
-                                List<NoteContextData> oldNotes =
-                                        song.get().getNotesInContext(regionToUpdate);
-                                List<NoteData> newNotes = converter.apply(oldNotes, voicebankData);
-                                updateNotes(song.get().getNotes(regionToUpdate), newNotes);
-                            }
+                            // Override with default presamp config if needed.
+                            VoicebankData voicebankData = usePresampConfig
+                                    ? song.get().getVoicebank().getReadonlyData()
+                                    : song.get().getVoicebank().getReadonlyData().withPresampConfig(
+                                            voicebankReader.getDefaultPresampConfig().getReader());
+                            statusBar.setText("Converting...");
+                            StringBuilder result = new StringBuilder("Converted: ");
+                            new Thread(() -> {
+                                for (ReclistConverter converter : path) {
+                                    List<NoteContextData> oldNotes =
+                                            song.get().getNotesInContext(regionToUpdate);
+                                    List<NoteData> newNotes = converter.apply(oldNotes, voicebankData);
+                                    updateNotes(song.get().getNotes(regionToUpdate), newNotes);
+                                    result
+                                            .append(converter.getFrom())
+                                            .append("->")
+                                            .append(converter.getTo())
+                                            .append(",");
+                                }
+                                if (!path.isEmpty()) {
+                                    result.deleteCharAt(result.length() - 1); // Delete last comma.
+                                    Platform.runLater(() -> {
+                                        refreshView();
+                                        statusBar.setText(result.toString());
+                                    });
+                                }
+                            }).start();
                         }
                     });
             Scene scene = new Scene(editorPane);
@@ -1178,28 +1189,58 @@ public class SongController implements EditorController, Localizable {
 
     /**
      * Modify anything about a set of notes, including lyric, positions, and quantity of notes.
+     * @param oldNotes: List of old notes.
+     * @param newNotes: List of new notes.
      */
     private void updateNotes(List<NoteData> oldNotes, List<NoteData> newNotes) {
         if (newNotes.isEmpty()) {
             return;
         }
+        // To avoid errors, sort both old and new notes.
+        Comparator<NoteData> noteComparator = Comparator.comparingInt(NoteData::getPosition);
+        List<NoteData> sortedOldNotes =
+                oldNotes.stream().sorted(noteComparator).collect(Collectors.toList());
+        List<NoteData> sortedNewNotes =
+                newNotes.stream().sorted(noteComparator).collect(Collectors.toList());
+
         Runnable redoAction = () -> {
-            songEditor.deleteNotesFromController(oldNotes);
-            song.get().addNotes(newNotes);
-            songEditor.addNotesFromController(
-                    newNotes.get(0).getPosition(),
-                    newNotes.get(newNotes.size() - 1).getPosition(),
-                    newNotes);
+            MutateResponse removeResponse = song.get().removeNotes(
+                    sortedOldNotes.stream().map(NoteData::getPosition).collect(Collectors.toSet()));
+            song.get().addNotes(sortedNewNotes);
+
+            // Standardize all impacted notes.
+            int newMinPos = sortedNewNotes.get(0).getPosition();
+            int minPos = removeResponse.getPrev()
+                    .map(prev -> Math.min(prev.getPosition(), newMinPos)).orElse(newMinPos);
+            int newMaxPos = sortedNewNotes.get(sortedNewNotes.size() - 1).getPosition();
+            int maxPos = removeResponse.getNext()
+                    .map(next -> Math.max(next.getPosition(), newMaxPos)).orElse(newMaxPos);
+            song.get().standardizeNotes(minPos, maxPos);
+
             onSongChange();
+            // If run from a separate thread, leave refreshing the view for later.
+            if (Platform.isFxApplicationThread()) {
+                refreshView();
+            }
         };
         Runnable undoAction = () -> {
-            songEditor.deleteNotesFromController(newNotes);
-            song.get().addNotes(oldNotes);
-            songEditor.addNotesFromController(
-                    oldNotes.get(0).getPosition(),
-                    oldNotes.get(oldNotes.size() - 1).getPosition(),
-                    oldNotes);
+            MutateResponse removeResponse = song.get().removeNotes(
+                    sortedNewNotes.stream().map(NoteData::getPosition).collect(Collectors.toSet()));
+            song.get().addNotes(sortedOldNotes);
+
+            // Standardize all impacted notes.
+            int newMinPos = sortedOldNotes.get(0).getPosition();
+            int minPos = removeResponse.getPrev()
+                    .map(prev -> Math.min(prev.getPosition(), newMinPos)).orElse(newMinPos);
+            int newMaxPos = sortedOldNotes.get(sortedOldNotes.size() - 1).getPosition();
+            int maxPos = removeResponse.getNext()
+                    .map(next -> Math.max(next.getPosition(), newMaxPos)).orElse(newMaxPos);
+            song.get().standardizeNotes(minPos, maxPos);
+
             onSongChange();
+            if (Platform.isFxApplicationThread()) {
+                refreshView();
+            }
         };
         // Apply changes and save redo/undo for these changes.
         redoAction.run();
