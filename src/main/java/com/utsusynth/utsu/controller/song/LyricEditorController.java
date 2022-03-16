@@ -166,14 +166,45 @@ public class LyricEditorController implements Localizable {
                 Preferences.userRoot().node("utsu/lyricEditor/reclistConverter");
         fromChoiceBox.setItems(FXCollections.observableArrayList(converterMap.keySet()));
         fromChoiceBox.setOnAction(event -> {
+            if (fromChoiceBox.getValue() == null) {
+                return;
+            }
+            reclistConverterPrefs.put("startReclist", fromChoiceBox.getValue().toString());
             HashMap<ReclistType, List<ReclistConverter>> pathMap =
                     converterMap.traverseReclists(fromChoiceBox.getValue());
             toChoiceBox.setItems(FXCollections.observableArrayList(pathMap.keySet()));
             if (!toChoiceBox.getItems().isEmpty()) {
-                toChoiceBox.setValue(toChoiceBox.getItems().get(0));
+                ReclistType endReclist = toChoiceBox.getItems().get(0);
+                try {
+                    ReclistType savedEndReclist = ReclistType.valueOf(
+                            reclistConverterPrefs.get("endReclist", endReclist.toString()));
+                    if (toChoiceBox.getItems().contains(savedEndReclist)) {
+                        endReclist = savedEndReclist;
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Unexpected reclist type value: "
+                            + reclistConverterPrefs.get("endReclist", endReclist.toString()));
+                }
+                toChoiceBox.setValue(endReclist);
             }
         });
-        fromChoiceBox.setValue(fromChoiceBox.getItems().get(0));
+        ReclistType startReclist = fromChoiceBox.getItems().get(0);
+        try {
+            ReclistType savedStartReclist = ReclistType.valueOf(
+                    reclistConverterPrefs.get("startReclist", startReclist.toString()));
+            if (fromChoiceBox.getItems().contains(savedStartReclist)) {
+                startReclist = savedStartReclist;
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Unexpected reclist type value: "
+                    + reclistConverterPrefs.get("startReclist", startReclist.toString()));
+        }
+        fromChoiceBox.setValue(startReclist);
+        toChoiceBox.setOnAction(event -> {
+            if (toChoiceBox.getValue() != null) {
+                reclistConverterPrefs.put("endReclist", toChoiceBox.getValue().toString());
+            }
+        });
         presampIniCheckBox.setSelected(reclistConverterPrefs.getBoolean("usePresampIni", true));
         presampIniCheckBox.setOnAction(event -> {
             reclistConverterPrefs.putBoolean("usePresampIni", presampIniCheckBox.isSelected());
@@ -433,6 +464,12 @@ public class LyricEditorController implements Localizable {
             if (fromChoiceBox.getValue() == null || toChoiceBox.getValue() == null) {
                 return;
             }
+            // Set up user preferences to convert in the opposite direction.
+            Preferences reclistConverterPrefs =
+                    Preferences.userRoot().node("utsu/lyricEditor/reclistConverter");
+            reclistConverterPrefs.put("startReclist", toChoiceBox.getValue().toString());
+            reclistConverterPrefs.put("endReclist", fromChoiceBox.getValue().toString());
+            // Recalculate the path.
             HashMap<ReclistType, List<ReclistConverter>> pathMap =
                     converterMap.traverseReclists(fromChoiceBox.getValue());
             if (!pathMap.containsKey(toChoiceBox.getValue())) {
