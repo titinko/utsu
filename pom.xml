@@ -56,6 +56,11 @@
       <artifactId>nsmenufx</artifactId>
       <version>3.1.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>1.30</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -79,6 +84,7 @@
         <configuration>
           <release>${maven.compiler.release}</release>
           <jlinkImageName>utsu</jlinkImageName>
+          <jmodsPath>${project.build.directory}/modules</jmodsPath>
           <launcher>launcher</launcher>
           <mainClass>com.utsusynth.utsu.UtsuApp</mainClass>
         </configuration>
@@ -95,6 +101,62 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M5</version>
+      </plugin>
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+        <version>1.0.0.RC1</version>
+        <executions>
+          <execution>
+            <id>add-module-info-to-dependencies</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>add-module-info</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/modules</outputDirectory>
+              <overwriteExistingFiles>true</overwriteExistingFiles>
+              <modules>
+                <module>
+                  <artifact>
+                    <groupId>org.yaml</groupId>
+                    <artifactId>snakeyaml</artifactId>
+                    <version>1.30</version>
+                  </artifact>
+                  <moduleInfo>
+                    <name>org.yaml.snakeyaml</name>
+                    <requires>
+                      java.logging;
+                      transitive java.desktop;
+                    </requires>
+                    <exports>
+                      org.yaml.snakeyaml;
+                      org.yaml.snakeyaml.composer;
+                      org.yaml.snakeyaml.constructor;
+                      org.yaml.snakeyaml.emitter;
+                      org.yaml.snakeyaml.env;
+                      org.yaml.snakeyaml.error;
+                      org.yaml.snakeyaml.events;
+                      org.yaml.snakeyaml.extensions.compactnotation;
+                      org.yaml.snakeyaml.external.biz.base64Coder;
+                      org.yaml.snakeyaml.external.com.google.gdata.util.common.base;
+                      org.yaml.snakeyaml.introspector;
+                      org.yaml.snakeyaml.nodes;
+                      org.yaml.snakeyaml.parser;
+                      org.yaml.snakeyaml.reader;
+                      org.yaml.snakeyaml.representer;
+                      org.yaml.snakeyaml.resolver;
+                      org.yaml.snakeyaml.scanner;
+                      org.yaml.snakeyaml.serializer;
+                      org.yaml.snakeyaml.tokens;
+                      org.yaml.snakeyaml.util;
+                    </exports>
+                  </moduleInfo>
+                </module>
+              </modules>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

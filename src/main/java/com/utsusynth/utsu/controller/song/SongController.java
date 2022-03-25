@@ -585,15 +585,15 @@ public class SongController implements EditorController, Localizable {
                 }
                 String content = FileUtils.readFileToString(file, charset);
                 if (content.contains("UST Version1.2")) {
-                    song.setSong(ust12Reader.loadSong(content));
+                    song.setSong(ust12Reader.loadSong(content, /* trackNum= */ 1));
                     saveFormat = "UST 1.2 (Shift JIS)";
                 } else if (content.contains("UST Version2.0")) {
-                    song.setSong(ust20Reader.loadSong(content));
+                    song.setSong(ust20Reader.loadSong(content, /* trackNum= */ 1));
                     saveFormat =
                             "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
                 } else {
                     // If no version found, assume UST 1.2 for now.
-                    song.setSong(ust12Reader.loadSong(content));
+                    song.setSong(ust12Reader.loadSong(content, /* trackNum= */ 1));
                     saveFormat = "UST 1.2 (Shift JIS)";
                 }
                 undoService.clearActions();

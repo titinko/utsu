@@ -4,6 +4,7 @@ open module com.utsusynth.utsu {
     requires javafx.media;
     requires java.desktop;
     requires org.apache.commons.io;
+    requires org.yaml.snakeyaml;
     requires jdk.charsets;
     requires jdk.localedata;
     requires com.google.guice;

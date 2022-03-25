@@ -10,7 +10,7 @@ import com.utsusynth.utsu.model.song.Song;
 /**
  * Reads a song from a Unicode UST 1.2 file.
  */
-public class Ust12Reader {
+public class Ust12Reader implements SongReader {
     private static final Pattern HEADER_PATTERN = Pattern.compile("\\[#[A-Z0-9]+\\]");
     private static final Pattern NOTE_PATTERN = Pattern.compile("\\[#[0-9]{1,4}\\]");
     private final Provider<Song> songProvider;
@@ -20,6 +20,22 @@ public class Ust12Reader {
     public Ust12Reader(Provider<Song> songProvider, VoicebankReader voicebankReader) {
         this.songProvider = songProvider;
         this.voicebankReader = voicebankReader;
+    }
+
+    @Override
+    public int getNumTracks(String fileContents) {
+        return 1;
+    }
+
+    @Override
+    public Song loadSong(String fileContents, int trackNum) {
+        Song.Builder songBuilder = songProvider.get().toBuilder();
+        String[] lines = fileContents.split("\n");
+        int curLine = 0;
+        while (curLine >= 0 && curLine < lines.length) {
+            curLine = parseSection(lines, curLine, songBuilder);
+        }
+        return songBuilder.build();
     }
 
     /**
@@ -78,16 +94,6 @@ public class Ust12Reader {
                 nextFound = true;
             }
             songLine = nextFound ? parseSection(songLines, songLine, songBuilder) : songLine + 1;
-        }
-        return songBuilder.build();
-    }
-
-    public Song loadSong(String fileContents) {
-        Song.Builder songBuilder = songProvider.get().toBuilder();
-        String[] lines = fileContents.split("\n");
-        int curLine = 0;
-        while (curLine >= 0 && curLine < lines.length) {
-            curLine = parseSection(lines, curLine, songBuilder);
         }
         return songBuilder.build();
     }
