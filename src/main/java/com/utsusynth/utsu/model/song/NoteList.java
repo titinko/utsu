@@ -46,7 +46,7 @@ public class NoteList implements Iterable<Note> {
             return this;
         }
 
-        public Builder appendNote(Note note) {
+        public void appendNote(Note note) {
             NoteNode newNode = new NoteNode(note);
             if (!noteList.head.isPresent()) {
                 NoteNode.appendFirstFromFile(newNode, overrideDelta);
@@ -63,16 +63,15 @@ public class NoteList implements Iterable<Note> {
             } else {
                 // TODO: throw error
                 System.out.println("Unexpected error while making note list.");
-                return this;
+                return;
             }
             totalDelta += note.getDelta();
             if (tail.isPresent()) {
                 noteList.nodeMap.put(totalDelta, tail.get());
             }
-            return this;
         }
 
-        public Builder appendRestNote(Note note) {
+        public void appendRestNote(Note note) {
             NoteNode newNode = new NoteNode(note);
             if (!noteList.head.isPresent()) {
                 if (!tail.isPresent()) {
@@ -87,12 +86,10 @@ public class NoteList implements Iterable<Note> {
             } else {
                 // TODO: throw error
                 System.out.println("Unexpected error while making note list.");
-                return this;
             }
-            return this;
         }
 
-        public Builder appendInvalidNote(int noteDelta, int noteLength) {
+        public void appendInvalidNote(int noteDelta, int noteLength) {
             if (tail.isPresent()) {
                 // Add note length to current tail's length.
                 overrideDelta = tail.get().getNote().getLength() + noteLength;
@@ -105,16 +102,14 @@ public class NoteList implements Iterable<Note> {
                 }
                 overrideDelta += noteLength;
             }
-            return this;
         }
 
-        public Builder standardize(NoteStandardizer standardizer, Voicebank voicebank) {
+        public void standardize(NoteStandardizer standardizer, Voicebank voicebank) {
             Optional<NoteNode> cur = tail;
             while (cur.isPresent()) {
                 cur.get().standardize(standardizer, voicebank);
                 cur = cur.get().getPrev();
             }
-            return this;
         }
 
         public Optional<Note> getLatestNote() {

@@ -261,6 +261,14 @@ public class Note {
         pbs = builder.build();
     }
 
+    public void setPBS(double[] pbsValues) {
+        ImmutableList.Builder<Double> builder = ImmutableList.builder();
+        for (double value : pbsValues) {
+            builder.add(value);
+        }
+        pbs = builder.build();
+    }
+
     public ImmutableList<Double> getPBS() {
         return pbs;
     }
@@ -273,6 +281,14 @@ public class Note {
         pbw = builder.build();
     }
 
+    public void setPBW(double[] pbwValues) {
+        ImmutableList.Builder<Double> builder = ImmutableList.builder();
+        for (double value : pbwValues) {
+            builder.add(value);
+        }
+        pbw = builder.build();
+    }
+
     public ImmutableList<Double> getPBW() {
         return pbw;
     }
@@ -281,6 +297,14 @@ public class Note {
         ImmutableList.Builder<Double> builder = ImmutableList.builder();
         for (String value : pbyValues) {
             builder.add(safeParseDouble(value, 0));
+        }
+        pby = builder.build();
+    }
+
+    public void setPBY(double[] pbyValues) {
+        ImmutableList.Builder<Double> builder = ImmutableList.builder();
+        for (double value : pbyValues) {
+            builder.add(value);
         }
         pby = builder.build();
     }
@@ -399,6 +423,10 @@ public class Note {
                 vibrato[i] = RoundUtils.round(safeParseDouble(vibratoValues[i], 0));
             }
         }
+    }
+
+    public void setVibrato(int[] vibratoValues) {
+        this.vibrato = vibratoValues;
     }
 
     public String[] getVibrato() {

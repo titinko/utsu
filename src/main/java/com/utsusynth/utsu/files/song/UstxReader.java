@@ -1,11 +1,11 @@
 package com.utsusynth.utsu.files.song;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
@@ -30,7 +30,7 @@ public class UstxReader implements SongReader {
         Yaml yaml = new Yaml();
         Node yamlNode = yaml.represent(yaml.load(fileContents));
         for (NodeTuple yamlEntry : getMapEntries(yamlNode)) {
-            if (getStringValue(yamlEntry.getKeyNode()).equals("voice_parts")) {
+            if (getStringValue(yamlEntry.getKeyNode(), "").equals("voice_parts")) {
                 return Math.max(1, getListEntries(yamlEntry.getValueNode()).size());
             }
         }
@@ -49,9 +49,10 @@ public class UstxReader implements SongReader {
     }
 
     private void parseSection(NodeTuple section, Song.Builder builder, int trackNum) {
-        switch (getStringValue(section.getKeyNode())) {
+        Node value = section.getValueNode();
+        switch (getStringValue(section.getKeyNode(), "")) {
             case "name":
-                builder.setProjectName(getStringValue(section.getValueNode()));
+                builder.setProjectName(getStringValue(value, ""));
                 break;
             case "comment":
                 // Do nothing.
@@ -66,7 +67,10 @@ public class UstxReader implements SongReader {
                 // Do nothing.
                 break;
             case "bpm":
-                builder.setTempo(getDoubleValue(section.getValueNode()));
+                double tempo = getDoubleValue(value, -1);
+                if (tempo > 0) {
+                    builder.setTempo(tempo);
+                }
                 break;
             case "beat_per_bar":
                 break;
@@ -79,58 +83,87 @@ public class UstxReader implements SongReader {
             case "tracks":
                 break;
             case "voice_parts":
-                Node voiceTrack = getListEntries(section.getValueNode()).get(trackNum - 1);
-                for (NodeTuple trackSection : getMapEntries(voiceTrack)) {
-                    parseTrackSection(trackSection, builder);
-                }
+                parseTrack(getListEntries(section.getValueNode()).get(trackNum - 1), builder);
                 break;
             case "wave_parts":
                 // Do nothing for now.
                 break;
             default:
-                System.out.println("Unknown USTX field: " + getStringValue(section.getKeyNode()));
+                printKeyErrorMessage(section);
         }
     }
 
-    private void parseTrackSection(NodeTuple section, Song.Builder builder) {
-        switch (getStringValue(section.getKeyNode())) {
-            case "name":
-                builder.setProjectName(getStringValue(section.getValueNode()));
-                break;
-            case "comment":
-                // Do nothing.
-                break;
-            case "track_no":
-                // Do nothing.
-                break;
-            case "position":
-                // Do nothing.
-                break;
-            case "notes":
-                for (Node noteNode : getListEntries(section.getValueNode())) {
-                    parseNote(noteNode, builder);
-                }
-                break;
-            default:
-                System.out.println("Unkown USTX field: " + getStringValue(section.getKeyNode()));
-        }
-    }
-
-    private void parseNote(Node noteNode, Song.Builder builder) {
-        Note note = new Note();
-        for (NodeTuple noteSection : getMapEntries(noteNode)) {
-            switch (getStringValue(noteSection.getKeyNode())) {
+    private void parseTrack(Node voiceTrack, Song.Builder builder) {
+        for (NodeTuple section : getMapEntries(voiceTrack)) {
+            Node value = section.getValueNode();
+            switch (getStringValue(section.getKeyNode(), "")) {
+                case "name":
+                    builder.setProjectName(getStringValue(section.getValueNode(), ""));
+                    break;
+                case "comment":
+                    // Do nothing.
+                    break;
+                case "track_no":
+                    // Do nothing.
+                    break;
                 case "position":
+                    // Do nothing.
+                    break;
+                case "notes":
+                    TreeMap<Integer, Note> sortedNotes = new TreeMap<>();
+                    for (Node noteNode : getListEntries(value)) {
+                        parseNote(noteNode, sortedNotes);
+                    }
+                    addAllNotes(sortedNotes, builder);
+                    break;
+                default:
+                    printKeyErrorMessage(section);
+            }
+        }
+    }
+
+    private void addAllNotes(TreeMap<Integer, Note> sortedNotes, Song.Builder builder) {
+        int curPosition = 0;
+        // TreeMap.entrySet() will return a set in sorted order.
+        for (Map.Entry<Integer, Note> entry : sortedNotes.entrySet()) {
+            int newPosition = entry.getKey();
+            if (newPosition > curPosition) {
+                // Fill any blank space with a rest note.
+                Note restNote = new Note();
+                restNote.setDuration(newPosition - curPosition);
+                restNote.setLyric("R");
+                restNote.setNoteNum(60);
+                builder.addRestNote(restNote);
+                curPosition = newPosition;
+            }
+            curPosition += entry.getValue().getDuration();
+            builder.addNote(entry.getValue());
+        }
+    }
+
+    private void parseNote(Node noteNode, TreeMap<Integer, Note> sortedNotes) {
+        int position = -1;
+        Note note = new Note();
+        for (NodeTuple section : getMapEntries(noteNode)) {
+            Node value = section.getValueNode();
+            switch (getStringValue(section.getKeyNode(), "")) {
+                case "position":
+                    position = getIntValue(value, position);
                     break;
                 case "duration":
+                    note.setDuration(getIntValue(value, -1));
                     break;
                 case "tone":
+                    note.setNoteNum(getIntValue(value, -1));
                     break;
                 case "lyric":
+                    note.setLyric(getStringValue(value, ""));
                     break;
                 case "pitch":
+                    parsePitch(value, note);
                     break;
                 case "vibrato":
+                    parseVibrato(value, note);
                     break;
                 case "note_expressions":
                     break;
@@ -139,35 +172,113 @@ public class UstxReader implements SongReader {
                 case "phoneme_overrides":
                     break;
                 default:
-                    System.out.println(
-                            "Unkown USTX field: " + getStringValue(noteSection.getKeyNode()));
+                    printKeyErrorMessage(section);
             }
         }
-        builder.addNote(note);
-    }
-
-    private void parsePitchSection(NodeTuple section, Note note) {
-        switch (getStringValue(section.getKeyNode())) {
-            case "data":
-                // x, y, shape
-                break;
-            case "snap_first":
-                break;
-            default:
-                System.out.println("Unkown USTX field: " + getStringValue(section.getKeyNode()));
+        if (position > 0) {
+            sortedNotes.put(position, note);
         }
     }
 
-    private void parseVibratoSection(NodeTuple section, Note note) {
-        switch (getStringValue(section.getKeyNode())) {
-            case "data":
-                // x, y, shape
-                break;
-            case "snap_first":
-                break;
-            default:
-                System.out.println("Unkown USTX field: " + getStringValue(section.getKeyNode()));
+    private void parsePitch(Node pitchNode, Note note) {
+        for (NodeTuple pitchSection : getMapEntries(pitchNode)) {
+            Node value = pitchSection.getValueNode();
+            switch (getStringValue(pitchSection.getKeyNode(), "")) {
+                case "data":
+                    List<Node> dataNodes = getListEntries(value);
+                    double curX = 0;
+                    double[] pbs = new double[2];
+                    double[] pbw = new double[Math.max(dataNodes.size() - 1, 0)];
+                    double[] pby = new double[Math.max(dataNodes.size() - 2, 0)];
+                    String[] pbm = new String[Math.max(dataNodes.size() - 1, 0)];
+                    Arrays.fill(pbm, "");
+                    for (int i = 0; i < dataNodes.size(); i++) {
+                        for (NodeTuple dataSection : getMapEntries(dataNodes.get(i))) {
+                            Node dataValue = dataSection.getValueNode();
+                            switch(getStringValue(dataSection.getKeyNode(), "")) {
+                                case "x":
+                                    double xValue = getDoubleValue(dataValue, 0);
+                                    if (i == 0) {
+                                        pbs[0] = xValue;
+                                    } else {
+                                        pbw[i - 1] = xValue - curX;
+                                    }
+                                    curX = xValue;
+                                    break;
+                                case "y":
+                                    if (i > 0 && i < dataNodes.size() - 1) {
+                                        pby[i - 1] = getDoubleValue(dataValue, 0);
+                                    }
+                                    break;
+                                case "shape":
+                                    if (i >= dataNodes.size() - 1) {
+                                        break;
+                                    }
+                                    switch (getStringValue(dataValue, "io")) {
+                                        case "l":
+                                            pbm[i] = "s"; // Straight.
+                                            break;
+                                        case "i":
+                                            pbm[i] = "j"; // Sine in.
+                                            break;
+                                        case "o":
+                                            pbm[i] = "r"; // Sine out.
+                                            break;
+                                        case "io":
+                                        default:
+                                            pbm[i] = ""; // Sine in out.
+                                    }
+                                    break;
+                                default:
+                                    printKeyErrorMessage(dataSection);
+                            }
+                        }
+                        note.setPBS(pbs);
+                        note.setPBW(pbw);
+                        note.setPBY(pby);
+                        note.setPBM(pbm);
+                    }
+                    break;
+                case "snap_first":
+                    // Do nothing.
+                    break;
+                default:
+                    printKeyErrorMessage(pitchSection);
+            }
         }
+    }
+
+    private void parseVibrato(Node vibratoNode, Note note) {
+        int[] vibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        for (NodeTuple vibratoSection : getMapEntries(vibratoNode)) {
+            Node value = vibratoSection.getValueNode();
+            switch (getStringValue(vibratoSection.getKeyNode(), "")) {
+                case "length":
+                    vibrato[0] = getIntValue(value, vibrato[0]);
+                    break;
+                case "period":
+                    vibrato[1] = getIntValue(value, vibrato[1]);
+                    break;
+                case "depth":
+                    vibrato[2] = getIntValue(value, vibrato[2]);
+                    break;
+                case "in":
+                    vibrato[3] = getIntValue(value, vibrato[3]);
+                    break;
+                case "out":
+                    vibrato[4] = getIntValue(value, vibrato[4]);
+                    break;
+                case "shift":
+                    vibrato[5] = getIntValue(value, vibrato[5]);
+                    break;
+                case "drift":
+                    vibrato[6] = getIntValue(value, vibrato[6]);
+                    break;
+                default:
+                    printKeyErrorMessage(vibratoSection);
+            }
+        }
+        note.setVibrato(vibrato);
     }
 
     private int parseNote(String[] lines, int noteStart, Song.Builder builder) {
@@ -240,6 +351,11 @@ public class UstxReader implements SongReader {
         return -1;
     }
 
+    private static void printKeyErrorMessage(NodeTuple nodeTuple) {
+        System.out.println(
+                "Unkown USTX field: " + getStringValue(nodeTuple.getKeyNode(), "UNKNOWN"));
+    }
+
     private static List<NodeTuple> getMapEntries(Node yamlNode) {
         if (!(yamlNode instanceof MappingNode)) {
             return ImmutableList.of();
@@ -254,16 +370,23 @@ public class UstxReader implements SongReader {
         return ((SequenceNode) yamlNode).getValue();
     }
 
-    private static String getStringValue(Node yamlNode) {
+    private static String getStringValue(Node yamlNode, String fallback) {
         if (!(yamlNode instanceof ScalarNode)) {
-            return "";
+            return fallback;
         }
         return ((ScalarNode) yamlNode).getValue();
     }
 
-    private static double getDoubleValue(Node yamlNode) {
+    private static int getIntValue(Node yamlNode, int fallback) {
         if (!(yamlNode instanceof ScalarNode)) {
-            return 0;
+            return fallback;
+        }
+        return RoundUtils.round(Double.parseDouble(((ScalarNode) yamlNode).getValue()));
+    }
+
+    private static double getDoubleValue(Node yamlNode, double fallback) {
+        if (!(yamlNode instanceof ScalarNode)) {
+            return fallback;
         }
         return Double.parseDouble(((ScalarNode) yamlNode).getValue());
     }

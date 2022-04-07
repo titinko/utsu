@@ -1,8 +1,10 @@
 package com.utsusynth.utsu.controller.song;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.utsusynth.utsu.common.dialog.ChooseTrackDialog;
 import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.*;
@@ -23,10 +25,7 @@ import com.utsusynth.utsu.controller.song.LyricEditorController.LyricEditorType;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
 import com.utsusynth.utsu.files.ThemeManager;
-import com.utsusynth.utsu.files.song.Ust12Reader;
-import com.utsusynth.utsu.files.song.Ust12Writer;
-import com.utsusynth.utsu.files.song.Ust20Reader;
-import com.utsusynth.utsu.files.song.Ust20Writer;
+import com.utsusynth.utsu.files.song.*;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.SongContainer;
@@ -90,12 +89,14 @@ public class SongController implements EditorController, Localizable {
     private final StatusBar statusBar;
     private final Ust12Reader ust12Reader;
     private final Ust20Reader ust20Reader;
+    private final UstxReader ustxReader;
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
     private final VoicebankReader voicebankReader;
     private final IconManager iconManager;
     private final ThemeManager themeManager;
     private final ExternalProcessRunner processRunner;
+    private final Provider<ChooseTrackDialog> chooseTrackProvider;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
 
     @FXML // fx:id="scrollPaneLeft"
@@ -141,12 +142,14 @@ public class SongController implements EditorController, Localizable {
             StatusBar statusBar,
             Ust12Reader ust12Reader,
             Ust20Reader ust20Reader,
+            UstxReader ustxReader,
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
             VoicebankReader voicebankReader,
             IconManager iconManager,
             ThemeManager themeManager,
             ExternalProcessRunner processRunner,
+            Provider<ChooseTrackDialog> chooseTrackProvider,
             Provider<FXMLLoader> fxmlLoaders) {
         this.song = songContainer;
         this.engine = engine;
@@ -159,12 +162,14 @@ public class SongController implements EditorController, Localizable {
         this.statusBar = statusBar;
         this.ust12Reader = ust12Reader;
         this.ust20Reader = ust20Reader;
+        this.ustxReader = ustxReader;
         this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
         this.voicebankReader = voicebankReader;
         this.iconManager = iconManager;
         this.themeManager = themeManager;
         this.processRunner = processRunner;
+        this.chooseTrackProvider = chooseTrackProvider;
         this.fxmlLoaderProvider = fxmlLoaders;
     }
 
@@ -558,6 +563,7 @@ public class SongController implements EditorController, Localizable {
         fc.setTitle("Select UST File");
         fc.getExtensionFilters().addAll(
                 new ExtensionFilter("UST files", "*.ust"),
+                new ExtensionFilter("USTX files", "*.ustx"),
                 new ExtensionFilter("All files", "*.*"));
         File file = fc.showOpenDialog(null);
         if (file != null) {
@@ -573,6 +579,7 @@ public class SongController implements EditorController, Localizable {
         statusBar.setText("Opening " + file.getName() + "...");
         new Thread(() -> {
             try {
+                SongReader songReader;
                 String saveFormat; // Format to save this song in the future.
                 String charset = "UTF-8";
                 CharsetDecoder utf8Decoder = StandardCharsets.UTF_8.newDecoder()
@@ -584,21 +591,38 @@ public class SongController implements EditorController, Localizable {
                     charset = "SJIS";
                 }
                 String content = FileUtils.readFileToString(file, charset);
-                if (content.contains("UST Version1.2")) {
-                    song.setSong(ust12Reader.loadSong(content, /* trackNum= */ 1));
+                if (file.getName().endsWith(".ustx")) {
+                    // Open dialog.
+                    songReader = ustxReader;
+                    saveFormat = "UST 2.0 (UTF-8)";
+                } else if (content.contains("UST Version1.2")) {
+                    songReader = ust12Reader;
                     saveFormat = "UST 1.2 (Shift JIS)";
                 } else if (content.contains("UST Version2.0")) {
-                    song.setSong(ust20Reader.loadSong(content, /* trackNum= */ 1));
+                    songReader = ust20Reader;
                     saveFormat =
                             "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
                 } else {
                     // If no version found, assume UST 1.2 for now.
-                    song.setSong(ust12Reader.loadSong(content, /* trackNum= */ 1));
+                    songReader = ust12Reader;
                     saveFormat = "UST 1.2 (Shift JIS)";
                 }
-                undoService.clearActions();
-                song.setSaveFormat(saveFormat);
                 Platform.runLater(() -> {
+                    // Get num tracks.
+                    int numTracks = songReader.getNumTracks(content);
+                    ImmutableList<Integer> trackNums = ImmutableList.of(1);
+                    if (numTracks > 1) {
+                        Stage parent = (Stage) anchorCenter.getScene().getWindow();
+                        trackNums = chooseTrackProvider.get().popup(parent, numTracks);
+                        if (trackNums.isEmpty()) {
+                            return; // Cancel process if no tracks are selected.
+                        }
+                    }
+                    // Read song.
+                    song.setSong(songReader.loadSong(content, trackNums.get(0)));
+                    undoService.clearActions();
+                    song.setSaveFormat(saveFormat);
+                    // Update view.
                     refreshView();
                     callback.markChanged(false);
                     menuItemManager.disableSave();
