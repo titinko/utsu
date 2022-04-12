@@ -607,19 +607,28 @@ public class SongController implements EditorController, Localizable {
                     songReader = ust12Reader;
                     saveFormat = "UST 1.2 (Shift JIS)";
                 }
+                // Read song now if it's only one track.
+                int numTracks = songReader.getNumTracks(content);
+                if (numTracks == 1) {
+                    song.setSong(songReader.loadSong(content, 1));
+                }
+                // Determine if there's more than one track.
                 Platform.runLater(() -> {
                     // Get num tracks.
-                    int numTracks = songReader.getNumTracks(content);
-                    ImmutableList<Integer> trackNums = ImmutableList.of(1);
                     if (numTracks > 1) {
                         Stage parent = (Stage) anchorCenter.getScene().getWindow();
-                        trackNums = chooseTrackProvider.get().popup(parent, numTracks);
+                        ImmutableList<Integer> trackNums =
+                                chooseTrackProvider.get().popup(parent, numTracks);
                         if (trackNums.isEmpty()) {
                             return; // Cancel process if no tracks are selected.
                         }
+                        song.setSong(songReader.loadSong(content, trackNums.get(0)));
+                        for (int i = 1; i < trackNums.size(); i++) {
+                            callback.openSongTrack(
+                                    file, content, saveFormat, songReader, trackNums.get(i));
+                        }
                     }
                     // Read song.
-                    song.setSong(songReader.loadSong(content, trackNums.get(0)));
                     undoService.clearActions();
                     song.setSaveFormat(saveFormat);
                     // Update view.
@@ -627,6 +636,37 @@ public class SongController implements EditorController, Localizable {
                     callback.markChanged(false);
                     menuItemManager.disableSave();
                     statusBar.setText("Opened " + file.getName());
+                    // Do scrolling after a short pause for viewport to establish itself.
+                    PauseTransition briefPause = new PauseTransition(Duration.millis(10));
+                    briefPause.setOnFinished(event -> songEditor.scrollToPosition(0));
+                    briefPause.play();
+                });
+            } catch (Exception e) {
+                Platform.runLater(
+                        () -> statusBar.setText("Error: Unable to open " + file.getName()));
+                errorLogger.logError(e);
+            }
+        }).start();
+    }
+
+    /** Opens a file with some values pre-calculated. Opens silently without changing status bar. */
+    public void openSubTrack(
+            File file,
+            String content,
+            String saveFormat,
+            SongReader songReader,
+            int trackNum) throws FileAlreadyOpenException {
+        song.setLocation(file);
+        new Thread(() -> {
+            try {
+                song.setSong(songReader.loadSong(content, trackNum));
+                undoService.clearActions();
+                song.setSaveFormat(saveFormat);
+                Platform.runLater(() -> {
+                    // Update view.
+                    refreshView();
+                    callback.markChanged(false);
+                    menuItemManager.disableSave();
                     // Do scrolling after a short pause for viewport to establish itself.
                     PauseTransition briefPause = new PauseTransition(Duration.millis(10));
                     briefPause.setOnFinished(event -> songEditor.scrollToPosition(0));

@@ -94,6 +94,7 @@ public class UstxReader implements SongReader {
     }
 
     private void parseTrack(Node voiceTrack, Song.Builder builder) {
+        int trackPosition = 0;
         for (NodeTuple section : getMapEntries(voiceTrack)) {
             Node value = section.getValueNode();
             switch (getStringValue(section.getKeyNode(), "")) {
@@ -107,14 +108,17 @@ public class UstxReader implements SongReader {
                     // Do nothing.
                     break;
                 case "position":
-                    // Do nothing.
+                    trackPosition = getIntValue(value, trackPosition);
                     break;
                 case "notes":
                     TreeMap<Integer, Note> sortedNotes = new TreeMap<>();
                     for (Node noteNode : getListEntries(value)) {
-                        parseNote(noteNode, sortedNotes);
+                        parseNote(noteNode, sortedNotes, trackPosition);
                     }
                     addAllNotes(sortedNotes, builder);
+                    break;
+                case "tags":
+                    // Do nothing.
                     break;
                 default:
                     printKeyErrorMessage(section);
@@ -141,14 +145,14 @@ public class UstxReader implements SongReader {
         }
     }
 
-    private void parseNote(Node noteNode, TreeMap<Integer, Note> sortedNotes) {
-        int position = -1;
+    private void parseNote(Node noteNode, TreeMap<Integer, Note> sortedNotes, int trackPosition) {
+        int notePosition = -1;
         Note note = new Note();
         for (NodeTuple section : getMapEntries(noteNode)) {
             Node value = section.getValueNode();
             switch (getStringValue(section.getKeyNode(), "")) {
                 case "position":
-                    position = getIntValue(value, position);
+                    notePosition = getIntValue(value, notePosition);
                     break;
                 case "duration":
                     note.setDuration(getIntValue(value, -1));
@@ -166,17 +170,20 @@ public class UstxReader implements SongReader {
                     parseVibrato(value, note);
                     break;
                 case "note_expressions":
-                    break;
                 case "phoneme_expressions":
+                    for (Node expressionNode : getListEntries(value)) {
+                        parseExpression(expressionNode, note);
+                    }
                     break;
                 case "phoneme_overrides":
+                    // Do nothing.
                     break;
                 default:
                     printKeyErrorMessage(section);
             }
         }
-        if (position > 0) {
-            sortedNotes.put(position, note);
+        if (notePosition > 0) {
+            sortedNotes.put(trackPosition + notePosition, note);
         }
     }
 
@@ -281,6 +288,55 @@ public class UstxReader implements SongReader {
         note.setVibrato(vibrato);
     }
 
+    private void parseExpression(Node expressionNode, Note note) {
+        String expressionName = "";
+        Integer expressionValue = null;
+        for (NodeTuple expressionSection : getMapEntries(expressionNode)) {
+            Node value = expressionSection.getValueNode();
+            switch (getStringValue(expressionSection.getKeyNode(), "")) {
+                case "index":
+                    // Not sure what this does.
+                    break;
+                case "abbr":
+                    expressionName = getStringValue(value, expressionName);
+                    break;
+                case "value":
+                    expressionValue = getIntValue(value, expressionValue);
+                    break;
+                default:
+                    printKeyErrorMessage(expressionSection);
+            }
+        }
+        if (expressionValue == null) {
+            return;
+        }
+        switch (expressionName.toLowerCase()) {
+            case "vel":
+                note.setVelocity(Math.max(0, Math.min(200, expressionValue)));
+                break;
+            case "vol":
+                note.setIntensity(Math.max(0, Math.min(200, expressionValue)));
+                break;
+            case "gen":
+                int genderValue = Math.max(-100, Math.min(100, expressionValue));
+                note.setNoteFlags(note.getNoteFlags() + "g" + genderValue);
+                break;
+            case "bre":
+                int breathValue = Math.max(0, Math.min(100, expressionValue));
+                note.setNoteFlags(note.getNoteFlags() + "B" + breathValue);
+                break;
+            case "lpf":
+                int lowPassValue = Math.max(0, Math.min(100, expressionValue));
+                note.setNoteFlags(note.getNoteFlags() + "H" + lowPassValue);
+                break;
+            case "mod":
+                note.setModulation(Math.max(0, Math.min(100, expressionValue)));
+                break;
+            default:
+                // Ignore other expressions.
+        }
+    }
+
     private int parseNote(String[] lines, int noteStart, Song.Builder builder) {
         Note note = new Note();
         for (int i = noteStart; i < lines.length; i++) {
@@ -377,7 +433,7 @@ public class UstxReader implements SongReader {
         return ((ScalarNode) yamlNode).getValue();
     }
 
-    private static int getIntValue(Node yamlNode, int fallback) {
+    private static Integer getIntValue(Node yamlNode, Integer fallback) {
         if (!(yamlNode instanceof ScalarNode)) {
             return fallback;
         }

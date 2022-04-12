@@ -12,7 +12,9 @@ import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.DiscreteScaler;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.controller.song.LyricEditorController.LyricEditorType;
+import com.utsusynth.utsu.controller.song.SongController;
 import com.utsusynth.utsu.files.ThemeManager;
+import com.utsusynth.utsu.files.song.SongReader;
 import de.jangassen.MenuToolkit;
 import javafx.animation.PauseTransition;
 import javafx.beans.property.BooleanProperty;
@@ -519,6 +521,30 @@ public class UtsuController implements Localizable {
                         if (tab.getText().startsWith("*")) {
                             tab.setText(tab.getText().substring(1));
                         }
+                    }
+                }
+
+                @Override
+                public void openSongTrack(
+                        File location,
+                        String content,
+                        String saveFormat,
+                        SongReader songReader,
+                        int trackNum) {
+                    File subFile = new File(
+                            location.getParentFile(), location.getName() + "(" + trackNum + ")");
+                    Tab newTab = createEditor(EditorType.SONG);
+                    if (newTab == null) {
+                        return;
+                    }
+                    // Switch back to old tab.
+                    try {
+                        SongController editor = (SongController) editors.get(newTab.getId());
+                        editor.openSubTrack(subFile, content, saveFormat, songReader, trackNum);
+                        newTab.setText(subFile.getName());
+                        // Do not add recent file since the method only opens a single track.
+                    } catch (FileAlreadyOpenException e) {
+                        closeTab(newTab);
                     }
                 }
 
