@@ -2,35 +2,47 @@ package com.utsusynth.utsu.model.song;
 
 import javafx.collections.ModifiableObservableListBase;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaMarkerEvent;
 import javafx.scene.media.MediaPlayer;
+import javafx.util.Duration;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class Metronome {
-    Media click;
-    MediaPlayer songPlayer;
 
     public Metronome(
         String clickUri,
-        MediaPlayer mp,
+        MediaPlayer songPlayer,
         Integer t
     ) {
-        this.click = new Media(
-                clickUri
+        attach(
+            songPlayer,
+            new MediaPlayer(new Media(
+                    clickUri
+            )),
+            generateMarkers(songPlayer.getTotalDuration().toSeconds(), t)
         );
-        this.songPlayer = mp;
-        attach(generateMarkers(mp.getTotalDuration().toSeconds(), t));
     }
 
     public void attach(
+            MediaPlayer songPlayer,
+            MediaPlayer metronomePlayer,
             ObservableList<MediaMarkerEvent> markers
     ) {
-//        songPlayer.getMarkers().put(markers);
-        songPlayer.setOnMarker((MediaMarkerEvent mme) -> {
-//            this.click.boop
+        ObservableMap<String, Duration> mediaMarkers = songPlayer.getMedia().getMarkers();
+        markers.forEach(mme ->
+                mediaMarkers.put(
+                        mme.getMarker().getKey(),
+                        mme.getMarker().getValue()
+                )
+        );
 
+        songPlayer.setOnMarker((MediaMarkerEvent mme) -> {
+            metronomePlayer.stop();
+            metronomePlayer.play();
         });
     }
 
@@ -39,11 +51,11 @@ public class Metronome {
             int tempo
     ) {
 
-        ArrayList<MediaMarkerEvent> events = new ArrayList<MediaMarkerEvent>();
+        ArrayList<MediaMarkerEvent> events = new ArrayList<>();
         int steps = Math.floorDiv((int)duration, tempo);
 
         // Not thread safe
-        return new ModifiableObservableListBase<MediaMarkerEvent>() {
+        return new ModifiableObservableListBase<>() {
             @Override
             public MediaMarkerEvent get(int i) {
                 return events.get(i);
