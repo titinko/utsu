@@ -14,6 +14,7 @@ import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
+import com.utsusynth.utsu.common.utils.UtsuFileUtils;
 import com.utsusynth.utsu.controller.EditorCallback;
 import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
@@ -61,8 +62,6 @@ import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.charset.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -87,9 +86,7 @@ public class SongController implements EditorController, Localizable {
     private final UndoService undoService;
     private final MenuItemManager menuItemManager;
     private final StatusBar statusBar;
-    private final Ust12Reader ust12Reader;
-    private final Ust20Reader ust20Reader;
-    private final UstxReader ustxReader;
+    private final SongReaderManager songReaderManager;
     private final Ust12Writer ust12Writer;
     private final Ust20Writer ust20Writer;
     private final VoicebankReader voicebankReader;
@@ -140,9 +137,7 @@ public class SongController implements EditorController, Localizable {
             UndoService undoService,
             MenuItemManager menuItemManager,
             StatusBar statusBar,
-            Ust12Reader ust12Reader,
-            Ust20Reader ust20Reader,
-            UstxReader ustxReader,
+            SongReaderManager songReaderManager,
             Ust12Writer ust12Writer,
             Ust20Writer ust20Writer,
             VoicebankReader voicebankReader,
@@ -160,9 +155,7 @@ public class SongController implements EditorController, Localizable {
         this.undoService = undoService;
         this.menuItemManager = menuItemManager;
         this.statusBar = statusBar;
-        this.ust12Reader = ust12Reader;
-        this.ust20Reader = ust20Reader;
-        this.ustxReader = ustxReader;
+        this.songReaderManager = songReaderManager;
         this.ust12Writer = ust12Writer;
         this.ust20Writer = ust20Writer;
         this.voicebankReader = voicebankReader;
@@ -562,8 +555,7 @@ public class SongController implements EditorController, Localizable {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST File");
         fc.getExtensionFilters().addAll(
-                new ExtensionFilter("UST files", "*.ust"),
-                new ExtensionFilter("USTX files", "*.ustx"),
+                new ExtensionFilter("UST, USTX, MIDI files", "*.ust", "*.ustx", ".midi"),
                 new ExtensionFilter("All files", "*.*"));
         File file = fc.showOpenDialog(null);
         if (file != null) {
@@ -579,38 +571,12 @@ public class SongController implements EditorController, Localizable {
         statusBar.setText("Opening " + file.getName() + "...");
         new Thread(() -> {
             try {
-                SongReader songReader;
-                String saveFormat; // Format to save this song in the future.
-                String charset = "UTF-8";
-                CharsetDecoder utf8Decoder = StandardCharsets.UTF_8.newDecoder()
-                        .onMalformedInput(CodingErrorAction.REPORT)
-                        .onUnmappableCharacter(CodingErrorAction.REPORT);
-                try {
-                    utf8Decoder.decode(ByteBuffer.wrap(FileUtils.readFileToByteArray(file)));
-                } catch (MalformedInputException | UnmappableCharacterException e) {
-                    charset = "SJIS";
-                }
-                String content = FileUtils.readFileToString(file, charset);
-                if (file.getName().endsWith(".ustx")) {
-                    // Open dialog.
-                    songReader = ustxReader;
-                    saveFormat = "UST 2.0 (UTF-8)";
-                } else if (content.contains("UST Version1.2")) {
-                    songReader = ust12Reader;
-                    saveFormat = "UST 1.2 (Shift JIS)";
-                } else if (content.contains("UST Version2.0")) {
-                    songReader = ust20Reader;
-                    saveFormat =
-                            "UST 2.0 " + (charset.equals("UTF-8") ? "(UTF-8)" : "(Shift JIS)");
-                } else {
-                    // If no version found, assume UST 1.2 for now.
-                    songReader = ust12Reader;
-                    saveFormat = "UST 1.2 (Shift JIS)";
-                }
+                SongReader songReader = songReaderManager.getSongReader(file);
+                String saveFormat = songReader.getSaveFormat(file);
                 // Read song now if it's only one track.
-                int numTracks = songReader.getNumTracks(content);
-                if (numTracks == 1) {
-                    song.setSong(songReader.loadSong(content, 1));
+                int numTracks = songReader.getNumTracks(file);
+                if (numTracks <= 1) {
+                    song.setSong(songReader.loadSong(file, 1));
                 }
                 // Determine if there's more than one track.
                 Platform.runLater(() -> {
@@ -622,18 +588,22 @@ public class SongController implements EditorController, Localizable {
                         if (trackNums.isEmpty()) {
                             return; // Cancel process if no tracks are selected.
                         }
-                        song.setSong(songReader.loadSong(content, trackNums.get(0)));
+                        song.setSong(songReader.loadSong(file, trackNums.get(0)));
                         for (int i = 1; i < trackNums.size(); i++) {
-                            callback.openSongTrack(
-                                    file, content, saveFormat, songReader, trackNums.get(i));
+                            callback.openSongTrack(file, songReader, trackNums.get(i));
                         }
                     }
-                    // Read song.
                     undoService.clearActions();
-                    song.setSaveFormat(saveFormat);
+                    // If no save format, mark as unsaved file with no permanent location.
+                    if (saveFormat.isEmpty()) {
+                        song.reset();
+                        callback.markChanged(true);
+                    } else {
+                        song.setSaveFormat(songReader.getSaveFormat(file));
+                        callback.markChanged(false);
+                    }
                     // Update view.
                     refreshView();
-                    callback.markChanged(false);
                     menuItemManager.disableSave();
                     statusBar.setText("Opened " + file.getName());
                     // Do scrolling after a short pause for viewport to establish itself.
@@ -651,21 +621,19 @@ public class SongController implements EditorController, Localizable {
 
     /** Opens a file with some values pre-calculated. Opens silently without changing status bar. */
     public void openSubTrack(
-            File file,
-            String content,
-            String saveFormat,
-            SongReader songReader,
-            int trackNum) throws FileAlreadyOpenException {
-        song.setLocation(file);
+            File file, SongReader songReader, int trackNum) throws FileAlreadyOpenException {
         new Thread(() -> {
             try {
-                song.setSong(songReader.loadSong(content, trackNum));
+                song.setSong(songReader.loadSong(file, trackNum));
+                String saveFormat = songReader.getSaveFormat(file);
                 undoService.clearActions();
-                song.setSaveFormat(saveFormat);
+                if (!saveFormat.isEmpty()) {
+                    song.setSaveFormat(saveFormat);
+                }
                 Platform.runLater(() -> {
                     // Update view.
                     refreshView();
-                    callback.markChanged(false);
+                    callback.markChanged(true);
                     menuItemManager.disableSave();
                     // Do scrolling after a short pause for viewport to establish itself.
                     PauseTransition briefPause = new PauseTransition(Duration.millis(10));
@@ -1234,6 +1202,7 @@ public class SongController implements EditorController, Localizable {
                                 if (!path.isEmpty()) {
                                     result.deleteCharAt(result.length() - 1); // Delete last comma.
                                     Platform.runLater(() -> {
+                                        onSongChange();
                                         refreshView();
                                         statusBar.setText(result.toString());
                                     });
@@ -1281,9 +1250,9 @@ public class SongController implements EditorController, Localizable {
                     .map(next -> Math.max(next.getPosition(), newMaxPos)).orElse(newMaxPos);
             song.get().standardizeNotes(minPos, maxPos);
 
-            onSongChange();
             // If run from a separate thread, leave refreshing the view for later.
             if (Platform.isFxApplicationThread()) {
+                onSongChange();
                 refreshView();
             }
         };
@@ -1303,6 +1272,7 @@ public class SongController implements EditorController, Localizable {
 
             onSongChange();
             if (Platform.isFxApplicationThread()) {
+                onSongChange();
                 refreshView();
             }
         };
@@ -1356,8 +1326,8 @@ public class SongController implements EditorController, Localizable {
                         pluginFile.getAbsolutePath());
 
                 // Read song from plugin output.
-                String output = FileUtils.readFileToString(pluginFile, "SJIS");
-                song.setSong(ust12Reader.readFromPlugin(headers, songString, output));
+                // String output = FileUtils.readFileToString(pluginFile, "SJIS");
+                // song.setSong(ust12Reader.readFromPlugin(headers, songString, output));
                 onSongChange();
                 refreshView();
 

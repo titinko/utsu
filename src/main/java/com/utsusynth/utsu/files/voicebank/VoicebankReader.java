@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.utils.UtsuFileUtils;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.model.voicebank.PresampConfig;
@@ -64,8 +65,11 @@ public class VoicebankReader {
     }
 
     public PresampConfig getDefaultPresampConfig() {
+        if (defaultPresampConfig != null) {
+            return defaultPresampConfig;
+        }
         // Read default presamp.ini data if needed.
-        String defaultData = readConfigFile(assetManager.getDefaultPresampIniFile());
+        String defaultData = UtsuFileUtils.readConfigFile(assetManager.getDefaultPresampIniFile());
         PresampConfig.Builder presampBuilder = presampConfigProvider.get().toBuilder();
         defaultPresampConfig =
                 presampConfigReader.loadPresampConfig(presampBuilder, defaultData);
@@ -89,8 +93,8 @@ public class VoicebankReader {
         System.out.println("Parsed voicebank as " + pathToVoicebank);
 
         // Parse character data in English or Japanese.
-        String characterData =
-                readConfigFile(pathToVoicebank.toPath().resolve("character.txt").toFile());
+        String characterData = UtsuFileUtils.readConfigFile(
+                pathToVoicebank.toPath().resolve("character.txt").toFile());
         for (String rawLine : characterData.split("\n")) {
             String line = rawLine.trim();
             if (line.startsWith("name=")) {
@@ -110,7 +114,7 @@ public class VoicebankReader {
 
         // Parse description.
         File readmeFile = pathToVoicebank.toPath().resolve("readme.txt").toFile();
-        builder.setDescription(readConfigFile(readmeFile));
+        builder.setDescription(UtsuFileUtils.readConfigFile(readmeFile));
 
         // Parse all oto_ini.txt and oto.ini files in arbitrary order.
         try {
@@ -152,7 +156,7 @@ public class VoicebankReader {
             Path pathToOtoFile,
             String otoFile,
             Voicebank.Builder builder) {
-        String otoData = readConfigFile(pathToOtoFile.resolve(otoFile).toFile());
+        String otoData = UtsuFileUtils.readConfigFile(pathToOtoFile.resolve(otoFile).toFile());
         for (String rawLine : otoData.split("\n")) {
             String line = rawLine.trim();
             Matcher matcher = LYRIC_PATTERN.matcher(line);
@@ -188,7 +192,7 @@ public class VoicebankReader {
     }
 
     private void parsePitchMap(File pitchMapFile, Voicebank.Builder builder) {
-        String pitchData = readConfigFile(pitchMapFile);
+        String pitchData = UtsuFileUtils.readConfigFile(pitchMapFile);
         for (String rawLine : pitchData.split("\n")) {
             String line = rawLine.trim();
             Matcher prefixMatcher = PREFIX_PATTERN.matcher(line);
@@ -208,34 +212,10 @@ public class VoicebankReader {
 
     private void parsePresampConfig(File presampConfigFile, Voicebank.Builder builder) {
         // Override any fields populated in the voicebank's presamp.ini file.
-        String presampData = readConfigFile(presampConfigFile);
+        String presampData = UtsuFileUtils.readConfigFile(presampConfigFile);
         PresampConfig presampConfig = presampConfigReader.loadPresampConfig(
                 getDefaultPresampConfig().toBuilder(), presampData);
         builder.setPresampConfig(presampConfig);
-    }
-
-    private String readConfigFile(File file) {
-        if (!file.canRead() || !file.isFile()) {
-            // This is often okay.
-            return "";
-        }
-        try {
-            byte[] bytes = FileUtils.readFileToByteArray(file);
-            String charset = "UTF-8";
-            CharsetDecoder utf8Decoder =
-                    StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
-                            .onUnmappableCharacter(CodingErrorAction.REPORT);
-            try {
-                utf8Decoder.decode(ByteBuffer.wrap(bytes));
-            } catch (CharacterCodingException e) {
-                charset = "SJIS";
-            }
-            return new String(bytes, charset);
-        } catch (IOException e) {
-            // TODO Handle this.
-            errorLogger.logError(e);
-        }
-        return "";
     }
 
     /**

@@ -3,6 +3,7 @@ package com.utsusynth.utsu.files;
 import com.utsusynth.utsu.UtsuModule.SettingsPath;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.common.utils.UtsuFileUtils;
 import com.utsusynth.utsu.model.config.Theme;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -276,7 +277,7 @@ public class ThemeManager {
                         theme,
                         IOUtils.toString(getClass().getResource(source), StandardCharsets.UTF_8));
             } else {
-                parseTheme(theme, readConfigFile(new File(themesPath, themeId)));
+                parseTheme(theme, UtsuFileUtils.readConfigFile(new File(themesPath, themeId)));
             }
         }
         return theme;
@@ -339,28 +340,5 @@ public class ThemeManager {
                 + formatHexString(color.getBlue())
                 + formatHexString(color.getOpacity()))
                 .toUpperCase();
-    }
-
-    private static String readConfigFile(File file) {
-        if (!file.canRead() || !file.isFile()) {
-            // This is often okay.
-            return "";
-        }
-        try {
-            byte[] bytes = FileUtils.readFileToByteArray(file);
-            String charset = "UTF-8";
-            CharsetDecoder utf8Decoder =
-                    StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
-                            .onUnmappableCharacter(CodingErrorAction.REPORT);
-            try {
-                utf8Decoder.decode(ByteBuffer.wrap(bytes));
-            } catch (CharacterCodingException e) {
-                charset = "SJIS";
-            }
-            return new String(bytes, charset);
-        } catch (IOException e) {
-            errorLogger.logError(e);
-        }
-        return "";
     }
 }

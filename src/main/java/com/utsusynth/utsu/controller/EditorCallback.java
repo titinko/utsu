@@ -15,8 +15,7 @@ public interface EditorCallback {
     /**
      * Open song for edit in a new tab with track pre-selected. Don't switch tabs.
      */
-    void openSongTrack(
-            File location, String content, String saveFormat, SongReader songReader, int trackNum);
+    void openSongTrack(File location, SongReader songReader, int trackNum);
 
     /**
      * Open voicebank for edit in a new tab.

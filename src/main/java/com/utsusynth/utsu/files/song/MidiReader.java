@@ -1,6 +1,7 @@
 package com.utsusynth.utsu.files.song;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.regex.Pattern;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -9,99 +10,50 @@ import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.Sequence;
+
 /**
- * Reads a song from a Unicode UST 1.2 file.
+ * Reads a song from a MIDI file.
  */
-public class Ust12Reader implements SongReader {
+public class MidiReader implements SongReader {
     private static final Pattern HEADER_PATTERN = Pattern.compile("\\[#[A-Z0-9]+\\]");
     private static final Pattern NOTE_PATTERN = Pattern.compile("\\[#[0-9]{1,4}\\]");
     private final Provider<Song> songProvider;
     private final VoicebankReader voicebankReader;
 
     @Inject
-    public Ust12Reader(Provider<Song> songProvider, VoicebankReader voicebankReader) {
+    public MidiReader(
+            Provider<Song> songProvider,
+            VoicebankReader voicebankReader) {
         this.songProvider = songProvider;
         this.voicebankReader = voicebankReader;
     }
 
     @Override
     public String getSaveFormat(File file) {
-        return "UST 1.2 (Shift JIS)";
+        return "";
     }
 
     @Override
     public int getNumTracks(File file) {
+        try {
+            Sequence sequence = MidiSystem.getSequence(file);
+        } catch (InvalidMidiDataException | IOException e) {
+            e.printStackTrace();
+        }
         return 1;
     }
 
     @Override
     public Song loadSong(File file, int trackNum) {
         String fileContents = UtsuFileUtils.readConfigFile(file);
-        Song.Builder songBuilder = songProvider.get().toBuilder();
         String[] lines = fileContents.split("\n");
+        Song.Builder songBuilder = songProvider.get().toBuilder();
         int curLine = 0;
         while (curLine >= 0 && curLine < lines.length) {
             curLine = parseSection(lines, curLine, songBuilder);
-        }
-        return songBuilder.build();
-    }
-
-    /**
-     * Reads results of a plugin into a new song.
-     * 
-     * @param headers Header of plugin PREV note & header after plugin NEXT note
-     * @param songFile, a file containing the pre-plugin song
-     * @param pluginFile, a file containing the plugin results
-     */
-    public Song readFromPlugin(String[] headers, String songFile, String pluginFile) {
-        Song.Builder songBuilder = songProvider.get().toBuilder();
-        String[] songLines = songFile.split("\n");
-        int songLine = 0;
-        String[] pluginLines = pluginFile.split("\n");
-        int pluginLine = 0;
-
-        // Read in song settings data.
-        while (songLine >= 0 && songLine < songLines.length) {
-            String header = songLines[songLine].trim();
-            if (header.equals("[#VERSION]") || header.equals("[#SETTING]")) {
-                songLine = parseSection(songLines, songLine, songBuilder);
-            } else {
-                break;
-            }
-        }
-
-        // Overwrite with plugin settings data.
-        while (pluginLine >= 0 && pluginLine < pluginLines.length) {
-            String header = pluginLines[pluginLine].trim();
-            if (header.equals("[#VERSION]") || header.equals("[#SETTING]")) {
-                pluginLine = parseSection(pluginLines, pluginLine, songBuilder);
-            } else {
-                break;
-            }
-        }
-
-        // Read song notes before plugin PREV note.
-        String prevHeader = headers.length > 0 ? headers[0] : "[#0000]";
-        while (songLine >= 0 && songLine < songLines.length) {
-            if (songLines[songLine].trim().equals(prevHeader)) {
-                break;
-            }
-            songLine = parseSection(songLines, songLine, songBuilder);
-        }
-
-        // Read in all plugin notes.
-        while (pluginLine >= 0 && pluginLine < pluginLines.length) {
-            pluginLine = parseSection(pluginLines, pluginLine, songBuilder);
-        }
-
-        // Read song notes after plugin NEXT note.
-        String nextHeaderPlusOne = headers.length > 1 ? headers[1] : "[#9999]";
-        boolean nextFound = false;
-        while (songLine >= 0 && songLine < songLines.length) {
-            if (songLines[songLine].trim().equals(nextHeaderPlusOne)) {
-                nextFound = true;
-            }
-            songLine = nextFound ? parseSection(songLines, songLine, songBuilder) : songLine + 1;
         }
         return songBuilder.build();
     }
@@ -110,7 +62,7 @@ public class Ust12Reader implements SongReader {
         String header = lines[sectionStart].trim();
         if (!HEADER_PATTERN.matcher(header).matches()) {
             // Report parse section not called on section header warning.
-            System.out.println("Warning: parse header not called on section header.");
+            System.out.println("Parse header not called on section header.");
             return -1;
         }
         // Case for notes.
@@ -122,9 +74,6 @@ public class Ust12Reader implements SongReader {
                 return parseVersion(lines, sectionStart + 1);
             case "[#SETTING]":
                 return parseSetting(lines, sectionStart + 1, builder);
-            case "[#PREV]":
-            case "[#NEXT]":
-                return parseNote(lines, sectionStart + 1, builder); // For plugins.
             case "[#TRACKEND]":
                 System.out.println("Finished parsing the track!");
                 return -1;
@@ -137,10 +86,15 @@ public class Ust12Reader implements SongReader {
 
     private int parseNote(String[] lines, int noteStart, Song.Builder builder) {
         Note note = new Note();
+        boolean outsideMainTrack = false;
         for (int i = noteStart; i < lines.length; i++) {
             String line = lines[i].trim();
-            if (line.startsWith("Length=") && !line.equals("Length=")) {
-                note.setDuration(Integer.parseInt(line.substring("Length=".length())));
+            if (line.startsWith("Delta=") && !line.equals("Delta=")) {
+                note.setDelta(Integer.parseInt(line.substring("Delta=".length())));
+            } else if (line.startsWith("Duration=") && !line.equals("Duration=")) {
+                note.setDuration(Integer.parseInt(line.substring("Duration=".length())));
+            } else if (line.startsWith("Length=") && !line.equals("Length=")) {
+                note.setLength(Integer.parseInt(line.substring("Length=".length())));
             } else if (line.startsWith("Lyric=")) {
                 note.setLyric(line.substring("Lyric=".length()));
             } else if (line.startsWith("NoteNum=") && !line.equals("NoteNum=")) {
@@ -160,7 +114,7 @@ public class Ust12Reader implements SongReader {
             } else if (line.startsWith("Flags=")) {
                 note.setNoteFlags(line.substring("Flags=".length()));
             } else if (line.startsWith("PBS=")) {
-                note.setPBS(line.substring("PBS=".length()).split("[,;]"));
+                note.setPBS(line.substring("PBS=".length()).split(","));
             } else if (line.startsWith("PBW=")) {
                 note.setPBW(line.substring("PBW=".length()).split(","));
             } else if (line.startsWith("PBY=")) {
@@ -171,9 +125,12 @@ public class Ust12Reader implements SongReader {
                 note.setEnvelope(line.substring("Envelope=".length()).split(","));
             } else if (line.startsWith("VBR=")) {
                 note.setVibrato(line.substring("VBR=".length()).split(","));
+            } else if (line.startsWith("layer=")) {
+                outsideMainTrack = true;
             } else if (HEADER_PATTERN.matcher(line).matches()) {
-                if (note.getLyric().equals("R")) {
-                    builder.addRestNote(note);
+                if (outsideMainTrack) {
+                    // TODO: Make these notes valid once multi-track is supported.
+                    builder.addInvalidNote(note);
                 } else {
                     builder.addNote(note);
                 }
@@ -184,12 +141,13 @@ public class Ust12Reader implements SongReader {
     }
 
     private int parseVersion(String[] lines, int versionStart) {
+        // Ignore charset, we don't really care about it.
         for (int i = versionStart; i < lines.length; i++) {
             String line = lines[i].trim();
             if (line.startsWith("UST Version")) {
                 String version = line.substring("UST Version".length());
-                if (!version.contains("1.2")) {
-                    // throw error
+                if (!version.equals("2.0")) {
+                    // throw error?
                 }
             } else if (HEADER_PATTERN.matcher(line).matches()) {
                 return i;

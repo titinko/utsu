@@ -527,21 +527,17 @@ public class UtsuController implements Localizable {
                 @Override
                 public void openSongTrack(
                         File location,
-                        String content,
-                        String saveFormat,
                         SongReader songReader,
                         int trackNum) {
-                    File subFile = new File(
-                            location.getParentFile(), location.getName() + "(" + trackNum + ")");
                     Tab newTab = createEditor(EditorType.SONG);
                     if (newTab == null) {
                         return;
                     }
-                    // Switch back to old tab.
+                    // Don't switch to the new tab.
                     try {
                         SongController editor = (SongController) editors.get(newTab.getId());
-                        editor.openSubTrack(subFile, content, saveFormat, songReader, trackNum);
-                        newTab.setText(subFile.getName());
+                        editor.openSubTrack(location, songReader, trackNum);
+                        newTab.setText(location.getName() + "(" + trackNum + ")");
                         // Do not add recent file since the method only opens a single track.
                     } catch (FileAlreadyOpenException e) {
                         closeTab(newTab);

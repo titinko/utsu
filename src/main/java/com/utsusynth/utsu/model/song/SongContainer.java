@@ -24,6 +24,14 @@ public class SongContainer {
         return songManager.getSong(location);
     }
 
+    public void reset() {
+        Song song = songManager.getSong(location);
+        songManager.removeSong(location);
+        location = songManager.addSong(song);
+        saveFormat = "UST 2.0 (UTF-8)";
+        hasPermanentLocation = false;
+    }
+
     public void setSong(Song newSong) {
         songManager.setSong(location, newSong);
     }

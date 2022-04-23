@@ -1,11 +1,15 @@
 package com.utsusynth.utsu.files.song;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.regex.Pattern;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.utsusynth.utsu.common.utils.UtsuFileUtils;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
+import org.apache.commons.io.FileUtils;
 
 /**
  * Reads a song from a Unicode UST 2.0 file.
@@ -23,12 +27,23 @@ public class Ust20Reader implements SongReader {
     }
 
     @Override
-    public int getNumTracks(String fileContents) {
+    public String getSaveFormat(File file) {
+        try {
+            return UtsuFileUtils.guessCharset(FileUtils.readFileToByteArray(file)).equals("UTF-8")
+                    ? "UST 2.0 (UTF-8)" : "UST 2.0 (Shift JIS)";
+        } catch (IOException e) {
+            return "UST 2.0 (UTF-8)";
+        }
+    }
+
+    @Override
+    public int getNumTracks(File file) {
         return 1;
     }
 
     @Override
-    public Song loadSong(String fileContents, int trackNum) {
+    public Song loadSong(File file, int trackNum) {
+        String fileContents = UtsuFileUtils.readConfigFile(file);
         String[] lines = fileContents.split("\n");
         Song.Builder songBuilder = songProvider.get().toBuilder();
         int curLine = 0;

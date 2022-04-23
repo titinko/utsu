@@ -1,14 +1,18 @@
 package com.utsusynth.utsu.files.song;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.common.utils.UtsuFileUtils;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
+import org.apache.commons.io.FileUtils;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.*;
 
@@ -26,24 +30,37 @@ public class UstxReader implements SongReader {
     }
 
     @Override
-    public int getNumTracks(String fileContents) {
+    public String getSaveFormat(File file) {
+        return "";
+    }
+
+    @Override
+    public int getNumTracks(File file) {
         Yaml yaml = new Yaml();
-        Node yamlNode = yaml.represent(yaml.load(fileContents));
-        for (NodeTuple yamlEntry : getMapEntries(yamlNode)) {
-            if (getStringValue(yamlEntry.getKeyNode(), "").equals("voice_parts")) {
-                return Math.max(1, getListEntries(yamlEntry.getValueNode()).size());
+        try {
+            Node yamlNode = yaml.represent(yaml.load(FileUtils.openInputStream(file)));
+            for (NodeTuple yamlEntry : getMapEntries(yamlNode)) {
+                if (getStringValue(yamlEntry.getKeyNode(), "").equals("voice_parts")) {
+                    return Math.max(1, getListEntries(yamlEntry.getValueNode()).size());
+                }
             }
+        } catch (IOException e) {
+            // TODO
         }
         return 1;
     }
 
     @Override
-    public Song loadSong(String fileContents, int trackNum) {
+    public Song loadSong(File file, int trackNum) {
         Yaml yaml = new Yaml();
-        Node yamlNode = yaml.represent(yaml.load(fileContents));
         Song.Builder songBuilder = songProvider.get().toBuilder();
-        for (NodeTuple yamlEntry : getMapEntries(yamlNode)) {
-            parseSection(yamlEntry, songBuilder, trackNum);
+        try {
+            Node yamlNode = yaml.represent(yaml.load(FileUtils.openInputStream(file)));
+            for (NodeTuple yamlEntry : getMapEntries(yamlNode)) {
+                parseSection(yamlEntry, songBuilder, trackNum);
+            }
+        } catch (IOException e) {
+            // TODO
         }
         return songBuilder.build();
     }
@@ -335,54 +352,6 @@ public class UstxReader implements SongReader {
             default:
                 // Ignore other expressions.
         }
-    }
-
-    private int parseNote(String[] lines, int noteStart, Song.Builder builder) {
-        Note note = new Note();
-        for (int i = noteStart; i < lines.length; i++) {
-            String line = lines[i].trim();
-            if (line.startsWith("Length=") && !line.equals("Length=")) {
-                note.setDuration(Integer.parseInt(line.substring("Length=".length())));
-            } else if (line.startsWith("Lyric=")) {
-                note.setLyric(line.substring("Lyric=".length()));
-            } else if (line.startsWith("NoteNum=") && !line.equals("NoteNum=")) {
-                note.setNoteNum(Integer.parseInt(line.substring("NoteNum=".length())));
-            } else if (line.startsWith("PreUtterance=") && !line.equals("PreUtterance=")) {
-                note.setPreutter(Double.parseDouble(line.substring("PreUtterance=".length())));
-            } else if (line.startsWith("VoiceOverlap=") && !line.equals("VoiceOverlap=")) {
-                note.setOverlap(Double.parseDouble(line.substring("VoiceOverlap=".length())));
-            } else if (line.startsWith("Velocity=") && !line.equals("Velocity=")) {
-                note.setVelocity(Double.parseDouble(line.substring("Velocity=".length())));
-            } else if (line.startsWith("StartPoint=") && !line.equals("StartPoint=")) {
-                note.setStartPoint(Double.parseDouble(line.substring("StartPoint=".length())));
-            } else if (line.startsWith("Intensity=") && !line.equals("Intensity=")) {
-                note.setIntensity(Integer.parseInt(line.substring("Intensity=".length())));
-            } else if (line.startsWith("Modulation=") && !line.equals("Modulation=")) {
-                note.setModulation(Integer.parseInt(line.substring("Modulation=".length())));
-            } else if (line.startsWith("Flags=")) {
-                note.setNoteFlags(line.substring("Flags=".length()));
-            } else if (line.startsWith("PBS=")) {
-                note.setPBS(line.substring("PBS=".length()).split("[,;]"));
-            } else if (line.startsWith("PBW=")) {
-                note.setPBW(line.substring("PBW=".length()).split(","));
-            } else if (line.startsWith("PBY=")) {
-                note.setPBY(line.substring("PBY=".length()).split(","));
-            } else if (line.startsWith("PBM=")) {
-                note.setPBM(line.substring("PBM=".length()).split(","));
-            } else if (line.startsWith("Envelope=")) {
-                note.setEnvelope(line.substring("Envelope=".length()).split(","));
-            } else if (line.startsWith("VBR=")) {
-                note.setVibrato(line.substring("VBR=".length()).split(","));
-            } else {
-                if (note.getLyric().equals("R")) {
-                    builder.addRestNote(note);
-                } else {
-                    builder.addNote(note);
-                }
-                return i;
-            }
-        }
-        return -1;
     }
 
     private int parseSetting(String[] lines, int settingStart, Song.Builder builder) {
