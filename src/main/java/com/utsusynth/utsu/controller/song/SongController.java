@@ -553,9 +553,9 @@ public class SongController implements EditorController, Localizable {
     @Override
     public Optional<String> open() throws FileAlreadyOpenException {
         FileChooser fc = new FileChooser();
-        fc.setTitle("Select UST File");
+        fc.setTitle("Select UST, USTX, or MIDI File");
         fc.getExtensionFilters().addAll(
-                new ExtensionFilter("UST, USTX, MIDI files", "*.ust", "*.ustx", ".midi"),
+                new ExtensionFilter("UST, USTX, MIDI files", "*.ust", "*.ustx", "*.mid"),
                 new ExtensionFilter("All files", "*.*"));
         File file = fc.showOpenDialog(null);
         if (file != null) {

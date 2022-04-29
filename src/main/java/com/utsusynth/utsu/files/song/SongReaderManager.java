@@ -27,7 +27,7 @@ public class SongReaderManager {
     public SongReader getSongReader(File file) {
         if (file.getName().endsWith(".ustx")) {
             return ustxReader;
-        } else if (file.getName().endsWith(".midi")) {
+        } else if (file.getName().endsWith(".mid")) {
             return midiReader;
         } else {
             String content = UtsuFileUtils.readConfigFile(file);

@@ -45,6 +45,12 @@ public class UtsuModule extends AbstractModule {
     @BindingAnnotation
     @Target({PARAMETER, METHOD})
     @Retention(RetentionPolicy.RUNTIME)
+    public @interface DefaultLyric {
+    }
+
+    @BindingAnnotation
+    @Target({PARAMETER, METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
     public @interface SettingsPath {
     }
 
@@ -77,6 +83,12 @@ public class UtsuModule extends AbstractModule {
     @Version
     private String provideSettingsVersion() {
         return ("0.5");
+    }
+
+    @Provides
+    @DefaultLyric
+    private String provideDefaultLyric() {
+        return "mi";
     }
 
     @Provides

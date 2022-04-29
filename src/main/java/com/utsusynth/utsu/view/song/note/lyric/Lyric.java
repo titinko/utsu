@@ -1,6 +1,8 @@
 package com.utsusynth.utsu.view.song.note.lyric;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import com.utsusynth.utsu.UtsuModule.DefaultLyric;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.view.song.track.TrackItem;
@@ -36,7 +38,8 @@ public class Lyric implements TrackItem {
     private BooleanProperty showLyrics;
     private BooleanProperty showAliases;
 
-    public Lyric(String defaultLyric, Scaler scaler) {
+    @Inject
+    public Lyric(@DefaultLyric String defaultLyric, Scaler scaler) {
         this.scaler = scaler;
         startX = new SimpleDoubleProperty(0);
         noteWidth = new SimpleDoubleProperty(Quantizer.TEXT_FIELD_WIDTH);
