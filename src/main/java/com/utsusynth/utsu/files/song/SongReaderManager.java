@@ -11,17 +11,20 @@ public class SongReaderManager {
     private final Ust20Reader ust20Reader;
     private final UstxReader ustxReader;
     private final MidiReader midiReader;
+    private final VsqxReader vsqxReader;
 
     @Inject
     public SongReaderManager(
             Ust12Reader ust12Reader,
             Ust20Reader ust20Reader,
             UstxReader ustxReader,
-            MidiReader midiReader) {
+            MidiReader midiReader,
+            VsqxReader vsqxReader) {
         this.ust12Reader = ust12Reader;
         this.ust20Reader = ust20Reader;
         this.ustxReader = ustxReader;
         this.midiReader = midiReader;
+        this.vsqxReader = vsqxReader;
     }
 
     public SongReader getSongReader(File file) {
@@ -29,6 +32,8 @@ public class SongReaderManager {
             return ustxReader;
         } else if (file.getName().endsWith(".mid")) {
             return midiReader;
+        } else if (file.getName().endsWith("vsqx")) {
+            return vsqxReader;
         } else {
             String content = UtsuFileUtils.readConfigFile(file);
             if (content.contains("UST Version1.2")) {

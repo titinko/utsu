@@ -120,8 +120,16 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
+    private DocumentBuilderFactory providdeDocumentBuilderFactory() {
+        return DocumentBuilderFactory.newDefaultInstance();
+    }
+
+    @Provides
+    @Singleton
     private PreferencesManager providePreferencesManager(
-            @SettingsPath File settingsPath, AssetManager assetManager) {
+            @SettingsPath File settingsPath,
+            DocumentBuilderFactory documentBuilderFactory,
+            AssetManager assetManager) {
         ImmutableMap.Builder<String, String> defaultBuilder = ImmutableMap.builder();
         defaultBuilder.put("theme", ThemeManager.DEFAULT_LIGHT_THEME);
         defaultBuilder.put("autoscroll", PreferencesManager.AutoscrollMode.ENABLED_END.name());
@@ -134,7 +142,7 @@ public class UtsuModule extends AbstractModule {
         defaultBuilder.put("voicebank", assetManager.getVoicePath().getAbsolutePath());
         return new PreferencesManager(
                 settingsPath,
-                DocumentBuilderFactory.newDefaultInstance(),
+                documentBuilderFactory,
                 TransformerFactory.newDefaultInstance(),
                 defaultBuilder.build());
     }

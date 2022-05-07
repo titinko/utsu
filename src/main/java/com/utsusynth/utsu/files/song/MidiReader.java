@@ -4,12 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Pattern;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.utsusynth.utsu.UtsuModule.DefaultLyric;
 import com.utsusynth.utsu.common.utils.RoundUtils;
-import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 
@@ -97,6 +95,7 @@ public class MidiReader implements SongReader {
             }
         } catch (InvalidMidiDataException | IOException e) {
             System.out.println("Unable to parse MIDI file, returning empty song.");
+            return songBuilder.build();
         }
         addAllNotes(sortedNotes, songBuilder);
         return songBuilder.build();
@@ -123,6 +122,7 @@ public class MidiReader implements SongReader {
         }
         double tempo = ((double) 60_000_000L) / microsPerQuarterNote;
         if (tempo > 0) {
+            System.out.println("Tempo: " + tempo);
             songBuilder.setTempo(tempo);
         }
     }

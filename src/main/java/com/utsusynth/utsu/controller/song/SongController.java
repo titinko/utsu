@@ -555,7 +555,7 @@ public class SongController implements EditorController, Localizable {
         FileChooser fc = new FileChooser();
         fc.setTitle("Select UST, USTX, or MIDI File");
         fc.getExtensionFilters().addAll(
-                new ExtensionFilter("UST, USTX, MIDI files", "*.ust", "*.ustx", "*.mid"),
+                new ExtensionFilter("UST, USTX, VSQx, MIDI files", "*.ust", "*.ustx", "*.mid", "*.vsqx"),
                 new ExtensionFilter("All files", "*.*"));
         File file = fc.showOpenDialog(null);
         if (file != null) {
