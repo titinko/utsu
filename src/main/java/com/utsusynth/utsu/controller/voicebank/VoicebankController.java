@@ -350,7 +350,7 @@ public class VoicebankController implements EditorController, Localizable {
     }
 
     @Override
-    public Optional<String> open() throws FileAlreadyOpenException {
+    public Optional<String> open(String... fileType) throws FileAlreadyOpenException {
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle(localizer.getMessage("dialog.selectVoicebankDirectory"));
         File file = dc.showDialog(null);

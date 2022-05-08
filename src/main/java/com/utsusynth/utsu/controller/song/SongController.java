@@ -551,11 +551,19 @@ public class SongController implements EditorController, Localizable {
     }
 
     @Override
-    public Optional<String> open() throws FileAlreadyOpenException {
+    public Optional<String> open(String... fileType) throws FileAlreadyOpenException {
         FileChooser fc = new FileChooser();
-        fc.setTitle("Select UST, USTX, or MIDI File");
+        fc.setTitle("Select File");
+        StringBuilder allFileTypes = new StringBuilder();
+        for (int i = 0; i < fileType.length; i++) {
+            allFileTypes.append(fileType[i]);
+            if (i < fileType.length - 1) {
+                allFileTypes.append(", ");
+            }
+        }
+        allFileTypes.append(" files");
         fc.getExtensionFilters().addAll(
-                new ExtensionFilter("UST, USTX, VSQx, MIDI files", "*.ust", "*.ustx", "*.mid", "*.vsqx"),
+                new ExtensionFilter(allFileTypes.toString(), fileType),
                 new ExtensionFilter("All files", "*.*"));
         File file = fc.showOpenDialog(null);
         if (file != null) {

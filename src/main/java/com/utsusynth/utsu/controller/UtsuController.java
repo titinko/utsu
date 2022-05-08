@@ -193,9 +193,17 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem saveAsItem; // Value injected by FXMLLoader
     @FXML
-    private MenuItem exportToWavItem; // Value injected by FXMLLoader;
+    private Menu importMenu; // Value injected by FXMLLoadder
     @FXML
-    private MenuItem preferencesItem; // Value injected by FXMLLoader;
+    private MenuItem importUstxItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem importVsqxItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem importMidiItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem exportToWavItem; // Value injected by FXMLLoader
+    @FXML
+    private MenuItem preferencesItem; // Value injected by FXMLLoader
     @FXML
     private Menu editMenu; // Value injected by FXMLLoader
     @FXML
@@ -275,6 +283,10 @@ public class UtsuController implements Localizable {
         clearRecentsItem.setText(bundle.getString("menu.file.openRecent.clear"));
         saveItem.setText(bundle.getString("general.save"));
         saveAsItem.setText(bundle.getString("menu.file.saveFileAs"));
+        importMenu.setText(bundle.getString("menu.file.import"));
+        importUstxItem.setText(bundle.getString("menu.file.import.ustx"));
+        importVsqxItem.setText(bundle.getString("menu.file.import.vsqx"));
+        importMidiItem.setText(bundle.getString("menu.file.import.midi"));
         exportToWavItem.setText(bundle.getString("menu.file.exportWav"));
         preferencesItem.setText(bundle.getString("menu.file.preferences"));
         editMenu.setText(bundle.getString("menu.edit"));
@@ -603,13 +615,17 @@ public class UtsuController implements Localizable {
 
     @FXML
     void openSong(ActionEvent event) {
+        openSong("*.ust");
+    }
+
+    private void openSong(String... fileType) {
         Tab newTab = createEditor(EditorType.SONG);
         if (newTab == null) {
             return;
         }
         try {
             EditorController editor = editors.get(newTab.getId());
-            Optional<String> songName = editor.open();
+            Optional<String> songName = editor.open(fileType);
             if (songName.isPresent()) {
                 newTab.setText(songName.get());
                 addRecentFile(editor.getOpenFile());
@@ -725,6 +741,21 @@ public class UtsuController implements Localizable {
             editor.saveAs().ifPresent(curTab::setText);
             addRecentFile(editor.getOpenFile());
         }
+    }
+
+    @FXML
+    void importUstxFile(ActionEvent event) {
+        openSong("*.ustx");
+    }
+
+    @FXML
+    void importVsqxFile(ActionEvent event) {
+        openSong("*.vsqx");
+    }
+
+    @FXML
+    void importMidiFile(ActionEvent event) {
+        openSong("*.mid");
     }
 
     @FXML

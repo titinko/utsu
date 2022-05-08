@@ -37,6 +37,13 @@
                   <MenuItem fx:id="saveItem" disable="true" mnemonicParsing="false" onAction="#saveFile" text="Save" />
                   <MenuItem fx:id="saveAsItem" mnemonicParsing="false" onAction="#saveFileAs" text="Save As..." />
                   <SeparatorMenuItem mnemonicParsing="false" />
+                  <Menu fx:id="importMenu" mnemonicParsing="false" text="Import">
+                    <items>
+                      <MenuItem fx:id="importUstxItem" mnemonicParsing="false" onAction="#importUstxFile" text="USTx File..." />
+                        <MenuItem fx:id="importVsqxItem" mnemonicParsing="false" onAction="#importVsqxFile" text="VSQx File..." />
+                        <MenuItem fx:id="importMidiItem" mnemonicParsing="false" onAction="#importMidiFile" text="MIDI File..." />
+                    </items>
+                  </Menu>
                   <MenuItem fx:id="exportToWavItem" mnemonicParsing="false" onAction="#exportToWav" text="Export WAV File..." />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="preferencesItem" mnemonicParsing="false" onAction="#openPreferences" text="Preferences..." />

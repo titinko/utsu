@@ -44,12 +44,13 @@ public interface EditorController {
     void onThemeChanged();
 
     /**
-     * Opens a file/directory in this tab.
+     * Opens a file/directory in this tab
      *
+     * @param fileType Allowed file types for te open file dialog.
      * @return What to name the tab, or nothing if open was canceled.
      * @throws FileAlreadyOpenException if file is open in another tab.
      */
-    Optional<String> open() throws FileAlreadyOpenException;
+    Optional<String> open(String... fileType) throws FileAlreadyOpenException;
 
     /**
      * Opens the specified file/directory in this tab.
