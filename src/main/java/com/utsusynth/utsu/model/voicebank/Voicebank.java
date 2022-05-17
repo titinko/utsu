@@ -30,6 +30,8 @@ public class Voicebank {
     private String author; // Example: "Lethe"
     private String description; // Contents of readme.txt
     private String imageName; // Example: "img.bmp"
+    private String portraitName; // Example: "portrait.bmp"
+    private double portraitOpacity; // Example: 0.67
 
     public static class Builder {
         private final Voicebank newVoicebank;
@@ -60,6 +62,16 @@ public class Voicebank {
 
         public Builder setImageName(String imageName) {
             newVoicebank.imageName = imageName;
+            return this;
+        }
+
+        public Builder setPortraitName(String portraitName) {
+            newVoicebank.portraitName = portraitName;
+            return this;
+        }
+
+        public Builder setPortraitOpacity(double portraitOpacity) {
+            newVoicebank.portraitOpacity = portraitOpacity;
             return this;
         }
 
@@ -108,6 +120,8 @@ public class Voicebank {
         this.author = "";
         this.description = "";
         this.imageName = "";
+        this.portraitName = "";
+        this.portraitOpacity = 0.5;
     }
 
     public Builder toBuilder() {
@@ -124,7 +138,9 @@ public class Voicebank {
                 .setName(this.name)
                 .setAuthor(this.author)
                 .setDescription(this.description)
-                .setImageName(this.imageName);
+                .setImageName(this.imageName)
+                .setPortraitName(this.portraitName)
+                .setPortraitOpacity(this.portraitOpacity);
     }
 
     /**
@@ -344,6 +360,6 @@ public class Voicebank {
     public String toString() {
         // Crappy string representation of a Voicebank object.
         String result = "";
-        return result + " " + pathToVoicebank + " " + name + " " + imageName;
+        return result + " " + pathToVoicebank + " " + name + " " + imageName + " " + portraitName;
     }
 }

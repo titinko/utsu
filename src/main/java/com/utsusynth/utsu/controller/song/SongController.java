@@ -14,7 +14,6 @@ import com.utsusynth.utsu.common.exception.FileAlreadyOpenException;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import com.utsusynth.utsu.common.quantize.Quantizer;
-import com.utsusynth.utsu.common.utils.UtsuFileUtils;
 import com.utsusynth.utsu.controller.EditorCallback;
 import com.utsusynth.utsu.controller.EditorController;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
@@ -371,6 +370,12 @@ public class SongController implements EditorController, Localizable {
         try {
             Image image = new Image("file:" + song.get().getVoicebank().getImagePath());
             voicebankImage.setImage(image);
+            // ImageView tempImage = new ImageView();
+            // tempImage.setImage(image);
+            // tempImage.setMouseTransparent(true);
+            // tempImage.setOpacity(.5);
+            // anchorCenter.getChildren().clear();
+            // anchorCenter.getChildren().add(tempImage);
         } catch (Exception e) {
             System.out.println("Exception while loading voicebank image.");
             errorLogger.logWarning(e);
@@ -426,7 +431,7 @@ public class SongController implements EditorController, Localizable {
 
         // Reloads current song.
         anchorCenter.getChildren().clear();
-        anchorCenter.getChildren().add(noteTrack);
+        anchorCenter.getChildren().add(0, noteTrack);
         anchorBottom.getChildren().clear();
         anchorBottom.getChildren().add(dynamicsTrack);
     }

@@ -14,6 +14,7 @@ import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.utils.UtsuFileUtils;
 import com.utsusynth.utsu.files.AssetManager;
@@ -25,6 +26,11 @@ import com.google.inject.Provider;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.MappingNode;
+import org.yaml.snakeyaml.nodes.Node;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.ScalarNode;
 
 public class VoicebankReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
@@ -93,24 +99,7 @@ public class VoicebankReader {
         System.out.println("Parsed voicebank as " + pathToVoicebank);
 
         // Parse character data in English or Japanese.
-        String characterData = UtsuFileUtils.readConfigFile(
-                pathToVoicebank.toPath().resolve("character.txt").toFile());
-        for (String rawLine : characterData.split("\n")) {
-            String line = rawLine.trim();
-            if (line.startsWith("name=")) {
-                builder.setName(line.substring("name=".length()));
-            } else if (line.startsWith("名前：")) {
-                builder.setName(line.substring("名前：".length()));
-            } else if (line.startsWith("author=")) {
-                builder.setAuthor(line.substring("author=".length()));
-            } else if (line.startsWith("CV：")) {
-                builder.setAuthor(line.substring("CV：".length()));
-            } else if (line.startsWith("image=")) {
-                builder.setImageName(line.substring("image=".length()));
-            } else if (line.startsWith("画像：")) {
-                builder.setImageName(line.substring("画像：".length()));
-            }
-        }
+        parseCharacterData(pathToVoicebank, builder);
 
         // Parse description.
         File readmeFile = pathToVoicebank.toPath().resolve("readme.txt").toFile();
@@ -149,6 +138,60 @@ public class VoicebankReader {
         parsePresampConfig(pathToVoicebank.toPath().resolve("presamp.ini").toFile(), builder);
 
         return builder.build();
+    }
+
+    private void parseCharacterData(File pathToVoicebank, Voicebank.Builder builder) {
+        String characterData = UtsuFileUtils.readConfigFile(
+                pathToVoicebank.toPath().resolve("character.txt").toFile());
+        for (String rawLine : characterData.split("\n")) {
+            String line = rawLine.trim();
+            if (line.startsWith("name=")) {
+                builder.setName(line.substring("name=".length()));
+            } else if (line.startsWith("名前：")) {
+                builder.setName(line.substring("名前：".length()));
+            } else if (line.startsWith("author=")) {
+                builder.setAuthor(line.substring("author=".length()));
+            } else if (line.startsWith("CV：")) {
+                builder.setAuthor(line.substring("CV：".length()));
+            } else if (line.startsWith("image=")) {
+                builder.setImageName(line.substring("image=".length()));
+            } else if (line.startsWith("画像：")) {
+                builder.setImageName(line.substring("画像：".length()));
+            }
+        }
+
+        // Some voicebanks have extra character data in a yaml file.
+        Node yamlNode = UtsuFileUtils.readYamlFile(
+                pathToVoicebank.toPath().resolve("character.yaml").toFile());
+        for (NodeTuple yamlEntry : UtsuFileUtils.getYamlMapEntries(yamlNode)) {
+            String keyName = UtsuFileUtils.getYamlStringValue(yamlEntry.getKeyNode(), "");
+            Node value = yamlEntry.getValueNode();
+            switch (keyName) {
+                case "name":
+                    builder.setName(UtsuFileUtils.getYamlStringValue(value, ""));
+                    break;
+                case "image":
+                    builder.setImageName(UtsuFileUtils.getYamlStringValue(value, ""));
+                    break;
+                case "author":
+                    builder.setAuthor(UtsuFileUtils.getYamlStringValue(value, ""));
+                    break;
+                case "voice":
+                    builder.setAuthor(UtsuFileUtils.getYamlStringValue(value, ""));
+                    break;
+                case "portrait":
+                    builder.setPortraitName(UtsuFileUtils.getYamlStringValue(value, ""));
+                    break;
+                case "portrait_opacity":
+                    builder.setPortraitOpacity(UtsuFileUtils.getYamlDoubleValue(value, 0.5));
+                    break;
+                case "text_file_encoding":
+                case "web":
+                case "subbanks":
+                default:
+                    // Do nothing.
+            }
+        }
     }
 
     private void parseOtoIni(

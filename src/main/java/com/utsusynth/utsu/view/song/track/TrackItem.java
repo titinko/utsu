@@ -11,7 +11,7 @@ public interface TrackItem {
         NOTE,
         PITCHBEND,
         ENVELOPE,
-        LYRIC, // Note lyrics and lyric entry boxes.
+        LYRIC, // Note lyrics.
         PLAYBACK, // Start, end, and playback bars.
         DRAWING, // Drawn by mouse action, i.e. AddNoteBox and SelectionBox.
     }

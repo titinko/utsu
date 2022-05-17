@@ -4,10 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.utsusynth.utsu.common.utils.RoundUtils;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.utils.UtsuFileUtils;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.Note;
@@ -20,6 +19,8 @@ import org.yaml.snakeyaml.nodes.*;
  * Reads a song from a ustx file.
  */
 public class UstxReader implements SongReader {
+    private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
     private final Provider<Song> songProvider;
     private final VoicebankReader voicebankReader;
 
@@ -39,13 +40,16 @@ public class UstxReader implements SongReader {
         Yaml yaml = new Yaml();
         try {
             Node yamlNode = yaml.represent(yaml.load(FileUtils.openInputStream(file)));
-            for (NodeTuple yamlEntry : getMapEntries(yamlNode)) {
-                if (getStringValue(yamlEntry.getKeyNode(), "").equals("voice_parts")) {
-                    return Math.max(1, getListEntries(yamlEntry.getValueNode()).size());
+            for (NodeTuple yamlEntry : UtsuFileUtils.getYamlMapEntries(yamlNode)) {
+                if (UtsuFileUtils.getYamlStringValue(
+                        yamlEntry.getKeyNode(), "").equals("voice_parts")) {
+                    return Math.max(
+                            1, UtsuFileUtils.getYamlListEntries(yamlEntry.getValueNode()).size());
                 }
             }
         } catch (IOException e) {
-            // TODO
+            // TODO: Handle this.
+            errorLogger.logError(e);
         }
         return 1;
     }
@@ -56,20 +60,21 @@ public class UstxReader implements SongReader {
         Song.Builder songBuilder = songProvider.get().toBuilder();
         try {
             Node yamlNode = yaml.represent(yaml.load(FileUtils.openInputStream(file)));
-            for (NodeTuple yamlEntry : getMapEntries(yamlNode)) {
+            for (NodeTuple yamlEntry : UtsuFileUtils.getYamlMapEntries(yamlNode)) {
                 parseSection(yamlEntry, songBuilder, trackNum);
             }
         } catch (IOException e) {
-            // TODO
+            // TODO: Handle this.
+            errorLogger.logError(e);
         }
         return songBuilder.build();
     }
 
     private void parseSection(NodeTuple section, Song.Builder builder, int trackNum) {
         Node value = section.getValueNode();
-        switch (getStringValue(section.getKeyNode(), "")) {
+        switch (UtsuFileUtils.getYamlStringValue(section.getKeyNode(), "")) {
             case "name":
-                builder.setProjectName(getStringValue(value, ""));
+                builder.setProjectName(UtsuFileUtils.getYamlStringValue(value, ""));
                 break;
             case "comment":
                 // Do nothing.
@@ -84,7 +89,7 @@ public class UstxReader implements SongReader {
                 // Do nothing.
                 break;
             case "bpm":
-                double tempo = getDoubleValue(value, -1);
+                double tempo = UtsuFileUtils.getYamlDoubleValue(value, -1);
                 if (tempo > 0) {
                     builder.setTempo(tempo);
                 }
@@ -100,7 +105,9 @@ public class UstxReader implements SongReader {
             case "tracks":
                 break;
             case "voice_parts":
-                parseTrack(getListEntries(section.getValueNode()).get(trackNum - 1), builder);
+                parseTrack(
+                        UtsuFileUtils.getYamlListEntries(section.getValueNode()).get(trackNum - 1),
+                        builder);
                 break;
             case "wave_parts":
                 // Do nothing for now.
@@ -112,11 +119,12 @@ public class UstxReader implements SongReader {
 
     private void parseTrack(Node voiceTrack, Song.Builder builder) {
         int trackPosition = 0;
-        for (NodeTuple section : getMapEntries(voiceTrack)) {
+        for (NodeTuple section : UtsuFileUtils.getYamlMapEntries(voiceTrack)) {
             Node value = section.getValueNode();
-            switch (getStringValue(section.getKeyNode(), "")) {
+            switch (UtsuFileUtils.getYamlStringValue(section.getKeyNode(), "")) {
                 case "name":
-                    builder.setProjectName(getStringValue(section.getValueNode(), ""));
+                    builder.setProjectName(
+                            UtsuFileUtils.getYamlStringValue(section.getValueNode(), ""));
                     break;
                 case "comment":
                     // Do nothing.
@@ -125,11 +133,11 @@ public class UstxReader implements SongReader {
                     // Do nothing.
                     break;
                 case "position":
-                    trackPosition = getIntValue(value, trackPosition);
+                    trackPosition = UtsuFileUtils.getYamlIntValue(value, trackPosition);
                     break;
                 case "notes":
                     TreeMap<Integer, Note> sortedNotes = new TreeMap<>();
-                    for (Node noteNode : getListEntries(value)) {
+                    for (Node noteNode : UtsuFileUtils.getYamlListEntries(value)) {
                         parseNote(noteNode, sortedNotes, trackPosition);
                     }
                     addAllNotes(sortedNotes, builder);
@@ -165,20 +173,20 @@ public class UstxReader implements SongReader {
     private void parseNote(Node noteNode, TreeMap<Integer, Note> sortedNotes, int trackPosition) {
         int notePosition = -1;
         Note note = new Note();
-        for (NodeTuple section : getMapEntries(noteNode)) {
+        for (NodeTuple section : UtsuFileUtils.getYamlMapEntries(noteNode)) {
             Node value = section.getValueNode();
-            switch (getStringValue(section.getKeyNode(), "")) {
+            switch (UtsuFileUtils.getYamlStringValue(section.getKeyNode(), "")) {
                 case "position":
-                    notePosition = getIntValue(value, notePosition);
+                    notePosition = UtsuFileUtils.getYamlIntValue(value, notePosition);
                     break;
                 case "duration":
-                    note.setDuration(getIntValue(value, -1));
+                    note.setDuration(UtsuFileUtils.getYamlIntValue(value, -1));
                     break;
                 case "tone":
-                    note.setNoteNum(getIntValue(value, -1));
+                    note.setNoteNum(UtsuFileUtils.getYamlIntValue(value, -1));
                     break;
                 case "lyric":
-                    note.setLyric(getStringValue(value, ""));
+                    note.setLyric(UtsuFileUtils.getYamlStringValue(value, ""));
                     break;
                 case "pitch":
                     parsePitch(value, note);
@@ -188,7 +196,7 @@ public class UstxReader implements SongReader {
                     break;
                 case "note_expressions":
                 case "phoneme_expressions":
-                    for (Node expressionNode : getListEntries(value)) {
+                    for (Node expressionNode : UtsuFileUtils.getYamlListEntries(value)) {
                         parseExpression(expressionNode, note);
                     }
                     break;
@@ -205,11 +213,11 @@ public class UstxReader implements SongReader {
     }
 
     private void parsePitch(Node pitchNode, Note note) {
-        for (NodeTuple pitchSection : getMapEntries(pitchNode)) {
+        for (NodeTuple pitchSection : UtsuFileUtils.getYamlMapEntries(pitchNode)) {
             Node value = pitchSection.getValueNode();
-            switch (getStringValue(pitchSection.getKeyNode(), "")) {
+            switch (UtsuFileUtils.getYamlStringValue(pitchSection.getKeyNode(), "")) {
                 case "data":
-                    List<Node> dataNodes = getListEntries(value);
+                    List<Node> dataNodes = UtsuFileUtils.getYamlListEntries(value);
                     double curX = 0;
                     double[] pbs = new double[2];
                     double[] pbw = new double[Math.max(dataNodes.size() - 1, 0)];
@@ -217,28 +225,31 @@ public class UstxReader implements SongReader {
                     String[] pbm = new String[Math.max(dataNodes.size() - 1, 0)];
                     Arrays.fill(pbm, "");
                     for (int i = 0; i < dataNodes.size(); i++) {
-                        for (NodeTuple dataSection : getMapEntries(dataNodes.get(i))) {
+                        for (NodeTuple dataSection
+                                : UtsuFileUtils.getYamlMapEntries(dataNodes.get(i))) {
+                            Node dataKey = dataSection.getKeyNode();
                             Node dataValue = dataSection.getValueNode();
-                            switch(getStringValue(dataSection.getKeyNode(), "")) {
+                            switch(UtsuFileUtils.getYamlStringValue(dataKey, "")) {
                                 case "x":
-                                    double xValue = getDoubleValue(dataValue, 0);
+                                    double xVal = UtsuFileUtils.getYamlDoubleValue(dataValue, 0);
                                     if (i == 0) {
-                                        pbs[0] = xValue;
+                                        pbs[0] = xVal;
                                     } else {
-                                        pbw[i - 1] = xValue - curX;
+                                        pbw[i - 1] = xVal - curX;
                                     }
-                                    curX = xValue;
+                                    curX = xVal;
                                     break;
                                 case "y":
                                     if (i > 0 && i < dataNodes.size() - 1) {
-                                        pby[i - 1] = getDoubleValue(dataValue, 0);
+                                        pby[i - 1] =
+                                                UtsuFileUtils.getYamlDoubleValue(dataValue, 0);
                                     }
                                     break;
                                 case "shape":
                                     if (i >= dataNodes.size() - 1) {
                                         break;
                                     }
-                                    switch (getStringValue(dataValue, "io")) {
+                                    switch (UtsuFileUtils.getYamlStringValue(dataValue, "io")) {
                                         case "l":
                                             pbm[i] = "s"; // Straight.
                                             break;
@@ -274,29 +285,29 @@ public class UstxReader implements SongReader {
 
     private void parseVibrato(Node vibratoNode, Note note) {
         int[] vibrato = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        for (NodeTuple vibratoSection : getMapEntries(vibratoNode)) {
+        for (NodeTuple vibratoSection : UtsuFileUtils.getYamlMapEntries(vibratoNode)) {
             Node value = vibratoSection.getValueNode();
-            switch (getStringValue(vibratoSection.getKeyNode(), "")) {
+            switch (UtsuFileUtils.getYamlStringValue(vibratoSection.getKeyNode(), "")) {
                 case "length":
-                    vibrato[0] = getIntValue(value, vibrato[0]);
+                    vibrato[0] = UtsuFileUtils.getYamlIntValue(value, vibrato[0]);
                     break;
                 case "period":
-                    vibrato[1] = getIntValue(value, vibrato[1]);
+                    vibrato[1] = UtsuFileUtils.getYamlIntValue(value, vibrato[1]);
                     break;
                 case "depth":
-                    vibrato[2] = getIntValue(value, vibrato[2]);
+                    vibrato[2] = UtsuFileUtils.getYamlIntValue(value, vibrato[2]);
                     break;
                 case "in":
-                    vibrato[3] = getIntValue(value, vibrato[3]);
+                    vibrato[3] = UtsuFileUtils.getYamlIntValue(value, vibrato[3]);
                     break;
                 case "out":
-                    vibrato[4] = getIntValue(value, vibrato[4]);
+                    vibrato[4] = UtsuFileUtils.getYamlIntValue(value, vibrato[4]);
                     break;
                 case "shift":
-                    vibrato[5] = getIntValue(value, vibrato[5]);
+                    vibrato[5] = UtsuFileUtils.getYamlIntValue(value, vibrato[5]);
                     break;
                 case "drift":
-                    vibrato[6] = getIntValue(value, vibrato[6]);
+                    vibrato[6] = UtsuFileUtils.getYamlIntValue(value, vibrato[6]);
                     break;
                 default:
                     printKeyErrorMessage(vibratoSection);
@@ -308,17 +319,17 @@ public class UstxReader implements SongReader {
     private void parseExpression(Node expressionNode, Note note) {
         String expressionName = "";
         Integer expressionValue = null;
-        for (NodeTuple expressionSection : getMapEntries(expressionNode)) {
+        for (NodeTuple expressionSection : UtsuFileUtils.getYamlMapEntries(expressionNode)) {
             Node value = expressionSection.getValueNode();
-            switch (getStringValue(expressionSection.getKeyNode(), "")) {
+            switch (UtsuFileUtils.getYamlStringValue(expressionSection.getKeyNode(), "")) {
                 case "index":
                     // Not sure what this does.
                     break;
                 case "abbr":
-                    expressionName = getStringValue(value, expressionName);
+                    expressionName = UtsuFileUtils.getYamlStringValue(value, expressionName);
                     break;
                 case "value":
-                    expressionValue = getIntValue(value, expressionValue);
+                    expressionValue = UtsuFileUtils.getYamlIntValue(value, expressionValue);
                     break;
                 default:
                     printKeyErrorMessage(expressionSection);
@@ -377,42 +388,7 @@ public class UstxReader implements SongReader {
     }
 
     private static void printKeyErrorMessage(NodeTuple nodeTuple) {
-        System.out.println(
-                "Unkown USTX field: " + getStringValue(nodeTuple.getKeyNode(), "UNKNOWN"));
-    }
-
-    private static List<NodeTuple> getMapEntries(Node yamlNode) {
-        if (!(yamlNode instanceof MappingNode)) {
-            return ImmutableList.of();
-        }
-        return ((MappingNode) yamlNode).getValue();
-    }
-
-    private static List<Node> getListEntries(Node yamlNode) {
-        if (!(yamlNode instanceof SequenceNode)) {
-            return ImmutableList.of();
-        }
-        return ((SequenceNode) yamlNode).getValue();
-    }
-
-    private static String getStringValue(Node yamlNode, String fallback) {
-        if (!(yamlNode instanceof ScalarNode)) {
-            return fallback;
-        }
-        return ((ScalarNode) yamlNode).getValue();
-    }
-
-    private static Integer getIntValue(Node yamlNode, Integer fallback) {
-        if (!(yamlNode instanceof ScalarNode)) {
-            return fallback;
-        }
-        return RoundUtils.round(Double.parseDouble(((ScalarNode) yamlNode).getValue()));
-    }
-
-    private static double getDoubleValue(Node yamlNode, double fallback) {
-        if (!(yamlNode instanceof ScalarNode)) {
-            return fallback;
-        }
-        return Double.parseDouble(((ScalarNode) yamlNode).getValue());
+        System.out.println("Unkown USTX field: "
+                + UtsuFileUtils.getYamlStringValue(nodeTuple.getKeyNode(), "UNKNOWN"));
     }
 }
