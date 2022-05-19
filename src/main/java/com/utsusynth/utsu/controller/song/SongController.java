@@ -41,6 +41,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Orientation;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -52,6 +53,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -366,18 +368,29 @@ public class SongController implements EditorController, Localizable {
 
     @Override
     public void refreshView() {
-        // Set song image.
+        // Load voicebank images.
+        ImageView voicebankPortrait = new ImageView();
         try {
+            // Voicebank image on the upper left.
             Image image = new Image("file:" + song.get().getVoicebank().getImagePath());
             voicebankImage.setImage(image);
-            // ImageView tempImage = new ImageView();
-            // tempImage.setImage(image);
-            // tempImage.setMouseTransparent(true);
-            // tempImage.setOpacity(.5);
-            // anchorCenter.getChildren().clear();
-            // anchorCenter.getChildren().add(tempImage);
+
+            // Full-size character portrait.
+            Image portrait = new Image("file:" + song.get().getVoicebank().getPortraitPath());
+            voicebankPortrait.setImage(portrait);
+            voicebankPortrait.setOpacity(song.get().getVoicebank().getPortraitOpacity());
+            voicebankPortrait.setPreserveRatio(true);
+            voicebankPortrait.setFitHeight(800);
+            voicebankPortrait.setMouseTransparent(true);
+            voicebankPortrait.setSmooth(true);
+            Rectangle clip = new Rectangle();
+            clip.widthProperty().bind(
+                    anchorCenter.widthProperty().subtract(Quantizer.SCROLL_BAR_WIDTH));
+            clip.heightProperty().bind(
+                    anchorCenter.heightProperty().subtract(Quantizer.SCROLL_BAR_WIDTH));
+            voicebankPortrait.setClip(clip);
         } catch (Exception e) {
-            System.out.println("Exception while loading voicebank image.");
+            System.out.println("Exception while loading voicebank images.");
             errorLogger.logWarning(e);
         }
 
@@ -431,7 +444,7 @@ public class SongController implements EditorController, Localizable {
 
         // Reloads current song.
         anchorCenter.getChildren().clear();
-        anchorCenter.getChildren().add(0, noteTrack);
+        anchorCenter.getChildren().addAll(noteTrack, voicebankPortrait);
         anchorBottom.getChildren().clear();
         anchorBottom.getChildren().add(dynamicsTrack);
     }

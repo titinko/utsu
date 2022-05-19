@@ -352,6 +352,14 @@ public class Voicebank {
         return new File(pathToVoicebank, imageName).getAbsolutePath();
     }
 
+    public String getPortraitPath() {
+        return new File(pathToVoicebank, portraitName).getAbsolutePath();
+    }
+
+    public double getPortraitOpacity() {
+        return portraitOpacity;
+    }
+
     public String getDescription() {
         return description;
     }
