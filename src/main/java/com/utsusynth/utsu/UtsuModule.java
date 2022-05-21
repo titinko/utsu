@@ -135,6 +135,8 @@ public class UtsuModule extends AbstractModule {
         defaultBuilder.put("autoscroll", PreferencesManager.AutoscrollMode.ENABLED_END.name());
         defaultBuilder.put(
                 "autoscrollCancel", PreferencesManager.AutoscrollCancelMode.ENABLED.name());
+        defaultBuilder.put("showVoicebankFace", "true");
+        defaultBuilder.put("showVoicebankBody", "true");
         defaultBuilder.put("locale", "en");
         defaultBuilder.put("cache", PreferencesManager.CacheMode.ENABLED.name());
         defaultBuilder.put("resampler", assetManager.getResamplerFile().getAbsolutePath());

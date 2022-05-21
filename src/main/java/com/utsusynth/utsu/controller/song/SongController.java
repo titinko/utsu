@@ -24,6 +24,7 @@ import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.controller.song.LyricEditorController.LyricEditorType;
 import com.utsusynth.utsu.engine.Engine;
 import com.utsusynth.utsu.engine.ExternalProcessRunner;
+import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.files.song.*;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
@@ -41,7 +42,6 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Orientation;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -60,7 +60,6 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.util.*;
@@ -93,6 +92,7 @@ public class SongController implements EditorController, Localizable {
     private final VoicebankReader voicebankReader;
     private final IconManager iconManager;
     private final ThemeManager themeManager;
+    private final PreferencesManager preferencesManager;
     private final ExternalProcessRunner processRunner;
     private final Provider<ChooseTrackDialog> chooseTrackProvider;
     private final Provider<FXMLLoader> fxmlLoaderProvider;
@@ -144,6 +144,7 @@ public class SongController implements EditorController, Localizable {
             VoicebankReader voicebankReader,
             IconManager iconManager,
             ThemeManager themeManager,
+            PreferencesManager preferencesManager,
             ExternalProcessRunner processRunner,
             Provider<ChooseTrackDialog> chooseTrackProvider,
             Provider<FXMLLoader> fxmlLoaders) {
@@ -162,6 +163,7 @@ public class SongController implements EditorController, Localizable {
         this.voicebankReader = voicebankReader;
         this.iconManager = iconManager;
         this.themeManager = themeManager;
+        this.preferencesManager = preferencesManager;
         this.processRunner = processRunner;
         this.chooseTrackProvider = chooseTrackProvider;
         this.fxmlLoaderProvider = fxmlLoaders;
@@ -374,6 +376,7 @@ public class SongController implements EditorController, Localizable {
             // Voicebank image on the upper left.
             Image image = new Image("file:" + song.get().getVoicebank().getImagePath());
             voicebankImage.setImage(image);
+            voicebankImage.visibleProperty().bind(preferencesManager.getShowVoicebankFace());
 
             // Full-size character portrait.
             Image portrait = new Image("file:" + song.get().getVoicebank().getPortraitPath());
@@ -389,6 +392,7 @@ public class SongController implements EditorController, Localizable {
             clip.heightProperty().bind(
                     anchorCenter.heightProperty().subtract(Quantizer.SCROLL_BAR_WIDTH));
             voicebankPortrait.setClip(clip);
+            voicebankPortrait.visibleProperty().bind(preferencesManager.getShowVoicebankBody());
         } catch (Exception e) {
             System.out.println("Exception while loading voicebank images.");
             errorLogger.logWarning(e);

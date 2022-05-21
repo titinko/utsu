@@ -5,6 +5,8 @@ import com.utsusynth.utsu.UtsuModule.SettingsPath;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.model.config.Theme;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -29,6 +31,10 @@ public class PreferencesManager {
     private final TransformerFactory transformerFactory;
     private final HashMap<String, String> preferences;
     private final ImmutableMap<String, String> defaultPreferences;
+
+    // Temporary data storage for preferences that can be changed and saved separately.
+    private BooleanProperty showVoicebankFaceTemp;
+    private BooleanProperty showVoicebankBodyTemp;
 
     public PreferencesManager(
             @SettingsPath File settingsPath,
@@ -137,6 +143,62 @@ public class PreferencesManager {
 
     public void setAutoscrollCancel(AutoscrollCancelMode autoscrollCancelMode) {
         preferences.put("autoscrollCancel", autoscrollCancelMode.name());
+    }
+
+    public BooleanProperty getShowVoicebankFace() {
+        if (showVoicebankFaceTemp == null) {
+            String showVoicebankFace = preferences.containsKey("showVoicebankFace")
+                    ? preferences.get("showVoicebankFace")
+                    : defaultPreferences.get("showVoicebankFace");
+            showVoicebankFaceTemp = new SimpleBooleanProperty(
+                    showVoicebankFace.equalsIgnoreCase("true"));
+        }
+        return showVoicebankFaceTemp;
+    }
+
+    public void saveShowVoicebankFace() {
+        if (showVoicebankFaceTemp == null) {
+            return; // Nothing to save.
+        }
+        preferences.put("showVoicebankFace", Boolean.toString(showVoicebankFaceTemp.get()));
+    }
+
+    public void revertShowVoicebankFace() {
+        if (showVoicebankFaceTemp == null) {
+            return;
+        }
+        String showVoicebankFace = preferences.containsKey("showVoicebankFace")
+                ? preferences.get("showVoicebankFace")
+                : defaultPreferences.get("showVoicebankFace");
+        showVoicebankFaceTemp.set(showVoicebankFace.equalsIgnoreCase("true"));
+    }
+
+    public BooleanProperty getShowVoicebankBody() {
+        if (showVoicebankBodyTemp == null) {
+            String showVoicebankBody = preferences.containsKey("showVoicebankBody")
+                    ? preferences.get("showVoicebankBody")
+                    : defaultPreferences.get("showVoicebankBody");
+            showVoicebankBodyTemp = new SimpleBooleanProperty(
+                    showVoicebankBody.equalsIgnoreCase("true"));
+        }
+        return showVoicebankBodyTemp;
+    }
+
+    public void saveShowVoicebankBody() {
+        if (showVoicebankBodyTemp == null) {
+            return; // Nothing to save.
+        }
+        preferences.put("showVoicebankBody", Boolean.toString(showVoicebankBodyTemp.get()));
+    }
+
+    public void revertShowVoicebankBody() {
+        if (showVoicebankBodyTemp == null) {
+            return;
+        }
+        String showVoicebankBody = preferences.containsKey("showVoicebankBody")
+                ? preferences.get("showVoicebankBody")
+                : defaultPreferences.get("showVoicebankBody");
+        showVoicebankBodyTemp.set(showVoicebankBody.equalsIgnoreCase("true"));
     }
 
     public NativeLocale getLocale() {

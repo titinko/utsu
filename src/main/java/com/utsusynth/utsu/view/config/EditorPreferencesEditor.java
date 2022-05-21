@@ -10,10 +10,7 @@ import com.utsusynth.utsu.files.PreferencesManager.AutoscrollCancelMode;
 import javafx.collections.FXCollections;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
@@ -34,6 +31,9 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
     private Label autoscrollCancelLabel;
     private RadioButton autoscrollCancelDisabled;
     private RadioButton autoscrollCancelEnabled;
+    private Label voicebankImageLabel;
+    private CheckBox voicebankFaceCheckBox;
+    private CheckBox voicebankBodyCheckBox;
     private Label languageLabel;
     private ChoiceBox<NativeLocale> languageChoiceBox;
 
@@ -110,6 +110,24 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
                 autoscrollCancelEnabled.setSelected(true);
         }
 
+        voicebankImageLabel = new Label("Show voicebank image");
+        voicebankImageLabel.setWrapText(true);
+        voicebankImageLabel.setMaxWidth(170);
+        GridPane.setValignment(voicebankImageLabel, VPos.TOP);
+        VBox voicebankImageVBox = new VBox(5);
+        voicebankFaceCheckBox = new CheckBox("Face");
+        voicebankFaceCheckBox.setSelected(preferencesManager.getShowVoicebankFace().get());
+        voicebankFaceCheckBox.setOnAction(action ->
+                preferencesManager.getShowVoicebankFace().setValue(
+                        voicebankFaceCheckBox.isSelected()));
+        voicebankBodyCheckBox = new CheckBox("Full body");
+        voicebankBodyCheckBox.setSelected(preferencesManager.getShowVoicebankBody().get());
+        voicebankBodyCheckBox.setOnAction(action ->
+                preferencesManager.getShowVoicebankBody().setValue(
+                        voicebankBodyCheckBox.isSelected()));
+        voicebankImageVBox.getChildren().addAll(
+                voicebankFaceCheckBox, voicebankBodyCheckBox);
+
         languageLabel = new Label("Language");
         languageLabel.setWrapText(true);
         languageLabel.setMaxWidth(170);
@@ -126,8 +144,10 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         viewInternal.add(autoscrollVBox, 1, 0);
         viewInternal.add(autoscrollCancelLabel, 0, 1);
         viewInternal.add(autoscrollCancelVBox, 1, 1);
-        viewInternal.add(languageLabel, 0, 2);
-        viewInternal.add(languageChoiceBox, 1, 2);
+        viewInternal.add(voicebankImageLabel, 0, 2);
+        viewInternal.add(voicebankImageVBox, 1, 2);
+        viewInternal.add(languageLabel, 0, 3);
+        viewInternal.add(languageChoiceBox, 1, 3);
 
         localizer.localize(this);
         return viewInternal;
@@ -166,11 +186,16 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         } else if (autoscrollCancelEnabled.isSelected()) {
             preferencesManager.setAutoscrollCancel(AutoscrollCancelMode.ENABLED);
         }
+        // Whether to show the voicebank face/body image on the song editor.
+        preferencesManager.saveShowVoicebankFace();
+        preferencesManager.saveShowVoicebankBody();
         preferencesManager.setLocale(localizer.getCurrentLocale());
     }
 
     @Override
     public void revertToPreferences() {
+        preferencesManager.revertShowVoicebankFace();
+        preferencesManager.revertShowVoicebankBody();
         localizer.setLocale(preferencesManager.getLocale());
     }
 }
