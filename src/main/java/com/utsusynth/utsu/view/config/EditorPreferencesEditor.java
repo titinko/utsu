@@ -162,6 +162,9 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         autoscrollCancelLabel.setText(bundle.getString("preferences.editor.autoscrollCancel"));
         autoscrollCancelDisabled.setText(bundle.getString("preferences.disabled"));
         autoscrollCancelEnabled.setText(bundle.getString("preferences.enabled"));
+        voicebankImageLabel.setText(bundle.getString("preferences.editor.showVoicebankImage"));
+        voicebankFaceCheckBox.setText(bundle.getString("preferences.editor.voicebankFace"));
+        voicebankBodyCheckBox.setText(bundle.getString("preferences.editor.voicebankFullBody"));
         languageLabel.setText(bundle.getString("preferences.editor.language"));
     }
 
