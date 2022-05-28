@@ -7,6 +7,7 @@ import com.utsusynth.utsu.common.i18n.NativeLocale;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.PreferencesManager.AutoscrollMode;
 import com.utsusynth.utsu.files.PreferencesManager.AutoscrollCancelMode;
+import com.utsusynth.utsu.files.PreferencesManager.GuessAliasMode;
 import javafx.collections.FXCollections;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
@@ -31,6 +32,9 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
     private Label autoscrollCancelLabel;
     private RadioButton autoscrollCancelDisabled;
     private RadioButton autoscrollCancelEnabled;
+    private Label guessAliasLabel;
+    private RadioButton guessAliasDisabled;
+    private RadioButton guessAliasEnabled;
     private Label voicebankImageLabel;
     private CheckBox voicebankFaceCheckBox;
     private CheckBox voicebankBodyCheckBox;
@@ -110,6 +114,25 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
                 autoscrollCancelEnabled.setSelected(true);
         }
 
+        guessAliasLabel = new Label("Guess alias for lyrics");
+        guessAliasLabel.setWrapText(true);
+        guessAliasLabel.setMaxWidth(170);
+        GridPane.setValignment(guessAliasLabel, VPos.TOP);
+        ToggleGroup guessAliasGroup = new ToggleGroup();
+        VBox guessAliasVBox = new VBox(5);
+        guessAliasDisabled = new RadioButton("Disabled");
+        guessAliasDisabled.setToggleGroup(guessAliasGroup);
+        guessAliasEnabled = new RadioButton("Enabled");
+        guessAliasEnabled.setToggleGroup(guessAliasGroup);
+        guessAliasVBox.getChildren().addAll(guessAliasDisabled, guessAliasEnabled);
+        switch (preferencesManager.getGuessAlias()) {
+            case DISABLED:
+                guessAliasDisabled.setSelected(true);
+                break;
+            case ENABLED:
+                guessAliasEnabled.setSelected(true);
+        }
+
         voicebankImageLabel = new Label("Show voicebank image");
         voicebankImageLabel.setWrapText(true);
         voicebankImageLabel.setMaxWidth(170);
@@ -144,10 +167,12 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         viewInternal.add(autoscrollVBox, 1, 0);
         viewInternal.add(autoscrollCancelLabel, 0, 1);
         viewInternal.add(autoscrollCancelVBox, 1, 1);
-        viewInternal.add(voicebankImageLabel, 0, 2);
-        viewInternal.add(voicebankImageVBox, 1, 2);
-        viewInternal.add(languageLabel, 0, 3);
-        viewInternal.add(languageChoiceBox, 1, 3);
+        viewInternal.add(guessAliasLabel, 0, 2);
+        viewInternal.add(guessAliasVBox, 1, 2);
+        viewInternal.add(voicebankImageLabel, 0, 3);
+        viewInternal.add(voicebankImageVBox, 1, 3);
+        viewInternal.add(languageLabel, 0, 4);
+        viewInternal.add(languageChoiceBox, 1, 4);
 
         localizer.localize(this);
         return viewInternal;
@@ -162,6 +187,9 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
         autoscrollCancelLabel.setText(bundle.getString("preferences.editor.autoscrollCancel"));
         autoscrollCancelDisabled.setText(bundle.getString("preferences.disabled"));
         autoscrollCancelEnabled.setText(bundle.getString("preferences.enabled"));
+        guessAliasLabel.setText(bundle.getString("preferences.editor.guessAlias"));
+        guessAliasDisabled.setText(bundle.getString("preferences.disabled"));
+        guessAliasEnabled.setText(bundle.getString("preferences.enabled"));
         voicebankImageLabel.setText(bundle.getString("preferences.editor.showVoicebankImage"));
         voicebankFaceCheckBox.setText(bundle.getString("preferences.editor.voicebankFace"));
         voicebankBodyCheckBox.setText(bundle.getString("preferences.editor.voicebankFullBody"));
@@ -188,6 +216,13 @@ public class EditorPreferencesEditor extends PreferencesEditor implements Locali
             preferencesManager.setAutoscrollCancel(AutoscrollCancelMode.DISABLED);
         } else if (autoscrollCancelEnabled.isSelected()) {
             preferencesManager.setAutoscrollCancel(AutoscrollCancelMode.ENABLED);
+        }
+        // Whether to try to guess the alias of lyrics by adding prefixes/suffixes, or only allow
+        // exact match.
+        if (guessAliasDisabled.isSelected()) {
+            preferencesManager.setGuessAlias(GuessAliasMode.DISABLED);
+        } else if (guessAliasEnabled.isSelected()) {
+            preferencesManager.setGuessAlias(GuessAliasMode.ENABLED);
         }
         // Whether to show the voicebank face/body image on the song editor.
         preferencesManager.saveShowVoicebankFace();

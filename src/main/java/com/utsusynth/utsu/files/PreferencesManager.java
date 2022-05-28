@@ -145,6 +145,25 @@ public class PreferencesManager {
         preferences.put("autoscrollCancel", autoscrollCancelMode.name());
     }
 
+    public enum GuessAliasMode {
+        DISABLED, ENABLED
+    }
+
+    public GuessAliasMode getGuessAlias() {
+        String guessAliasName = preferences.containsKey("guessAlias")
+                ? preferences.get("guessAlias") : defaultPreferences.get("guessAlias");
+        try {
+            return GuessAliasMode.valueOf(guessAliasName);
+        } catch (IllegalArgumentException e) {
+            errorLogger.logError(e);
+            return GuessAliasMode.valueOf(defaultPreferences.get("guessAlias"));
+        }
+    }
+
+    public void setGuessAlias(GuessAliasMode guessAliasMode) {
+        preferences.put("guessAlias", guessAliasMode.name());
+    }
+
     public BooleanProperty getShowVoicebankFace() {
         if (showVoicebankFaceTemp == null) {
             String showVoicebankFace = preferences.containsKey("showVoicebankFace")

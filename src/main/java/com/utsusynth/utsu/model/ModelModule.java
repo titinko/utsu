@@ -9,6 +9,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.utsusynth.utsu.engine.FrqGenerator;
 import com.utsusynth.utsu.files.CacheManager;
+import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.model.song.NoteList;
 import com.utsusynth.utsu.model.song.NoteStandardizer;
 import com.utsusynth.utsu.model.song.Song;
@@ -42,8 +43,10 @@ public class ModelModule extends AbstractModule {
             LyricConfigMap configMap,
             PitchMap pitchMap,
             FrqGenerator frqGen,
+            PreferencesManager preferencesManager,
             PresampConfig presampConfig) {
-        return new Voicebank(configMap, pitchMap, new HashSet<>(), frqGen, presampConfig);
+        return new Voicebank(
+                configMap, pitchMap, new HashSet<>(), frqGen, preferencesManager, presampConfig);
     }
 
     @Provides

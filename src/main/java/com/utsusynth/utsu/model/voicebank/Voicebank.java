@@ -2,12 +2,13 @@ package com.utsusynth.utsu.model.voicebank;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.common.data.VoicebankData;
 import com.utsusynth.utsu.engine.FrqGenerator;
+import com.utsusynth.utsu.files.PreferencesManager;
+import com.utsusynth.utsu.files.PreferencesManager.GuessAliasMode;
 
 import java.io.File;
 import java.util.*;
@@ -23,6 +24,7 @@ public class Voicebank {
     private final PitchMap pitchMap;
     private final Set<File> soundFiles;
     private final FrqGenerator frqGenerator;
+    private final PreferencesManager preferencesManager;
     private PresampConfig presampConfig; // Immutable value.
 
     private File pathToVoicebank; // Example: "/Library/Iona.utau/"
@@ -108,11 +110,13 @@ public class Voicebank {
             PitchMap pitchMap,
             Set<File> soundFiles,
             FrqGenerator frqGenerator,
+            PreferencesManager preferencesManager,
             PresampConfig presampConfig) {
         this.lyricConfigs = lyricConfigs;
         this.pitchMap = pitchMap;
         this.soundFiles = soundFiles;
         this.frqGenerator = frqGenerator;
+        this.preferencesManager = preferencesManager;
         this.presampConfig = presampConfig;
 
         // Default values.
@@ -133,6 +137,7 @@ public class Voicebank {
                         this.pitchMap,
                         this.soundFiles,
                         this.frqGenerator,
+                        this.preferencesManager,
                         this.presampConfig))
                 .setPathToVoicebank(this.pathToVoicebank)
                 .setName(this.name)
@@ -155,6 +160,11 @@ public class Voicebank {
     }
 
     public Optional<LyricConfig> getLyricConfig(String prevLyric, String lyric, String pitch) {
+        // If alias guessing is disabled, allow an exact match only.
+        if (preferencesManager.getGuessAlias().equals(GuessAliasMode.DISABLED)) {
+            return lyricConfigs.hasLyric(lyric)
+                    ? Optional.of(lyricConfigs.getConfig(lyric)) : Optional.empty();
+        }
         String vcvPrefix = getVowel(prevLyric) + " "; // Most common VCV format.
         String prefix = pitchMap.getPrefix(pitch); // Pitch prefix.
         String suffix = pitchMap.getSuffix(pitch); // Pitch suffix.
