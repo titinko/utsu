@@ -4,6 +4,9 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.files.AudioPlayer;
+import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 
@@ -11,12 +14,14 @@ public class Piano {
     private static final double LEFT_KEY_WIDTH = 60;
     private static final double RIGHT_KEY_WIDTH = 40;
 
+    private final AudioPlayer audioPlayer;
     private final Scaler scaler;
 
     private Pane pianoGrid;
 
     @Inject
-    public Piano(Scaler scaler) {
+    public Piano(AudioPlayer audioPlayer, Scaler scaler) {
+        this.audioPlayer = audioPlayer;
         this.scaler = scaler;
     }
 
@@ -30,15 +35,22 @@ public class Piano {
         pianoGrid = new Pane();
         pianoGrid.setPrefSize(
                 LEFT_KEY_WIDTH + RIGHT_KEY_WIDTH, rowHeight * PitchUtils.TOTAL_NUM_PITCHES);
+        pianoGrid.setOnMouseEntered(event -> {
+            pianoGrid.getScene().setCursor(Cursor.HAND);
+        });
+        pianoGrid.setOnMouseExited(event -> {
+            pianoGrid.getScene().setCursor(Cursor.DEFAULT);
+        });
 
         int rowNum = 0;
         for (int octave = 7; octave > 0; octave--) {
             for (String pitch : PitchUtils.REVERSE_PITCHES) {
                 Pane leftHalfOfKey = new Pane();
+                String pitchLabel = pitch + octave;
                 leftHalfOfKey.getStyleClass()
                         .add(pitch.endsWith("#") ? "piano-black-key" : "piano-white-key");
                 leftHalfOfKey.setPrefSize(LEFT_KEY_WIDTH, rowHeight);
-                leftHalfOfKey.getChildren().add(new Label(pitch + octave));
+                leftHalfOfKey.getChildren().add(new Label(pitchLabel));
                 leftHalfOfKey.setTranslateY(rowNum * rowHeight);
 
                 Pane rightHalfOfKey;
@@ -70,7 +82,19 @@ public class Piano {
                     rightHalfOfKey.setPrefHeight(rowHeight + 1);
                 }
 
-                pianoGrid.getChildren().addAll(leftHalfOfKey, rightHalfOfKey);
+                Group fullKey = new Group(leftHalfOfKey, rightHalfOfKey);
+                fullKey.setOnMousePressed(event -> {
+                    audioPlayer.playPianoNote(
+                            PitchUtils.pitchToNoteNum(pitchLabel), /* alwaysPlay= */ true);
+                });
+                fullKey.setOnDragDetected(event -> {
+                    fullKey.startFullDrag();
+                });
+                fullKey.setOnMouseDragOver(event -> {
+                    audioPlayer.playPianoNote(
+                            PitchUtils.pitchToNoteNum(pitchLabel), /* alwaysPlay= */ false);
+                });
+                pianoGrid.getChildren().add(fullKey);
                 rowNum++;
             }
         }

@@ -67,6 +67,7 @@ public class AssetManager {
             return false;
         }
         copyFile(SOUNDS_SOURCE, soundsPath, "silence.wav", "SILENCE_WAV");
+        copyFile(SOUNDS_SOURCE, soundsPath, "piano.wav", "PIANO_WAV");
         initializeVoicebank();
 
         // Initialize executables.
@@ -133,6 +134,10 @@ public class AssetManager {
 
     public File getSilenceFile() {
         return new File(soundsPath, "silence.wav");
+    }
+
+    public File getPianoFile() {
+        return new File(soundsPath, "piano.wav");
     }
 
     public File getVoicePath() {

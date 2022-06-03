@@ -16,7 +16,7 @@ public class PitchUtils {
      * Convert a note num (where 24 = C1) to the string description of what pitch it represents.
      */
     public static String noteNumToPitch(int noteNum) {
-        return PITCHES.get(noteNum % 12) + Integer.toString(noteNum / 12 - 1);
+        return PITCHES.get(noteNum % 12) + (noteNum / 12 - 1);
     }
 
     /**
