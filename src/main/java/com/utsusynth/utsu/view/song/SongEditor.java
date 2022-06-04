@@ -12,6 +12,7 @@ import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.controller.UtsuController.CheckboxType;
+import com.utsusynth.utsu.files.AudioPlayer;
 import com.utsusynth.utsu.view.song.note.AddNoteBox;
 import com.utsusynth.utsu.view.song.note.Note;
 import com.utsusynth.utsu.view.song.note.NoteCallback;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 public class SongEditor {
     private final Track track;
     private final PlaybackManager playbackManager;
+    private final AudioPlayer audioPlayer;
     private final SelectionBox selectionBox;
     private final AddNoteBox addNoteBox;
     private final ContextMenu editorContextMenu;
@@ -61,6 +63,7 @@ public class SongEditor {
     public SongEditor(
             Track track,
             PlaybackManager playbackManager,
+            AudioPlayer audioPlayer,
             SelectionBox selectionBox,
             AddNoteBox addNoteBox,
             SongClipboard clipboard,
@@ -71,6 +74,7 @@ public class SongEditor {
             Scaler scaler) {
         this.track = track;
         this.playbackManager = playbackManager;
+        this.audioPlayer = audioPlayer;
         this.selectionBox = selectionBox;
         this.addNoteBox = addNoteBox;
         this.clipboard = clipboard;
@@ -483,6 +487,12 @@ public class SongEditor {
     }
 
     private void moveNotes(List<Note> notes, int positionDelta, int rowDelta) {
+        // Play a piano note in some situations.
+        if (notes.size() == 1 && rowDelta != 0) {
+            String pitch = PitchUtils.rowNumToPitch(notes.get(0).getRow() + rowDelta);
+            audioPlayer.playPianoNote(pitch, /* alwaysPlay= */ true);
+        }
+
         Set<Integer> positionsToRemove = notes.stream().filter(Note::isValid)
                 .map(Note::getAbsPositionMs).collect(Collectors.toSet());
         RegionBounds toStandardize = removeNotes(positionsToRemove);
@@ -708,6 +718,9 @@ public class SongEditor {
                         // Create new note if size would be nonzero.
                         if (endMs > startMs) {
                             int startRow = (int) scaler.unscaleY(curY) / Quantizer.ROW_HEIGHT;
+                            // Play a piano key when creating the new note.
+                            audioPlayer.playPianoNote(
+                                    PitchUtils.rowNumToPitch(startRow), /* alwaysPlay= */ true);
                             Note newNote = noteFactory.createDefaultNote(
                                     startRow,
                                     startMs,
