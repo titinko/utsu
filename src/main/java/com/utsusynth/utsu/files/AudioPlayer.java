@@ -20,10 +20,11 @@ public class AudioPlayer {
     }
 
     /**
-     * Plays a certain noteNum (where 24 = C1). If alwaysPlay is false, a piano note that's already
-     * in-progress won't be replayed.
+     * Plays a piano note at a certain pitch.
+     * @param volume A value between 0 and 1.
+     * @param alwaysPlay If false, a note that's already in progress won't be replayed.
      */
-    public void playPianoNote(String pitch, boolean alwaysPlay) {
+    public void playPianoNote(String pitch, double volume, boolean alwaysPlay) {
         int noteNum = PitchUtils.pitchToNoteNum(pitch);
         if (noteNum < 24 || noteNum > 107) {
             return; // Can only play C1->B7.
@@ -36,6 +37,7 @@ public class AudioPlayer {
         pianoPlayer = new MediaPlayer(media);
         pianoPlayer.setStartTime(Duration.millis(500 * (noteNum - 24)));
         pianoPlayer.setStopTime(Duration.millis(500 * (noteNum - 23) - 50));
+        pianoPlayer.setVolume(volume);
         pianoPlayer.setOnEndOfMedia(pianoPlayer::stop);
         pianoPlayer.setOnStopped(pianoPlayer::dispose);
         pianoPlayer.play();

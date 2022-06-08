@@ -84,13 +84,15 @@ public class Piano {
 
                 Group fullKey = new Group(leftHalfOfKey, rightHalfOfKey);
                 fullKey.setOnMousePressed(event -> {
-                    audioPlayer.playPianoNote(pitchLabel, /* alwaysPlay= */ true);
+                    audioPlayer.playPianoNote(
+                            pitchLabel, /* volume= */ 1, /* alwaysPlay= */ true);
                 });
                 fullKey.setOnDragDetected(event -> {
                     fullKey.startFullDrag();
                 });
                 fullKey.setOnMouseDragOver(event -> {
-                    audioPlayer.playPianoNote(pitchLabel, /* alwaysPlay= */ false);
+                    audioPlayer.playPianoNote(
+                            pitchLabel, /* volume= */ 1, /* alwaysPlay= */ false);
                 });
                 pianoGrid.getChildren().add(fullKey);
                 rowNum++;

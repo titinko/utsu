@@ -145,6 +145,25 @@ public class PreferencesManager {
         preferences.put("autoscrollCancel", autoscrollCancelMode.name());
     }
 
+    public enum PlayPianoNotesMode {
+        DISABLED, ENABLED_HALF, ENABLED_FULL
+    }
+
+    public PlayPianoNotesMode getPlayPianoNotes() {
+        String playPianoNotesName = preferences.containsKey("playPianoNotes")
+                ? preferences.get("playPianoNotes") : defaultPreferences.get("playPianoNotes");
+        try {
+            return PlayPianoNotesMode.valueOf(playPianoNotesName);
+        } catch (IllegalArgumentException e) {
+            errorLogger.logError(e);
+            return PlayPianoNotesMode.valueOf(defaultPreferences.get("playPianoNotes"));
+        }
+    }
+
+    public void setPlayPianoNotes(PlayPianoNotesMode playPianoNotesMode) {
+        preferences.put("playPianoNotes", playPianoNotesMode.name());
+    }
+
     public enum GuessAliasMode {
         DISABLED, ENABLED
     }
