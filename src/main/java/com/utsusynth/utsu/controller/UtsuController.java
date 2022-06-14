@@ -221,6 +221,8 @@ public class UtsuController implements Localizable {
     @FXML
     private MenuItem selectAllItem; // Value injected by FXMLLoader
     @FXML
+    private MenuItem refreshEditorItem; // Value injected by FXMLLoader
+    @FXML
     private MenuItem notePropertiesItem; // Value injected by FXMLLoader
     @FXML
     private Menu viewMenu; // Value injected by FXMLLoader
@@ -297,6 +299,7 @@ public class UtsuController implements Localizable {
         pasteItem.setText(bundle.getString("menu.edit.paste"));
         deleteItem.setText(bundle.getString("menu.edit.delete"));
         selectAllItem.setText(bundle.getString("menu.edit.selectAll"));
+        refreshEditorItem.setText(bundle.getString("menu.edit.refreshEditor"));
         notePropertiesItem.setText(bundle.getString("menu.edit.noteProperties"));
         viewMenu.setText(bundle.getString("menu.view"));
         zoomInHorizontallyItem.setText(bundle.getString("menu.view.zoomInHorizontally"));
@@ -346,6 +349,7 @@ public class UtsuController implements Localizable {
         pasteItem.setAccelerator(new KeyCodeCombination(KeyCode.V, SHORTCUT_DOWN));
         deleteItem.setAccelerator(new KeyCodeCombination(KeyCode.D, SHORTCUT_DOWN));
         selectAllItem.setAccelerator(new KeyCodeCombination(KeyCode.A, SHORTCUT_DOWN));
+        refreshEditorItem.setAccelerator(new KeyCodeCombination(KeyCode.R, SHORTCUT_DOWN));
         notePropertiesItem.setAccelerator(new KeyCodeCombination(KeyCode.E, SHORTCUT_DOWN));
         zoomInHorizontallyItem
                 .setAccelerator(new KeyCodeCombination(KeyCode.EQUALS, SHORTCUT_DOWN));
@@ -842,6 +846,13 @@ public class UtsuController implements Localizable {
     void selectAll(ActionEvent event) {
         if (!tabs.getTabs().isEmpty()) {
             editors.get(tabs.getSelectionModel().getSelectedItem().getId()).selectAll();
+        }
+    }
+
+    @FXML
+    void refreshEditor(ActionEvent event) {
+        if (!tabs.getTabs().isEmpty()) {
+            editors.get(tabs.getSelectionModel().getSelectedItem().getId()).refreshView();
         }
     }
 

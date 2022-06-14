@@ -61,6 +61,8 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
               <MenuItem fx:id="selectAllItem" mnemonicParsing="false" onAction="#selectAll" text="Select All" />
                   <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="refreshEditorItem" mnemonicParsing="false" onAction="#refreshEditor" text="Refresh Editor" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="notePropertiesItem" mnemonicParsing="false" onAction="#openNoteProperties" text="Note Properties" />
             </items>
           </Menu>

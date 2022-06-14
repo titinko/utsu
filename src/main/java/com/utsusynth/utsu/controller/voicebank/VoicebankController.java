@@ -124,20 +124,23 @@ public class VoicebankController implements EditorController, Localizable {
     // Provide setup for other frontend song management.
     // This is called automatically when fxml loads.
     public void initialize() {
-        nameTextField.textProperty().addListener(event -> {
-            String newText = nameTextField.getText();
-            voicebank.mutate(voicebank.get().toBuilder().setName(newText).build());
-            onVoicebankChange();
+        nameTextField.textProperty().addListener((obs, oldText, newText) -> {
+            if (!newText.equals(oldText)) {
+                voicebank.mutate(voicebank.get().toBuilder().setName(newText).build());
+                onVoicebankChange();
+            }
         });
-        authorTextField.textProperty().addListener(event -> {
-            String newText = authorTextField.getText();
-            voicebank.mutate(voicebank.get().toBuilder().setAuthor(newText).build());
-            onVoicebankChange();
+        authorTextField.textProperty().addListener((obs, oldText, newText) -> {
+            if (!newText.equals(oldText)) {
+                voicebank.mutate(voicebank.get().toBuilder().setAuthor(newText).build());
+                onVoicebankChange();
+            }
         });
-        descriptionTextArea.textProperty().addListener(event -> {
-            String newText = descriptionTextArea.getText();
-            voicebank.mutate(voicebank.get().toBuilder().setDescription(newText).build());
-            onVoicebankChange();
+        descriptionTextArea.textProperty().addListener((obs, oldText, newText) -> {
+            if (!newText.equals(oldText)) {
+                voicebank.mutate(voicebank.get().toBuilder().setDescription(newText).build());
+                onVoicebankChange();
+            }
         });
 
         // Pass callback to voicebank editor.
