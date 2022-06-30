@@ -256,7 +256,7 @@ public class Engine {
                 config = voicebank.getLyricConfig(prevLyric, note.getLyric(), pitch);
                 if (config.isPresent()) {
                     System.out.println("Would set true lyric.");
-                    //note.setTrueLyric(config.get().getTrueLyric());
+                    // note.setTrueLyric(config.get().getTrueLyric());
                 }
             }
 

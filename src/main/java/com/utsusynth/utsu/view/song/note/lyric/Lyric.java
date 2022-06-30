@@ -231,8 +231,8 @@ public class Lyric implements TrackItem {
         }
     }
 
-    public void registerLyric() {
-        trackNote.setSongLyric(lyric.get());
+    public void saveChanges() {
+        trackNote.saveChanges();
     }
 
     private void adjustLyricAndAlias() {

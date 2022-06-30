@@ -406,9 +406,10 @@ public class LyricEditorController implements Localizable {
             if (addRadioButton.isSelected() && prefixRadioButton.isSelected()) {
                 callback.transformLyric(noteData -> {
                     if (isPitch) {
-                        String pitchString = extractStartPitch(noteData.getTrueLyric().orElse(""));
+                        String pitchString = PitchUtils.extractStartPitch(
+                                noteData.getTrueLyric().orElse(""));
                         if (!pitchString.isEmpty()
-                                && extractStartPitch(noteData.getLyric()).isEmpty()) {
+                                && PitchUtils.extractStartPitch(noteData.getLyric()).isEmpty()) {
                             return noteData.withNewLyric(pitchString + noteData.getLyric());
                         }
                         return noteData;
@@ -418,7 +419,7 @@ public class LyricEditorController implements Localizable {
             } else if (removeRadioButton.isSelected() && prefixRadioButton.isSelected()) {
                 callback.transformLyric(noteData -> {
                     if (isPitch) {
-                        String pitchString = extractStartPitch(noteData.getLyric());
+                        String pitchString = PitchUtils.extractStartPitch(noteData.getLyric());
                         if (!pitchString.isEmpty()) {
                             return noteData.withNewLyric(
                                     noteData.getLyric().substring(pitchString.length()));
@@ -434,9 +435,10 @@ public class LyricEditorController implements Localizable {
             } else if (addRadioButton.isSelected() && suffixRadioButton.isSelected()) {
                 callback.transformLyric(noteData -> {
                     if (isPitch) {
-                        String pitchString = extractEndPitch(noteData.getTrueLyric().orElse(""));
+                        String pitchString = PitchUtils.extractEndPitch(
+                                noteData.getTrueLyric().orElse(""));
                         if (!pitchString.isEmpty()
-                                && extractEndPitch(noteData.getLyric()).isEmpty()) {
+                                && PitchUtils.extractEndPitch(noteData.getLyric()).isEmpty()) {
                             return noteData.withNewLyric(noteData.getLyric() + pitchString);
                         }
                         return noteData;
@@ -446,7 +448,7 @@ public class LyricEditorController implements Localizable {
             } else if (removeRadioButton.isSelected() && suffixRadioButton.isSelected()) {
                 callback.transformLyric(noteData -> {
                     if (isPitch) {
-                        String pitchString = extractEndPitch(noteData.getLyric());
+                        String pitchString = PitchUtils.extractEndPitch(noteData.getLyric());
                         if (!pitchString.isEmpty()) {
                             return noteData.withNewLyric(noteData.getLyric().substring(
                                     0, noteData.getLyric().length() - pitchString.length()));
@@ -480,38 +482,6 @@ public class LyricEditorController implements Localizable {
                     presampIniCheckBox.isSelected(),
                     regionToUpdate);
         }
-    }
-
-    private static String extractStartPitch(String lyric) {
-        if (lyric.isEmpty()) {
-            return "";
-        }
-        for (String pitch : PitchUtils.PITCHES) {
-            for (int i = 1; i <= 7; i++) {
-                String fullPitch = pitch + i;
-                if (lyric.startsWith(fullPitch)
-                        || lyric.startsWith(fullPitch.toLowerCase())) {
-                    return fullPitch;
-                }
-            }
-        }
-        return "";
-    }
-
-    private static String extractEndPitch(String lyric) {
-        if (lyric.isEmpty()) {
-            return "";
-        }
-        for (String pitch : PitchUtils.PITCHES) {
-            for (int i = 1; i <= 7; i++) {
-                String fullPitch = pitch + i;
-                if (lyric.endsWith(fullPitch)
-                        || lyric.endsWith(fullPitch.toLowerCase())) {
-                    return fullPitch;
-                }
-            }
-        }
-        return "";
     }
 
     @FXML

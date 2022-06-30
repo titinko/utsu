@@ -2,6 +2,7 @@ package com.utsusynth.utsu.view.song.note;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.ImmutableSet;
@@ -116,20 +117,13 @@ public class Note implements TrackItem, Comparable<Note> {
         Note thisNote = this;
         lyric.initialize(new LyricCallback() {
             @Override
-            public void setSongLyric(String newLyric) {
+            public void saveChanges() {
                 thisNote.track.updateNote(thisNote);
             }
 
             @Override
             public void replaceSongLyric(String oldLyric, String newLyric) {
-                thisNote.track.updateNote(thisNote);
-                thisNote.track.recordAction(() -> {
-                    lyric.setVisibleLyric(newLyric);
-                    thisNote.track.updateNote(thisNote);
-                }, () -> {
-                    lyric.setVisibleLyric(oldLyric);
-                    thisNote.track.updateNote(thisNote);
-                });
+                thisNote.updateLyric(oldLyric, newLyric);
             }
 
             @Override
@@ -210,16 +204,6 @@ public class Note implements TrackItem, Comparable<Note> {
 
     private void initializeLayout(StackPane newLayout, double offsetX) {
         Note thisNote = this;
-        newLayout.setOnContextMenuRequested(event -> {
-            if (!isValid()) {
-                return;
-            }
-            if (contextMenu != null) {
-                contextMenu.hide(); // Hide any existing context menu.
-            }
-            createContextMenu().show(newLayout, event.getScreenX(), event.getScreenY());
-        });
-
         newLayout.setOnMouseReleased(event -> {
             if (event.getButton() != MouseButton.PRIMARY) {
                 return;
@@ -388,18 +372,54 @@ public class Note implements TrackItem, Comparable<Note> {
             }
         });
         newLayout.setOnMousePressed(event -> {
-            if (newLayout.getScene().getCursor() == Cursor.W_RESIZE) {
-                subMode = SubMode.RESIZING;
-                startDuration = getDurationMs();
-            } else {
-                subMode = SubMode.CLICKING; // Note that this may become dragging in the future.
-                positionInNote =
-                        RoundUtils.round(scaler.unscaleX(event.getX() + offsetX - getStartX()));
-                startPos = getAbsPositionMs();
-                startRow = getRow();
-                hasMoved = false;
+            if (contextMenu != null) {
+                contextMenu.hide(); // Hide any existing context menu.
+            }
+            // Open the context menu if needed.
+            if (event.getButton() == MouseButton.SECONDARY) {
+                if (event.isShiftDown()) {
+                    // Open the pitch chooser menu.
+                    createPitchChooserMenu().show(
+                            newLayout, event.getScreenX(), event.getScreenY());
+                } else if (isValid()) {
+                    // Open the context menu.
+                    createContextMenu().show(newLayout, event.getScreenX(), event.getScreenY());
+                }
+            // Start a move or resize action.
+            } else if (event.getButton() == MouseButton.PRIMARY) {
+                if (newLayout.getScene().getCursor() == Cursor.W_RESIZE) {
+                    subMode = SubMode.RESIZING;
+                    startDuration = getDurationMs();
+                } else {
+                    subMode = SubMode.CLICKING; // Note that this may become dragging in the future.
+                    positionInNote =
+                            RoundUtils.round(scaler.unscaleX(event.getX() + offsetX - getStartX()));
+                    startPos = getAbsPositionMs();
+                    startRow = getRow();
+                    hasMoved = false;
+                }
             }
         });
+    }
+
+    private ContextMenu createPitchChooserMenu() {
+        contextMenu = new ContextMenu();
+        List<String> prefixes = track.getVoicebankPrefixes();
+        for (String prefix : prefixes) {
+            MenuItem menuItem = new MenuItem(prefix);
+            menuItem.setOnAction(event -> setPrefix(prefix, prefixes));
+            contextMenu.getItems().add(menuItem);
+        }
+        List<String> suffixes = track.getVoicebankSuffixes();
+        if (!prefixes.isEmpty() && !suffixes.isEmpty()) {
+            contextMenu.getItems().add(new SeparatorMenuItem());
+        }
+        for (String suffix : suffixes) {
+            MenuItem menuItem = new MenuItem(suffix);
+            menuItem.setOnAction(event -> setSuffix(suffix, suffixes));
+            contextMenu.getItems().add(menuItem);
+        }
+        return contextMenu;
     }
 
     private ContextMenu createContextMenu() {
@@ -674,6 +694,54 @@ public class Note implements TrackItem, Comparable<Note> {
             double adjustedWidthX = Math.max(0, endOfSection - startOfSection);
             drawnOverlaps.get(offsetX).setMaxWidth(adjustedWidthX);
         }
+    }
+
+    /** Set the prefix of a note, usually the pitch prefix. */
+    private void setPrefix(String prefix, List<String> allPrefixes) {
+        String oldLyric = lyric.getLyric();
+        // Remove any existing prefix or pitch prefix.
+        String existing = "";
+        for (String possiblePrefix : allPrefixes) {
+            if (oldLyric.startsWith(possiblePrefix)) {
+                existing = possiblePrefix;
+                break;
+            }
+        }
+        String pitch = PitchUtils.extractStartPitch(oldLyric);
+        String strippedLyric = oldLyric.substring(Math.max(existing.length(), pitch.length()));
+        // Add the new prefix.
+        updateLyric(oldLyric, prefix + strippedLyric);
+    }
+
+    /** Set the prefix of a note, usually the pitch suffix. */
+    private void setSuffix(String suffix, List<String> allSuffixes) {
+        String oldLyric = lyric.getLyric();
+        // Remove any existing suffix or pitch suffix.
+        String existing = "";
+        for (String possibleSuffix : allSuffixes) {
+            if (oldLyric.endsWith(possibleSuffix)) {
+                existing = possibleSuffix;
+                break;
+            }
+        }
+        String pitch = PitchUtils.extractEndPitch(oldLyric);
+        String strippedLyric = oldLyric.substring(
+                0, oldLyric.length() - Math.max(existing.length(), pitch.length()));
+        // Add the new suffix.
+        updateLyric(oldLyric, strippedLyric + suffix);
+    }
+
+    // Update the lyric programmatically, including visible lyric if needed.
+    private void updateLyric(String oldLyric, String newLyric) {
+        lyric.setVisibleLyric(newLyric);
+        track.updateNote(this);
+        track.recordAction(() -> {
+            lyric.setVisibleLyric(newLyric);
+            track.updateNote(this);
+        }, () -> {
+            lyric.setVisibleLyric(oldLyric);
+            track.updateNote(this);
+        });
     }
 
     private int getQuantizedStart() {

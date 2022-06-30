@@ -4,6 +4,8 @@ import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.view.song.DragHandler;
 import javafx.scene.layout.AnchorPane;
 
+import java.util.List;
+
 /**
  * A way of communicating TrackNote information back to its parent Track.
  */
@@ -55,4 +57,8 @@ public interface NoteCallback {
     void clearCache(Note note);
 
     AnchorPane getLyricPane();
+
+    List<String> getVoicebankPrefixes();
+
+    List<String> getVoicebankSuffixes();
 }

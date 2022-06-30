@@ -234,6 +234,16 @@ public class SongController implements EditorController, Localizable {
             public AnchorPane getLyricPane() {
                 return anchorCenter;
             }
+
+            @Override
+            public List<String> getVoicebankPrefixes() {
+                return song.get().getVoicebank().getPrefixes();
+            }
+
+            @Override
+            public List<String> getVoicebankSuffixes() {
+                return song.get().getVoicebank().getSuffixes();
+            }
         });
         scrollPaneLeft.setVvalue(0.5);
 

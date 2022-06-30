@@ -962,6 +962,16 @@ public class SongEditor {
         public AnchorPane getLyricPane() {
             return model.getLyricPane();
         }
+
+        @Override
+        public List<String> getVoicebankPrefixes() {
+            return model.getVoicebankPrefixes();
+        }
+
+        @Override
+        public List<String> getVoicebankSuffixes() {
+            return model.getVoicebankSuffixes();
+        }
     };
 
     private EnvelopeCallback getEnvelopeCallback(final int positionMs) {

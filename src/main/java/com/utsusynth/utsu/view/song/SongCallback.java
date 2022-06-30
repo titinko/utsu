@@ -64,4 +64,14 @@ public interface SongCallback {
      * Fetches core anchor pane from controller for placing lyric boxes.
      */
     AnchorPane getLyricPane();
+
+    /**
+     * Fetches all prefixes in the voicebank's prefix map.
+     */
+    List<String> getVoicebankPrefixes();
+
+    /**
+     * Fetches all suffixes in the voicebank's prefix map.
+     */
+    List<String> getVoicebankSuffixes();
 }

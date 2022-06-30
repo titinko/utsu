@@ -6,6 +6,8 @@ import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.LyricConfigData.FrqStatus;
 import com.utsusynth.utsu.common.data.PitchMapData;
 import com.utsusynth.utsu.common.data.VoicebankData;
+import com.utsusynth.utsu.common.utils.Pitch;
+import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.engine.FrqGenerator;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.PreferencesManager.GuessAliasMode;
@@ -148,6 +150,33 @@ public class Voicebank {
                 .setPortraitOpacity(this.portraitOpacity);
     }
 
+    public List<String> getPrefixes() {
+        return sortPrefixSuffix(pitchMap.getAllPrefixes());
+    }
+
+    public List<String> getSuffixes() {
+        return sortPrefixSuffix(pitchMap.getAllSuffixes());
+    }
+
+    private List<String> sortPrefixSuffix(List<String> toSort) {
+        ArrayList<String> notPitches = new ArrayList<>();
+        TreeSet<Pitch> pitches = new TreeSet<>();
+        for (String prefixSuffix : toSort) {
+            if (PitchUtils.looksLikePitch(prefixSuffix)) {
+                pitches.add(PitchUtils.pitchStringToPitch(prefixSuffix));
+            } else {
+                notPitches.add(prefixSuffix);
+            }
+        }
+        // Pitches on top, with higher pitches higher on the list.
+        ImmutableList.Builder<String> result = ImmutableList.builder();
+        for (Pitch pitch : pitches.descendingSet()) {
+            result.add(pitch.toString());
+        }
+        // Miscellaneous prefixes/suffixes on the bottom.
+        return result.addAll(notPitches).build();
+    }
+
     /**
      * Should be called when lyric is expected to have an exact match in voicebank.
      */
@@ -177,7 +206,12 @@ public class Voicebank {
         }
 
         SortedSet<LyricConfig> matches = new TreeSet<>();
-        for (String convertedLyric : presampConfig.getLyricConversions().getGroup(lyric)) {
+        String strippedLyric = PitchUtils.removePitches(lyric);
+        for (String candidate : presampConfig.getLyricConversions().getGroup(strippedLyric)) {
+            String convertedLyric =
+                    PitchUtils.extractStartPitch(lyric)
+                            + candidate
+                            + PitchUtils.extractEndPitch(lyric);
             if (convertedLyric.equals(lyric)) {
                 // Don't check the same lyric twice.
                 continue;
@@ -202,7 +236,8 @@ public class Voicebank {
         if (prevLyric.isEmpty()) {
             return '-'; // Return dash if there appears to be no previous note.
         }
-        for (String convertedLyric : presampConfig.getLyricConversions().getGroup(prevLyric)) {
+        String strippedLyric = PitchUtils.removePitches(prevLyric);
+        for (String convertedLyric : presampConfig.getLyricConversions().getGroup(strippedLyric)) {
             if (CharMatcher.ascii().matchesAllOf(convertedLyric)) {
                 return convertedLyric.toLowerCase().charAt(convertedLyric.length() - 1);
             }

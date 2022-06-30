@@ -93,7 +93,7 @@ public class NoteFactory {
                 localizer,
                 quantizer,
                 scaler);
-        lyric.registerLyric();
+        lyric.saveChanges();
 
         return trackNote;
     }

@@ -4,7 +4,7 @@ import javafx.scene.layout.AnchorPane;
 
 /** Callback from Lyric to Note. */
 public interface LyricCallback {
-    void setSongLyric(String newLyric);
+    void saveChanges();
 
     void replaceSongLyric(String oldLyric, String newLyric);
 
