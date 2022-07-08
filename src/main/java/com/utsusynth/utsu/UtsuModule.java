@@ -204,7 +204,7 @@ public class UtsuModule extends AbstractModule {
     @Provides
     private Engine provideEngine(
             Resampler resampler,
-            Wavtool wavtool,
+            ExternalWavtool wavtool,
             StatusBar statusBar,
             CacheManager cacheManager,
             PreferencesManager preferencesManager) {

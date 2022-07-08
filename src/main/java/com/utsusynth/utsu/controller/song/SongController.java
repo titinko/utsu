@@ -652,8 +652,7 @@ public class SongController implements EditorController, Localizable {
                     briefPause.play();
                 });
             } catch (Exception e) {
-                Platform.runLater(
-                        () -> statusBar.setText("Error: Unable to open " + file.getName()));
+                statusBar.setTextAsync("Error: Unable to open " + file.getName());
                 errorLogger.logError(e);
             }
         }).start();
@@ -681,8 +680,7 @@ public class SongController implements EditorController, Localizable {
                     briefPause.play();
                 });
             } catch (Exception e) {
-                Platform.runLater(
-                        () -> statusBar.setText("Error: Unable to open " + file.getName()));
+                statusBar.setTextAsync("Error: Unable to open " + file.getName());
                 errorLogger.logError(e);
             }
         }).start();
@@ -711,9 +709,7 @@ public class SongController implements EditorController, Localizable {
                         statusBar.setText("Saved changes to " + saveLocation.getName());
                     });
                 } catch (Exception e) {
-                    Platform.runLater(
-                            () -> statusBar
-                                    .setText("Error: Unable to save " + saveLocation.getName()));
+                   statusBar.setTextAsync("Error: Unable to save " + saveLocation.getName());
                     errorLogger.logError(e);
                 }
             }).start();
@@ -768,9 +764,7 @@ public class SongController implements EditorController, Localizable {
                         statusBar.setText("Saved as " + file.getName());
                     });
                 } catch (Exception e) {
-                    Platform.runLater(
-                            () -> statusBar
-                                    .setText("Error: Unable to save as " + file.getName()));
+                    statusBar.setTextAsync("Error: Unable to save as " + file.getName());
                     errorLogger.logError(e);
                 }
             }).start();
@@ -902,7 +896,7 @@ public class SongController implements EditorController, Localizable {
                     statusBar.setText("Render complete.");
                 });
             } else {
-                Platform.runLater(() -> statusBar.setText("Render produced no output."));
+                statusBar.setTextAsync("Render produced no output.");
             }
             playPauseIcon.setDisable(false);
         }).start();
@@ -936,10 +930,9 @@ public class SongController implements EditorController, Localizable {
             statusBar.setText("Exporting...");
             new Thread(() -> {
                 if (engine.renderWav(song.get(), file)) {
-                    Platform.runLater(
-                            () -> statusBar.setText("Exported to file: " + file.getName()));
+                    statusBar.setTextAsync("Exported to file: " + file.getName());
                 } else {
-                    Platform.runLater(() -> statusBar.setText("Export produced no output."));
+                    statusBar.setTextAsync("Export produced no output.");
                 }
             }).start();
         }

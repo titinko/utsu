@@ -15,7 +15,6 @@ import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.voicebank.LyricConfig;
 import com.utsusynth.utsu.model.voicebank.Voicebank;
-import javafx.application.Platform;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
@@ -39,20 +38,19 @@ public class Engine {
     }
 
     private final Resampler resampler;
-    private final Wavtool wavtool;
+    private final ExternalWavtool wavtool;
     private final StatusBar statusBar;
     private final int threadPoolSize;
     private final CacheManager cacheManager;
     private final PreferencesManager preferencesManager;
     private File resamplerPath;
-    private File wavtoolPath;
 
     private MediaPlayer instrumentalPlayer; // Used for background music.
     private MediaPlayer mediaPlayer; // Used for audio playback.
 
     public Engine(
             Resampler resampler,
-            Wavtool wavtool,
+            ExternalWavtool wavtool,
             StatusBar statusBar,
             int threadPoolSize,
             CacheManager cacheManager,
@@ -64,7 +62,6 @@ public class Engine {
         this.cacheManager = cacheManager;
         this.preferencesManager = preferencesManager;
         resamplerPath = preferencesManager.getResampler();
-        wavtoolPath = preferencesManager.getWavtool();
     }
 
     public File getResamplerPath() {
@@ -79,14 +76,11 @@ public class Engine {
     }
 
     public File getWavtoolPath() {
-        if (wavtoolPath != null) {
-            return wavtoolPath;
-        }
-        return preferencesManager.getWavtool();
+        return wavtool.getWavtoolPath();
     }
 
     public void setWavtoolPath(File wavtoolPath) {
-        this.wavtoolPath = wavtoolPath;
+        wavtool.setWavtoolPath(wavtoolPath);
     }
 
     /**
@@ -351,7 +345,6 @@ public class Engine {
                 }
                 return () -> {
                     wavtool.addNewNote(
-                            getWavtoolPath(),
                             song,
                             note,
                             adjustedLength,
@@ -388,14 +381,14 @@ public class Engine {
         for (int i = 0; i < futures.size(); i++) {
             try {
                 double curProgress = i * 1.0 / futures.size();
-                Platform.runLater(() -> statusBar.setProgress(curProgress));
+                statusBar.setProgressAsync(curProgress);
                 futures.get(i).get().run();
             } catch (InterruptedException | ExecutionException e) {
                 errorLogger.logError(e);
                 return Optional.empty();
             }
         }
-        Platform.runLater(() -> statusBar.setProgress(1.0)); // Mark task as complete.
+        statusBar.setProgressAsync(1.0); // Mark task as complete.
         executor.shutdown(); // Shut down thread pool
 
         if (preferencesManager.getCache().equals(CacheMode.ENABLED)) {
@@ -421,7 +414,6 @@ public class Engine {
             resampler.resampleSilence(getResamplerPath(), renderedSilence, duration);
             return () -> {
                 wavtool.addSilence(
-                        getWavtoolPath(),
                         duration,
                         totalDelta,
                         renderedSilence,
@@ -444,7 +436,6 @@ public class Engine {
             resampler.resampleSilence(getResamplerPath(), renderedSilence, trueDuration);
             return () -> {
                 wavtool.addSilence(
-                        getWavtoolPath(),
                         trueDuration,
                         totalDelta,
                         renderedSilence,

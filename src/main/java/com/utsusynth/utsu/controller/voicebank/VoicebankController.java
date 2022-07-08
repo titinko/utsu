@@ -183,7 +183,7 @@ public class VoicebankController implements EditorController, Localizable {
                 statusBar.setText("Generating .frq files...");
                 new Thread(() -> {
                     voicebank.get().generateFrqs(lyricIterator);
-                    Platform.runLater(() -> statusBar.setText("Finished generating .frq files."));
+                    statusBar.setTextAsync("Finished generating .frq files.");
                     // Change cannot be saved or undone, so don't call onVoicebankChange.
                 }).start();
             }
@@ -382,8 +382,7 @@ public class VoicebankController implements EditorController, Localizable {
                     statusBar.setStatus("status.loadedVoicebank", file.getName());
                 });
             } catch (Exception e) {
-                Platform.runLater(() ->
-                        statusBar.setStatus("status.unableToLoadVoicebank", file.getName()));
+                statusBar.setStatusAsync("status.unableToLoadVoicebank", file.getName());
             }
         }).start();
     }
@@ -401,8 +400,7 @@ public class VoicebankController implements EditorController, Localizable {
                     menuItemManager.disableSave();
                 });
             } catch (Exception e) {
-                Platform.runLater(
-                        () -> statusBar.setText("Error: Unable to save changes to voicebank."));
+                statusBar.setTextAsync("Error: Unable to save changes to voicebank.");
             }
         }).start();
         return Optional.empty();

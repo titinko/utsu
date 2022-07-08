@@ -3,6 +3,7 @@ package com.utsusynth.utsu.common;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 
@@ -57,6 +58,10 @@ public class StatusBar implements Localizable {
         }
     }
 
+    public void setStatusAsync(String key, String param) {
+        Platform.runLater(() -> setStatus(key, param));
+    }
+
     public void setText(String text) {
         if (statusText != null) {
             key = "";
@@ -65,9 +70,18 @@ public class StatusBar implements Localizable {
         }
     }
 
+    /** Should be called from backend threads. */
+    public void setTextAsync(String text) {
+        Platform.runLater(() -> setText(text));
+    }
+
     public void setProgress(double progress) {
         if (curProgress != null) {
             curProgress.set(progress);
         }
+    }
+
+    public void setProgressAsync(double progress) {
+        Platform.runLater(() -> setProgress(progress));
     }
 }

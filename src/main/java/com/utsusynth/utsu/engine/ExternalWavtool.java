@@ -2,24 +2,42 @@ package com.utsusynth.utsu.engine;
 
 import java.io.File;
 import com.google.inject.Inject;
+import com.utsusynth.utsu.engine.wavtool.Wavtool;
+import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.Note;
 
-public class Wavtool {
+public class ExternalWavtool implements Wavtool {
     private final ExternalProcessRunner runner;
+    private final PreferencesManager preferencesManager;
+    private File wavtoolPath;
     private double totalDelta = 0; // Total duration in ms, used to debug timing issues.
 
     @Inject
-    Wavtool(ExternalProcessRunner runner) {
+    ExternalWavtool(ExternalProcessRunner runner, PreferencesManager preferencesManager) {
         this.runner = runner;
+        this.preferencesManager = preferencesManager;
+        wavtoolPath = preferencesManager.getWavtool();
     }
 
-    void startRender(double startDelta) {
+    File getWavtoolPath() {
+        if (wavtoolPath != null) {
+            return wavtoolPath;
+        }
+        return preferencesManager.getWavtool();
+    }
+
+    void setWavtoolPath(File wavtoolPath) {
+        this.wavtoolPath = wavtoolPath;
+    }
+
+    @Override
+    public void startRender(double startDelta) {
         totalDelta = startDelta;
     }
 
-    void addNewNote(
-            File wavtoolPath,
+    @Override
+    public void addNewNote(
             Song song,
             Note note,
             double noteLength,
@@ -53,7 +71,7 @@ public class Wavtool {
 
         // Call wavtool to add new note onto the end of the output file.
         runner.runProcess(
-                wavtoolPath.getAbsolutePath(),
+                getWavtoolPath().getAbsolutePath(),
                 outputFilePath,
                 inputFilePath,
                 Double.toString(note.getRealStartPoint()),
@@ -73,8 +91,8 @@ public class Wavtool {
         totalDelta += noteLength - boundedOverlap;
     }
 
-    void addSilence(
-            File wavtoolPath,
+    @Override
+    public void addSilence(
             double duration,
             double expectedDelta,
             File inputFile,
@@ -92,7 +110,7 @@ public class Wavtool {
 
         // Call wavtool to add new note onto the end of the output file.
         runner.runProcess(
-                wavtoolPath.getAbsolutePath(),
+                getWavtoolPath().getAbsolutePath(),
                 outputFile.getAbsolutePath(),
                 inputFile.getAbsolutePath(),
                 startPoint,
