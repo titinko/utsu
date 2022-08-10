@@ -2,6 +2,7 @@ package com.utsusynth.utsu.files.voicebank;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -70,26 +71,42 @@ public class SoundFileReader {
     }
 
     public Optional<WavData> loadWavData(File wavFile) {
+        return loadWavData(wavFile, 0);
+    }
+
+    public Optional<WavData> loadWavData(File wavFile, int offsetMs) {
         if (!wavFile.canRead()) {
             statusBar.setTextAsync("Error: wav file not found!");
             return Optional.empty();
         }
         try (AudioInputStream input = AudioSystem.getAudioInputStream(wavFile)) {
-            int numFrames = (int) input.getFrameLength();
-            double lengthMs = numFrames / input.getFormat().getFrameRate() * 1000;
             int bitsPerSample = input.getFormat().getSampleSizeInBits();
             if (bitsPerSample != 8 && bitsPerSample != 16) {
                 statusBar.setTextAsync("Error: Does not support sample sizes other than 8 or 16 bit.");
                 return Optional.empty();
             }
+
             Encoding encoding = input.getFormat().getEncoding();
             if (encoding != Encoding.PCM_SIGNED && encoding != Encoding.PCM_UNSIGNED) {
                 statusBar.setTextAsync("Error: Does not support encodings other than PCM.");
                 return Optional.empty();
             }
 
+            // Calculate the number of bytes to offset.
+            offsetMs = Math.max(offsetMs, 0); // Ignore negative offsets.
+            int offsetFrames = (int) (input.getFormat().getFrameRate() / 1000.0 * offsetMs);
+            int offsetBytes = offsetFrames * bitsPerSample / 8;
+            int numFrames = (int) input.getFrameLength();
+            int numBytes = numFrames * input.getFormat().getFrameSize();
+            double lengthMs = numFrames / input.getFormat().getFrameRate() * 1000;
+
             // Create a buffer to read 16-bit samples.
-            byte[] bytes = new byte[numFrames * input.getFormat().getFrameSize()];
+            byte[] bytes = new byte[numBytes - offsetBytes];
+            long bytesSkipped = input.skip(offsetBytes);
+            if (bytesSkipped < offsetBytes) {
+                statusBar.setTextAsync("Error: Could not skip to correct location in wav file.");
+                return Optional.empty();
+            }
             int bytesRead = input.read(bytes);
             if (bytesRead < bytes.length) {
                 statusBar.setTextAsync("Error: Could not read entire wav file.");
@@ -101,9 +118,9 @@ public class SoundFileReader {
                             : ByteOrder.LITTLE_ENDIAN);
             ShortBuffer shortBuffer = byteBuffer.asShortBuffer(); // Use if 16 bits per sample.
 
-            double[] samples = new double[numFrames];
+            double[] samples = new double[numFrames - offsetFrames];
             double maxAmplitude = Math.pow(2.0, bitsPerSample - 1);
-            for (int i = 0; i < numFrames; i++) {
+            for (int i = 0; i < numFrames - offsetFrames; i++) {
                 for (int channel = 0; channel < input.getFormat().getChannels(); channel++) {
                     short sample = bitsPerSample == 16 ? shortBuffer.get() : byteBuffer.get();
                     if (channel == 0) {

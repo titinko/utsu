@@ -7,6 +7,7 @@ import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.engine.wavtool.UtsuWavtool;
 import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.PreferencesManager.CacheMode;
@@ -39,6 +40,7 @@ public class Engine {
 
     private final Resampler resampler;
     private final ExternalWavtool wavtool;
+    private final UtsuWavtool utsuWavtool;
     private final StatusBar statusBar;
     private final int threadPoolSize;
     private final CacheManager cacheManager;
@@ -51,12 +53,14 @@ public class Engine {
     public Engine(
             Resampler resampler,
             ExternalWavtool wavtool,
+            UtsuWavtool utsuWavtool,
             StatusBar statusBar,
             int threadPoolSize,
             CacheManager cacheManager,
             PreferencesManager preferencesManager) {
         this.resampler = resampler;
         this.wavtool = wavtool;
+        this.utsuWavtool = utsuWavtool;
         this.statusBar = statusBar;
         this.threadPoolSize = threadPoolSize;
         this.cacheManager = cacheManager;

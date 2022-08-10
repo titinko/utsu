@@ -56,12 +56,9 @@ public class ExternalWavtool implements Wavtool {
             boundedOverlap = 0;
         }
 
-        double scaleFactor = 125 / song.getTempo();
-        double scaledExpectedDelta = expectedDelta * scaleFactor;
-
         // Check that current length matches expected length and correct any discrepancies.
-        if (scaledExpectedDelta > totalDelta && Math.abs(scaledExpectedDelta - totalDelta) > 0.01) {
-            double timingCorrection = scaledExpectedDelta - totalDelta;
+        if (expectedDelta > totalDelta && Math.abs(expectedDelta - totalDelta) > 0.01) {
+            double timingCorrection = expectedDelta - totalDelta;
             if (boundedOverlap > timingCorrection) {
                 // Disable for now.
                 // boundedOverlap -= timingCorrection;

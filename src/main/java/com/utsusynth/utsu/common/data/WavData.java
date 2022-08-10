@@ -17,4 +17,8 @@ public class WavData {
     public double[] getSamples() {
         return samples;
     }
+
+    public double getSamplesPerMs() {
+        return samples.length / lengthMs;
+    }
 }
