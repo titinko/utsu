@@ -10,11 +10,14 @@ import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Optional;
 
 public class UtsuWavtool implements Wavtool {
     private final SoundFileReader soundFileReader;
     private final SoundFileWriter soundFileWriter;
+    private final ArrayList<Double> overlaps = new ArrayList<>();
+    private final ArrayList<WavData> fragments = new ArrayList<>();
     private double startDelta = 0; // Start duration in ms.
     private double totalDelta = 0; // Total duration in ms, used to debug timing issues.
 
@@ -26,6 +29,8 @@ public class UtsuWavtool implements Wavtool {
 
     @Override
     public void startRender(double startDelta) {
+        overlaps.clear();
+        fragments.clear();
         this.startDelta = startDelta;
         totalDelta = startDelta;
     }
@@ -56,12 +61,8 @@ public class UtsuWavtool implements Wavtool {
             }
         }
 
-        double relativeDelta = totalDelta - startDelta;
         Optional<WavData> wavData = soundFileReader.loadWavData(inputFile);
-        System.out.println(relativeDelta + " and " + boundedOverlap);
-        Optional<WavData> overlapData = soundFileReader.loadWavData(
-                outputFile, RoundUtils.round(relativeDelta - boundedOverlap));
-        if (wavData.isEmpty() || (boundedOverlap > 0 && overlapData.isEmpty())) {
+        if (wavData.isEmpty()) {
             // TODO: Throw an error.
             System.out.println("Error: Unable to read WAV data.");
             return;
@@ -70,21 +71,14 @@ public class UtsuWavtool implements Wavtool {
             System.out.println("Error: Input note is not long enough.");
             return;
         }
-        double[] wavSamples = wavData.get().getSamples();
-        double[] overlapSamples = overlapData.map(WavData::getSamples).orElse(new double[] {});
-        double[] combinedSamples = new double[wavSamples.length];
-        for (int i = 0; i < wavSamples.length; i++) {
-            if (i < overlapSamples.length) {
-                combinedSamples[i] = wavSamples[i] + overlapSamples[i];
-            } else {
-                combinedSamples[i] = wavSamples[i];
-            }
-        }
-        WavData combinedWav = new WavData(noteLength, combinedSamples);
-        WavData scaledWav = applyEnvelope(combinedWav, note.getEnvelope());
-        soundFileWriter.writeWavData(scaledWav, outputFile, RoundUtils.round(relativeDelta));
+        WavData scaledWav = applyEnvelope(wavData.get(), note.getEnvelope());
 
+        overlaps.add(boundedOverlap);
+        fragments.add(scaledWav);
         totalDelta += noteLength - boundedOverlap;
+        if (triggerSynthesis) {
+            saveToOutputFile(outputFile);
+        }
     }
 
     @Override
@@ -101,12 +95,11 @@ public class UtsuWavtool implements Wavtool {
             System.out.println("Corrected timing by " + timingCorrection + " ms.");
         }
 
-        double relativeDelta = totalDelta - startDelta;
         int numSamples = RoundUtils.round(duration / 1000 * 44100);
-        WavData silenceData = new WavData(duration, new double[numSamples]);
-        soundFileWriter.writeWavData(
-                silenceData, outputFile, RoundUtils.round(relativeDelta));
+        WavData silenceWav = new WavData(duration, new double[numSamples]);
 
+        overlaps.add((double) 0);
+        fragments.add(silenceWav);
         totalDelta += duration;
     }
 
@@ -140,5 +133,30 @@ public class UtsuWavtool implements Wavtool {
             }
         }
         return new WavData(wavData.getLengthMs(), result);
+    }
+
+    private void saveToOutputFile(File outputFile) {
+        double sampleRate = 44100; // Number of samples per second of the output file.
+        double durationMs = totalDelta - startDelta;
+        int numSamples = RoundUtils.round(durationMs / 1000 * sampleRate);
+        double[] combinedSamples = new double[numSamples];
+        int curSample = 0;
+        for (int i = 0; i < fragments.size(); i++) {
+            WavData fragment = fragments.get(i);
+            int overlapSamples = RoundUtils.round(overlaps.get(i) / 1000 * sampleRate);
+            curSample = Math.min(numSamples, Math.max(0, curSample - overlapSamples));
+            int samplesToWrite = Math.min(fragment.getSamples().length, numSamples - curSample);
+            int firstSample = curSample;
+            int lastSample = curSample + samplesToWrite - 1; // Off-by-1 error.
+            for (; curSample <= lastSample; curSample++) {
+                if (curSample < firstSample + overlapSamples) {
+                    combinedSamples[curSample] += fragment.getSamples()[curSample - firstSample];
+                } else {
+                    combinedSamples[curSample] = fragment.getSamples()[curSample - firstSample];
+                }
+            }
+        }
+        WavData combinedWav = new WavData(durationMs, combinedSamples);
+        soundFileWriter.writeWavData(combinedWav, outputFile);
     }
 }

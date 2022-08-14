@@ -8,6 +8,7 @@ import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.utils.PitchUtils;
 import com.utsusynth.utsu.engine.wavtool.UtsuWavtool;
+import com.utsusynth.utsu.engine.wavtool.Wavtool;
 import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.PreferencesManager.CacheMode;
@@ -39,12 +40,13 @@ public class Engine {
     }
 
     private final Resampler resampler;
-    private final ExternalWavtool wavtool;
+    private final ExternalWavtool externalWavtool;
     private final UtsuWavtool utsuWavtool;
     private final StatusBar statusBar;
     private final int threadPoolSize;
     private final CacheManager cacheManager;
     private final PreferencesManager preferencesManager;
+    private Wavtool wavtool;
     private File resamplerPath;
 
     private MediaPlayer instrumentalPlayer; // Used for background music.
@@ -52,19 +54,20 @@ public class Engine {
 
     public Engine(
             Resampler resampler,
-            ExternalWavtool wavtool,
+            ExternalWavtool externalWavtool,
             UtsuWavtool utsuWavtool,
             StatusBar statusBar,
             int threadPoolSize,
             CacheManager cacheManager,
             PreferencesManager preferencesManager) {
         this.resampler = resampler;
-        this.wavtool = wavtool;
+        this.externalWavtool = externalWavtool;
         this.utsuWavtool = utsuWavtool;
         this.statusBar = statusBar;
         this.threadPoolSize = threadPoolSize;
         this.cacheManager = cacheManager;
         this.preferencesManager = preferencesManager;
+        wavtool = externalWavtool;
         resamplerPath = preferencesManager.getResampler();
     }
 
@@ -80,11 +83,12 @@ public class Engine {
     }
 
     public File getWavtoolPath() {
-        return wavtool.getWavtoolPath();
+        return externalWavtool.getWavtoolPath();
     }
 
     public void setWavtoolPath(File wavtoolPath) {
-        wavtool.setWavtoolPath(wavtoolPath);
+        externalWavtool.setWavtoolPath(wavtoolPath);
+
     }
 
     /**
