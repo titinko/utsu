@@ -67,7 +67,7 @@ public class Engine {
         this.threadPoolSize = threadPoolSize;
         this.cacheManager = cacheManager;
         this.preferencesManager = preferencesManager;
-        wavtool = externalWavtool;
+        wavtool = utsuWavtool;
         resamplerPath = preferencesManager.getResampler();
     }
 

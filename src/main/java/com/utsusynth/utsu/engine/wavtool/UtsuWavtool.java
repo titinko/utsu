@@ -11,6 +11,7 @@ import com.utsusynth.utsu.model.song.Song;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 
 public class UtsuWavtool implements Wavtool {
@@ -60,6 +61,7 @@ public class UtsuWavtool implements Wavtool {
                 System.out.println("Would correct note timing by " + timingCorrection + " ms.");
             }
         }
+        totalDelta += noteLength - boundedOverlap;
 
         Optional<WavData> wavData = soundFileReader.loadWavData(inputFile);
         if (wavData.isEmpty()) {
@@ -71,11 +73,13 @@ public class UtsuWavtool implements Wavtool {
             System.out.println("Error: Input note is not long enough.");
             return;
         }
-        WavData scaledWav = applyEnvelope(wavData.get(), note.getEnvelope());
+        int numSamples = msToNumSamples(noteLength);
+        WavData truncatedWav =
+                new WavData(noteLength, Arrays.copyOf(wavData.get().getSamples(), numSamples));
+        WavData scaledWav = applyEnvelope(truncatedWav, note.getEnvelope());
 
         overlaps.add(boundedOverlap);
         fragments.add(scaledWav);
-        totalDelta += noteLength - boundedOverlap;
         if (triggerSynthesis) {
             saveToOutputFile(outputFile);
         }
@@ -95,7 +99,7 @@ public class UtsuWavtool implements Wavtool {
             System.out.println("Corrected timing by " + timingCorrection + " ms.");
         }
 
-        int numSamples = RoundUtils.round(duration / 1000 * 44100);
+        int numSamples = msToNumSamples(duration);
         WavData silenceWav = new WavData(duration, new double[numSamples]);
 
         overlaps.add((double) 0);
@@ -107,21 +111,26 @@ public class UtsuWavtool implements Wavtool {
         double[] widths = envelopeData.getWidths();
         double[] result = new double[wavData.getSamples().length];
         double samplesPerMs = wavData.getSamplesPerMs();
-        int[] xValues = new int[7];
+        int[] xValues = new int[8];
         xValues[0] = 0;
         xValues[1] = RoundUtils.round(widths[0] * samplesPerMs);
         xValues[2] = RoundUtils.round((widths[0] + widths[1]) * samplesPerMs);
         xValues[3] = RoundUtils.round((widths[0] + widths[1] + widths[4]) * samplesPerMs);
         xValues[4] = RoundUtils.round((wavData.getLengthMs() - widths[2] - widths[3]) * samplesPerMs);
         xValues[5] = RoundUtils.round((wavData.getLengthMs() - widths[3]) * samplesPerMs);
-        xValues[6] = RoundUtils.round(wavData.getSamples().length);
-        double[] yValues = new double[7];
+        xValues[6] = Math.max(xValues[5], wavData.getSamples().length - 400); // Final phase out.
+        xValues[7] = wavData.getSamples().length;
+
+        double[] yValues = new double[8];
         yValues[0] = 0;
-        for (int i = 0; i <= 4; i++) {
-            yValues[i + 1] = envelopeData.getHeights()[i] / 100.0;
-        }
-        yValues[6] = 0;
-        for (int segment = 0; segment < 6; segment++) {
+        yValues[1] = envelopeData.getHeights()[0] / 100.0;
+        yValues[2] = envelopeData.getHeights()[1] / 100.0;
+        yValues[3] = envelopeData.getHeights()[4] / 100.0;
+        yValues[4] = envelopeData.getHeights()[2] / 100.0;
+        yValues[5] = envelopeData.getHeights()[3] / 100.0;
+        yValues[6] = 0.1; // Final phase out.
+        yValues[7] = 0;
+        for (int segment = 0; segment < xValues.length - 1; segment++) {
             int minX = xValues[segment];
             int maxX = xValues[segment + 1];
             for (int xValue = minX; xValue < maxX; xValue++) {
@@ -130,20 +139,20 @@ public class UtsuWavtool implements Wavtool {
                 // The value to multiply a sample by.
                 double yValue = (yValues[segment] * (1 - ratio)) + (yValues[segment + 1] * ratio);
                 result[xValue] = wavData.getSamples()[xValue] * yValue;
+                result[xValue] = Math.min(1, Math.max(-1, result[xValue])); // Clamp to [-1,1].
             }
         }
         return new WavData(wavData.getLengthMs(), result);
     }
 
     private void saveToOutputFile(File outputFile) {
-        double sampleRate = 44100; // Number of samples per second of the output file.
         double durationMs = totalDelta - startDelta;
-        int numSamples = RoundUtils.round(durationMs / 1000 * sampleRate);
+        int numSamples = msToNumSamples(durationMs);
         double[] combinedSamples = new double[numSamples];
         int curSample = 0;
         for (int i = 0; i < fragments.size(); i++) {
             WavData fragment = fragments.get(i);
-            int overlapSamples = RoundUtils.round(overlaps.get(i) / 1000 * sampleRate);
+            int overlapSamples = msToNumSamples(overlaps.get(i));
             curSample = Math.min(numSamples, Math.max(0, curSample - overlapSamples));
             int samplesToWrite = Math.min(fragment.getSamples().length, numSamples - curSample);
             int firstSample = curSample;
@@ -158,5 +167,12 @@ public class UtsuWavtool implements Wavtool {
         }
         WavData combinedWav = new WavData(durationMs, combinedSamples);
         soundFileWriter.writeWavData(combinedWav, outputFile);
+    }
+
+    private static int msToNumSamples(double lengthMs) {
+        // Convert milliseconds to samples, assuming a sample rate of 44,100 Hz.
+        double sampleRate = 44100;
+        int msPerSecond = 1000;
+        return RoundUtils.round(lengthMs / msPerSecond * sampleRate);
     }
 }
