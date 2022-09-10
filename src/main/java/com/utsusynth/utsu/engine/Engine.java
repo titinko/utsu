@@ -1,15 +1,16 @@
 package com.utsusynth.utsu.engine;
 
 import com.google.common.base.Function;
-import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.PreferencesManager.CacheMode;
+import com.utsusynth.utsu.model.song.Metronome;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.Song;
@@ -134,6 +135,13 @@ public class Engine {
                     instrumentalPlayer.dispose();
                 }
             });
+            //Metronome
+            Metronome metro_gnome = new Metronome(
+                    "file:C:\\Users\\pedro\\source\\src\\main\\resources\\boop.wav",
+                    mediaPlayer,
+                    173
+            );
+
             mediaPlayer.play();
         }
         return finalSong.isPresent();
