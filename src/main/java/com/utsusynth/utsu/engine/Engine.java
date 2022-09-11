@@ -10,7 +10,6 @@ import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.PreferencesManager.CacheMode;
-import com.utsusynth.utsu.model.song.Metronome;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.NoteIterator;
 import com.utsusynth.utsu.model.song.Song;
@@ -135,12 +134,15 @@ public class Engine {
                     instrumentalPlayer.dispose();
                 }
             });
-            //Metronome
-            Metronome metro_gnome = new Metronome(
-                    "file:C:\\Users\\pedro\\source\\src\\main\\resources\\boop.wav",
-                    mediaPlayer,
-                    173
+
+            new Metronome(
+                mediaPlayer,
+                song.getTempo(),
+                String.format("file:%s", this.preferencesManager.getMetronomeFile().getAbsolutePath()),
+                this.preferencesManager.getMetronomeEnabled()
             );
+
+
 
             mediaPlayer.play();
         }

@@ -121,6 +121,9 @@ public class SongController implements EditorController, Localizable {
     @FXML // fx:id="stopIcon"
     private AnchorPane stopIcon; // Value injected by FXMLLoader
 
+    @FXML // fx:id="metronomeIcon"
+    private AnchorPane metronomeIcon;
+
     @FXML // fx:id="quantizeChoiceBox"
     private ChoiceBox<String> quantizeChoiceBox; // Value injected by FXMLLoader
 
@@ -346,6 +349,14 @@ public class SongController implements EditorController, Localizable {
         iconManager.setStopIcon(stopIcon);
         stopIcon.setOnMousePressed(event -> iconManager.selectIcon(stopIcon));
         stopIcon.setOnMouseReleased(event -> iconManager.deselectIcon(stopIcon));
+        iconManager.setMetronomeIcon(metronomeIcon);
+        preferencesManager.getMetronomeEnabled().addListener(((observable, oldValue, newValue) -> {
+            if (newValue == true) {
+                iconManager.selectIcon(metronomeIcon);
+            } else {
+                iconManager.deselectIcon(metronomeIcon);
+            }
+        }));
 
         refreshView();
 
@@ -1369,6 +1380,6 @@ public class SongController implements EditorController, Localizable {
     }
 
     public void toggleMetronome(MouseEvent mouseEvent) {
-
+        preferencesManager.getMetronomeEnabled().set(!preferencesManager.getMetronomeEnabled().getValue());
     }
 }

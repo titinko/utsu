@@ -331,4 +331,12 @@ public class PreferencesManager {
                 ? new File(preferences.get("metronome"))
                 : new File(defaultPreferences.get("metronome"));
     }
+
+    public BooleanProperty getMetronomeEnabled() {
+        if (isMetronomeEnabled == null) {
+            isMetronomeEnabled = new SimpleBooleanProperty();
+            isMetronomeEnabled.setValue(false);
+        }
+        return isMetronomeEnabled;
+    }
 }
