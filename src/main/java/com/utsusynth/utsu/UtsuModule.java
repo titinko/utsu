@@ -14,6 +14,7 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.*;
+import com.utsusynth.utsu.engine.wavtool.UtsuWavtool;
 import com.utsusynth.utsu.files.*;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
@@ -206,13 +207,15 @@ public class UtsuModule extends AbstractModule {
     @Provides
     private Engine provideEngine(
             Resampler resampler,
-            ExternalWavtool wavtool,
+            ExternalWavtool externalWavtool,
+            UtsuWavtool utsuWavtool,
             StatusBar statusBar,
             CacheManager cacheManager,
             PreferencesManager preferencesManager) {
         return new Engine(
                 resampler,
-                wavtool,
+                externalWavtool,
+                utsuWavtool,
                 statusBar,
                 /* threadPoolSize= */ 10,
                 cacheManager,
