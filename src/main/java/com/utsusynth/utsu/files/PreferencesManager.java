@@ -325,4 +325,10 @@ public class PreferencesManager {
     public void setVoicebank(File voicebank) {
         preferences.put("voicebank", voicebank.getAbsolutePath());
     }
+
+    public File getMetronomeFile() {
+        return preferences.containsKey("metronome")
+                ? new File(preferences.get("metronome"))
+                : new File(defaultPreferences.get("metronome"));
+    }
 }

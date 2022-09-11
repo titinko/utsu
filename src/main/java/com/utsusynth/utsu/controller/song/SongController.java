@@ -47,10 +47,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
@@ -1369,5 +1366,9 @@ public class SongController implements EditorController, Localizable {
                 errorLogger.logError(e);
             }
         }
+    }
+
+    public void toggleMetronome(MouseEvent mouseEvent) {
+
     }
 }

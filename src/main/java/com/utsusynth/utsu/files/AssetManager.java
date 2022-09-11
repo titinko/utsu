@@ -68,6 +68,7 @@ public class AssetManager {
         }
         copyFile(SOUNDS_SOURCE, soundsPath, "silence.wav", "SILENCE_WAV");
         copyFile(SOUNDS_SOURCE, soundsPath, "piano.wav", "PIANO_WAV");
+        copyFile(SOUNDS_SOURCE, soundsPath, "metronome.wav", "METRONOME_WAV");
         initializeVoicebank();
 
         // Initialize executables.
@@ -138,6 +139,10 @@ public class AssetManager {
 
     public File getPianoFile() {
         return new File(soundsPath, "piano.wav");
+    }
+
+    public File getMetronomeFile() {
+        return new File(soundsPath, "metronome.wav");
     }
 
     public File getVoicePath() {
