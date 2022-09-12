@@ -36,6 +36,8 @@ public class PreferencesManager {
     private BooleanProperty showVoicebankFaceTemp;
     private BooleanProperty showVoicebankBodyTemp;
 
+    private BooleanProperty isMetronomeEnabled;
+
     public PreferencesManager(
             @SettingsPath File settingsPath,
             DocumentBuilderFactory documentBuilderFactory,

@@ -70,19 +70,15 @@ public class Metronome {
 
     List<Duration> generateMarkers(
             double seconds,
-            double tempo
+            double bpm
     ) {
 
         ArrayList<Duration> events = new ArrayList<>();
-        int ratio = Math.floorDiv((int)seconds * 1000, (int) 60000);
-        double beats = tempo * ratio;
-        double steps = seconds * ratio;
+        double bps = bpm * (1.0 / 60.0);
+        double ms_beat = (1.0 / bps) * (1000.0);
 
-        for (int i = 0; i < 200; i++) {
-            if (i * 1000 > seconds * 1000) {
-                break;
-            }
-            events.add(new Duration(i * 1000));
+        for (int i = 0; i < seconds * 1000; i+=ms_beat) {
+            events.add(new Duration(i));
         }
 
         return events;
