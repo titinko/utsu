@@ -36,6 +36,8 @@ public class PreferencesManager {
     private BooleanProperty showVoicebankFaceTemp;
     private BooleanProperty showVoicebankBodyTemp;
 
+    private BooleanProperty isMetronomeEnabled;
+
     public PreferencesManager(
             @SettingsPath File settingsPath,
             DocumentBuilderFactory documentBuilderFactory,
@@ -324,5 +326,19 @@ public class PreferencesManager {
 
     public void setVoicebank(File voicebank) {
         preferences.put("voicebank", voicebank.getAbsolutePath());
+    }
+
+    public File getMetronomeFile() {
+        return preferences.containsKey("metronome")
+                ? new File(preferences.get("metronome"))
+                : new File(defaultPreferences.get("metronome"));
+    }
+
+    public BooleanProperty getMetronomeEnabled() {
+        if (isMetronomeEnabled == null) {
+            isMetronomeEnabled = new SimpleBooleanProperty();
+            isMetronomeEnabled.setValue(false);
+        }
+        return isMetronomeEnabled;
     }
 }

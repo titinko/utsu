@@ -146,11 +146,13 @@ public class UtsuModule extends AbstractModule {
         defaultBuilder.put("resampler", assetManager.getResamplerFile().getAbsolutePath());
         defaultBuilder.put("wavtool", assetManager.getWavtoolFile().getAbsolutePath());
         defaultBuilder.put("voicebank", assetManager.getVoicePath().getAbsolutePath());
+        defaultBuilder.put("metronome", assetManager.getMetronomeFile().getAbsolutePath());
         return new PreferencesManager(
                 settingsPath,
                 documentBuilderFactory,
                 TransformerFactory.newDefaultInstance(),
-                defaultBuilder.build());
+                defaultBuilder.build()
+        );
     }
 
     @Provides

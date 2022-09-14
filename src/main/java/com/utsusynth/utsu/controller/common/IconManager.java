@@ -5,6 +5,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.SVGPath;
 
 /** Singleton class, supplier of icon shapes and settings. */
 public class IconManager {
@@ -49,6 +50,14 @@ public class IconManager {
         stopIcon.getStyleClass().addAll("playback-icon", "not-selected");
         parent.getChildren().clear();
         parent.getChildren().add(stopIcon);
+    }
+
+    public void setMetronomeIcon(Pane parent) {
+        SVGPath metronomeIcon = new SVGPath();
+        metronomeIcon.setContent("M7 25C7 25 10.662 7.0634 14.2803 7.0634C17.8986 7.0634 14.013 7 17.3848 7C20.7567 7 25 24.8431 25 24.8431L7 25Z");
+        metronomeIcon.getStyleClass().addAll("playback-icon", "not-selected");
+        parent.getChildren().clear();
+        parent.getChildren().add(metronomeIcon);
     }
 
     public void selectIcon(Pane selectMe) {

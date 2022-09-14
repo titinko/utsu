@@ -26,6 +26,7 @@
                         <AnchorPane fx:id="rewindIcon" prefHeight="27.0" prefWidth="27.0" onMouseClicked="#rewindPlayback" />
                         <AnchorPane fx:id="playPauseIcon" prefHeight="27.0" prefWidth="27.0" onMouseClicked="#playOrPause" />
                         <AnchorPane fx:id="stopIcon" prefHeight="27.0" prefWidth="27.0" onMouseClicked="#stopPlayback" />
+                        <AnchorPane fx:id="metronomeIcon" prefHeight="27.0" prefWidth="27.0" onMouseClicked="#toggleMetronome" />
                      </children>
                   </HBox>
                </children>

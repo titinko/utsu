@@ -1,12 +1,12 @@
 package com.utsusynth.utsu.engine;
 
 import com.google.common.base.Function;
-import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.engine.wavtool.UtsuWavtool;
 import com.utsusynth.utsu.engine.wavtool.Wavtool;
 import com.utsusynth.utsu.files.CacheManager;
@@ -142,6 +142,16 @@ public class Engine {
                     instrumentalPlayer.dispose();
                 }
             });
+
+            new Metronome(
+                mediaPlayer,
+                song.getTempo(),
+                String.format("file:%s", this.preferencesManager.getMetronomeFile().getAbsolutePath()),
+                this.preferencesManager.getMetronomeEnabled()
+            );
+
+
+
             mediaPlayer.play();
         }
         return finalSong.isPresent();

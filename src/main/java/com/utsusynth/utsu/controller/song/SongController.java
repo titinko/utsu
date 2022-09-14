@@ -47,10 +47,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
@@ -123,6 +120,9 @@ public class SongController implements EditorController, Localizable {
 
     @FXML // fx:id="stopIcon"
     private AnchorPane stopIcon; // Value injected by FXMLLoader
+
+    @FXML // fx:id="metronomeIcon"
+    private AnchorPane metronomeIcon;
 
     @FXML // fx:id="quantizeChoiceBox"
     private ChoiceBox<String> quantizeChoiceBox; // Value injected by FXMLLoader
@@ -349,6 +349,14 @@ public class SongController implements EditorController, Localizable {
         iconManager.setStopIcon(stopIcon);
         stopIcon.setOnMousePressed(event -> iconManager.selectIcon(stopIcon));
         stopIcon.setOnMouseReleased(event -> iconManager.deselectIcon(stopIcon));
+        iconManager.setMetronomeIcon(metronomeIcon);
+        preferencesManager.getMetronomeEnabled().addListener(((observable, oldValue, newValue) -> {
+            if (newValue == true) {
+                iconManager.selectIcon(metronomeIcon);
+            } else {
+                iconManager.deselectIcon(metronomeIcon);
+            }
+        }));
 
         refreshView();
 
@@ -1369,5 +1377,9 @@ public class SongController implements EditorController, Localizable {
                 errorLogger.logError(e);
             }
         }
+    }
+
+    public void toggleMetronome(MouseEvent mouseEvent) {
+        preferencesManager.getMetronomeEnabled().set(!preferencesManager.getMetronomeEnabled().getValue());
     }
 }
