@@ -7,8 +7,9 @@ import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.utils.PitchUtils;
-import com.utsusynth.utsu.engine.wavtool.UtsuWavtool;
+import com.utsusynth.utsu.engine.resampler.Resampler;
 import com.utsusynth.utsu.engine.wavtool.Wavtool;
+import com.utsusynth.utsu.engine.wavtool.WavtoolConverter;
 import com.utsusynth.utsu.files.CacheManager;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.PreferencesManager.CacheMode;
@@ -39,13 +40,11 @@ public class Engine {
         PLAYING, PAUSED, STOPPED,
     }
 
-    private final Resampler resampler;
-    private final ExternalWavtool externalWavtool;
-    private final UtsuWavtool utsuWavtool;
     private final StatusBar statusBar;
     private final int threadPoolSize;
     private final CacheManager cacheManager;
     private final PreferencesManager preferencesManager;
+    private Resampler resampler;
     private Wavtool wavtool;
     private File resamplerPath;
 
@@ -54,20 +53,17 @@ public class Engine {
 
     public Engine(
             Resampler resampler,
-            ExternalWavtool externalWavtool,
-            UtsuWavtool utsuWavtool,
+            WavtoolConverter wavtoolConverter,
             StatusBar statusBar,
             int threadPoolSize,
             CacheManager cacheManager,
             PreferencesManager preferencesManager) {
-        this.resampler = resampler;
-        this.externalWavtool = externalWavtool;
-        this.utsuWavtool = utsuWavtool;
         this.statusBar = statusBar;
         this.threadPoolSize = threadPoolSize;
         this.cacheManager = cacheManager;
         this.preferencesManager = preferencesManager;
-        wavtool = utsuWavtool;
+        this.resampler = resampler;
+        wavtool = wavtoolConverter.fromString(preferencesManager.getWavtool());
         resamplerPath = preferencesManager.getResampler();
     }
 
@@ -82,13 +78,20 @@ public class Engine {
         this.resamplerPath = resamplerPath;
     }
 
-    public File getWavtoolPath() {
-        return externalWavtool.getWavtoolPath();
+    public Resampler getResampler() {
+        return resampler;
     }
 
-    public void setWavtoolPath(File wavtoolPath) {
-        externalWavtool.setWavtoolPath(wavtoolPath);
+    public void setResampler(Resampler resampler) {
+        this.resampler = resampler;
+    }
 
+    public Wavtool getWavtool() {
+        return wavtool;
+    }
+
+    public void setWavtool(Wavtool wavtool) {
+        this.wavtool = wavtool;
     }
 
     /**

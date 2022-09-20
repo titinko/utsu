@@ -290,22 +290,18 @@ public class PreferencesManager {
         preferences.put("resampler", resampler.getAbsolutePath());
     }
 
-    public File getWavtool() {
-        File wavtool = preferences.containsKey("wavtool")
-                ? new File(preferences.get("wavtool"))
-                : new File(defaultPreferences.get("wavtool"));
-        if (!wavtool.canExecute()) {
-            return new File(defaultPreferences.get("wavtool"));
-        }
-        return wavtool;
+    public String getWavtool() {
+        return preferences.containsKey("wavtool")
+                ? preferences.get("wavtool")
+                : defaultPreferences.get("wavtool");
     }
 
-    public File getWavtoolDefault() {
-        return new File(defaultPreferences.get("wavtool"));
+    public String getWavtoolDefault() {
+        return defaultPreferences.get("wavtool");
     }
 
-    public void setWavtool(File wavtool) {
-        preferences.put("wavtool", wavtool.getAbsolutePath());
+    public void setWavtool(String wavtool) {
+        preferences.put("wavtool", wavtool);
     }
 
     public File getVoicebank() {

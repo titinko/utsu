@@ -32,7 +32,7 @@ public class EnginePreferencesEditor extends PreferencesEditor implements Locali
     private Button changeResamplerButton;
     private Button resetResamplerButton;
     private Label defaultWavtoolLabel;
-    private File currentWavtool;
+    private String currentWavtool;
     private Button changeWavtoolButton;
     private Button resetWavtoolButton;
     private Label defaultVoicebankLabel;
@@ -124,20 +124,20 @@ public class EnginePreferencesEditor extends PreferencesEditor implements Locali
         TextField wavtoolName = new TextField();
         wavtoolName.setEditable(false);
         currentWavtool = preferencesManager.getWavtool();
-        wavtoolName.setText(currentWavtool.getName());
+        wavtoolName.setText(guessFileName(currentWavtool));
         HBox wavtoolHBox = new HBox(5);
         changeWavtoolButton = new Button("Change...");
         changeWavtoolButton.setOnAction(event -> {
-            File newWavtool = selectExecutable();
-            if (newWavtool != null && newWavtool.canExecute()) {
-                currentWavtool = newWavtool;
-                wavtoolName.setText(currentWavtool.getName());
+            File newWavtoolFile = selectExecutable();
+            if (newWavtoolFile != null && newWavtoolFile.canExecute()) {
+                currentWavtool = newWavtoolFile.getAbsolutePath();
+                wavtoolName.setText(newWavtoolFile.getName());
             }
         });
         resetWavtoolButton = new Button("Reset");
         resetWavtoolButton.setOnAction(event -> {
             currentWavtool = preferencesManager.getWavtoolDefault();
-            wavtoolName.setText(currentWavtool.getName());
+            wavtoolName.setText(guessFileName(currentWavtool));
         });
         wavtoolHBox.getChildren().addAll(changeWavtoolButton, resetWavtoolButton);
         wavtoolVBox.getChildren().addAll(wavtoolName, wavtoolHBox);
@@ -233,6 +233,15 @@ public class EnginePreferencesEditor extends PreferencesEditor implements Locali
                 new FileChooser.ExtensionFilter("OSX Executables", "*.out", "*.app"),
                 new FileChooser.ExtensionFilter("All Files", "*.*"));
         return fc.showOpenDialog(null);
+    }
+
+    // If string is a file path, give it a more human-readable name.
+    private static String guessFileName(String filePath) {
+        File file = new File(filePath);
+        if (file.exists() && file.canExecute()) {
+            return file.getName();
+        }
+        return filePath;
     }
 
     /* Loads voicebank in a new thread in case it takes a while. */

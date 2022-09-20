@@ -107,6 +107,11 @@ public class UtsuWavtool implements Wavtool {
         totalDelta += duration;
     }
 
+    @Override
+    public String toString() {
+        return "Default";
+    }
+
     private WavData applyEnvelope(WavData wavData, EnvelopeData envelopeData) {
         double[] widths = envelopeData.getWidths();
         double[] result = new double[wavData.getSamples().length];

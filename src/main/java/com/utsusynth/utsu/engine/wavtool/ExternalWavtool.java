@@ -1,34 +1,31 @@
-package com.utsusynth.utsu.engine;
+package com.utsusynth.utsu.engine.wavtool;
 
 import java.io.File;
 import com.google.inject.Inject;
-import com.utsusynth.utsu.engine.wavtool.Wavtool;
-import com.utsusynth.utsu.files.PreferencesManager;
+import com.utsusynth.utsu.engine.common.ExternalProcessRunner;
 import com.utsusynth.utsu.model.song.Song;
 import com.utsusynth.utsu.model.song.Note;
 
 public class ExternalWavtool implements Wavtool {
     private final ExternalProcessRunner runner;
-    private final PreferencesManager preferencesManager;
     private File wavtoolPath;
     private double totalDelta = 0; // Total duration in ms, used to debug timing issues.
 
     @Inject
-    ExternalWavtool(ExternalProcessRunner runner, PreferencesManager preferencesManager) {
+    ExternalWavtool(ExternalProcessRunner runner) {
         this.runner = runner;
-        this.preferencesManager = preferencesManager;
-        wavtoolPath = preferencesManager.getWavtool();
     }
 
-    File getWavtoolPath() {
-        if (wavtoolPath != null) {
-            return wavtoolPath;
-        }
-        return preferencesManager.getWavtool();
+    public File getWavtoolPath() {
+        return wavtoolPath;
     }
 
-    void setWavtoolPath(File wavtoolPath) {
+    public void setWavtoolPath(File wavtoolPath) {
         this.wavtoolPath = wavtoolPath;
+    }
+
+    public boolean isRunnable() {
+        return wavtoolPath != null && wavtoolPath.exists() && wavtoolPath.canExecute();
     }
 
     @Override
@@ -125,5 +122,10 @@ public class ExternalWavtool implements Wavtool {
                 envelope[10], // v5
                 triggerSynthesis ? "LAST_NOTE" : ""); // Triggers final song processing.
         totalDelta += duration;
+    }
+
+    @Override
+    public String toString() {
+        return wavtoolPath.getName();
     }
 }

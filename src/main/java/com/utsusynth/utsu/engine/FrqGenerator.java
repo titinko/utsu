@@ -2,6 +2,7 @@ package com.utsusynth.utsu.engine;
 
 import java.io.File;
 import com.google.inject.Inject;
+import com.utsusynth.utsu.engine.common.ExternalProcessRunner;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.FileNameFixer;
 

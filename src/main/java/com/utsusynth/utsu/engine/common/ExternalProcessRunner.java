@@ -1,4 +1,4 @@
-package com.utsusynth.utsu.engine;
+package com.utsusynth.utsu.engine.common;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -14,7 +14,12 @@ import com.utsusynth.utsu.common.quantize.Quantizer;
 import com.utsusynth.utsu.common.quantize.Scaler;
 import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.*;
+import com.utsusynth.utsu.engine.common.ExternalProcessRunner;
+import com.utsusynth.utsu.engine.resampler.Resampler;
+import com.utsusynth.utsu.engine.wavtool.ExternalWavtool;
 import com.utsusynth.utsu.engine.wavtool.UtsuWavtool;
+import com.utsusynth.utsu.engine.wavtool.Wavtool;
+import com.utsusynth.utsu.engine.wavtool.WavtoolConverter;
 import com.utsusynth.utsu.files.*;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
@@ -71,6 +76,7 @@ public class UtsuModule extends AbstractModule {
         bind(VoicebankReader.class).asEagerSingleton();
         bind(ReclistConverterMap.class).asEagerSingleton();
         bind(Scaler.class).to(DiscreteScaler.class);
+        bind(Wavtool.class).to(UtsuWavtool.class);
     }
 
     @Provides
@@ -144,7 +150,7 @@ public class UtsuModule extends AbstractModule {
         defaultBuilder.put("locale", "en");
         defaultBuilder.put("cache", PreferencesManager.CacheMode.ENABLED.name());
         defaultBuilder.put("resampler", assetManager.getResamplerFile().getAbsolutePath());
-        defaultBuilder.put("wavtool", assetManager.getWavtoolFile().getAbsolutePath());
+        defaultBuilder.put("wavtool", "Default");
         defaultBuilder.put("voicebank", assetManager.getVoicePath().getAbsolutePath());
         return new PreferencesManager(
                 settingsPath,
@@ -205,15 +211,13 @@ public class UtsuModule extends AbstractModule {
     @Provides
     private Engine provideEngine(
             Resampler resampler,
-            ExternalWavtool externalWavtool,
-            UtsuWavtool utsuWavtool,
+            WavtoolConverter wavtoolConverter,
             StatusBar statusBar,
             CacheManager cacheManager,
             PreferencesManager preferencesManager) {
         return new Engine(
                 resampler,
-                externalWavtool,
-                utsuWavtool,
+                wavtoolConverter,
                 statusBar,
                 /* threadPoolSize= */ 10,
                 cacheManager,

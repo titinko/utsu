@@ -1,9 +1,10 @@
-package com.utsusynth.utsu.engine;
+package com.utsusynth.utsu.engine.resampler;
 
 import java.io.File;
 import com.google.inject.Inject;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.utils.PitchUtils;
+import com.utsusynth.utsu.engine.common.ExternalProcessRunner;
 import com.utsusynth.utsu.files.AssetManager;
 import com.utsusynth.utsu.files.FileNameFixer;
 import com.utsusynth.utsu.model.song.Note;
@@ -23,7 +24,7 @@ public class Resampler {
         this.assetManager = assetManager;
     }
 
-    void resample(
+    public void resample(
             File resamplerPath,
             Note note,
             double noteLength,
@@ -74,7 +75,7 @@ public class Resampler {
      * @param pitchString Pitch changes
      * @param tempo Tempo in BPM at which pitch changes are established
      */
-    void resampleNote(
+    public void resampleNote(
             File resamplerPath,
             Note note,
             double noteLength,
@@ -113,7 +114,7 @@ public class Resampler {
     }
 
 
-    void resampleSilence(File resamplerPath, File outputFile, double duration) {
+    public void resampleSilence(File resamplerPath, File outputFile, double duration) {
         String desiredLength = Double.toString(duration + 1);
         runner.runProcess(
                 resamplerPath.getAbsolutePath(),

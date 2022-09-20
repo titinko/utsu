@@ -23,7 +23,7 @@ import com.utsusynth.utsu.controller.common.UndoService;
 import com.utsusynth.utsu.controller.song.BulkEditorController.BulkEditorType;
 import com.utsusynth.utsu.controller.song.LyricEditorController.LyricEditorType;
 import com.utsusynth.utsu.engine.Engine;
-import com.utsusynth.utsu.engine.ExternalProcessRunner;
+import com.utsusynth.utsu.engine.common.ExternalProcessRunner;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.files.ThemeManager;
 import com.utsusynth.utsu.files.song.*;
