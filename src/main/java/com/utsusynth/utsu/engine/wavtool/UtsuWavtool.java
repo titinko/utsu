@@ -131,9 +131,9 @@ public class UtsuWavtool implements Wavtool {
         xValues[2] = Math.max(xValues[2], xValues[1]);
         xValues[3] = Math.max(xValues[3], xValues[2]);
         xValues[4] = Math.max(xValues[4], xValues[3]);
-        xValues[5] = Math.max(xValues[5], xValues[4]);
-        xValues[6] = Math.max(xValues[6], xValues[5]);
-        xValues[7] = Math.max(xValues[7], xValues[6]);
+        //xValues[5] = Math.max(xValues[5], xValues[4]);
+        //xValues[6] = Math.max(xValues[6], xValues[5]);
+        //xValues[7] = Math.max(xValues[7], xValues[6]);
 
         double[] yValues = new double[8];
         yValues[0] = 0;
