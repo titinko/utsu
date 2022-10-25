@@ -28,10 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 public class Engine {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
@@ -123,7 +120,7 @@ public class Engine {
             Runnable endCallback) {
         stopPlayback(); // Clear existing playback, if present.
         Optional<File> finalSong = render(song, bounds);
-        if (finalSong.isPresent()) {
+        if (finalSong.isPresent() && finalSong.get().canRead()) {
             // Play instrumental, if present.
             if (song.getInstrumental().isPresent()) {
                 Media instrumental = new Media(song.getInstrumental().get().toURI().toString());
@@ -331,18 +328,14 @@ public class Engine {
             final boolean isLastNote = notes.peekNext().isEmpty();
             final int currentTotalDelta = totalDelta;
             final double expectedDelta = totalDelta - preutter;
-            final double noteAddOn = preutter - nextNoteEncroachment;
             futures.add(executor.submit(() -> {
                 // Re-samples lyric and puts result into renderedNote file.
                 File renderedNote;
                 if (preferencesManager.getCache().equals(CacheMode.DISABLED)) {
                     song.clearNoteCache(currentTotalDelta, currentTotalDelta);
                 }
-                if (note.getCacheFile().isEmpty()) {
+                if (note.getCacheFile() == null || !note.getCacheFile().exists()) {
                     renderedNote = cacheManager.createNoteCache();
-                    if (preferencesManager.getCache().equals(CacheMode.ENABLED)) {
-                        note.setCacheFile(Optional.of(renderedNote));
-                    }
                     resampler.resample(
                             getResamplerPath(),
                             note,
@@ -351,20 +344,23 @@ public class Engine {
                             renderedNote,
                             pitchString,
                             song);
+                    // Wait up to one second for file to become readable.
+                    waitUntilFileReadable(renderedNote);
+                    if (preferencesManager.getCache().equals(CacheMode.ENABLED)) {
+                        note.setCacheFile(renderedNote);
+                    }
                 } else {
-                    renderedNote = note.getCacheFile().get();
+                    renderedNote = note.getCacheFile();
                 }
-                return () -> {
-                    wavtool.addNewNote(
-                            song,
-                            note,
-                            adjustedLength,
-                            expectedDelta,
-                            renderedNote,
-                            finalSong,
-                            includeOverlap,
-                            isLastNote);
-                };
+                return () -> wavtool.addNewNote(
+                        song,
+                        note,
+                        adjustedLength,
+                        expectedDelta,
+                        renderedNote,
+                        finalSong,
+                        includeOverlap,
+                        isLastNote);
             }));
 
             // Possible silence after each note.
@@ -388,20 +384,42 @@ public class Engine {
         }
 
         // When resampler finishes, run wavtool on notes in sequential order.
-        wavtool.startRender(startPosition * scaleFactor);
-        for (int i = 0; i < futures.size(); i++) {
-            try {
-                double curProgress = i * 1.0 / futures.size();
-                statusBar.setProgressAsync(curProgress);
-                futures.get(i).get().run();
-            } catch (InterruptedException | ExecutionException e) {
-                errorLogger.logError(e);
-                return Optional.empty();
+        // The wavtool is given its own thread so it can be terminated separately from the engine.
+        Thread wavtoolThread = new Thread(() -> {
+            wavtool.startRender(startPosition * scaleFactor);
+            for (int i = 0; i < futures.size(); i++) {
+                try {
+                    double curProgress = i * 1.0 / futures.size();
+                    statusBar.setProgressAsync(curProgress);
+                    futures.get(i).get().run();
+                    if (Thread.interrupted()) {
+                        throw new InterruptedException("Wavtool thread manually interrupted.");
+                    }
+                } catch (InterruptedException | CancellationException | ExecutionException e) {
+                    System.out.println("Wavtool run failed or was canceled.");
+                    errorLogger.logError(e);
+                    executor.shutdownNow(); // Shutdown all resamplers.
+                    return; // Return early from wavtool thread.
+                }
             }
+        });
+        statusBar.startProgress(wavtoolThread::interrupt);
+        wavtoolThread.start();
+        try {
+            wavtoolThread.join();
+            waitUntilFileReadable(finalSong);
+        } catch (InterruptedException e) {
+            // This triggers if engine thread is interrupted while waiting for the wavtool thread.
+            errorLogger.logError(e);
+            return Optional.empty();
         }
-        statusBar.setProgressAsync(1.0); // Mark task as complete.
+        statusBar.endProgress(); // Mark task as complete.
         executor.shutdown(); // Shut down thread pool
 
+        if (!finalSong.canRead()) {
+            System.out.println("Render did not produce a valid file.");
+            return Optional.empty();
+        }
         if (preferencesManager.getCache().equals(CacheMode.ENABLED)) {
             song.setCache(bounds, finalSong); // Cache region that was played.
         } else {
@@ -445,14 +463,12 @@ public class Engine {
         File renderedSilence = cacheManager.createSilenceCache();
         futures.add(executor.submit(() -> {
             resampler.resampleSilence(getResamplerPath(), renderedSilence, trueDuration);
-            return () -> {
-                wavtool.addSilence(
-                        trueDuration,
-                        totalDelta,
-                        renderedSilence,
-                        finalSong,
-                        true);
-            };
+            return () -> wavtool.addSilence(
+                    trueDuration,
+                    totalDelta,
+                    renderedSilence,
+                    finalSong,
+                    true);
         }));
     }
 
@@ -491,5 +507,18 @@ public class Engine {
         double scaleFactor = 125.0 / tempo;
         double scaledGap = (note.get().getLength() - note.get().getDuration()) * scaleFactor;
         return scaledGap <= nextPreutter.get();
+    }
+
+    // Wait up to 1 second for a file to be readable.
+    private static void waitUntilFileReadable(File file) throws InterruptedException {
+        for (int i = 0; i < 10; i++) {
+            if (file.canRead()) {
+                if (i > 0) {
+                    System.out.println("Note appeared at " + (i * 100) + "ms.");
+                }
+                break;
+            }
+            Thread.sleep(100); // Wait for 100ms.
+        }
     }
 }

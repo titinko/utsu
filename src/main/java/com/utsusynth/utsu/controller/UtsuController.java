@@ -87,6 +87,8 @@ public class UtsuController implements Localizable {
     private Label statusLabel;
     @FXML
     private ProgressBar loadingBar;
+    @FXML
+    private Button cancelButton;
 
     @Inject
     public UtsuController(
@@ -159,8 +161,10 @@ public class UtsuController implements Localizable {
         loadingBar.progressProperty().addListener(event -> {
             if (loadingBar.getProgress() <= 0 || loadingBar.getProgress() >= 1) {
                 loadingBar.setVisible(false);
+                cancelButton.setVisible(false);
             } else {
                 loadingBar.setVisible(true);
+                cancelButton.setVisible(true);
             }
         });
 
@@ -329,6 +333,9 @@ public class UtsuController implements Localizable {
         // Force the menu to refresh.
         fileMenu.setVisible(false);
         fileMenu.setVisible(true);
+
+        // Translate any status bar items.
+        cancelButton.setText(bundle.getString("general.cancel"));
     }
 
     private void createMenuKeyboardShortcuts() {
@@ -982,5 +989,10 @@ public class UtsuController implements Localizable {
                 recentPluginsMenu.setDisable(false);
             }
         }
+    }
+
+    @FXML
+    void cancelTask(ActionEvent event) {
+        statusBar.cancelProgress();
     }
 }

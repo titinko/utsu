@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
@@ -11,6 +12,7 @@
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utsusynth.utsu.controller.UtsuController">
    <top>
@@ -126,15 +128,23 @@
                   <Insets bottom="3.0" left="3.0" right="3.0" top="3.5" />
                </BorderPane.margin></Label>
          </left>
-         <right>
-            <ProgressBar fx:id="loadingBar" prefWidth="150.0" progress="0.0" visible="false">
-               <BorderPane.margin>
-                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.5" />
-               </BorderPane.margin></ProgressBar>
-         </right>
          <top>
             <Separator prefWidth="200.0" BorderPane.alignment="CENTER" />
          </top>
+         <right>
+            <HBox alignment="CENTER_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
+               <children>
+                  <ProgressBar fx:id="loadingBar" prefWidth="150.0" progress="0.0" visible="false" />
+                  <Button fx:id="cancelButton" alignment="CENTER_RIGHT" cancelButton="true" mnemonicParsing="false" onAction="#cancelTask" text="Cancel" visible="false">
+                     <padding>
+                        <Insets bottom="2.0" left="6.0" top="2.0" right="6.0" />
+                     </padding>
+                     <HBox.margin>
+                        <Insets right="1.0" />
+                     </HBox.margin></Button>
+               </children>
+            </HBox>
+         </right>
       </BorderPane>
    </bottom>
 </BorderPane>

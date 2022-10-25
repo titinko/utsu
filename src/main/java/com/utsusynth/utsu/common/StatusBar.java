@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 
@@ -16,6 +17,7 @@ public class StatusBar implements Localizable {
 
     private StringProperty statusText;
     private DoubleProperty curProgress; // A value from 0 to 1, inclusive.
+    private Runnable cancelProgressRunnable; // Gets called when progress is set to 0.
 
     private String key = ""; // Key of current status message, if present.
     private String param = ""; // Param of current status message, if present.
@@ -70,9 +72,14 @@ public class StatusBar implements Localizable {
         }
     }
 
-    /** Should be called from backend threads. */
+    /** Async versions should be called from backend threads. */
     public void setTextAsync(String text) {
         Platform.runLater(() -> setText(text));
+    }
+
+    public void startProgress(Runnable cancelProgressRunnable) {
+        this.cancelProgressRunnable = cancelProgressRunnable;
+        setProgressAsync(0);
     }
 
     public void setProgress(double progress) {
@@ -83,5 +90,19 @@ public class StatusBar implements Localizable {
 
     public void setProgressAsync(double progress) {
         Platform.runLater(() -> setProgress(progress));
+    }
+
+    /** End progress naturally without calling the cancel runnable. */
+    public void endProgress() {
+        cancelProgressRunnable = null;
+        setProgressAsync(0);
+    }
+
+    /** End progress early and call the cancel runnable. */
+    public void cancelProgress() {
+        if (cancelProgressRunnable != null) {
+            cancelProgressRunnable.run();
+        }
+        endProgress();
     }
 }

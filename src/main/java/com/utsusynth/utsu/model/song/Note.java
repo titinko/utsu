@@ -42,7 +42,7 @@ public class Note {
     private double realDuration; // What real duration would be with default tempo.
     private double realStartPoint;
     private String trueLyric; // Note's lyric after processing and formatting.
-    private Optional<File> cacheFile; // Result of applying resampler to this note.
+    private File cacheFile; // Result of applying resampler to this note.
 
     public Note() {
         // Set every required field to its default.
@@ -72,7 +72,7 @@ public class Note {
         this.realDuration = -1; // Should be ignored if not explicitly set.
         this.realStartPoint = 0;
         this.trueLyric = ""; // Defaults to "" if no lyric is found.
-        this.cacheFile = Optional.empty();
+        this.cacheFile = null;
     }
 
     public void setDelta(int delta) {
@@ -469,12 +469,16 @@ public class Note {
         this.trueLyric = trueLyric;
     }
 
-    public Optional<File> getCacheFile() {
+    public File getCacheFile() {
         return this.cacheFile;
     }
 
-    public void setCacheFile(Optional<File> cacheFile) {
-        this.cacheFile = cacheFile;
+    public void setCacheFile(File cacheFile) {
+        this.cacheFile = (cacheFile != null && cacheFile.exists()) ? cacheFile : null;
+    }
+
+    public void clearCacheFile() {
+        this.cacheFile = null;
     }
 
     private static double safeParseDouble(String fromMe, double fallback) {

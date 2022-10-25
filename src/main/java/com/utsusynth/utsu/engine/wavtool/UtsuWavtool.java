@@ -66,7 +66,7 @@ public class UtsuWavtool implements Wavtool {
         Optional<WavData> wavData = soundFileReader.loadWavData(inputFile);
         if (wavData.isEmpty()) {
             // TODO: Throw an error.
-            System.out.println("Error: Unable to read WAV data.");
+            System.out.println("Error: Unable to read WAV data: " + inputFile.getName());
             return;
         }
         if (wavData.get().getLengthMs() < noteLength) {
@@ -126,14 +126,14 @@ public class UtsuWavtool implements Wavtool {
         xValues[6] = Math.max(xValues[5], wavData.getSamples().length - 400); // Final phase out.
         xValues[7] = wavData.getSamples().length;
 
-        // Ensure envelope values are strictly increasing.
-        xValues[1] = Math.max(xValues[1], xValues[0]);
-        xValues[2] = Math.max(xValues[2], xValues[1]);
-        xValues[3] = Math.max(xValues[3], xValues[2]);
-        xValues[4] = Math.max(xValues[4], xValues[3]);
-        xValues[5] = Math.max(xValues[5], xValues[4]);
-        xValues[6] = Math.max(xValues[6], xValues[5]);
-        xValues[7] = Math.max(xValues[7], xValues[6]);
+        // Ensure envelope values are strictly and don't exceed note length.
+        xValues[1] = Math.min(Math.max(xValues[1], xValues[0]), wavData.getSamples().length);
+        xValues[2] = Math.min(Math.max(xValues[2], xValues[1]), wavData.getSamples().length);
+        xValues[3] = Math.min(Math.max(xValues[3], xValues[2]), wavData.getSamples().length);
+        xValues[4] = Math.min(Math.max(xValues[4], xValues[3]), wavData.getSamples().length);
+        xValues[5] = Math.min(Math.max(xValues[5], xValues[4]), wavData.getSamples().length);
+        xValues[6] = Math.min(Math.max(xValues[6], xValues[5]), wavData.getSamples().length);
+        xValues[7] = Math.min(Math.max(xValues[7], xValues[6]), wavData.getSamples().length);
 
         double[] yValues = new double[8];
         yValues[0] = 0;

@@ -44,7 +44,9 @@ public class ExternalProcessRunner {
             curProcess = builder.start();
             watch(curProcess.getInputStream());
             curProcess.waitFor();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            // Do nothing. This thread can be canceled.
+        } catch (IOException e) {
             errorLogger.logError(e);
         }
     }

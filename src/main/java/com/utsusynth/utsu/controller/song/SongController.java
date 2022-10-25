@@ -1311,7 +1311,11 @@ public class SongController implements EditorController, Localizable {
         };
         // Apply changes and save redo/undo for these changes.
         redoAction.run();
-        undoService.setMostRecentAction(redoAction, undoAction);
+        if (Platform.isFxApplicationThread()) {
+            undoService.setMostRecentAction(redoAction, undoAction);
+        } else {
+            Platform.runLater(() -> undoService.setMostRecentAction(redoAction, undoAction));
+        }
     }
 
     @Override

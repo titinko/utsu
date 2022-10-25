@@ -1,7 +1,6 @@
 package com.utsusynth.utsu.model.song;
 
 import com.utsusynth.utsu.common.data.*;
-import com.utsusynth.utsu.common.utils.LyricUtils;
 import com.utsusynth.utsu.common.utils.RegionBounds;
 import com.utsusynth.utsu.common.enums.FilterType;
 import com.utsusynth.utsu.common.exception.NoteAlreadyExistsException;
@@ -528,10 +527,10 @@ public class Song {
     }
 
     private void clearNoteCache(Note note) {
-        if (note.getCacheFile().isPresent()) {
-            cacheManager.clearCache(note.getCacheFile().get());
+        if (note.getCacheFile() != null) {
+            cacheManager.clearCache(note.getCacheFile());
         }
-        note.setCacheFile(Optional.empty());
+        note.clearCacheFile();
     }
 
     public String getProjectName() {
