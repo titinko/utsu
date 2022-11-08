@@ -119,7 +119,10 @@ public class Engine {
             Function<Duration, Void> startCallback,
             Runnable endCallback) {
         stopPlayback(); // Clear existing playback, if present.
+        long start = System.currentTimeMillis();
         Optional<File> finalSong = render(song, bounds);
+        long time = System.currentTimeMillis() - start;
+        System.out.println("Rendering took " + (time / 1000.0) + " seconds.");
         if (finalSong.isPresent() && finalSong.get().canRead()) {
             // Play instrumental, if present.
             if (song.getInstrumental().isPresent()) {
@@ -314,7 +317,7 @@ public class Engine {
             }
             double adjustedLength =
                     (note.getDuration() * scaleFactor) + preutter - nextNoteEncroachment;
-            System.out.println("Real duration is " + adjustedLength);
+            // System.out.println("Real duration is " + adjustedLength);
 
             // Calculate pitchbends.
             int firstStep = getFirstPitchStep(totalDelta, preutter);

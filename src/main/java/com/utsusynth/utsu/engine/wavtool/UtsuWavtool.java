@@ -1,29 +1,46 @@
 package com.utsusynth.utsu.engine.wavtool;
 
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.EnvelopeData;
 import com.utsusynth.utsu.common.data.WavData;
+import com.utsusynth.utsu.common.exception.ErrorLogger;
 import com.utsusynth.utsu.common.utils.RoundUtils;
 import com.utsusynth.utsu.files.voicebank.SoundFileReader;
 import com.utsusynth.utsu.files.voicebank.SoundFileWriter;
 import com.utsusynth.utsu.model.song.Note;
 import com.utsusynth.utsu.model.song.Song;
+import javafx.util.Pair;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.*;
 
 public class UtsuWavtool implements Wavtool {
+    private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
+
+    private final StatusBar statusBar;
+    private final int threadPoolSize;
     private final SoundFileReader soundFileReader;
     private final SoundFileWriter soundFileWriter;
     private final ArrayList<Double> overlaps = new ArrayList<>();
     private final ArrayList<WavData> fragments = new ArrayList<>();
+    private final ArrayList<Future<Pair<Double, WavData>>> futures = new ArrayList<>();
     private double startDelta = 0; // Start duration in ms.
     private double totalDelta = 0; // Total duration in ms, used to debug timing issues.
+    private ExecutorService threadPool;
 
     @Inject
-    public UtsuWavtool(SoundFileReader soundFileReader, SoundFileWriter soundFileWriter) {
+    public UtsuWavtool(
+            StatusBar statusBar,
+            int threadPoolSize,
+            SoundFileReader soundFileReader,
+            SoundFileWriter soundFileWriter) {
+        this.statusBar = statusBar;
+        this.threadPoolSize = threadPoolSize;
         this.soundFileReader = soundFileReader;
         this.soundFileWriter = soundFileWriter;
     }
@@ -32,6 +49,11 @@ public class UtsuWavtool implements Wavtool {
     public void startRender(double startDelta) {
         overlaps.clear();
         fragments.clear();
+        futures.clear();
+        if (threadPool != null && !threadPool.isTerminated()) {
+            threadPool.shutdownNow();
+        }
+        threadPool = Executors.newFixedThreadPool(threadPoolSize);
         this.startDelta = startDelta;
         totalDelta = startDelta;
     }
@@ -63,23 +85,30 @@ public class UtsuWavtool implements Wavtool {
         }
         totalDelta += noteLength - boundedOverlap;
 
-        Optional<WavData> wavData = soundFileReader.loadWavData(inputFile);
-        if (wavData.isEmpty()) {
-            // TODO: Throw an error.
-            System.out.println("Error: Unable to read WAV data: " + inputFile.getName());
-            return;
-        }
-        if (wavData.get().getLengthMs() < noteLength) {
-            System.out.println("Error: Input note is not long enough.");
-            return;
-        }
-        int numSamples = msToNumSamples(noteLength);
-        WavData truncatedWav =
-                new WavData(noteLength, Arrays.copyOf(wavData.get().getSamples(), numSamples));
-        WavData scaledWav = applyEnvelope(truncatedWav, note.getEnvelope());
+        final double finalOverlap = boundedOverlap;
+        final int numSamples = msToNumSamples(noteLength);
+        futures.add(threadPool.submit(() -> {
+            // Files are often not ready to read immediately after the resampler finishes.
+            // Putting a wait here reduces data race errors without significantly impacting
+            // render time.
+            Thread.sleep(100);
+            Optional<WavData> wavData = soundFileReader.loadWavData(inputFile);
+            if (wavData.isEmpty()) {
+                System.out.println("Warning: Unable to read WAV data: " + inputFile.getName());
+                WavData silenceWav = new WavData(noteLength, new double[numSamples]);
+                return new Pair<>(0.0, silenceWav);
+            }
+            if (wavData.get().getLengthMs() < noteLength) {
+                // Will truncate or pad with zeroes to get to the desired length.
+                System.out.println("Warning: Input not is not long enough: "
+                        + wavData.get().getLengthMs() + " < " + noteLength);
+            }
+            WavData truncatedWav =
+                    new WavData(noteLength, Arrays.copyOf(wavData.get().getSamples(), numSamples));
+            WavData scaledWav = applyEnvelope(truncatedWav, note.getEnvelope());
 
-        overlaps.add(boundedOverlap);
-        fragments.add(scaledWav);
+            return new Pair<>(finalOverlap, scaledWav);
+        }));
         if (triggerSynthesis) {
             saveToOutputFile(outputFile);
         }
@@ -98,13 +127,17 @@ public class UtsuWavtool implements Wavtool {
             duration += timingCorrection;
             System.out.println("Corrected timing by " + timingCorrection + " ms.");
         }
-
-        int numSamples = msToNumSamples(duration);
-        WavData silenceWav = new WavData(duration, new double[numSamples]);
-
-        overlaps.add((double) 0);
-        fragments.add(silenceWav);
+        final double finalDuration = duration;
+        final int numSamples = msToNumSamples(duration);
         totalDelta += duration;
+
+        futures.add(threadPool.submit(() -> {
+            WavData silenceWav = new WavData(finalDuration, new double[numSamples]);
+            return new Pair<>(0.0, silenceWav);
+        }));
+        if (triggerSynthesis) {
+            saveToOutputFile(outputFile);
+        }
     }
 
     @Override
@@ -159,14 +192,19 @@ public class UtsuWavtool implements Wavtool {
         return new WavData(wavData.getLengthMs(), result);
     }
 
-    private void saveToOutputFile(File outputFile) {
+    // Asyncronously apply synthesis and return the comined wav.
+    private WavData synthesize() throws ExecutionException, InterruptedException {
         double durationMs = totalDelta - startDelta;
         int numSamples = msToNumSamples(durationMs);
         double[] combinedSamples = new double[numSamples];
         int curSample = 0;
-        for (int i = 0; i < fragments.size(); i++) {
-            WavData fragment = fragments.get(i);
-            int overlapSamples = msToNumSamples(overlaps.get(i));
+        for (int i = 0; i < futures.size(); i++) {
+            double curProgress = i * 1.0 / futures.size();
+            statusBar.setProgressAsync(curProgress);
+
+            WavData fragment = futures.get(i).get().getValue();
+            double overlapMs = futures.get(i).get().getKey();
+            int overlapSamples = msToNumSamples(overlapMs);
             curSample = Math.min(numSamples, Math.max(0, curSample - overlapSamples));
             int samplesToWrite = Math.min(fragment.getSamples().length, numSamples - curSample);
             int firstSample = curSample;
@@ -179,8 +217,19 @@ public class UtsuWavtool implements Wavtool {
                 }
             }
         }
-        WavData combinedWav = new WavData(durationMs, combinedSamples);
-        soundFileWriter.writeWavData(combinedWav, outputFile);
+        return new WavData(durationMs, combinedSamples);
+    }
+
+    private void saveToOutputFile(File outputFile) {
+        try {
+            WavData combinedWav = synthesize();
+            soundFileWriter.writeWavData(combinedWav, outputFile);
+        } catch (InterruptedException | ExecutionException e) {
+            System.out.println("Wavtool run failed or was canceled.");
+            errorLogger.logError(e);
+            threadPool.shutdownNow();  // Cancel all other tasks.
+        }
+        threadPool.shutdown();
     }
 
     private static int msToNumSamples(double lengthMs) {

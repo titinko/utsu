@@ -16,11 +16,12 @@ import com.utsusynth.utsu.controller.common.IconManager;
 import com.utsusynth.utsu.engine.*;
 import com.utsusynth.utsu.engine.common.ExternalProcessRunner;
 import com.utsusynth.utsu.engine.resampler.Resampler;
-import com.utsusynth.utsu.engine.wavtool.ExternalWavtool;
 import com.utsusynth.utsu.engine.wavtool.UtsuWavtool;
 import com.utsusynth.utsu.engine.wavtool.Wavtool;
 import com.utsusynth.utsu.engine.wavtool.WavtoolConverter;
 import com.utsusynth.utsu.files.*;
+import com.utsusynth.utsu.files.voicebank.SoundFileReader;
+import com.utsusynth.utsu.files.voicebank.SoundFileWriter;
 import com.utsusynth.utsu.files.voicebank.VoicebankReader;
 import com.utsusynth.utsu.model.song.converters.ReclistConverter;
 import com.utsusynth.utsu.model.song.converters.ReclistConverterMap;
@@ -127,7 +128,7 @@ public class UtsuModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private DocumentBuilderFactory providdeDocumentBuilderFactory() {
+    private DocumentBuilderFactory provideDocumentBuilderFactory() {
         return DocumentBuilderFactory.newDefaultInstance();
     }
 
@@ -215,6 +216,7 @@ public class UtsuModule extends AbstractModule {
             StatusBar statusBar,
             CacheManager cacheManager,
             PreferencesManager preferencesManager) {
+        // Engine is not a singleton--each instance has its own thread pool.
         return new Engine(
                 resampler,
                 wavtoolConverter,
@@ -222,6 +224,14 @@ public class UtsuModule extends AbstractModule {
                 /* threadPoolSize= */ 10,
                 cacheManager,
                 preferencesManager);
+    }
+
+    @Provides
+    private UtsuWavtool provideUtsuWavtool(
+            StatusBar statusBar, SoundFileReader soundFileReader, SoundFileWriter soundFileWriter) {
+        // UtsuWavtool is not a singleton--each instance has its own thread pool.
+        return new UtsuWavtool(
+                statusBar, /* threadPoolSize= */ 10, soundFileReader, soundFileWriter);
     }
 
     @Provides
