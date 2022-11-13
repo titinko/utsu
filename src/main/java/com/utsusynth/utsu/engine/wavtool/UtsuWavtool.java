@@ -13,7 +13,6 @@ import com.utsusynth.utsu.model.song.Song;
 import javafx.util.Pair;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
@@ -26,8 +25,6 @@ public class UtsuWavtool implements Wavtool {
     private final int threadPoolSize;
     private final SoundFileReader soundFileReader;
     private final SoundFileWriter soundFileWriter;
-    private final ArrayList<Double> overlaps = new ArrayList<>();
-    private final ArrayList<WavData> fragments = new ArrayList<>();
     private final ArrayList<Future<Pair<Double, WavData>>> futures = new ArrayList<>();
     private double startDelta = 0; // Start duration in ms.
     private double totalDelta = 0; // Total duration in ms, used to debug timing issues.
@@ -47,8 +44,6 @@ public class UtsuWavtool implements Wavtool {
 
     @Override
     public void startRender(double startDelta) {
-        overlaps.clear();
-        fragments.clear();
         futures.clear();
         if (threadPool != null && !threadPool.isTerminated()) {
             threadPool.shutdownNow();

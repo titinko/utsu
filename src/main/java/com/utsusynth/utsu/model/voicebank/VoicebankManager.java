@@ -15,8 +15,6 @@ import java.util.Set;
  * does not open on two editors.
  */
 public class VoicebankManager {
-    private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
-
     private final Map<File, Voicebank> voicebanks;
     private final Set<File> openForEdit;
 
@@ -26,43 +24,27 @@ public class VoicebankManager {
     }
 
     public boolean hasVoicebank(File location) {
-        File normalized = normalize(location);
-        return voicebanks.containsKey(normalized);
+        return voicebanks.containsKey(location);
     }
 
     public Voicebank getVoicebank(File location) {
-        File normalized = normalize(location);
-        return voicebanks.get(normalized);
+        return voicebanks.get(location);
     }
 
     public void setVoicebank(File location, Voicebank voicebank) {
-        File normalized = normalize(location);
-        voicebanks.put(normalized, voicebank);
+        voicebanks.put(location, voicebank);
     }
 
     public void openVoicebankForEdit(File location) throws FileAlreadyOpenException {
-        File normalized = normalize(location);
-        if (openForEdit.contains(normalized)) {
+        if (openForEdit.contains(location)) {
             // No two tabs should point at the same file, to prevent headaches.
-            throw new FileAlreadyOpenException(normalized);
+            throw new FileAlreadyOpenException(location);
         }
-        openForEdit.add(normalized);
+        openForEdit.add(location);
     }
 
     public void removeVoicebank(File location) {
-        File normalized = normalize(location);
-        voicebanks.remove(normalized);
-        openForEdit.remove(normalized);
-    }
-
-    private File normalize(File rawFile) {
-        try {
-            return rawFile.getCanonicalFile();
-        } catch (IOException e) {
-            // TODO: Handle this
-            errorLogger.logError(e);
-        }
-        // Return raw file if it cannot be normalized.
-        return rawFile;
+        voicebanks.remove(location);
+        openForEdit.remove(location);
     }
 }
