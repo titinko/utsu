@@ -20,6 +20,7 @@ import com.utsusynth.utsu.files.voicebank.VoicebankWriter;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
 import com.utsusynth.utsu.view.voicebank.*;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -181,11 +182,21 @@ public class VoicebankController implements EditorController, Localizable {
             @Override
             public void generateFrqFiles(Iterator<LyricConfigData> lyricIterator) {
                 statusBar.setText("Generating .frq files...");
-                new Thread(() -> {
-                    voicebank.get().generateFrqs(lyricIterator);
-                    statusBar.setTextAsync("Finished generating .frq files.");
-                    // Change cannot be saved or undone, so don't call onVoicebankChange.
-                }).start();
+                Task<Void> generateFrqsTask = new Task<>() {
+                    @Override
+                    protected Void call() {
+                        voicebank.get().generateFrqs(lyricIterator);
+                        return null;
+                    }
+
+                    @Override
+                    protected void succeeded() {
+                        super.succeeded();
+                        statusBar.setText("Finished generating .frq files.");
+                        // Change cannot be saved or undone, so don't call onVoicebankChange.
+                    }
+                };
+                new Thread(generateFrqsTask).start();
             }
 
             @Override
@@ -369,40 +380,58 @@ public class VoicebankController implements EditorController, Localizable {
         voicebank.setVoicebankForEdit(file);
         openForEdit = true;
         statusBar.setText("Loading " + file.getName() + "...");
-        new Thread(() -> {
-            try {
-                undoService.clearActions();
+        undoService.clearActions();
+        Task<Void> readVoicebankTask = new Task<>() {
+            @Override
+            protected Void call() {
                 voicebank.get(); // Loads voicebank from file if necessary.
-                Platform.runLater(() -> {
-                    // UI thread.
-                    refreshView();
-                    callback.markChanged(false);
-                    menuItemManager.disableSave();
-
-                    statusBar.setStatus("status.loadedVoicebank", file.getName());
-                });
-            } catch (Exception e) {
-                statusBar.setStatusAsync("status.unableToLoadVoicebank", file.getName());
+                return null;
             }
-        }).start();
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                refreshView();
+                callback.markChanged(false);
+                menuItemManager.disableSave();
+                statusBar.setStatus("status.loadedVoicebank", file.getName());
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+                statusBar.setStatus("status.unableToLoadVoicebank", file.getName());
+            }
+        };
+        new Thread(readVoicebankTask).start();
     }
 
     @Override
     public Optional<String> save() {
         statusBar.setText("Saving...");
-        new Thread(() -> {
-            try {
+        Task<Void> writeVoicebankTask = new Task<>() {
+            @Override
+            protected Void call() {
                 voicebankWriter.writeVoicebankToDirectory(voicebank.get(), voicebank.getLocation());
-                Platform.runLater(() -> {
-                    statusBar.setText(
-                            "Saved changes to voicebank: " + voicebank.getLocation().getName());
-                    callback.markChanged(false);
-                    menuItemManager.disableSave();
-                });
-            } catch (Exception e) {
-                statusBar.setTextAsync("Error: Unable to save changes to voicebank.");
+                return null;
             }
-        }).start();
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                statusBar.setText(
+                        "Saved changes to voicebank: " + voicebank.getLocation().getName());
+                callback.markChanged(false);
+                menuItemManager.disableSave();
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+                statusBar.setText("Error: Unable to save changes to voicebank.");
+            }
+        };
+        new Thread(writeVoicebankTask).start();
         return Optional.empty();
     }
 

@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.utsusynth.utsu.common.i18n.Localizable;
 import com.utsusynth.utsu.common.i18n.Localizer;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 
@@ -60,21 +59,12 @@ public class StatusBar implements Localizable {
         }
     }
 
-    public void setStatusAsync(String key, String param) {
-        Platform.runLater(() -> setStatus(key, param));
-    }
-
     public void setText(String text) {
         if (statusText != null) {
             key = "";
             param = "";
             statusText.set(text);
         }
-    }
-
-    /** Async versions should be called from backend threads. */
-    public void setTextAsync(String text) {
-        Platform.runLater(() -> setText(text));
     }
 
     public void startProgress(Runnable cancelProgressRunnable) {

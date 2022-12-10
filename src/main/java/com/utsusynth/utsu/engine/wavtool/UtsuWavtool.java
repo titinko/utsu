@@ -81,13 +81,13 @@ public class UtsuWavtool implements Wavtool {
         totalDelta += noteLength - boundedOverlap;
 
         final double finalOverlap = boundedOverlap;
-        final int numSamples = msToNumSamples(noteLength);
+        final int numSamples = Math.max(0, msToNumSamples(noteLength));
         futures.add(threadPool.submit(() -> {
             // Files are often not ready to read immediately after the resampler finishes.
             // Putting a wait here reduces data race errors without significantly impacting
             // render time.
             Thread.sleep(100);
-            Optional<WavData> wavData = soundFileReader.loadWavData(inputFile);
+            Optional<WavData> wavData = soundFileReader.loadWavData(inputFile, message -> null);
             if (wavData.isEmpty()) {
                 System.out.println("Warning: Unable to read WAV data: " + inputFile.getName());
                 WavData silenceWav = new WavData(noteLength, new double[numSamples]);

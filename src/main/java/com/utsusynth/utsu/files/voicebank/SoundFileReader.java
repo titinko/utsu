@@ -2,7 +2,6 @@ package com.utsusynth.utsu.files.voicebank;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -12,8 +11,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import com.google.inject.Inject;
-import com.utsusynth.utsu.common.StatusBar;
+import com.google.common.base.Function;
 import org.apache.commons.io.FileUtils;
 import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.WavData;
@@ -25,16 +23,9 @@ import com.utsusynth.utsu.common.exception.ErrorLogger;
 public class SoundFileReader {
     private static final ErrorLogger errorLogger = ErrorLogger.getLogger();
 
-    private final StatusBar statusBar;
-
-    @Inject
-    public SoundFileReader(StatusBar statusBar) {
-        this.statusBar = statusBar;
-    }
-
-    public Optional<FrequencyData> loadFrqData(File frqFile) {
+    public Optional<FrequencyData> loadFrqData(File frqFile, Function<String, Void> updateStatus) {
         if (!frqFile.canRead()) {
-            statusBar.setTextAsync("Warning: frq file not found: " + frqFile.getAbsolutePath());
+            updateStatus.apply("Warning: frq file not found: " + frqFile.getAbsolutePath());
             return Optional.empty();
         }
         try {
@@ -44,7 +35,7 @@ public class SoundFileReader {
             byte[] charBuf = new byte[8];
             buffer.get(charBuf);
             if (!"FREQ0003".equals(new String(charBuf))) {
-                statusBar.setTextAsync("Error: Tried to load frq data on a non-frq file.");
+                updateStatus.apply("Error: Tried to load frq data on a non-frq file.");
                 return Optional.empty();
             }
             int samplesPerFrq = buffer.getInt(); // Number of samples per frequency value.
@@ -60,7 +51,7 @@ public class SoundFileReader {
                 amplitudes[i] = buffer.getDouble();
             }
             if (buffer.hasRemaining()) {
-                statusBar.setTextAsync("Warning: Parts of frq file were left unread.");
+                updateStatus.apply("Warning: Parts of frq file were left unread.");
             }
             return Optional.of(new FrequencyData(average, samplesPerFrq, frqs, amplitudes));
         } catch (IOException e) {
@@ -70,25 +61,26 @@ public class SoundFileReader {
         }
     }
 
-    public Optional<WavData> loadWavData(File wavFile) {
-        return loadWavData(wavFile, 0);
+    public Optional<WavData> loadWavData(File wavFile, Function<String, Void> updateStatus) {
+        return loadWavData(wavFile, /* offsetMs= */ 0, updateStatus);
     }
 
-    public Optional<WavData> loadWavData(File wavFile, int offsetMs) {
+    public Optional<WavData> loadWavData(
+            File wavFile, int offsetMs, Function<String, Void> updateStatus) {
         if (!wavFile.canRead()) {
-            statusBar.setTextAsync("Error: wav file not found!");
+            updateStatus.apply("Error: wav file not found!");
             return Optional.empty();
         }
         try (AudioInputStream input = AudioSystem.getAudioInputStream(wavFile)) {
             int bitsPerSample = input.getFormat().getSampleSizeInBits();
             if (bitsPerSample != 8 && bitsPerSample != 16) {
-                statusBar.setTextAsync("Error: Does not support sample sizes other than 8 or 16 bit.");
+                updateStatus.apply("Error: Does not support sample sizes other than 8 or 16 bit.");
                 return Optional.empty();
             }
 
             Encoding encoding = input.getFormat().getEncoding();
             if (encoding != Encoding.PCM_SIGNED && encoding != Encoding.PCM_UNSIGNED) {
-                statusBar.setTextAsync("Error: Does not support encodings other than PCM.");
+                updateStatus.apply("Error: Does not support encodings other than PCM.");
                 return Optional.empty();
             }
 
@@ -104,12 +96,12 @@ public class SoundFileReader {
             byte[] bytes = new byte[numBytes - offsetBytes];
             long bytesSkipped = input.skip(offsetBytes);
             if (bytesSkipped < offsetBytes) {
-                statusBar.setTextAsync("Error: Could not skip to correct location in wav file.");
+                updateStatus.apply("Error: Could not skip to correct location in wav file.");
                 return Optional.empty();
             }
             int bytesRead = input.read(bytes);
             if (bytesRead < bytes.length) {
-                statusBar.setTextAsync("Error: Could not read entire wav file.");
+                updateStatus.apply("Error: Could not read entire wav file.");
                 return Optional.empty();
             }
             ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
@@ -133,7 +125,7 @@ public class SoundFileReader {
             }
             if ((bitsPerSample == 16 && shortBuffer.hasRemaining())
                     || (bitsPerSample == 8 && byteBuffer.hasRemaining())) {
-                statusBar.setTextAsync("Warning: Parts of wav file were left unread.");
+                updateStatus.apply("Warning: Parts of wav file were left unread.");
             }
             input.close();
             return Optional.of(new WavData(lengthMs, samples));

@@ -5,6 +5,7 @@ import com.utsusynth.utsu.files.song.SongReader;
 import javafx.beans.property.BooleanProperty;
 
 import java.io.File;
+import java.util.List;
 
 public interface EditorCallback {
     /**
@@ -15,7 +16,7 @@ public interface EditorCallback {
     /**
      * Open song for edit in a new tab with track pre-selected. Don't switch tabs.
      */
-    void openSongTrack(File location, SongReader songReader, int trackNum);
+    void openSongTrack(File location, SongReader songReader, List<Integer> trackNums, int trackNum);
 
     /**
      * Open voicebank for edit in a new tab.

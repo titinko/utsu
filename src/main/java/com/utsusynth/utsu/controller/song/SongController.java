@@ -39,6 +39,7 @@ import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Orientation;
@@ -60,6 +61,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.util.Pair;
 
 import java.io.*;
 import java.util.*;
@@ -256,19 +258,28 @@ public class SongController implements EditorController, Localizable {
             DirectoryChooser dc = new DirectoryChooser();
             dc.setTitle("Select voicebank");
             File file = dc.showDialog(null);
-            if (file != null
-                    && !file.getAbsolutePath().equals(song.get().getVoiceDir().getAbsolutePath())) {
-                new Thread(() -> {
+            if (file == null
+                    || file.getAbsolutePath().equals(song.get().getVoiceDir().getAbsolutePath())) {
+                return;
+            }
+            Task<String> loadVoicebankTask = new Task<>() {
+                @Override
+                protected String call() throws Exception {
                     song.setSong(song.get().toBuilder().setVoiceDirectory(file).build());
                     String newName = song.get().getVoicebank().getName(); // Loads voicebank.
                     song.get().clearAllCacheValues();
-                    Platform.runLater(() -> {
-                        onSongChange();
-                        refreshView();
-                        statusBar.setText("Changed voicebank to " + newName + ".");
-                    });
-                }).start();
-            }
+                    return newName;
+                }
+
+                @Override
+                protected void succeeded() {
+                    super.succeeded();
+                    onSongChange();
+                    refreshView();
+                    statusBar.setText("Changed voicebank to " + getValue() + ".");
+                }
+            };
+            new Thread(loadVoicebankTask).start();
         });
         iconContextMenu.getItems().addAll(openVoicebankItem, changeVoicebankItem);
         iconContextMenu.setOnShowing(event -> {
@@ -609,115 +620,134 @@ public class SongController implements EditorController, Localizable {
     public void open(File file) throws FileAlreadyOpenException {
         song.setLocation(file);
         statusBar.setText("Opening " + file.getName() + "...");
-        new Thread(() -> {
-            try {
-                SongReader songReader = songReaderManager.getSongReader(file);
-                String saveFormat = songReader.getSaveFormat(file);
+        Task<Void> fileExamineTask = new Task<>() {
+            SongReader songReader;
+            int numTracks = 0;
+
+            @Override
+            protected Void call() {
+                songReader = songReaderManager.getSongReader(file);
                 // Read song now if it's only one track.
-                int numTracks = songReader.getNumTracks(file);
-                if (numTracks <= 1) {
-                    song.setSong(songReader.loadSong(file, 1));
-                }
-                // Determine if there's more than one track.
-                Platform.runLater(() -> {
-                    // Get num tracks.
-                    if (numTracks > 1) {
-                        Stage parent = (Stage) anchorCenter.getScene().getWindow();
-                        ImmutableList<Integer> trackNums =
-                                chooseTrackProvider.get().popup(parent, numTracks);
-                        if (trackNums.isEmpty()) {
-                            return; // Cancel process if no tracks are selected.
-                        }
-                        song.setSong(songReader.loadSong(file, trackNums.get(0)));
-                        for (int i = 1; i < trackNums.size(); i++) {
-                            callback.openSongTrack(file, songReader, trackNums.get(i));
-                        }
-                    }
-                    undoService.clearActions();
-                    // If no save format, mark as unsaved file with no permanent location.
-                    if (saveFormat.isEmpty()) {
-                        song.reset();
-                        callback.markChanged(true);
-                    } else {
-                        song.setSaveFormat(songReader.getSaveFormat(file));
-                        callback.markChanged(false);
-                    }
-                    // Update view.
-                    refreshView();
-                    menuItemManager.disableSave();
-                    statusBar.setText("Opened " + file.getName());
-                    // Do scrolling after a short pause for viewport to establish itself.
-                    PauseTransition briefPause = new PauseTransition(Duration.millis(10));
-                    briefPause.setOnFinished(event -> songEditor.scrollToPosition(0));
-                    briefPause.play();
-                });
-            } catch (Exception e) {
-                statusBar.setTextAsync("Error: Unable to open " + file.getName());
-                errorLogger.logError(e);
+                numTracks = songReader.getNumTracks(file);
+                return null;
             }
-        }).start();
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                if (songReader == null) {
+                    return;
+                }
+                if (numTracks > 1) {
+                    Stage parent = (Stage) anchorCenter.getScene().getWindow();
+                    ImmutableList<Integer> trackNums =
+                            chooseTrackProvider.get().popup(parent, numTracks);
+                    if (trackNums.isEmpty()) {
+                        return; // Cancel process if no tracks are selected.
+                    }
+                    // Open first track in main window and other tracks in sub-windows.
+                    openTrack(file, songReader, trackNums, trackNums.get(0));
+                    for (int i = 1; i < trackNums.size(); i++) {
+                        callback.openSongTrack(file, songReader, trackNums, trackNums.get(i));
+                    }
+                } else {
+                    openTrack(file, songReader, ImmutableList.of(1), 1);
+                }
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+            }
+        };
+        new Thread(fileExamineTask).start();
     }
 
-    /** Opens a file with some values pre-calculated. Opens silently without changing status bar. */
-    public void openSubTrack(
-            File file, SongReader songReader, int trackNum) throws FileAlreadyOpenException {
-        new Thread(() -> {
-            try {
+    /** Opens a file with some values pre-calculated. */
+    public void openTrack(
+            File file, SongReader songReader, List<Integer> trackNums, int trackNum) {
+        Task<Void> fileReadTask = new Task<>() {
+            String saveFormat = "";
+
+            @Override
+            protected Void call() throws Exception {
                 song.setSong(songReader.loadSong(file, trackNum));
-                String saveFormat = songReader.getSaveFormat(file);
-                undoService.clearActions();
-                if (!saveFormat.isEmpty()) {
+                saveFormat = songReader.getSaveFormat(file);
+                // If no save format, mark as a file with no permanent location.
+                if (saveFormat.isEmpty()) {
+                    song.reset();
+                } else {
                     song.setSaveFormat(saveFormat);
                 }
-                Platform.runLater(() -> {
-                    // Update view.
-                    refreshView();
-                    callback.markChanged(true);
-                    menuItemManager.disableSave();
-                    // Do scrolling after a short pause for viewport to establish itself.
-                    PauseTransition briefPause = new PauseTransition(Duration.millis(10));
-                    briefPause.setOnFinished(event -> songEditor.scrollToPosition(0));
-                    briefPause.play();
-                });
-            } catch (Exception e) {
-                statusBar.setTextAsync("Error: Unable to open " + file.getName());
-                errorLogger.logError(e);
+                undoService.clearActions();
+                return null;
             }
-        }).start();
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                // Mark as unsaved if this is a subtrack or save format cannot be found.
+                callback.markChanged(trackNum != trackNums.get(0) || saveFormat.isEmpty());
+                // Update view.
+                refreshView();
+                menuItemManager.disableSave();
+                statusBar.setText("Opened " + file.getName());
+                // Do scrolling after a short pause for viewport to establish itself.
+                PauseTransition briefPause = new PauseTransition(Duration.millis(10));
+                briefPause.setOnFinished(event -> songEditor.scrollToPosition(0));
+                briefPause.play();
+            }
+
+            @Override
+            protected void failed() {
+                statusBar.setText("Error: Unable to open " + file.getName());
+                errorLogger.logError(getException());
+            }
+        };
+        new Thread(fileReadTask).start();
     }
 
     @Override
     public Optional<String> save() {
-        if (song.hasPermanentLocation()) {
-            String saveFormat = song.getSaveFormat();
-            String charset = saveFormat.contains("Shift JIS") ? "SJIS" : "UTF-8";
-            File saveLocation = song.getLocation();
-            statusBar.setText("Saving...");
-            new Thread(() -> {
-                try (PrintStream ps = new PrintStream(saveLocation, charset)) {
-                    if (saveFormat.contains("UST 1.2")) {
-                        ust12Writer.writeSong(song.get(), ps);
-                    } else {
-                        ust20Writer.writeSong(song.get(), ps, charset);
-                    }
-                    ps.flush();
-                    ps.close();
-                    // Report results to UI.
-                    Platform.runLater(() -> {
-                        callback.markChanged(false);
-                        menuItemManager.disableSave();
-                        statusBar.setText("Saved changes to " + saveLocation.getName());
-                    });
-                } catch (Exception e) {
-                   statusBar.setTextAsync("Error: Unable to save " + saveLocation.getName());
-                    errorLogger.logError(e);
-                }
-            }).start();
-            return Optional.empty();
-        } else {
+        if (!song.hasPermanentLocation()) {
             // Default to "Save As" if no permanent location found.
             return saveAs();
         }
+        String saveFormat = song.getSaveFormat();
+        String charset = saveFormat.contains("Shift JIS") ? "SJIS" : "UTF-8";
+        File saveLocation = song.getLocation();
+        statusBar.setText("Saving...");
+        Task<Void> fileWriteTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                PrintStream ps = new PrintStream(saveLocation, charset);
+                if (saveFormat.contains("UST 1.2")) {
+                    ust12Writer.writeSong(song.get(), ps);
+                } else {
+                    ust20Writer.writeSong(song.get(), ps, charset);
+                }
+                ps.flush();
+                ps.close();
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                callback.markChanged(false);
+                menuItemManager.disableSave();
+                statusBar.setText("Saved changes to " + saveLocation.getName());
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+                statusBar.setText("Error: Unable to save " + saveLocation.getName());
+                errorLogger.logError(getException());
+            }
+        };
+        new Thread(fileWriteTask).start();
+        return Optional.empty();
     }
 
     @Override
@@ -737,41 +767,51 @@ public class SongController implements EditorController, Localizable {
                     new ExtensionFilter("UST 2.0 (Shift JIS)", "*.ust"));
         }
         File file = fc.showSaveDialog(null);
-        if (file != null) {
-            statusBar.setText("Saving...");
-            try {
-                song.setLocation(file);
-            } catch (FileAlreadyOpenException e) {
-                statusBar.setText("Error: Cannot have the same file open in two tabs.");
-                return Optional.empty();
-            }
-            ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
-            String charset = chosenFormat.getDescription().contains("Shift JIS") ? "SJIS" : "UTF-8";
-            new Thread(() -> {
-                try (PrintStream ps = new PrintStream(file, charset)) {
-                    if (chosenFormat.getDescription().contains("UST 1.2")) {
-                        ust12Writer.writeSong(song.get(), ps);
-                    } else {
-                        ust20Writer.writeSong(song.get(), ps, charset);
-                    }
-                    ps.flush();
-                    ps.close();
-                    // Report results to UI.
-                    song.setSaveFormat(chosenFormat.getDescription());
-                    Platform.runLater(() -> {
-                        callback.markChanged(false);
-                        menuItemManager.disableSave();
-                        statusBar.setText("Saved as " + file.getName());
-                    });
-                } catch (Exception e) {
-                    statusBar.setTextAsync("Error: Unable to save as " + file.getName());
-                    errorLogger.logError(e);
-                }
-            }).start();
-            // File name may have changed, so just return new file name.
-            return Optional.of(file.getName());
+        if (file == null) {
+            return Optional.empty();
         }
-        return Optional.empty();
+        statusBar.setText("Saving...");
+        try {
+            song.setLocation(file);
+        } catch (FileAlreadyOpenException e) {
+            statusBar.setText("Error: Cannot have the same file open in two tabs.");
+            return Optional.empty();
+        }
+        ExtensionFilter chosenFormat = fc.getSelectedExtensionFilter();
+        String charset = chosenFormat.getDescription().contains("Shift JIS") ? "SJIS" : "UTF-8";
+        Task<Void> fileWriteTask = new Task<>() {
+            @Override
+            protected Void call() throws FileNotFoundException, UnsupportedEncodingException {
+                PrintStream ps = new PrintStream(file, charset);
+                if (chosenFormat.getDescription().contains("UST 1.2")) {
+                    ust12Writer.writeSong(song.get(), ps);
+                } else {
+                    ust20Writer.writeSong(song.get(), ps, charset);
+                }
+                ps.flush();
+                ps.close();
+                song.setSaveFormat(chosenFormat.getDescription());
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                callback.markChanged(false);
+                menuItemManager.disableSave();
+                statusBar.setText("Saved as " + file.getName());
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+                statusBar.setText("Error: Unable to save as " + file.getName());
+                errorLogger.logError(getException());
+            }
+        };
+        new Thread(fileWriteTask).start();
+        // File name may have changed, so just return new file name.
+        return Optional.of(file.getName());
     }
 
     /**
@@ -888,18 +928,27 @@ public class SongController implements EditorController, Localizable {
         playPauseIcon.setDisable(true);
 
         statusBar.setText("Rendering...");
-        new Thread(() ->
-        {
-            if (engine.startPlayback(song.get(), regionToPlay, startPlaybackFn, endPlaybackFn)) {
-                Platform.runLater(() -> {
+        Task<Boolean> renderTask = new Task<>() {
+
+            @Override
+            protected Boolean call() {
+                return engine.startPlayback(
+                        song.get(), regionToPlay, startPlaybackFn, endPlaybackFn);
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                if (getValue()) {
                     iconManager.setPauseIcon(playPauseIcon);
                     statusBar.setText("Render complete.");
-                });
-            } else {
-                statusBar.setTextAsync("Render produced no output.");
+                } else {
+                    statusBar.setText("Render produced no output.");
+                }
+                playPauseIcon.setDisable(false);
             }
-            playPauseIcon.setDisable(false);
-        }).start();
+        };
+        new Thread(renderTask).start();
     }
 
     private void pausePlayback() {
@@ -926,16 +975,27 @@ public class SongController implements EditorController, Localizable {
         fc.setTitle("Select WAV File");
         fc.getExtensionFilters().addAll(new ExtensionFilter(".wav files", "*.wav"));
         File file = fc.showSaveDialog(null);
-        if (file != null) {
-            statusBar.setText("Exporting...");
-            new Thread(() -> {
-                if (engine.renderWav(song.get(), file)) {
-                    statusBar.setTextAsync("Exported to file: " + file.getName());
-                } else {
-                    statusBar.setTextAsync("Export produced no output.");
-                }
-            }).start();
+        if (file == null) {
+            return;
         }
+        statusBar.setText("Exporting...");
+        Task<Boolean> renderWavTask = new Task<>() {
+            @Override
+            protected Boolean call() throws Exception {
+                return engine.renderWav(song.get(), file);
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                if (getValue()) {
+                    statusBar.setText("Exported to file: " + file.getName());
+                } else {
+                    statusBar.setText("Export produced no output.");
+                }
+            }
+        };
+        new Thread(renderWavTask).start();
     }
 
     @Override
@@ -954,17 +1014,10 @@ public class SongController implements EditorController, Localizable {
             propertiesWindow.initOwner(currentStage);
             BorderPane propertiesPane = loader.load(fxml);
             SongPropertiesController controller = loader.getController();
-            controller.setData(song, engine, shouldClearCache -> {
-                // Should only be called after song changes are applied.
-                if (shouldClearCache) {
-                    song.get().clearAllCacheValues();
-                }
-                Platform.runLater(() -> {
-                    onSongChange();
-                    refreshView();
-                    statusBar.setText("Property changes applied.");
-                });
-                return null;
+            controller.setData(song, engine, () -> {
+                onSongChange();
+                refreshView();
+                statusBar.setText("Property changes applied.");
             });
             Scene scene = new Scene(propertiesPane);
             themeManager.applyToScene(scene);
@@ -1220,27 +1273,37 @@ public class SongController implements EditorController, Localizable {
                                             voicebankReader.getDefaultPresampConfig().getReader());
                             statusBar.setText("Converting...");
                             StringBuilder result = new StringBuilder("Converted: ");
-                            new Thread(() -> {
-                                for (ReclistConverter converter : path) {
-                                    List<NoteContextData> oldNotes =
-                                            song.get().getNotesInContext(regionToUpdate);
-                                    List<NoteData> newNotes = converter.apply(oldNotes, voicebankData);
-                                    updateNotes(song.get().getNotes(regionToUpdate), newNotes);
-                                    result
-                                            .append(converter.getFrom())
-                                            .append("->")
-                                            .append(converter.getTo())
-                                            .append(",");
+                            Task<String> convertReclistTask = new Task<>() {
+                                @Override
+                                protected String call() {
+                                    for (ReclistConverter converter : path) {
+                                        List<NoteContextData> oldNotes =
+                                                song.get().getNotesInContext(regionToUpdate);
+                                        List<NoteData> newNotes =
+                                                converter.apply(oldNotes, voicebankData);
+                                        updateNotes(song.get().getNotes(regionToUpdate), newNotes);
+                                        result.append(converter.getFrom());
+                                        result.append("->");
+                                        result.append(converter.getTo());
+                                        result.append(",");
+                                    }
+                                    if (!path.isEmpty()) {
+                                        result.deleteCharAt(result.length() - 1); // Delete comma.
+                                    }
+                                    return result.toString();
                                 }
-                                if (!path.isEmpty()) {
-                                    result.deleteCharAt(result.length() - 1); // Delete last comma.
-                                    Platform.runLater(() -> {
+
+                                @Override
+                                protected void succeeded() {
+                                    super.succeeded();
+                                    if (!path.isEmpty()) {
                                         onSongChange();
                                         refreshView();
-                                        statusBar.setText(result.toString());
-                                    });
+                                        statusBar.setText(getValue());
+                                    }
                                 }
-                            }).start();
+                            };
+                            new Thread(convertReclistTask).start();
                         }
                     });
             Scene scene = new Scene(editorPane);
@@ -1303,7 +1366,7 @@ public class SongController implements EditorController, Localizable {
                     .map(next -> Math.max(next.getPosition(), newMaxPos)).orElse(newMaxPos);
             song.get().standardizeNotes(minPos, maxPos);
 
-            onSongChange();
+            // If run from a separate thread, leave refreshing th
             if (Platform.isFxApplicationThread()) {
                 onSongChange();
                 refreshView();

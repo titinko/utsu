@@ -11,8 +11,8 @@ import com.utsusynth.utsu.engine.wavtool.WavtoolConverter;
 import com.utsusynth.utsu.files.PreferencesManager;
 import com.utsusynth.utsu.model.song.SongContainer;
 import com.utsusynth.utsu.model.voicebank.VoicebankContainer;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -51,7 +51,7 @@ public class SongPropertiesController implements Localizable {
     private File resamplerPath;
     private Wavtool wavtool;
     // private Optional<File> instrumentalPath;
-    private Function<Boolean, Void> onSongChange; // Call when applying properties.
+    private Runnable onSongChange; // Call when applying properties.
 
     @FXML // fx:id="root"
     private BorderPane root; // Value injected by FXMLLoader
@@ -144,10 +144,10 @@ public class SongPropertiesController implements Localizable {
     }
 
     /* Initializes properties panel with a SongContainer with the song to edit. */
-    void setData(SongContainer songContainer, Engine engine, Function<Boolean, Void> callback) {
+    void setData(SongContainer songContainer, Engine engine, Runnable updateViewCallback) {
         this.songContainer = songContainer;
         this.engine = engine;
-        this.onSongChange = callback;
+        this.onSongChange = updateViewCallback;
 
         // Set values to save.
         voicebankContainer.setVoicebankForRead(songContainer.get().getVoiceDir());
@@ -196,6 +196,7 @@ public class SongPropertiesController implements Localizable {
         voicebankChoiceBox.setValue(voicebankContainer.getLocation());
         voicebankChoiceBox.setOnAction(event -> {
             new Thread(() -> {
+                // Pre-loads the voicebank.
                 voicebankContainer.setVoicebankForRead(voicebankChoiceBox.getValue());
                 voicebankContainer.get();
             }).start();
@@ -330,17 +331,25 @@ public class SongPropertiesController implements Localizable {
         dc.setTitle("Select voicebank");
         File file = dc.showDialog(null);
         if (file != null && file.isDirectory()) {
-            new Thread(() -> {
-                voicebankContainer.setVoicebankForRead(file);
-                voicebankContainer.get();
-                // TODO: Throw error if voicebank doesn't load.
-                ArrayList<File> allVoicebanks = updateFileList(VOICEBANK_CATEGORY, file);
-                Platform.runLater(() -> {
+            Task<ArrayList<File>> voicebankReadTask = new Task<>() {
+                @Override
+                protected ArrayList<File> call() throws Exception {
+                    voicebankContainer.setVoicebankForRead(file);
+                    voicebankContainer.get();
+                    // TODO: Throw error if voicebank doesn't load.
+                    return updateFileList(VOICEBANK_CATEGORY, file);
+                }
+
+                @Override
+                protected void succeeded() {
+                    super.succeeded();
+                    ArrayList<File> allVoicebanks = getValue();
                     voicebankChoiceBox.setItems(FXCollections.observableArrayList(allVoicebanks));
                     voicebankChoiceBox.getItems().add(0, preferencesManager.getVoicebankDefault());
                     voicebankChoiceBox.setValue(file);
-                });
-            }).start();
+                }
+            };
+            new Thread(voicebankReadTask).start();
         }
     }
 
@@ -360,22 +369,37 @@ public class SongPropertiesController implements Localizable {
 
     @FXML
     void applyProperties(ActionEvent event) {
-        new Thread(() -> {
-            boolean shouldClearCache = !engine.getResamplerPath().equals(resamplerPath)
-                    || !songContainer.get().getFlags().equals(flagsTF.getText())
-                    || !songContainer.get().getVoiceDir().equals(voicebankContainer.getLocation());
-            songContainer.setSong(
-                    songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
-                            .setOutputFile(new File(outputFileTF.getText()))
-                            .setFlags(flagsTF.getText())
-                            .setVoiceDirectory(voicebankContainer.getLocation())
-                            .setTempo(RoundUtils.round(tempoSlider.getValue()))
-                            //.setInstrumental(instrumentalPath)
-                            .build());
-            engine.setResamplerPath(resamplerChoiceBox.getValue());
-            engine.setWavtool(wavtoolChoiceBox.getValue());
-            onSongChange.apply(shouldClearCache);
-        }).start();
+        // Returns whether the cache should be cleared.
+        Task<Void> applyPropertiesTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                boolean shouldClearCache = !engine.getResamplerPath().equals(resamplerPath)
+                        || !songContainer.get().getFlags().equals(flagsTF.getText())
+                        || !songContainer.get().getVoiceDir().equals(voicebankContainer.getLocation());
+                songContainer.setSong(
+                        songContainer.get().toBuilder().setProjectName(projectNameTF.getText())
+                                .setOutputFile(new File(outputFileTF.getText()))
+                                .setFlags(flagsTF.getText())
+                                .setVoiceDirectory(voicebankContainer.getLocation())
+                                .setTempo(RoundUtils.round(tempoSlider.getValue()))
+                                //.setInstrumental(instrumentalPath)
+                                .build());
+                engine.setResamplerPath(resamplerChoiceBox.getValue());
+                engine.setWavtool(wavtoolChoiceBox.getValue());
+                if (shouldClearCache) {
+                    // Should only be called after song changes are applied.
+                    songContainer.get().clearAllCacheValues();
+                }
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                onSongChange.run();
+            }
+        };
+        new Thread(applyPropertiesTask).start();
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }

@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.utsusynth.utsu.common.StatusBar;
 import com.utsusynth.utsu.common.data.FrequencyData;
 import com.utsusynth.utsu.common.data.LyricConfigData;
 import com.utsusynth.utsu.common.data.WavData;
@@ -45,6 +46,7 @@ public class LyricConfigEditor {
     private final SoundFileReader soundFileReader;
     private final Spectrogram spectrogram;
     private final Localizer localizer;
+    private final StatusBar statusBar;
 
     private final BooleanProperty isPlaying;
     private final BooleanProperty showFrequency;
@@ -67,10 +69,11 @@ public class LyricConfigEditor {
 
     @Inject
     public LyricConfigEditor(
-            SoundFileReader soundFileReader, Spectrogram spectrogram, Localizer localizer) {
+            SoundFileReader soundFileReader, Spectrogram spectrogram, Localizer localizer, StatusBar statusBar) {
         this.soundFileReader = soundFileReader;
         this.spectrogram = spectrogram;
         this.localizer = localizer;
+        this.statusBar = statusBar;
 
         // Initialize with dummy data.
         background = new GridPane();
@@ -383,7 +386,10 @@ public class LyricConfigEditor {
 
         // Populate wav chart data.
         File pathToWav = config.getPathToFile();
-        Optional<WavData> maybeWavData = soundFileReader.loadWavData(pathToWav);
+        Optional<WavData> maybeWavData = soundFileReader.loadWavData(pathToWav, message -> {
+            statusBar.setText(message); // Read frq data and report output on status bar.
+            return null;
+        });
         if (maybeWavData.isEmpty()) {
             chart = new LineChart<>(new NumberAxis(), new NumberAxis());
             chart.setMouseTransparent(true);
@@ -454,7 +460,10 @@ public class LyricConfigEditor {
         String wavName = wavFile.getName();
         String frqName = wavFile.getName().substring(0, wavName.length() - 4) + "_wav.frq";
         File frqFile = wavFile.getParentFile().toPath().resolve(frqName).toFile();
-        Optional<FrequencyData> frqData = soundFileReader.loadFrqData(frqFile);
+        Optional<FrequencyData> frqData = soundFileReader.loadFrqData(frqFile, message -> {
+            statusBar.setText(message); // Read frq data and report output on status bar.
+            return null;
+        });
         // Don't bother populating frq data if there is no wav data.
         if (frqData.isPresent()) {
             frqSamples.clear();
